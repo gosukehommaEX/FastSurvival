@@ -1,0 +1,14 @@
+Package: FastSurvival
+Type: Package
+Title: A fast way to calculate the test statistic, p-Value and hazard ratio for clinical trials with time-to-event endpoints.
+Version: 0.1.0
+Authors@R: person(given = "Gosuke",
+                  family = "Homma",
+                  role = c("aut", "cre"),
+                  email = "my.name.is.gosuke@gmail.com")
+Description: A fast log-rank-test and hazard ratio calculations those faster than the implementation in the 'survival' package.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
