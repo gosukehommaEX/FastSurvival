@@ -1,6 +1,7 @@
 #' Calculate a one-sided log-rank test statistic for a two-arm parallel group trial.
 #'
 #' This function calculates the one-sided log-rank test statistic.
+#' Note that if ties of event time exist, this function cannot be used.
 #'
 #' @param time A numeric vector representing the event time.
 #' @param event A numeric vector representing the flag of event for both groups.
