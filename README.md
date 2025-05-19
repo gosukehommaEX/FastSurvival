@@ -24,14 +24,24 @@ library(survival)
 library(FastSurvival)
 library(microbenchmark)
 
+survdiff.result  = survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
+FastLRtest.result = FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2)
+
+print(list(survdiff.chisq = survdiff.result[['chisq']], FastLRtest.chisq = FastLRtest.result ^ 2))
+# $survdiff.chisq
+# [1] 1.06274
+# 
+# $FastLRtest.chisq
+# [1] 1.06274
+
 microbenchmark(
-  surv.diff.result  = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
+  survdiff.result  = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
   FastLRtest.result = FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2)
 )
 
 # Unit: microseconds
-#               expr     min      lq      mean   median       uq      max neval
-#   surv.diff.result 609.001 752.001 811.44694 782.1005 858.6510 1287.801   100
-#  FastLRtest.result  60.400  79.851  97.57995  93.0515 107.5515  214.700   100
+#               expr     min      lq      mean  median       uq      max neval
+#    survdiff.result 598.301 668.101 827.18999 742.851 835.8005 1601.901   100
+#  FastLRtest.result  56.002  72.750  96.40398  89.151 102.3005  259.701   100
 ```
 
