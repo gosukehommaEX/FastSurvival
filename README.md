@@ -30,8 +30,8 @@ microbenchmark(
 )
 
 # Unit: microseconds
-#               expr     min      lq      mean   median      uq    max neval
-#   surv.diff.result 586.201 620.401 719.57500 647.2005 705.001 1935.6   100
-#  FastLRtest.result  18.001  20.951  28.76396  28.1510  31.101  195.0   100
+#               expr     min      lq      mean   median       uq      max neval
+#   surv.diff.result 609.001 752.001 811.44694 782.1005 858.6510 1287.801   100
+#  FastLRtest.result  60.400  79.851  97.57995  93.0515 107.5515  214.700   100
 ```
 
