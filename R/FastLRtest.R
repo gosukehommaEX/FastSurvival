@@ -1,7 +1,6 @@
 #' Calculate a one-sided log-rank test statistic for a two-arm parallel group trial.
 #'
 #' This function calculates the one-sided log-rank test statistic.
-#' Note that if ties of event time exist, this function cannot be used.
 #'
 #' @param time A numeric vector representing the event time.
 #' @param event A numeric vector representing the flag of event for both groups.
@@ -16,23 +15,31 @@
 #'
 #' @export
 FastLRtest = function(time, event, group, control) {
-  # Re-label treatment and control groups
-  group = as.numeric(group != control)
-  # Set the ordered distinct event times
-  t.k = order(time)
-  # Set the ordered events, groups, and sample size at t.k
-  e.k = event[t.k]
-  g.k = group[t.k]
-  n.k = length(t.k):1
-  n.1k = rev(cumsum(rev(g.k)))
-  n.2k = n.k - n.1k
+  # Convert groups to numeric values 
+  j = as.numeric(group != control)
+  # Convert time to integer values
+  time = match(time, sort(unique(time)))
+  # Times occuring events
+  t.k = sort(unique(time[event == 1]))
+  # Set at risk
+  n.1k = rev(cumsum(rev(tabulate(time * j))))[t.k]
+  n.1k[is.na(n.1k)] = 0
+  n.0k = rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
+  n.0k[is.na(n.0k)] = 0
+  n.jk = n.1k + n.0k
+  # Number of events at t.k
+  e.1k = tabulate(time * j * event)[t.k]
+  e.1k[is.na(e.1k)] = 0
+  e.0k = tabulate(time * (1 - j) * event)[t.k]
+  e.0k[is.na(e.0k)] = 0
+  e.jk = e.1k + e.0k
   # The observed number of events on the group 1 at t.k
-  O1 = c(e.k %*% g.k)
+  O1 = sum(e.1k)
   # The expected number of events on the group 1 at t.k
-  E1 = c(e.k %*% (n.1k / n.k))
+  E1 = sum(e.jk * (n.1k / n.jk))
   # The variance
-  V1 = sum(n.1k * n.2k * e.k * (n.k - e.k) / (n.k ^ 2 * (n.k - 1)), na.rm = TRUE)
-  # Log-rank test statistic
+  V1 = sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
+  # Log-ran.jk test statistic
   LR = (O1 - E1) / sqrt(V1)
   return(LR)
 }
