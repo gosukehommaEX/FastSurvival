@@ -4,8 +4,8 @@
 
 
 <!-- badges: start -->
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/FastSurvival)](http://cran.r-project.org/package=FastSurvival)
 <!-- badges: end -->
-
 
 The goal of FastSurvival is to (1) implement log-rank test, (2) estimate hazard ratio, and (3) generate simulation datasets, much faster.
 
