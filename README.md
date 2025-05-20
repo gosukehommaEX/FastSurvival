@@ -7,26 +7,20 @@
 <!-- badges: end -->
 
 
-The goal of FastSurvival is to ...
+The goal of FastSurvival is to (1) implement log-rank test, (2) estimate hazard ratio, and (3) generate simulation datasets, much faster.
 
 
 ## Installation
 
-
 You can install the development version of FastSurvival from [GitHub](https://github.com/) with:
 
-
 ``` r
-# install.packages("pak")
-pak::pak("gosukehommaEX/FastSurvival")
+# install.packages("devtools")
+devtools::install_github("gosukehommaEX/FastSurvival")
 ```
 
 
-## Example
-
-
-This is a basic example which shows you how to solve a common problem:
-
+## Usage
 
 ``` r
 library(survival)
