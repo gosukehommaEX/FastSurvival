@@ -15,13 +15,13 @@
 #'
 #' @export
 FastLRtest = function(time, event, group, control) {
-  # Convert groups to numeric values 
+  # Convert groups to numeric values
   j = as.numeric(group != control)
   # Convert time to integer values
   time = match(time, sort(unique(time)))
-  # Times occuring events
+  # Times events occurred
   t.k = sort(unique(time[event == 1]))
-  # Set at risk
+  # Define at risk
   n.1k = rev(cumsum(rev(tabulate(time * j))))[t.k]
   n.1k[is.na(n.1k)] = 0
   n.0k = rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
@@ -33,13 +33,13 @@ FastLRtest = function(time, event, group, control) {
   e.0k = tabulate(time * (1 - j) * event)[t.k]
   e.0k[is.na(e.0k)] = 0
   e.jk = e.1k + e.0k
-  # The observed number of events on the group 1 at t.k
+  # The observed number of events for the group 1 at t.k
   O1 = sum(e.1k)
-  # The expected number of events on the group 1 at t.k
+  # The expected number of events for the group 1 at t.k
   E1 = sum(e.jk * (n.1k / n.jk))
   # The variance
   V1 = sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
-  # Log-ran.jk test statistic
+  # Log-rank test statistic
   LR = (O1 - E1) / sqrt(V1)
   return(LR)
 }
