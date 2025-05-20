@@ -1,6 +1,11 @@
-#' Calculate a hazard ratio for a two-arm parallel group trial.
+#' Estimate a hazard ratio for a two-arm parallel group trial.
 #'
-#' This function calculates the hazard ratio by various methods.
+#' This function estimates the hazard ratio by various methods shown below.
+#' (1) pearson-year method (PY)
+#' (2) median survival method (MST)
+#' (3) method proposed by Pike (Pike)
+#' (4) method proposed by Peto (Peto)
+#' (5) log-rank test based method (LR)
 #'
 #' @param time A numeric vector representing the event time.
 #' @param event A numeric vector representing the flag of event for both groups.
