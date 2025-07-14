@@ -14,32 +14,43 @@
 #' FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2)
 #'
 #' @export
-FastLRtest = function(time, event, group, control) {
+FastLRtest <- function(time, event, group, control) {
   # Convert groups to numeric values
-  j = as.numeric(group != control)
+  j <- as.numeric(group != control)
+
   # Convert time to integer values
-  time = match(time, sort(unique(time)))
+  time <- rank(time, ties.method = "min")
+
   # Times events occurred
-  t.k = sort(unique(time[event == 1]))
+  t.k <- sort.int(unique.default(time[event == 1]))
+
+  # Rest of the algorithm remains exactly the same
   # Define at risk
-  n.1k = rev(cumsum(rev(tabulate(time * j))))[t.k]
-  n.1k[is.na(n.1k)] = 0
-  n.0k = rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
-  n.0k[is.na(n.0k)] = 0
-  n.jk = n.1k + n.0k
+  n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]
+  n.1k[is.na(n.1k)] <- 0
+  n.0k <- rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
+  n.0k[is.na(n.0k)] <- 0
+  n.jk <- n.1k + n.0k
+
   # Number of events at t.k
-  e.1k = tabulate(time * j * event)[t.k]
-  e.1k[is.na(e.1k)] = 0
-  e.0k = tabulate(time * (1 - j) * event)[t.k]
-  e.0k[is.na(e.0k)] = 0
-  e.jk = e.1k + e.0k
-  # The observed number of events for the group 1 at t.k
-  O1 = sum(e.1k)
-  # The expected number of events for the group 1 at t.k
-  E1 = sum(e.jk * (n.1k / n.jk))
+  e.1k <- tabulate(time * j * event)[t.k]
+  e.1k[is.na(e.1k)] <- 0
+  e.0k <- tabulate(time * (1 - j) * event)[t.k]
+  e.0k[is.na(e.0k)] <- 0
+  e.jk <- e.1k + e.0k
+
+  # The observed number of events for the group j(=T,C) at t.k
+  O1 <- sum(e.1k)
+  O0 <- sum(e.0k)
+
+  # The expected number of events for the group j at t.k
+  E1 <- sum(e.jk * (n.1k / n.jk))
+  E0 <- sum(e.jk * (n.0k / n.jk))
+
   # The variance
-  V1 = sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
+  V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
+
   # Log-rank test statistic
-  LR = (O1 - E1) / sqrt(V1)
+  LR <- (O1 - E1) / sqrt(V1)
   return(LR)
 }
