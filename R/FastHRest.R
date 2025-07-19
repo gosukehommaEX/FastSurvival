@@ -2,27 +2,29 @@
 #'
 #' This function estimates the hazard ratio by various methods shown below.
 #' (1) pearson-year method (PY)
-#' (2) median survival method (MST)
-#' (3) method proposed by Pike (Pike)
-#' (4) method proposed by Peto (Peto)
-#' (5) log-rank test based method (LR)
+#' (2) method proposed by Pike (Pike)
+#' (3) method proposed by Peto (Peto)
+#' (4) log-rank test based method (LR)
+#' (5) Cox proportional hazards regression (Cox)
 #'
 #' @param time A numeric vector representing the event time.
 #' @param event A numeric vector representing the flag of event for both groups.
 #' @param group A numeric vector representing the group indicator.
 #' @param control A numeric value what value/character represents the control group.
-#' @param method Indicates the method: must be either "PY", "MST", "Pike", "Peto" or "LR".
+#' @param method Indicates the method: must be either "PY", "Pike", "Peto", "LR", or "Cox".
 #'
-#' @return A dataframe includng a method and a hazard ratio.
+#' @return A dataframe including a method and a hazard ratio.
 #'
 #' @examples
 #' library(survival)
-#' FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 1, 'PY')
-#' FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 1, 'MST')
-#' FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 1, 'Pike')
-#' FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 1, 'Peto')
-#' FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 1, 'LR')
+#' # Using veteran dataset (has sufficient events for MST calculation)
+#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'PY')
+#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Pike')
+#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Peto')
+#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'LR')
+#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Cox')
 #'
+#' @importFrom survival coxph
 #' @export
 FastHRest <- function(time, event, group, control, method) {
   # Convert groups to numeric values
@@ -34,9 +36,10 @@ FastHRest <- function(time, event, group, control, method) {
   if(method == 'PY') {
     # PersonyYear method
     HR <- (sum(event * j) / sum(time * j)) / ((sum(event * (1 - j)) / sum(time * (1 - j))))
-  } else if(method == 'MST') {
-    # Median survival method
-    HR <- median(time[j == 0]) / median(time[j == 1])
+  } else if(method == 'Cox') {
+    # Cox proportional hazards regression
+    cox.fit <- coxph(Surv(time, event) ~ j)
+    HR <- exp(coef(cox.fit))
   } else {
     # Times events occurred
     t.k <- sort.int(unique.default(time[event == 1]))
