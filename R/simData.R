@@ -24,7 +24,7 @@
 #'   The length should be one less than the length of d.time.
 #' @param seed A positive integer for random seed setting. Default is NULL (no seed set).
 #'
-#' @return A tibble containing the simulated survival data with the following columns:
+#' @return A data.frame containing the simulated survival data with the following columns:
 #' \describe{
 #'   \item{simID}{Simulation iteration ID (1 to nsim)}
 #'   \item{accrual.time}{Patient accrual time from study start}
@@ -74,7 +74,6 @@
 #'   d.hazard = 0.01
 #' )
 #'
-#' @import dplyr
 #' @export
 simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL, e.time,
                     e.hazard, d.time, d.hazard, seed = NULL) {
@@ -84,15 +83,32 @@ simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
     set.seed(seed)
   }
 
-  # Generate dataset
-  dataset <- tibble(
-    simID = rep(1:nsim, rep(N, nsim)), # Simulation ID
-    accrual.time = rpieceunif(N * nsim, a.time, intensity, proportion), # Accrual time
-    surv.time = rpieceexp(N * nsim, e.time, e.hazard), # Survival time
-    dropout.time = rpieceexp(N * nsim, d.time, d.hazard), # Time to dropout
-    tte = pmin(surv.time, dropout.time), # Time-to-event
-    total = accrual.time + tte, # Total time (accrual + time-to-event)
-    dropout = as.numeric(dropout.time < surv.time) # Dropout indicator
+  # Pre-calculate total sample size
+  total_n <- N * nsim
+
+  # Pre-allocate vectors for better memory efficiency
+  simID <- rep.int(seq_len(nsim), rep.int(N, nsim))
+
+  # Generate all random variates at once (vectorized operations)
+  accrual_time <- rpieceunif(total_n, a.time, intensity, proportion)
+  surv_time <- rpieceexp(total_n, e.time, e.hazard)
+  dropout_time <- rpieceexp(total_n, d.time, d.hazard)
+
+  # Vectorized calculations
+  tte <- pmin.int(surv_time, dropout_time)
+  total_time <- accrual_time + tte
+  dropout_ind <- as.integer(dropout_time < surv_time)
+
+  # Create data.frame for final output
+  dataset <- data.frame(
+    simID = simID,
+    accrual.time = accrual_time,
+    surv.time = surv_time,
+    dropout.time = dropout_time,
+    tte = tte,
+    total = total_time,
+    dropout = dropout_ind,
+    stringsAsFactors = FALSE
   )
 
   # Return the dataset
