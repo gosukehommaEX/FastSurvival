@@ -37,7 +37,7 @@
 #'
 #' @examples
 #' # Basic simulation
-#' data <- simSurvdata(
+#' data <- simData(
 #'   nsim = 1e+3,
 #'   N = 200,
 #'   a.time = c(0, 6, 12, 18, 24),
@@ -52,8 +52,8 @@
 #'
 #' @import dplyr
 #' @export
-simSurvdata <- function(nsim = 1e+3, N, a.time, intensity, proportion = NULL, e.time,
-                        e.hazard, d.time, d.hazard, seed = NULL) {
+simData <- function(nsim = 1e+3, N, a.time, intensity, proportion = NULL, e.time,
+                    e.hazard, d.time, d.hazard, seed = NULL) {
 
   # Set seed number
   set.seed(seed)
