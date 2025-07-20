@@ -1,8 +1,10 @@
-#' Simulate survival data for clinical trials with time-to-event endpoints
+#' Simulate survival data for clinical trials using data.table
 #'
-#' This function generates simulation datasets for clinical trials with time-to-event endpoints.
-#' It accounts for piecewise uniform distribution for patient accrual and piecewise exponential
-#' distributions for patient survival time and dropout time during the trial.
+#' This function generates simulation datasets for clinical trials with time-to-event endpoints
+#' using data.table for efficient data manipulation while maintaining the high-performance
+#' base R functions for random number generation. It accounts for piecewise uniform distribution
+#' for patient accrual and piecewise exponential distributions for patient survival time and
+#' dropout time during the trial.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
 #' @param N A positive integer specifying the total sample size per simulation.
@@ -22,9 +24,9 @@
 #'   The length must be one more than the length of d.hazard. The last element must be Inf.
 #' @param d.hazard A numeric vector of hazard rates for dropout time in each interval.
 #'   The length should be one less than the length of d.time.
-#' @param seed A positive integer for random seed setting. Default is NULL (no seed set).
+#' @param seed A positive integer for random seed setting. Default is NULL.
 #'
-#' @return A data.frame containing the simulated survival data with the following columns:
+#' @return A data.table containing the simulated survival data with the following columns:
 #' \describe{
 #'   \item{simID}{Simulation iteration ID (1 to nsim)}
 #'   \item{accrual.time}{Patient accrual time from study start}
@@ -36,6 +38,8 @@
 #' }
 #'
 #' @examples
+#' library(data.table)
+#'
 #' # Basic simulation with uniform accrual
 #' data1 <- simData(
 #'   nsim = 100,
@@ -74,6 +78,7 @@
 #'   d.hazard = 0.01
 #' )
 #'
+#' @import data.table
 #' @export
 simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL, e.time,
                     e.hazard, d.time, d.hazard, seed = NULL) {
@@ -83,34 +88,44 @@ simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
     set.seed(seed)
   }
 
-  # Pre-calculate total sample size
+  # Input validation
+  if (is.null(intensity) && is.null(proportion)) {
+    stop("Either intensity or proportion must be specified")
+  }
+
+  if (!is.null(intensity) && !is.null(proportion)) {
+    stop("Cannot specify both intensity and proportion arguments")
+  }
+
+  # Pre-calculate total sample size for efficient memory allocation
   total_n <- N * nsim
 
-  # Pre-allocate vectors for better memory efficiency
-  simID <- rep.int(seq_len(nsim), rep.int(N, nsim))
-
-  # Generate all random variates at once (vectorized operations)
-  accrual_time <- rpieceunif(total_n, a.time, intensity, proportion)
-  surv_time <- rpieceexp(total_n, e.time, e.hazard)
-  dropout_time <- rpieceexp(total_n, d.time, d.hazard)
-
-  # Vectorized calculations
-  tte <- pmin.int(surv_time, dropout_time)
-  total_time <- accrual_time + tte
-  dropout_ind <- as.integer(dropout_time < surv_time)
-
-  # Create data.frame for final output
-  dataset <- data.frame(
-    simID = simID,
-    accrual.time = accrual_time,
-    surv.time = surv_time,
-    dropout.time = dropout_time,
-    tte = tte,
-    total = total_time,
-    dropout = dropout_ind,
-    stringsAsFactors = FALSE
+  # Create the main data.table with simID using efficient rep.int
+  dt <- data.table(
+    simID = rep.int(seq_len(nsim), rep.int(N, nsim))
   )
 
-  # Return the dataset
-  return(dataset)
+  # Generate accrual times using high-performance base function
+  dt[, accrual.time := rpieceunif(.N, a.time, intensity, proportion)]
+
+  # Generate survival times using high-performance base function
+  dt[, surv.time := rpieceexp(.N, e.time, e.hazard)]
+
+  # Generate dropout times using high-performance base function
+  dt[, dropout.time := rpieceexp(.N, d.time, d.hazard)]
+
+  # Calculate derived variables using data.table's efficient operations
+  # Use := for reference modification (no copying)
+  dt[, `:=`(
+    tte = pmin(surv.time, dropout.time),
+    dropout = as.integer(dropout.time < surv.time)
+  )]
+
+  # Calculate total time using data.table's efficient column operations
+  dt[, total := accrual.time + tte]
+
+  # Set column order efficiently without copying
+  setcolorder(dt, c("simID", "accrual.time", "surv.time", "dropout.time", "tte", "total", "dropout"))
+
+  return(dt)
 }
