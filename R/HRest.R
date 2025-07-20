@@ -18,15 +18,15 @@
 #' @examples
 #' library(survival)
 #' # Using veteran dataset (has sufficient events for MST calculation)
-#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'PY')
-#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Pike')
-#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Peto')
-#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'LR')
-#' FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Cox')
+#' HRest(veteran$time, veteran$status, veteran$trt, 1, 'PY')
+#' HRest(veteran$time, veteran$status, veteran$trt, 1, 'Pike')
+#' HRest(veteran$time, veteran$status, veteran$trt, 1, 'Peto')
+#' HRest(veteran$time, veteran$status, veteran$trt, 1, 'LR')
+#' HRest(veteran$time, veteran$status, veteran$trt, 1, 'Cox')
 #'
 #' @importFrom survival coxph
 #' @export
-FastHRest <- function(time, event, group, control, method) {
+HRest <- function(time, event, group, control, method) {
   # Convert groups to numeric values
   j <- as.numeric(group != control)
 

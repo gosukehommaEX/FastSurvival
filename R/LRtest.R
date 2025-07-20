@@ -1,20 +1,25 @@
-#' Calculate a one-sided log-rank test statistic for a two-arm parallel group trial.
+#' Calculate log-rank test statistic for a two-arm parallel group trial
 #'
-#' This function calculates the one-sided log-rank test statistic.
+#' This function calculates the log-rank test statistic for comparing survival curves
+#' between two groups. It can return either one-sided or two-sided test statistics.
 #'
 #' @param time A numeric vector representing the event time.
 #' @param event A numeric vector representing the flag of event for both groups.
 #' @param group A numeric vector representing the group indicator.
 #' @param control A numeric value what value/character represents the control group.
+#' @param side A numeric value indicating the type of test: 1 for one-sided, 2 for two-sided.
 #'
-#' @return A numeric value of the one-sided log-rank test statistic.
+#' @return A numeric value of the log-rank test statistic.
 #'
 #' @examples
 #' library(survival)
-#' FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2)
+#' # One-sided test
+#' LRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
+#' # Two-sided test
+#' LRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
 #'
 #' @export
-FastLRtest <- function(time, event, group, control) {
+LRtest <- function(time, event, group, control, side) {
   # Convert groups to numeric values
   j <- as.numeric(group != control)
 
@@ -24,7 +29,6 @@ FastLRtest <- function(time, event, group, control) {
   # Times events occurred
   t.k <- sort.int(unique.default(time[event == 1]))
 
-  # Rest of the algorithm remains exactly the same
   # Define at risk
   n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]
   n.1k[is.na(n.1k)] <- 0
@@ -52,5 +56,11 @@ FastLRtest <- function(time, event, group, control) {
 
   # Log-rank test statistic
   LR <- (O1 - E1) / sqrt(V1)
-  return(LR)
+
+  # Return based on side argument
+  if (side == 1) {
+    return(LR)  # One-sided test statistic
+  } else if (side == 2) {
+    return(LR^2)  # Two-sided test statistic (chi-square)
+  }
 }
