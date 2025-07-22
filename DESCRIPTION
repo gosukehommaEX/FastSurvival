@@ -7,9 +7,12 @@ Authors@R: person(given = "Gosuke",
                   role = c("aut", "cre"),
                   email = "my.name.is.gosuke@gmail.com")
 Description: Provide a (one-sided) log-rank-test statistic and a hazard ratio.
-Functions in this package are faster than those in the 'survival' package.
+    Functions in this package are faster than those in the survival package.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+LinkingTo: Rcpp
+Imports: Rcpp
+SystemRequirements: C++11
