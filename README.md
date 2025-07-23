@@ -12,7 +12,7 @@ The goal of FastSurvival is to provide fast implementations of (1) log-rank test
 - **Multiple Hazard Ratio Estimation Methods**: Support for Person-Year, Pike, Peto, Log-rank based, and Cox regression methods
 - **High-Performance Simulation**: Generate simulation datasets with piecewise exponential and uniform distributions
 - **Clinical Trial Support**: Specialized functions for clinical trial data simulation and analysis
-- **C++ Implementation**: Core functions implemented in C++ for maximum performance
+- **Optimized R Implementation**: Core functions optimized for performance using efficient R programming techniques
 
 ## Installation
 
@@ -159,7 +159,7 @@ FastSurvival provides significant performance improvements over standard R survi
 
 - **Log-rank test**: ~10-15x faster than `survdiff()`
 - **Hazard ratio estimation**: ~5-10x faster than `coxph()` for simple cases
-- **Simulation**: Optimized C++ implementation for large-scale simulations
+- **Simulation**: Optimized R implementation for large-scale simulations
 
 ## Available Functions
 
@@ -173,14 +173,8 @@ FastSurvival provides significant performance improvements over standard R survi
 
 ### Simulation Functions
 - `simData()`: Basic survival data simulation
-- `simDataFast()`: High-performance C++ simulation
 - `simTrial()`: Clinical trial data simulation
 - `analysisData()`: Create analysis datasets from trial simulations
-
-### C++ Functions (Advanced)
-- `rpieceexp_cpp()`: C++ implementation of piecewise exponential RNG
-- `rpieceunif_cpp()`: C++ implementation of piecewise uniform RNG  
-- `simData_cpp()`: C++ implementation of data simulation
 
 ## References
 

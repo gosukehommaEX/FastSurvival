@@ -4,10 +4,6 @@
 importFrom("stats", "runif", "rbinom", "pnorm", "qnorm")
 importFrom("utils", "combn")
 
-# Import from Rcpp
-importFrom(Rcpp, evalCpp)
-useDynLib(FastSurvival, .registration=TRUE)
-
 # Import from data.table
 import(data.table)
 
@@ -20,11 +16,5 @@ export(FastHRest)
 export(rpieceunif)
 export(rpieceexp)
 export(simData)
-export(simDataFast)
 export(simTrial)
 export(analysisData)
-
-# Export C++ functions
-export(rpieceunif_cpp)
-export(rpieceexp_cpp)
-export(simData_cpp)
