@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2025 Yoshihiko Kunisato
+Copyright (c) 2025 Gosuke Homma
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

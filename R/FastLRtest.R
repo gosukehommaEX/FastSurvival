@@ -14,12 +14,12 @@
 #' @examples
 #' library(survival)
 #' # One-sided test
-#' LRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
+#' FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
 #' # Two-sided test
-#' LRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
+#' FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
 #'
 #' @export
-LRtest <- function(time, event, group, control, side) {
+FastLRtest <- function(time, event, group, control, side) {
   # Convert groups to numeric values
   j <- as.numeric(group != control)
 
