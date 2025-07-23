@@ -1,29 +1,31 @@
 #' Simulate survival data for clinical trials using data.table
 #'
-#' This function generates simulation datasets for clinical trials with time-to-event endpoints
-#' using data.table for efficient data manipulation while maintaining the high-performance
-#' base R functions for random number generation. It accounts for piecewise uniform distribution
-#' for patient accrual and piecewise exponential distributions for patient survival time and
-#' dropout time during the trial.
+#' This function generates simulation datasets for clinical trials with time-to-event
+#' endpoints using data.table for efficient data manipulation. It accounts for piecewise
+#' uniform distribution for patient accrual and piecewise exponential distributions for
+#' patient survival time and dropout time during the trial.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
 #' @param N A positive integer specifying the total sample size per simulation.
 #' @param a.time A numeric vector of time points defining the accrual intervals.
 #'   The length must be one more than the length of intensity (when used) or proportion (when used).
+#'   Time points must be in increasing order.
 #' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval.
 #'   The length should be one less than the length of a.time. Cannot be used with proportion.
-#'   Default is NULL.
+#'   All values must be positive. Default is NULL.
 #' @param proportion A numeric vector of accrual proportions for each interval that sum to 1.
 #'   The length should be one less than the length of a.time. Cannot be used with intensity.
-#'   Default is NULL.
+#'   All values must be non-negative and sum to 1. Default is NULL.
 #' @param e.time A numeric vector of time points defining the survival time intervals.
 #'   The length must be one more than the length of e.hazard. The last element must be Inf.
+#'   Time points must be in increasing order.
 #' @param e.hazard A numeric vector of hazard rates for survival time in each interval.
-#'   The length should be one less than the length of e.time.
+#'   The length should be one less than the length of e.time. All values must be positive.
 #' @param d.time A numeric vector of time points defining the dropout time intervals.
 #'   The length must be one more than the length of d.hazard. The last element must be Inf.
+#'   Time points must be in increasing order.
 #' @param d.hazard A numeric vector of hazard rates for dropout time in each interval.
-#'   The length should be one less than the length of d.time.
+#'   The length should be one less than the length of d.time. All values must be positive.
 #' @param seed A positive integer for random seed setting. Default is NULL.
 #'
 #' @return A data.table containing the simulated survival data with the following columns:
@@ -37,46 +39,119 @@
 #'   \item{dropout}{Dropout indicator (1 = dropout occurred, 0 = event occurred)}
 #' }
 #'
+#' @details
+#' This function is designed for single-arm or single-group survival data simulation.
+#' For multi-arm trials, use \code{\link{simTrial}}. The function uses piecewise
+#' distributions to model:
+#'
+#' \describe{
+#'   \item{Patient Accrual}{
+#'     Modeled using piecewise uniform distribution with either intensities or proportions.
+#'     This allows for realistic recruitment patterns that vary over time.
+#'   }
+#'   \item{Survival Times}{
+#'     Modeled using piecewise exponential distribution to accommodate scenarios such as
+#'     delayed treatment effects or changing baseline risks over time.
+#'   }
+#'   \item{Dropout Times}{
+#'     Also modeled using piecewise exponential distribution to account for
+#'     time-varying dropout rates.
+#'   }
+#' }
+#'
+#' The observed time-to-event is the minimum of survival time and dropout time.
+#' The total time from study start combines accrual time and time-to-event.
+#'
 #' @examples
 #' library(data.table)
 #'
-#' # Basic simulation with uniform accrual
+#' # Basic simulation with uniform accrual over 24 months
 #' data1 <- simData(
 #'   nsim = 100,
 #'   N = 200,
 #'   a.time = c(0, 24),
-#'   intensity = 200/24,
+#'   intensity = 200/24,  # Constant rate: 200 patients over 24 months
 #'   e.time = c(0, Inf),
-#'   e.hazard = log(2) / 12,
+#'   e.hazard = log(2) / 12,  # Median survival = 12 months
 #'   d.time = c(0, Inf),
-#'   d.hazard = -log(1 - 0.1) / 12,
+#'   d.hazard = -log(1 - 0.1) / 12,  # 10% dropout rate per year
 #'   seed = 123
 #' )
+#' print(data1[1:10])  # Show first 10 observations
 #'
-#' # Simulation with piecewise uniform accrual and piecewise exponential survival
+#' # Simulation with non-uniform accrual (slow start, ramp up, slow down)
 #' data2 <- simData(
-#'   nsim = 500,
+#'   nsim = 50,
 #'   N = 300,
 #'   a.time = c(0, 6, 12, 18, 24),
-#'   intensity = c(10, 20, 30, 40),
+#'   intensity = c(5, 15, 25, 10),  # Varying recruitment rates
 #'   e.time = c(0, 6, Inf),
-#'   e.hazard = c(0.1, 0.05),
+#'   e.hazard = c(0.1, 0.05),  # Hazard decreases after 6 months (delayed effect)
 #'   d.time = c(0, Inf),
-#'   d.hazard = 0.02,
+#'   d.hazard = 0.02,  # Constant low dropout rate
 #'   seed = 456
 #' )
 #'
+#' # Visualize accrual pattern
+#' accrual_times <- data2[simID == 1, accrual.time]
+#' hist(accrual_times, breaks = 20, main = "Patient Accrual Pattern",
+#'      xlab = "Accrual Time (months)", ylab = "Number of Patients")
+#'
 #' # Simulation using proportions for accrual
 #' data3 <- simData(
-#'   nsim = 1000,
+#'   nsim = 200,
 #'   N = 400,
 #'   a.time = c(0, 12, 24),
-#'   proportion = c(0.3, 0.7),
+#'   proportion = c(0.3, 0.7),  # 30% in first 12 months, 70% in next 12
 #'   e.time = c(0, Inf),
 #'   e.hazard = 0.08,
 #'   d.time = c(0, Inf),
 #'   d.hazard = 0.01
 #' )
+#'
+#' # Calculate summary statistics
+#' summary_stats <- data3[, .(
+#'   median_tte = median(tte),
+#'   dropout_rate = mean(dropout),
+#'   total_events = sum(1 - dropout),
+#'   study_duration = max(total)
+#' ), by = simID]
+#'
+#' print(summary_stats[1:10])
+#'
+#' # Advanced example: Time-varying hazards for complex scenarios
+#' data4 <- simData(
+#'   nsim = 100,
+#'   N = 500,
+#'   a.time = c(0, 18),  # 18-month accrual
+#'   intensity = 500/18,
+#'   e.time = c(0, 3, 12, Inf),  # Multiple change points
+#'   e.hazard = c(0.15, 0.08, 0.05),  # Decreasing hazard (treatment effect)
+#'   d.time = c(0, 6, Inf),
+#'   d.hazard = c(0.08, 0.03),  # Higher early dropout, then lower
+#'   seed = 789
+#' )
+#'
+#' # Analyze survival patterns
+#' library(survival)
+#' surv_data <- data4[simID == 1]
+#' km_fit <- survfit(Surv(tte, 1 - dropout) ~ 1, data = surv_data)
+#' plot(km_fit, main = "Kaplan-Meier Survival Curve (First Simulation)",
+#'      xlab = "Time (months)", ylab = "Survival Probability")
+#'
+#' @seealso
+#' \code{\link{simTrial}} for multi-arm clinical trial simulation,
+#' \code{\link{rpieceexp}} and \code{\link{rpieceunif}} for the underlying distributions,
+#' \code{\link{analysisData}} for creating analysis datasets
+#'
+#' @references
+#' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
+#' Design and monitoring of survival trials in complex scenarios.
+#' Statistics in Medicine, 38(2), 192-209.
+#'
+#' Lachin, J. M., & Foulkes, M. A. (1986). Evaluation of sample size and power
+#' for analyses of survival with allowance for nonuniform patient entry, losses
+#' to follow-up, noncompliance, and stratification. Biometrics, 42(3), 507-519.
 #'
 #' @import data.table
 #' @export
