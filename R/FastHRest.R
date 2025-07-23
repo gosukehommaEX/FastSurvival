@@ -95,6 +95,7 @@
 #' Statistical Society, 34(2), 187-220.
 #'
 #' @importFrom survival coxph Surv
+#' @importFrom stats coef
 #' @export
 FastHRest <- function(time, event, group, control, method) {
   # Input validation
