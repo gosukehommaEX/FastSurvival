@@ -145,134 +145,130 @@ testSummary <- function(data, control = 1, hr_method = "Cox") {
   # Check if subgroup column exists
   has_subgroups <- "subgroup" %in% names(data)
 
-  # Create overall population results
+  # Set key for optimal performance
+  if (has_subgroups) {
+    setkeyv(data, c("simID", "analysis", "subgroup"))
+  } else {
+    setkeyv(data, c("simID", "analysis"))
+  }
+
+  # Pre-compute group indicators for efficiency
+  data[, `:=`(
+    is_control = as.integer(group == control),
+    is_treatment = as.integer(group != control)
+  )]
+
+  # Helper function for log-rank test computation
+  compute_lr_stats <- function(tte_vec, event_vec, group_vec) {
+    if (length(unique(group_vec)) != 2 || sum(event_vec) < 2) {
+      return(list(lr_statistic = NA_real_, lr_pvalue = NA_real_))
+    }
+
+    # Check if both groups have events
+    events_by_group <- tapply(event_vec, group_vec, sum)
+    if (any(events_by_group == 0)) {
+      return(list(lr_statistic = NA_real_, lr_pvalue = NA_real_))
+    }
+
+    tryCatch({
+      lr_stat <- FastLRtest(tte_vec, event_vec, group_vec, control, 2)
+      list(
+        lr_statistic = lr_stat,
+        lr_pvalue = 1 - pchisq(lr_stat, 1)
+      )
+    }, error = function(e) {
+      list(lr_statistic = NA_real_, lr_pvalue = NA_real_)
+    })
+  }
+
+  # Helper function for hazard ratio computation
+  compute_hr <- function(tte_vec, event_vec, group_vec) {
+    if (length(unique(group_vec)) != 2) {
+      return(NA_real_)
+    }
+
+    # Check if both groups have events
+    events_by_group <- tapply(event_vec, group_vec, sum)
+    if (any(events_by_group == 0)) {
+      return(NA_real_)
+    }
+
+    tryCatch({
+      hr_result <- FastHRest(tte_vec, event_vec, group_vec, control, hr_method)
+      hr_result$HR
+    }, error = function(e) {
+      NA_real_
+    })
+  }
+
+  # Overall population analysis using optimized data.table operations
   overall_results <- data[, {
-    # Analysis time (should be the same for all patients in same simID/analysis)
-    analysis_time <- unique(analysis.time)[1]
-
-    # Patient counts by group
-    n_total <- .N
-    n_control <- sum(group == control)
-    n_treatment <- sum(group != control)
-
-    # Event counts by group
-    events_total <- sum(event)
-    events_control <- sum(event[group == control])
-    events_treatment <- sum(event[group != control])
-
-    # Initialize results
-    lr_statistic <- NA_real_
-    lr_pvalue <- NA_real_
-    hazard_ratio <- NA_real_
-
-    # Log-rank test (only if sufficient events in both groups)
-    if (events_control > 0 && events_treatment > 0 &&
-        length(unique(group)) == 2) {
-      tryCatch({
-        lr_stat <- FastLRtest(tte, event, group, control, 2)
-        lr_statistic <- lr_stat
-        lr_pvalue <- 1 - pchisq(lr_stat, 1)
-      }, error = function(e) {
-        # Keep NA values if error occurs
-      })
-    }
-
-    # Hazard ratio estimation (only if sufficient events in both groups)
-    if (events_control > 0 && events_treatment > 0 &&
-        length(unique(group)) == 2) {
-      tryCatch({
-        hr_result <- FastHRest(tte, event, group, control, hr_method)
-        hazard_ratio <- hr_result$HR
-      }, error = function(e) {
-        # Keep NA values if error occurs
-      })
-    }
-
+    # Basic statistics computed in single pass
     list(
       subgroup = "Overall",
-      analysis_time = analysis_time,
-      lr_statistic = lr_statistic,
-      lr_pvalue = lr_pvalue,
-      hazard_ratio = hazard_ratio,
-      hr_method = hr_method,
-      n_total = n_total,
-      n_control = n_control,
-      n_treatment = n_treatment,
-      events_total = events_total,
-      events_control = events_control,
-      events_treatment = events_treatment
+      analysis_time = analysis.time[1L],  # Use first value (should be identical)
+      n_total = .N,
+      n_control = sum(is_control),
+      n_treatment = sum(is_treatment),
+      events_total = sum(event),
+      events_control = sum(event * is_control),
+      events_treatment = sum(event * is_treatment),
+      # Compute statistical tests
+      lr_stats = list(compute_lr_stats(tte, event, group)),
+      hazard_ratio = compute_hr(tte, event, group)
     )
   }, by = .(simID, analysis)]
 
-  # Create subgroup-specific results if subgroups exist
+  # Expand log-rank statistics
+  overall_results[, `:=`(
+    lr_statistic = sapply(lr_stats, function(x) x$lr_statistic),
+    lr_pvalue = sapply(lr_stats, function(x) x$lr_pvalue)
+  )]
+
+  # Remove temporary column
+  overall_results[, lr_stats := NULL]
+
+  # Add hr_method column
+  overall_results[, hr_method := hr_method]
+
   if (has_subgroups) {
+    # Subgroup analysis using optimized data.table operations
     subgroup_results <- data[, {
-      # Analysis time (should be the same for all patients in same simID/analysis/subgroup)
-      analysis_time <- unique(analysis.time)[1]
-
-      # Patient counts by group
-      n_total <- .N
-      n_control <- sum(group == control)
-      n_treatment <- sum(group != control)
-
-      # Event counts by group
-      events_total <- sum(event)
-      events_control <- sum(event[group == control])
-      events_treatment <- sum(event[group != control])
-
-      # Initialize results
-      hazard_ratio <- NA_real_
-
-      # Hazard ratio estimation (only if sufficient events in both groups)
-      if (events_control > 0 && events_treatment > 0 &&
-          length(unique(group)) == 2) {
-        tryCatch({
-          hr_result <- FastHRest(tte, event, group, control, hr_method)
-          hazard_ratio <- hr_result$HR
-        }, error = function(e) {
-          # Keep NA values if error occurs
-        })
-      }
-
       list(
-        analysis_time = analysis_time,
-        lr_statistic = NA_real_,  # Log-rank test only for overall population
-        lr_pvalue = NA_real_,     # Log-rank test only for overall population
-        hazard_ratio = hazard_ratio,
-        hr_method = hr_method,
-        n_total = n_total,
-        n_control = n_control,
-        n_treatment = n_treatment,
-        events_total = events_total,
-        events_control = events_control,
-        events_treatment = events_treatment
+        analysis_time = analysis.time[1L],
+        n_total = .N,
+        n_control = sum(is_control),
+        n_treatment = sum(is_treatment),
+        events_total = sum(event),
+        events_control = sum(event * is_control),
+        events_treatment = sum(event * is_treatment),
+        hazard_ratio = compute_hr(tte, event, group),
+        lr_statistic = NA_real_,  # No log-rank test for subgroups
+        lr_pvalue = NA_real_      # No log-rank test for subgroups
       )
     }, by = .(simID, analysis, subgroup)]
 
-    # Combine overall and subgroup results
+    # Add hr_method column
+    subgroup_results[, hr_method := hr_method]
+
+    # Combine results efficiently
     final_results <- rbindlist(list(overall_results, subgroup_results),
                                use.names = TRUE, fill = TRUE)
   } else {
     final_results <- overall_results
   }
 
-  # Set column order for consistency
-  if (has_subgroups) {
-    col_order <- c("simID", "analysis", "subgroup", "analysis_time",
-                   "lr_statistic", "lr_pvalue", "hazard_ratio", "hr_method",
-                   "n_total", "n_control", "n_treatment",
-                   "events_total", "events_control", "events_treatment")
-  } else {
-    col_order <- c("simID", "analysis", "subgroup", "analysis_time",
-                   "lr_statistic", "lr_pvalue", "hazard_ratio", "hr_method",
-                   "n_total", "n_control", "n_treatment",
-                   "events_total", "events_control", "events_treatment")
-  }
+  # Remove temporary columns from original data
+  data[, `:=`(is_control = NULL, is_treatment = NULL)]
 
-  setcolorder(final_results, col_order)
+  # Set optimal column order
+  setcolorder(final_results, c("simID", "analysis", "subgroup", "analysis_time",
+                               "lr_statistic", "lr_pvalue", "hazard_ratio", "hr_method",
+                               "n_total", "n_control", "n_treatment",
+                               "events_total", "events_control", "events_treatment"))
 
-  # Sort by simID, analysis, and subgroup
-  setorder(final_results, simID, analysis, subgroup)
+  # Sort results for consistency
+  setorderv(final_results, c("simID", "analysis", "subgroup"))
 
   return(final_results)
 }
