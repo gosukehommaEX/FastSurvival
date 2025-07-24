@@ -91,8 +91,8 @@
 #'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
 #'   ),
 #'   e.hazard = list(
-#'     control = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811),
-#'     treatment = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3)
+#'     control = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3),
+#'     treatment = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811)
 #'   ),
 #'   d.time = list(
 #'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
