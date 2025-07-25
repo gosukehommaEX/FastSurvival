@@ -10,20 +10,22 @@
 #' @param N A list where each element corresponds to a group, and if subgroups exist,
 #'   each element is a named vector with subgroup sample sizes. If no subgroups,
 #'   a vector of sample sizes for each group.
-#' @param a.time A list where each element corresponds to a group (and subgroup if applicable),
-#'   containing time points defining the accrual intervals. Time points must be in increasing order.
-#' @param intensity A list where each element corresponds to a group (and subgroup if applicable),
-#'   containing accrual intensities. Cannot be used with proportion. Default is NULL.
-#' @param proportion A list where each element corresponds to a group (and subgroup if applicable),
-#'   containing accrual proportions. Cannot be used with intensity. Default is NULL.
+#' @param a.time A numeric vector of time points defining the accrual intervals.
+#'   Time points must be in increasing order. Applied to all groups.
+#' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval.
+#'   Cannot be used with proportion. Applied to all groups. Default is NULL.
+#' @param proportion A numeric vector of accrual proportions for each interval that sum to 1.
+#'   Cannot be used with intensity. Applied to all groups. Default is NULL.
 #' @param e.time A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing time points defining the survival time intervals. Last element must be Inf.
 #' @param e.hazard A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing hazard rates for survival time. All values must be positive.
 #' @param d.time A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing time points defining the dropout time intervals. Last element must be Inf.
+#'   Can be NULL if no dropout is assumed. Default is NULL.
 #' @param d.hazard A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing hazard rates for dropout time. All values must be positive.
+#'   Can be NULL if no dropout is assumed. Default is NULL.
 #' @param seed A positive integer for random seed setting. Default is NULL.
 #'
 #' @return A data.table containing the simulated clinical trial data with the following columns:
@@ -45,20 +47,21 @@
 #'
 #' \describe{
 #'   \item{Multiple Treatment Groups}{
-#'     Each group can have different accrual patterns, survival distributions,
-#'     and dropout rates.
+#'     Each group can have different survival distributions and dropout rates.
+#'     Accrual patterns are common across all groups.
 #'   }
 #'   \item{Subgroup Analysis}{
 #'     Within each treatment group, subgroups can be defined with distinct
 #'     characteristics (e.g., different biomarker status).
 #'   }
-#'   \item{Flexible Accrual Patterns}{
-#'     Each group/subgroup can have unique recruitment patterns using either
-#'     intensity rates or proportion-based allocation.
+#'   \item{Common Accrual Pattern}{
+#'     All groups share the same recruitment pattern as patients are randomized
+#'     after enrollment.
 #'   }
 #'   \item{Complex Survival Scenarios}{
 #'     Supports delayed treatment effects, time-varying hazards, and different
-#'     dropout patterns across groups.
+#'     dropout patterns across groups. Dropout can be disabled by setting
+#'     d.time and d.hazard to NULL.
 #'   }
 #' }
 #'
@@ -73,14 +76,8 @@
 #' trial1 <- simTrial(
 #'   nsim = 100,
 #'   N = list(group1 = 100, group2 = 100),
-#'   a.time = list(
-#'     group1 = c(0, 24),
-#'     group2 = c(0, 24)
-#'   ),
-#'   intensity = list(
-#'     group1 = 100/24,  # Control group
-#'     group2 = 100/24   # Treatment group
-#'   ),
+#'   a.time = c(0, 24),
+#'   intensity = 200/24,  # Total 200 patients over 24 months
 #'   e.time = list(
 #'     group1 = c(0, Inf),
 #'     group2 = c(0, Inf)
@@ -102,59 +99,12 @@
 #' # Summary of first simulation
 #' print(trial1[simID == 1, .N, by = group])
 #'
-#' # Example 2: Two groups with subgroups (biomarker positive/negative)
+#' # Example 2: Trial without dropout
 #' trial2 <- simTrial(
 #'   nsim = 50,
-#'   N = list(
-#'     group1 = c(A = 50, B = 50),    # Control: 50 biomarker+, 50 biomarker-
-#'     group2 = c(A = 60, B = 40)     # Treatment: 60 biomarker+, 40 biomarker-
-#'   ),
-#'   a.time = list(
-#'     group1 = list(A = c(0, 12), B = c(0, 18)),
-#'     group2 = list(A = c(0, 12), B = c(0, 18))
-#'   ),
-#'   intensity = list(
-#'     group1 = list(A = 50/12, B = 50/18),
-#'     group2 = list(A = 60/12, B = 40/18)
-#'   ),
-#'   e.time = list(
-#'     group1 = list(A = c(0, Inf), B = c(0, Inf)),
-#'     group2 = list(A = c(0, Inf), B = c(0, Inf))
-#'   ),
-#'   e.hazard = list(
-#'     group1 = list(A = 0.08, B = 0.12),    # Control: better prognosis for A
-#'     group2 = list(A = 0.05, B = 0.08)     # Treatment: benefit in both subgroups
-#'   ),
-#'   d.time = list(
-#'     group1 = list(A = c(0, Inf), B = c(0, Inf)),
-#'     group2 = list(A = c(0, Inf), B = c(0, Inf))
-#'   ),
-#'   d.hazard = list(
-#'     group1 = list(A = 0.01, B = 0.015),   # Slightly higher dropout in B
-#'     group2 = list(A = 0.01, B = 0.015)
-#'   )
-#' )
-#'
-#' # Analyze subgroup effects
-#' subgroup_summary <- trial2[simID == 1, .(
-#'   n_patients = .N,
-#'   events = sum(1 - dropout),
-#'   median_tte = median(tte)
-#' ), by = .(group, subgroup)]
-#' print(subgroup_summary)
-#'
-#' # Example 3: Complex trial with delayed treatment effect
-#' trial3 <- simTrial(
-#'   nsim = 100,
 #'   N = list(control = 150, treatment = 150),
-#'   a.time = list(
-#'     control = c(0, 6, 12, 18),
-#'     treatment = c(0, 6, 12, 18)
-#'   ),
-#'   intensity = list(
-#'     control = c(10, 15, 20),     # Varying recruitment rates
-#'     treatment = c(10, 15, 20)
-#'   ),
+#'   a.time = c(0, 6, 12, 18),
+#'   intensity = c(10, 15, 20),     # Varying recruitment rates
 #'   e.time = list(
 #'     control = c(0, Inf),
 #'     treatment = c(0, 6, Inf)     # Treatment effect after 6 months
@@ -163,90 +113,13 @@
 #'     control = 0.1,              # Constant hazard
 #'     treatment = c(0.1, 0.06)    # Reduced hazard after 6 months
 #'   ),
-#'   d.time = list(
-#'     control = c(0, Inf),
-#'     treatment = c(0, Inf)
-#'   ),
-#'   d.hazard = list(
-#'     control = 0.02,
-#'     treatment = 0.02
-#'   ),
+#'   d.time = NULL,               # No dropout
+#'   d.hazard = NULL,
 #'   seed = 789
 #' )
 #'
-#' # Perform log-rank test on first simulation
-#' test_data <- trial3[simID == 1]
-#' lr_result <- FastLRtest(
-#'   time = test_data$tte,
-#'   event = 1 - test_data$dropout,
-#'   group = test_data$group,
-#'   control = 1,
-#'   side = 2
-#' )
-#' cat("Log-rank chi-square statistic:", lr_result, "\n")
-#'
-#' # Visualize survival curves for delayed effect
-#' library(survival)
-#' km_fit <- survfit(Surv(tte, 1 - dropout) ~ group, data = test_data)
-#' plot(km_fit, col = c("red", "blue"),
-#'      main = "Survival Curves with Delayed Treatment Effect",
-#'      xlab = "Time (months)", ylab = "Survival Probability")
-#' legend("topright", c("Control", "Treatment"), col = c("red", "blue"), lty = 1)
-#'
-#' # Example 4: Trial with proportional accrual
-#' trial4 <- simTrial(
-#'   nsim = 200,
-#'   N = list(arm1 = 100, arm2 = 100, arm3 = 100),
-#'   a.time = list(
-#'     arm1 = c(0, 12, 24),
-#'     arm2 = c(0, 12, 24),
-#'     arm3 = c(0, 12, 24)
-#'   ),
-#'   proportion = list(
-#'     arm1 = c(0.4, 0.6),  # 40% in first 12 months, 60% in next 12
-#'     arm2 = c(0.3, 0.7),  # Different pattern for arm 2
-#'     arm3 = c(0.5, 0.5)   # Even split for arm 3
-#'   ),
-#'   e.time = list(
-#'     arm1 = c(0, Inf),
-#'     arm2 = c(0, Inf),
-#'     arm3 = c(0, Inf)
-#'   ),
-#'   e.hazard = list(
-#'     arm1 = 0.12,    # Control
-#'     arm2 = 0.09,    # Low dose
-#'     arm3 = 0.07     # High dose
-#'   ),
-#'   d.time = list(
-#'     arm1 = c(0, Inf),
-#'     arm2 = c(0, Inf),
-#'     arm3 = c(0, Inf)
-#'   ),
-#'   d.hazard = list(
-#'     arm1 = 0.015,
-#'     arm2 = 0.020,   # Slightly higher dropout with treatment
-#'     arm3 = 0.025    # Highest dropout with high dose
-#'   )
-#' )
-#'
-#' # Calculate power across simulations for pairwise comparisons
-#' power_analysis <- trial4[, {
-#'   # Control vs Low dose
-#'   lr1 <- FastLRtest(tte[group %in% c(1,2)],
-#'                     1 - dropout[group %in% c(1,2)],
-#'                     group[group %in% c(1,2)], 1, 2)
-#'   # Control vs High dose
-#'   lr2 <- FastLRtest(tte[group %in% c(1,3)],
-#'                     1 - dropout[group %in% c(1,3)],
-#'                     group[group %in% c(1,3)], 1, 2)
-#'
-#'   list(control_vs_low = lr1 > qchisq(0.95, 1),
-#'        control_vs_high = lr2 > qchisq(0.95, 1))
-#' }, by = simID]
-#'
-#' # Power calculation
-#' cat("Power (Control vs Low dose):", mean(power_analysis$control_vs_low), "\n")
-#' cat("Power (Control vs High dose):", mean(power_analysis$control_vs_high), "\n")
+#' # Check that dropout column is all zeros
+#' print(trial2[simID == 1, .(dropout_rate = mean(dropout))])
 #'
 #' @seealso
 #' \code{\link{simData}} for single-group simulation,
@@ -267,7 +140,7 @@
 #' @import data.table
 #' @export
 simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
-                     e.time, e.hazard, d.time, d.hazard, seed = NULL) {
+                     e.time, e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
 
   # Set seed if provided
   if (!is.null(seed)) {
@@ -283,6 +156,18 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
     stop("Cannot specify both intensity and proportion arguments")
   }
 
+  # Validate dropout parameters
+  if (is.null(d.time) && !is.null(d.hazard)) {
+    stop("If d.time is NULL, d.hazard must also be NULL")
+  }
+
+  if (!is.null(d.time) && is.null(d.hazard)) {
+    stop("If d.hazard is NULL, d.time must also be NULL")
+  }
+
+  # Check if dropout is assumed
+  has_dropout <- !is.null(d.time) && !is.null(d.hazard)
+
   # Determine if subgroups exist
   has_subgroups <- FALSE
   if (is.list(N) && length(N) > 0) {
@@ -293,9 +178,9 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   }
 
   # Create parameter combination table using data.table
-  param_dt <- create_parameter_table(N, a.time, intensity, proportion,
-                                     e.time, e.hazard, d.time, d.hazard,
-                                     has_subgroups)
+  param_dt <- create_parameter_table_modified(N, a.time, intensity, proportion,
+                                              e.time, e.hazard, d.time, d.hazard,
+                                              has_subgroups, has_dropout)
 
   # Generate data for all combinations using data.table operations
   all_data_list <- vector("list", nrow(param_dt))
@@ -347,18 +232,13 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   return(final_data)
 }
 
-# Internal function: Create parameter combination table using data.table
-create_parameter_table <- function(N, a.time, intensity, proportion,
-                                   e.time, e.hazard, d.time, d.hazard,
-                                   has_subgroups) {
+# Internal function: Create parameter combination table using data.table (modified)
+create_parameter_table_modified <- function(N, a.time, intensity, proportion,
+                                            e.time, e.hazard, d.time, d.hazard,
+                                            has_subgroups, has_dropout) {
 
   # Extract combinations into data.table format
   combinations <- extract_combinations_dt(N, has_subgroups)
-
-  # Validate parameter structure
-  param_lists <- list(a.time, e.time, e.hazard, d.time, d.hazard)
-  if (!is.null(intensity)) param_lists <- c(param_lists, list(intensity))
-  if (!is.null(proportion)) param_lists <- c(param_lists, list(proportion))
 
   # Create parameter data.table
   param_dt <- data.table(
@@ -370,24 +250,35 @@ create_parameter_table <- function(N, a.time, intensity, proportion,
   # Add parameter values using data.table operations
   param_dt[, `:=`(
     n_val = extract_parameter_values(N, combination_key, has_subgroups),
-    a_time_val = extract_parameter_values(a.time, combination_key, has_subgroups),
+    a_time_val = list(a.time),  # Common accrual time for all groups
     e_time_val = extract_parameter_values(e.time, combination_key, has_subgroups),
-    e_hazard_val = extract_parameter_values(e.hazard, combination_key, has_subgroups),
-    d_time_val = extract_parameter_values(d.time, combination_key, has_subgroups),
-    d_hazard_val = extract_parameter_values(d.hazard, combination_key, has_subgroups)
+    e_hazard_val = extract_parameter_values(e.hazard, combination_key, has_subgroups)
   )]
 
-  if (!is.null(intensity)) {
-    param_dt[, intensity_val := extract_parameter_values(intensity, combination_key, has_subgroups)]
-    param_dt[, proportion_val := vector("list", nrow(param_dt))]
+  # Handle dropout parameters
+  if (has_dropout) {
+    param_dt[, `:=`(
+      d_time_val = extract_parameter_values(d.time, combination_key, has_subgroups),
+      d_hazard_val = extract_parameter_values(d.hazard, combination_key, has_subgroups)
+    )]
   } else {
-    param_dt[, intensity_val := vector("list", nrow(param_dt))]
+    param_dt[, `:=`(
+      d_time_val = list(NULL),
+      d_hazard_val = list(NULL)
+    )]
   }
 
-  if (!is.null(proportion)) {
-    param_dt[, proportion_val := extract_parameter_values(proportion, combination_key, has_subgroups)]
-  } else if (!"proportion_val" %in% names(param_dt)) {
-    param_dt[, proportion_val := vector("list", nrow(param_dt))]
+  # Handle accrual parameters (common for all groups)
+  if (!is.null(intensity)) {
+    param_dt[, `:=`(
+      intensity_val = list(intensity),  # Common intensity for all groups
+      proportion_val = list(NULL)
+    )]
+  } else {
+    param_dt[, `:=`(
+      intensity_val = list(NULL),
+      proportion_val = list(proportion)  # Common proportion for all groups
+    )]
   }
 
   return(param_dt)

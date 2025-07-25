@@ -57,14 +57,14 @@
 #' # Compare different methods on ovarian cancer data
 #' methods <- c('PY', 'Pike', 'Peto', 'LR', 'Cox')
 #' results <- lapply(methods, function(m) {
-#'   FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, m)
+#'   esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, m)
 #' })
 #' hr_comparison <- do.call(rbind, results)
 #' print(hr_comparison)
 #'
 #' # Using veteran lung cancer data (more events)
 #' veteran_results <- lapply(methods, function(m) {
-#'   FastHRest(veteran$time, veteran$status, veteran$trt, 1, m)
+#'   esthr(veteran$time, veteran$status, veteran$trt, 1, m)
 #' })
 #' veteran_hr <- do.call(rbind, veteran_results)
 #' print(veteran_hr)
@@ -74,15 +74,15 @@
 #' library(microbenchmark)
 #' microbenchmark(
 #'   Cox_standard = coxph(Surv(time, status) ~ trt, data = veteran),
-#'   FastHRest_Cox = FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
-#'   FastHRest_Pike = FastHRest(veteran$time, veteran$status, veteran$trt, 1, 'Pike'),
+#'   esthr_Cox = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
+#'   esthr_Pike = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Pike'),
 #'   times = 100
 #' )
 #' }
 #'
 #' @seealso
 #' \code{\link[survival]{coxph}} for standard Cox regression,
-#' \code{\link{FastLRtest}} for log-rank test statistics
+#' \code{\link{lrtest}} for log-rank test statistics
 #'
 #' @references
 #' Pike, M. C., et al. (1979). Design and analysis of randomized clinical trials
@@ -97,7 +97,7 @@
 #' @importFrom survival coxph Surv
 #' @importFrom stats coef
 #' @export
-FastHRest <- function(time, event, group, control, method) {
+esthr <- function(time, event, group, control, method) {
   # Input validation
   if (length(time) != length(event) || length(time) != length(group)) {
     stop("Arguments 'time', 'event', and 'group' must have the same length")

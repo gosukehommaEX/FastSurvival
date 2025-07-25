@@ -21,7 +21,7 @@
 #' @details
 #' The log-rank test is a non-parametric test used to compare the survival
 #' distributions of two groups. This implementation uses an optimized algorithm
-#' that is significantly faster than the standard \code{\link[survival]{survdiff}}
+#' that is significantly more efficient than the standard \code{\link[survival]{survdiff}}
 #' function while producing equivalent results.
 #'
 #' The function converts event times to ranks to handle tied observations and
@@ -34,41 +34,41 @@
 #' library(survival)
 #'
 #' # One-sided log-rank test
-#' z_stat <- FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
+#' z_stat <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
 #' cat("One-sided Z statistic:", z_stat, "\n")
 #'
 #' # Two-sided log-rank test (chi-square)
-#' chisq_stat <- FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
+#' chisq_stat <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
 #' cat("Chi-square statistic:", chisq_stat, "\n")
 #'
 #' # Compare with survdiff
 #' survdiff_result <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
 #' cat("survdiff chi-square:", survdiff_result$chisq, "\n")
-#' cat("FastLRtest chi-square:", chisq_stat, "\n")
+#' cat("lrtest chi-square:", chisq_stat, "\n")
 #'
 #' # Performance comparison
 #' \dontrun{
 #' library(microbenchmark)
 #' microbenchmark(
 #'   survdiff = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-#'   FastLRtest = FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
+#'   lrtest = lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
 #'   times = 100
 #' )
 #' }
 #'
 #' @seealso
 #' \code{\link[survival]{survdiff}} for the standard implementation,
-#' \code{\link{FastHRest}} for hazard ratio estimation
+#' \code{\link{esthr}} for hazard ratio estimation
 #'
 #' @references
 #' Mantel, N. (1966). Evaluation of survival data and two new rank order statistics
-#' arising in its consideration. Cancer Chemotherapy Reports, 50(3), 163-170.
+#' arising in its consideration. Cancer Chemotherapy Reports, 50(3), 163-270.
 #'
 #' Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test procedures.
 #' Journal of the Royal Statistical Society, 135(2), 185-207.
 #'
 #' @export
-FastLRtest <- function(time, event, group, control, side) {
+lrtest <- function(time, event, group, control, side) {
   # Input validation
   if (length(time) != length(event) || length(time) != length(group)) {
     stop("Arguments 'time', 'event', and 'group' must have the same length")
