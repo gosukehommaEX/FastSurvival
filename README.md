@@ -4,11 +4,11 @@
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/FastSurvival)](http://cran.r-project.org/package=FastSurvival)
 <!-- badges: end -->
 
-The goal of FastSurvival is to provide fast implementations of (1) log-rank test, (2) hazard ratio estimation, and (3) simulation dataset generation for survival analysis.
+The goal of FastSurvival is to provide efficient implementations of (1) log-rank test, (2) hazard ratio estimation, and (3) simulation dataset generation for survival analysis.
 
 ## Features
 
-- **Fast Log-rank Test**: Efficient computation of log-rank test statistics
+- **Log-rank Test**: Efficient computation of log-rank test statistics
 - **Multiple Hazard Ratio Estimation Methods**: Support for Person-Year, Pike, Peto, Log-rank based, and Cox regression methods
 - **High-Performance Simulation**: Generate simulation datasets with piecewise exponential and uniform distributions
 - **Clinical Trial Support**: Specialized functions for clinical trial data simulation and analysis
@@ -36,17 +36,17 @@ library(microbenchmark)
 
 # Compare log-rank test results
 survdiff_result <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
-fastlr_result <- FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
+lrtest_result <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
 
 print(list(
   survdiff_chisq = survdiff_result[['chisq']], 
-  FastLRtest_chisq = fastlr_result
+  lrtest_chisq = lrtest_result
 ))
 
 # Performance comparison
 microbenchmark(
   survdiff_result = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-  FastLRtest_result = FastLRtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
+  lrtest_result = lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
   times = 100
 )
 ```
@@ -67,21 +67,21 @@ coxph_result <- data.frame(
 
 # FastSurvival methods
 methods <- c('PY', 'Pike', 'Peto', 'LR', 'Cox')
-fasthr_results <- lapply(methods, function(method) {
-  FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, method)
+esthr_results <- lapply(methods, function(method) {
+  esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, method)
 })
 
 # Combine results
-all_results <- do.call(rbind, c(list(coxph_result), fasthr_results))
+all_results <- do.call(rbind, c(list(coxph_result), esthr_results))
 print(all_results)
 
 # Performance comparison
 microbenchmark(
   CoxPH = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
-  FastHRest_PY = FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'PY'),
-  FastHRest_Pike = FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Pike'),
-  FastHRest_Peto = FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Peto'),
-  FastHRest_LR = FastHRest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'LR'),
+  esthr_PY = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'PY'),
+  esthr_Pike = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Pike'),
+  esthr_Peto = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Peto'),
+  esthr_LR = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'LR'),
   times = 100
 )
 ```
@@ -121,14 +121,8 @@ library(data.table)
 trial_data <- simTrial(
   nsim = 100,
   N = list(group1 = 100, group2 = 100),
-  a.time = list(
-    group1 = c(0, 24),
-    group2 = c(0, 24)
-  ),
-  intensity = list(
-    group1 = 100/24,
-    group2 = 100/24
-  ),
+  a.time = c(0, 24),
+  intensity = 200/24,
   e.time = list(
     group1 = c(0, Inf),
     group2 = c(0, Inf)
@@ -151,6 +145,24 @@ trial_data <- simTrial(
 analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 
 head(analysis_data)
+
+# Trial without dropout
+trial_data_no_dropout <- simTrial(
+  nsim = 100,
+  N = list(control = 100, treatment = 100),
+  a.time = c(0, 24),
+  intensity = 200/24,
+  e.time = list(
+    control = c(0, Inf),
+    treatment = c(0, Inf)
+  ),
+  e.hazard = list(
+    control = log(2) / 12,
+    treatment = log(2) / 15
+  ),
+  d.time = NULL,  # No dropout
+  d.hazard = NULL
+)
 ```
 
 ## Performance Benefits
@@ -164,8 +176,8 @@ FastSurvival provides significant performance improvements over standard R survi
 ## Available Functions
 
 ### Core Functions
-- `FastLRtest()`: Fast log-rank test calculation
-- `FastHRest()`: Hazard ratio estimation with multiple methods
+- `lrtest()`: Log-rank test calculation
+- `esthr()`: Hazard ratio estimation with multiple methods
 
 ### Distribution Functions  
 - `rpieceexp()`: Random number generation from piecewise exponential distribution
@@ -175,6 +187,11 @@ FastSurvival provides significant performance improvements over standard R survi
 - `simData()`: Basic survival data simulation
 - `simTrial()`: Clinical trial data simulation
 - `analysisData()`: Create analysis datasets from trial simulations
+
+### Analysis Functions
+- `overallSummary()`: Overall population analysis summary
+- `subgroupSummary()`: Subgroup analysis summary
+- `overallResults()`: Adaptive trial stopping probabilities
 
 ## References
 
