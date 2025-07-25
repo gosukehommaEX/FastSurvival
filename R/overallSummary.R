@@ -37,11 +37,11 @@
 #'
 #' \describe{
 #'   \item{Log-rank Test}{
-#'     Performs log-rank test using \code{\link{FastLRtest}} for the overall population
+#'     Performs log-rank test using \code{\link{lrtest}} for the overall population
 #'     at each analysis timepoint. Returns test statistic and p-value based on the side parameter.
 #'   }
 #'   \item{Hazard Ratio Estimation}{
-#'     Calculates hazard ratios using \code{\link{FastHRest}} for the overall population
+#'     Calculates hazard ratios using \code{\link{esthr}} for the overall population
 #'     using the specified method.
 #'   }
 #'   \item{Patient and Event Counts}{
@@ -62,8 +62,8 @@
 #' trial_data <- simTrial(
 #'   nsim = 50,
 #'   N = list(control = 100, treatment = 100),
-#'   a.time = list(control = c(0, 18), treatment = c(0, 18)),
-#'   intensity = list(control = 100/18, treatment = 100/18),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
 #'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
 #'   e.hazard = list(control = 0.08, treatment = 0.05),
 #'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
@@ -82,8 +82,8 @@
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
-#' \code{\link{FastLRtest}} for log-rank test implementation,
-#' \code{\link{FastHRest}} for hazard ratio estimation,
+#' \code{\link{lrtest}} for log-rank test implementation,
+#' \code{\link{esthr}} for hazard ratio estimation,
 #' \code{\link{subgroupSummary}} for subgroup analysis
 #'
 #' @import data.table
@@ -131,7 +131,7 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      lr_stat <- FastLRtest(tte_vec, event_vec, group_vec, control, side)
+      lr_stat <- lrtest(tte_vec, event_vec, group_vec, control, side)
 
       # Calculate p-value based on side parameter
       if (side == 1) {
@@ -162,7 +162,7 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      hr_result <- FastHRest(tte_vec, event_vec, group_vec, control, hr_est_method)
+      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method)
       hr_result$HR
     }, error = function(e) {
       NA_real_

@@ -72,8 +72,8 @@
 #' trial_data <- simTrial(
 #'   nsim = 1000,
 #'   N = list(control = 100, treatment = 100),
-#'   a.time = list(control = c(0, 18), treatment = c(0, 18)),
-#'   intensity = list(control = 100/18, treatment = 100/18),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
 #'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
 #'   e.hazard = list(control = 0.08, treatment = 0.05),
 #'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),

@@ -124,7 +124,7 @@
 #' @seealso
 #' \code{\link{simData}} for single-group simulation,
 #' \code{\link{analysisData}} for creating analysis datasets,
-#' \code{\link{FastLRtest}} and \code{\link{FastHRest}} for statistical analysis
+#' \code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis
 #'
 #' @references
 #' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).

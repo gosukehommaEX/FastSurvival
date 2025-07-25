@@ -58,7 +58,7 @@
 #' }
 #'
 #' The resulting dataset can be used directly with survival analysis functions
-#' like \code{\link{FastLRtest}} and \code{\link{FastHRest}}.
+#' like \code{\link{lrtest}} and \code{\link{esthr}}.
 #'
 #' @examples
 #' library(data.table)
@@ -70,22 +70,8 @@
 #'     control = c(A = 25, B = 112, C = 113),
 #'     treatment = c(A = 25, B = 112, C = 113)
 #'   ),
-#'   a.time = list(
-#'     control = list(A = c(0, 5, 10, 15, 20, 25),
-#'                    B = c(0, 5, 10, 15, 20, 25),
-#'                    C = c(0, 5, 10, 15, 20, 25)),
-#'     treatment = list(A = c(0, 5, 10, 15, 20, 25),
-#'                      B = c(0, 5, 10, 15, 20, 25),
-#'                      C = c(0, 5, 10, 15, 20, 25))
-#'   ),
-#'   intensity = list(
-#'     control = list(A = c(3.5, 14.3, 28.9, 43.6, 45),
-#'                    B = c(3.5, 14.3, 28.9, 43.6, 45),
-#'                    C = c(3.5, 14.3, 28.9, 43.6, 45)),
-#'     treatment = list(A = c(3.5, 14.3, 28.9, 43.6, 45),
-#'                      B = c(3.5, 14.3, 28.9, 43.6, 45),
-#'                      C = c(3.5, 14.3, 28.9, 43.6, 45))
-#'   ),
+#'   a.time = c(0, 5, 10, 15, 20, 25),
+#'   intensity = c(3.5, 14.3, 28.9, 43.6, 45),
 #'   e.time = list(
 #'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
 #'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
@@ -120,7 +106,7 @@
 #'
 #' # Perform log-rank tests at each analysis timepoint
 #' lr_results <- analysis_events[simID == 1, {
-#'   lr_stat <- FastLRtest(tte, event, group, 1, 2)
+#'   lr_stat <- lrtest(tte, event, group, 1, 2)
 #'   p_value <- 1 - pchisq(lr_stat, 1)
 #'   list(lr_statistic = lr_stat, p_value = p_value)
 #' }, by = analysis]
@@ -147,7 +133,7 @@
 #'
 #' subgroup_results <- final_analysis[, {
 #'   if (sum(event) >= 10) {  # Ensure sufficient events
-#'     hr_result <- FastHRest(tte, event, group, 1, "LR")
+#'     hr_result <- esthr(tte, event, group, 1, "LR")
 #'     list(hazard_ratio = hr_result$HR, events = sum(event))
 #'   } else {
 #'     list(hazard_ratio = NA, events = sum(event))
@@ -160,7 +146,7 @@
 #' # Example 4: Power analysis across simulations
 #' # Calculate power for the final analysis (analysis 3)
 #' power_results <- analysis_events[analysis == 3, {
-#'   lr_stat <- FastLRtest(tte, event, group, 1, 2)
+#'   lr_stat <- lrtest(tte, event, group, 1, 2)
 #'   p_value <- 1 - pchisq(lr_stat, 1)
 #'   list(significant = p_value < 0.05, total_events = sum(event))
 #' }, by = simID]
@@ -176,7 +162,7 @@
 #' # Example 5: Adaptive design simulation
 #' # Early stopping for efficacy or futility
 #' adaptive_results <- analysis_events[, {
-#'   lr_stat <- FastLRtest(tte, event, group, 1, 2)
+#'   lr_stat <- lrtest(tte, event, group, 1, 2)
 #'   p_value <- 1 - pchisq(lr_stat, 1)
 #'
 #'   # Simple stopping rules
@@ -205,7 +191,7 @@
 #'
 #' @seealso
 #' \code{\link{simTrial}} for generating the input trial data,
-#' \code{\link{FastLRtest}} and \code{\link{FastHRest}} for statistical analysis,
+#' \code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis,
 #' \code{\link[survival]{Surv}} for creating survival objects
 #'
 #' @references

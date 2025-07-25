@@ -31,7 +31,7 @@
 #'
 #' \describe{
 #'   \item{Hazard Ratio Estimation}{
-#'     Calculates hazard ratios using \code{\link{FastHRest}} for each subgroup
+#'     Calculates hazard ratios using \code{\link{esthr}} for each subgroup
 #'     using the specified method.
 #'   }
 #'   \item{Patient and Event Counts}{
@@ -52,14 +52,8 @@
 #'     control = c(A = 50, B = 50),
 #'     treatment = c(A = 50, B = 50)
 #'   ),
-#'   a.time = list(
-#'     control = list(A = c(0, 18), B = c(0, 18)),
-#'     treatment = list(A = c(0, 18), B = c(0, 18))
-#'   ),
-#'   intensity = list(
-#'     control = list(A = 50/18, B = 50/18),
-#'     treatment = list(A = 50/18, B = 50/18)
-#'   ),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
 #'   e.time = list(
 #'     control = list(A = c(0, Inf), B = c(0, Inf)),
 #'     treatment = list(A = c(0, Inf), B = c(0, Inf))
@@ -79,7 +73,7 @@
 #'   seed = 123
 #' )
 #'
-#' # Create analysis datasets
+#' #' # Create analysis datasets
 #' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate subgroup summary
@@ -90,7 +84,7 @@
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
-#' \code{\link{FastHRest}} for hazard ratio estimation,
+#' \code{\link{esthr}} for hazard ratio estimation,
 #' \code{\link{overallSummary}} for overall population analysis
 #'
 #' @import data.table
@@ -134,7 +128,7 @@ subgroupSummary <- function(data, control = 1, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      hr_result <- FastHRest(tte_vec, event_vec, group_vec, control, hr_est_method)
+      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method)
       hr_result$HR
     }, error = function(e) {
       NA_real_
