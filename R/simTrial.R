@@ -4,18 +4,24 @@
 #' groups and optional subgroups using data.table for maximum performance and memory efficiency.
 #' It extends the functionality of simData to handle complex trial designs with time-to-event
 #' endpoints, accounting for piecewise uniform distribution for patient accrual and piecewise
-#' exponential distributions for patient survival time and dropout time.
+#' exponential distributions for patient survival time and dropout time. The function supports
+#' different accrual periods for different subgroups within treatment groups.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
 #' @param N A list where each element corresponds to a group, and if subgroups exist,
 #'   each element is a named vector with subgroup sample sizes. If no subgroups,
 #'   a vector of sample sizes for each group.
-#' @param a.time A numeric vector of time points defining the accrual intervals.
-#'   Time points must be in increasing order. Applied to all groups.
+#' @param a.time A numeric vector or named list of time points defining the accrual intervals.
+#'   If numeric vector: common accrual periods for all groups/subgroups.
+#'   If named list: subgroup-specific accrual periods allowing for delayed starts
+#'   (e.g., list(A = c(6, 12, 24), B = c(0, 6, 12, 24))).
+#'   Time points must be in increasing order.
 #' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval.
-#'   Cannot be used with proportion. Applied to all groups. Default is NULL.
+#'   Cannot be used with proportion. Applied to all groups when a.time is numeric.
+#'   Default is NULL.
 #' @param proportion A numeric vector of accrual proportions for each interval that sum to 1.
-#'   Cannot be used with intensity. Applied to all groups. Default is NULL.
+#'   Cannot be used with intensity. Applied to all groups when a.time is numeric.
+#'   Default is NULL.
 #' @param e.time A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing time points defining the survival time intervals. Last element must be Inf.
 #' @param e.hazard A list where each element corresponds to a group (and subgroup if applicable),
@@ -26,6 +32,10 @@
 #' @param d.hazard A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing hazard rates for dropout time. All values must be positive.
 #'   Can be NULL if no dropout is assumed. Default is NULL.
+#' @param overall.time A numeric vector of overall study timeline when a.time is a named list with
+#'   different subgroup timings. Required for delayed subgroup scenarios. Default is NULL.
+#' @param overall.intensity A numeric vector of overall intensity targets when a.time is a named list.
+#'   Used for delayed subgroup scenarios to maintain overall recruitment targets. Default is NULL.
 #' @param seed A positive integer for random seed setting. Default is NULL.
 #'
 #' @return A data.table containing the simulated clinical trial data with the following columns:
@@ -48,15 +58,15 @@
 #' \describe{
 #'   \item{Multiple Treatment Groups}{
 #'     Each group can have different survival distributions and dropout rates.
-#'     Accrual patterns are common across all groups.
 #'   }
 #'   \item{Subgroup Analysis}{
 #'     Within each treatment group, subgroups can be defined with distinct
 #'     characteristics (e.g., different biomarker status).
 #'   }
-#'   \item{Common Accrual Pattern}{
-#'     All groups share the same recruitment pattern as patients are randomized
-#'     after enrollment.
+#'   \item{Flexible Accrual Patterns}{
+#'     Common accrual patterns across all groups, or different accrual periods
+#'     for different subgroups to model delayed enrollment scenarios. Subgroup-specific
+#'     timing applies to all treatment groups equally (randomization occurs after enrollment).
 #'   }
 #'   \item{Complex Survival Scenarios}{
 #'     Supports delayed treatment effects, time-varying hazards, and different
@@ -71,55 +81,34 @@
 #' @examples
 #' library(data.table)
 #'
-#' # Example 1: Simple two-group trial without subgroups
-#' set.seed(123)
+#' # Example 1: Standard two-group trial (existing functionality)
 #' trial1 <- simTrial(
 #'   nsim = 100,
-#'   N = list(group1 = 100, group2 = 100),
+#'   N = list(control = 100, treatment = 100),
 #'   a.time = c(0, 24),
-#'   intensity = 200/24,  # Total 200 patients over 24 months
+#'   intensity = 200/24,
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.05),
+#'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   d.hazard = list(control = 0.01, treatment = 0.01)
+#' )
+#'
+#' # Example 2: Trial with delayed subgroup accrual
+#' trial2 <- simTrial(
+#'   nsim = 100,
+#'   N = list(control = c(A = 50, B = 75), treatment = c(A = 50, B = 75)),
+#'   a.time = list(A = c(6, 12, 24), B = c(0, 6, 12, 24)),
+#'   overall.time = c(0, 6, 12, 24),
+#'   overall.intensity = c(10, 15, 20),
 #'   e.time = list(
-#'     group1 = c(0, Inf),
-#'     group2 = c(0, Inf)
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
 #'   ),
 #'   e.hazard = list(
-#'     group1 = log(2) / 12,    # Control: median = 12 months
-#'     group2 = log(2) / 15     # Treatment: median = 15 months
-#'   ),
-#'   d.time = list(
-#'     group1 = c(0, Inf),
-#'     group2 = c(0, Inf)
-#'   ),
-#'   d.hazard = list(
-#'     group1 = -log(1 - 0.1) / 12,  # 10% annual dropout
-#'     group2 = -log(1 - 0.1) / 12   # Same dropout rate
+#'     control = list(A = 0.08, B = 0.08),
+#'     treatment = list(A = 0.05, B = 0.05)
 #'   )
 #' )
-#'
-#' # Summary of first simulation
-#' print(trial1[simID == 1, .N, by = group])
-#'
-#' # Example 2: Trial without dropout
-#' trial2 <- simTrial(
-#'   nsim = 50,
-#'   N = list(control = 150, treatment = 150),
-#'   a.time = c(0, 6, 12, 18),
-#'   intensity = c(10, 15, 20),     # Varying recruitment rates
-#'   e.time = list(
-#'     control = c(0, Inf),
-#'     treatment = c(0, 6, Inf)     # Treatment effect after 6 months
-#'   ),
-#'   e.hazard = list(
-#'     control = 0.1,              # Constant hazard
-#'     treatment = c(0.1, 0.06)    # Reduced hazard after 6 months
-#'   ),
-#'   d.time = NULL,               # No dropout
-#'   d.hazard = NULL,
-#'   seed = 789
-#' )
-#'
-#' # Check that dropout column is all zeros
-#' print(trial2[simID == 1, .(dropout_rate = mean(dropout))])
 #'
 #' @seealso
 #' \code{\link{simData}} for single-group simulation,
@@ -140,7 +129,8 @@
 #' @import data.table
 #' @export
 simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
-                     e.time, e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
+                     e.time, e.hazard, d.time = NULL, d.hazard = NULL,
+                     overall.time = NULL, overall.intensity = NULL, seed = NULL) {
 
   # Set seed if provided
   if (!is.null(seed)) {
@@ -148,8 +138,8 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   }
 
   # Validate input parameters
-  if (is.null(intensity) && is.null(proportion)) {
-    stop("Either intensity or proportion must be specified")
+  if (is.null(intensity) && is.null(proportion) && is.null(overall.intensity)) {
+    stop("Either intensity, proportion, or overall.intensity must be specified")
   }
 
   if (!is.null(intensity) && !is.null(proportion)) {
@@ -168,19 +158,19 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   # Check if dropout is assumed
   has_dropout <- !is.null(d.time) && !is.null(d.hazard)
 
-  # Determine if subgroups exist
-  has_subgroups <- FALSE
-  if (is.list(N) && length(N) > 0) {
-    first_element <- N[[1]]
-    if (is.vector(first_element) && !is.null(names(first_element))) {
-      has_subgroups <- TRUE
-    }
-  }
+  # Detect delayed subgroup scenario
+  delayed_scenario <- detect_delayed_subgroups(a.time, overall.time, overall.intensity)
 
-  # Create parameter combination table using data.table
-  param_dt <- create_parameter_table_modified(N, a.time, intensity, proportion,
-                                              e.time, e.hazard, d.time, d.hazard,
-                                              has_subgroups, has_dropout)
+  if (delayed_scenario$has_delays) {
+    # Handle delayed subgroup accrual
+    param_dt <- create_delayed_parameter_table(N, a.time, overall.time, overall.intensity,
+                                               e.time, e.hazard, d.time, d.hazard, has_dropout)
+  } else {
+    # Use existing logic for uniform timing
+    param_dt <- create_parameter_table_modified(N, a.time, intensity, proportion,
+                                                e.time, e.hazard, d.time, d.hazard,
+                                                delayed_scenario$has_subgroups, has_dropout)
+  }
 
   # Generate data for all combinations using data.table operations
   all_data_list <- vector("list", nrow(param_dt))
@@ -202,13 +192,12 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
     )
 
     # Add group and subgroup information using data.table operations
-    # Ensure group_data is a data.table
     if (!is.data.table(group_data)) {
       group_data <- as.data.table(group_data)
     }
 
     group_data[, group := row$group]
-    if (has_subgroups) {
+    if (delayed_scenario$has_subgroups) {
       group_data[, subgroup := row$subgroup]
     }
 
@@ -219,7 +208,7 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   final_data <- rbindlist(all_data_list, use.names = TRUE, fill = TRUE)
 
   # Set optimal column order using data.table
-  if (has_subgroups) {
+  if (delayed_scenario$has_subgroups) {
     column_order <- c("simID", "group", "subgroup", "accrual.time",
                       "surv.time", "dropout.time", "tte", "total", "dropout")
   } else {
@@ -232,7 +221,259 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   return(final_data)
 }
 
-# Internal function: Create parameter combination table using data.table (modified)
+# Helper function: Detect delayed subgroup scenario
+detect_delayed_subgroups <- function(a.time, overall.time, overall.intensity) {
+
+  # Check if delayed subgroup scenario
+  has_delays <- FALSE
+  has_subgroups <- FALSE
+
+  if (is.list(a.time) && !is.null(overall.time) && !is.null(overall.intensity)) {
+    # Check if a.time is a named list with subgroup timing
+    if (!is.null(names(a.time))) {
+      has_subgroups <- TRUE
+
+      # Check for different start times across subgroups
+      all_start_times <- sapply(a.time, function(x) x[1])
+      has_delays <- length(unique(all_start_times)) > 1
+    }
+  }
+
+  return(list(has_delays = has_delays, has_subgroups = has_subgroups))
+}
+
+# Helper function: Create parameter table for delayed scenarios
+create_delayed_parameter_table <- function(N, a.time, overall.time, overall.intensity,
+                                           e.time, e.hazard, d.time, d.hazard, has_dropout) {
+
+  # Calculate proportion-based allocation
+  allocation_result <- calculate_delayed_allocation(N, a.time, overall.time, overall.intensity)
+
+  # Extract combinations
+  combinations <- extract_combinations_dt(N, allocation_result$has_subgroups)
+
+  # Create parameter data.table
+  param_dt <- data.table(
+    group = combinations$group,
+    subgroup = combinations$subgroup,
+    combination_key = combinations$combination_key
+  )
+
+  # Add parameter values using data.table operations
+  param_dt[, `:=`(
+    n_val = extract_parameter_values(N, combination_key, allocation_result$has_subgroups),
+    a_time_val = extract_subgroup_a_time(a.time, combination_key, allocation_result$has_subgroups),
+    e_time_val = extract_parameter_values(e.time, combination_key, allocation_result$has_subgroups),
+    e_hazard_val = extract_parameter_values(e.hazard, combination_key, allocation_result$has_subgroups)
+  )]
+
+  # Handle dropout parameters
+  if (has_dropout) {
+    param_dt[, `:=`(
+      d_time_val = extract_parameter_values(d.time, combination_key, allocation_result$has_subgroups),
+      d_hazard_val = extract_parameter_values(d.hazard, combination_key, allocation_result$has_subgroups)
+    )]
+  } else {
+    param_dt[, `:=`(
+      d_time_val = list(NULL),
+      d_hazard_val = list(NULL)
+    )]
+  }
+
+  # Add calculated proportions
+  param_dt[, `:=`(
+    intensity_val = list(NULL),
+    proportion_val = extract_subgroup_proportions(allocation_result$subgroup_proportions,
+                                                  combination_key, allocation_result$has_subgroups)
+  )]
+
+  return(param_dt)
+}
+
+# Helper function: Calculate delayed allocation
+calculate_delayed_allocation <- function(N, a.time, overall.time, overall.intensity) {
+
+  # Convert overall intensity to proportions
+  interval_lengths <- diff(overall.time)
+  expected_counts <- overall.intensity * interval_lengths
+  total_expected <- sum(expected_counts)
+  overall_proportions <- expected_counts / total_expected
+
+  # Calculate target allocation per interval
+  total_N <- sum(unlist(N))
+  target_allocation <- overall_proportions * total_N
+
+  # Initialize subgroup allocation - now subgroup-specific only
+  subgroup_allocation <- list()
+  has_subgroups <- TRUE  # Always true for delayed scenario
+
+  # Create allocation structure for each subgroup
+  for (sg_name in names(a.time)) {
+    sg_intervals <- length(a.time[[sg_name]]) - 1
+    subgroup_allocation[[sg_name]] <- numeric(sg_intervals)
+  }
+
+  # Track remaining sample sizes by subgroup across all groups
+  remaining_N_by_subgroup <- list()
+  for (sg_name in names(a.time)) {
+    total_sg_N <- sum(sapply(N, function(group) {
+      if (sg_name %in% names(group)) group[[sg_name]] else 0
+    }))
+    remaining_N_by_subgroup[[sg_name]] <- total_sg_N
+  }
+
+  # Distribute allocation across intervals
+  for (i in 1:length(target_allocation)) {
+    target_for_interval <- target_allocation[i]
+
+    # Find active subgroups and calculate remaining needs
+    active_info <- get_active_subgroups_info_simplified(i, a.time, overall.time, remaining_N_by_subgroup)
+
+    if (active_info$total_remaining <= 0) next
+
+    # Allocate based on remaining needs
+    if (active_info$total_remaining <= target_for_interval) {
+      # Satisfy all remaining needs
+      for (j in 1:length(active_info$active_keys)) {
+        key_info <- active_info$active_keys[[j]]
+        allocation_amount <- key_info$remaining
+
+        subgroup_allocation[[key_info$subgroup]][key_info$interval_idx] <- allocation_amount
+        remaining_N_by_subgroup[[key_info$subgroup]] <- 0
+      }
+    } else {
+      # Proportional allocation
+      for (j in 1:length(active_info$active_keys)) {
+        key_info <- active_info$active_keys[[j]]
+        proportion <- key_info$remaining / active_info$total_remaining
+        allocation_amount <- target_for_interval * proportion
+
+        subgroup_allocation[[key_info$subgroup]][key_info$interval_idx] <- allocation_amount
+        remaining_N_by_subgroup[[key_info$subgroup]] <- remaining_N_by_subgroup[[key_info$subgroup]] - allocation_amount
+      }
+    }
+  }
+
+  # Convert to proportions
+  subgroup_proportions <- convert_allocation_to_proportions_simplified(subgroup_allocation)
+
+  return(list(
+    subgroup_proportions = subgroup_proportions,
+    has_subgroups = has_subgroups
+  ))
+}
+
+# Helper function: Get active subgroups info for an interval (simplified for subgroup-only timing)
+get_active_subgroups_info_simplified <- function(interval_idx, a.time, overall.time, remaining_N_by_subgroup) {
+
+  interval_start <- overall.time[interval_idx]
+  interval_end <- overall.time[interval_idx + 1]
+
+  active_keys <- list()
+  total_remaining <- 0
+
+  for (sg_name in names(a.time)) {
+    sg_times <- a.time[[sg_name]]
+    sg_interval_idx <- find_overlapping_interval(interval_start, interval_end, sg_times)
+
+    if (!is.na(sg_interval_idx)) {
+      remaining <- remaining_N_by_subgroup[[sg_name]]
+      if (remaining > 0) {
+        active_keys <- append(active_keys, list(list(
+          subgroup = sg_name,
+          interval_idx = sg_interval_idx,
+          remaining = remaining
+        )), after = length(active_keys))
+        total_remaining <- total_remaining + remaining
+      }
+    }
+  }
+
+  return(list(active_keys = active_keys, total_remaining = total_remaining))
+}
+
+# Helper function: Find overlapping interval index
+find_overlapping_interval <- function(interval_start, interval_end, sg_times) {
+  for (j in 1:(length(sg_times) - 1)) {
+    sg_start <- sg_times[j]
+    sg_end <- sg_times[j + 1]
+
+    if (sg_start < interval_end && sg_end > interval_start) {
+      return(j)
+    }
+  }
+  return(NA)
+}
+
+# Helper function: Convert allocation to proportions (simplified for subgroup-only)
+convert_allocation_to_proportions_simplified <- function(subgroup_allocation) {
+
+  subgroup_proportions <- list()
+
+  for (sg_name in names(subgroup_allocation)) {
+    allocations <- subgroup_allocation[[sg_name]]
+    total_allocated <- sum(allocations)
+    if (total_allocated > 0) {
+      subgroup_proportions[[sg_name]] <- allocations / total_allocated
+    } else {
+      subgroup_proportions[[sg_name]] <- allocations
+    }
+  }
+
+  return(subgroup_proportions)
+}
+
+# Helper function: Extract subgroup-specific a.time
+extract_subgroup_a_time <- function(a.time, combination_keys, has_subgroups) {
+
+  result <- vector("list", length(combination_keys))
+
+  for (i in seq_along(combination_keys)) {
+    key <- combination_keys[i]
+
+    if (has_subgroups) {
+      # Parse subgroup from combination key
+      parts <- strsplit(key, "_")[[1]]
+      subgroup_name <- parts[2]
+
+      # For delayed scenario, a.time is subgroup-specific
+      result[[i]] <- a.time[[subgroup_name]]
+    } else {
+      # This shouldn't happen in delayed scenario, but keep for safety
+      result[[i]] <- a.time
+    }
+  }
+
+  return(result)
+}
+# Helper function: Extract subgroup proportions (simplified for subgroup-only)
+extract_subgroup_proportions <- function(subgroup_proportions, combination_keys, has_subgroups) {
+
+  result <- vector("list", length(combination_keys))
+
+  for (i in seq_along(combination_keys)) {
+    key <- combination_keys[i]
+
+    if (has_subgroups) {
+      # Parse subgroup from combination key
+      parts <- strsplit(key, "_")[[1]]
+      subgroup_name <- parts[2]
+
+      result[[i]] <- subgroup_proportions[[subgroup_name]]
+    } else {
+      # This shouldn't happen in delayed scenario, but keep for safety
+      group_idx <- as.integer(gsub("group", "", key))
+      group_names <- names(subgroup_proportions)
+      group_name <- group_names[group_idx]
+
+      result[[i]] <- subgroup_proportions[[group_name]]
+    }
+  }
+
+  return(result)
+}
+
+# Reuse existing helper functions from original simTrial with modifications
 create_parameter_table_modified <- function(N, a.time, intensity, proportion,
                                             e.time, e.hazard, d.time, d.hazard,
                                             has_subgroups, has_dropout) {
