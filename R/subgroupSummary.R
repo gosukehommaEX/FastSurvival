@@ -73,7 +73,7 @@
 #'   seed = 123
 #' )
 #'
-#' #' # Create analysis datasets
+#' # Create analysis datasets
 #' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate subgroup summary
@@ -81,6 +81,30 @@
 #'
 #' # View results for first simulation, first analysis
 #' print(subgroup_results[simID == 1 & analysis == 1])
+#'
+#' # Example with no dropout
+#' trial_data_no_dropout <- simTrial(
+#'   nsim = 50,
+#'   N = list(
+#'     control = c(A = 50, B = 50),
+#'     treatment = c(A = 50, B = 50)
+#'   ),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
+#'   ),
+#'   e.hazard = list(
+#'     control = list(A = 0.08, B = 0.12),
+#'     treatment = list(A = 0.05, B = 0.08)
+#'   ),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
+#' analysis_data_no_dropout <- analysisData(trial_data_no_dropout, E = c(50, 100, 150))
+#' subgroup_results_no_dropout <- subgroupSummary(analysis_data_no_dropout, control = 1)
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,

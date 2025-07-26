@@ -12,8 +12,8 @@ simTrial(
   proportion = NULL,
   e.time,
   e.hazard,
-  d.time,
-  d.hazard,
+  d.time = NULL,
+  d.hazard = NULL,
   seed = NULL
 )
 }
@@ -24,14 +24,14 @@ simTrial(
 each element is a named vector with subgroup sample sizes. If no subgroups,
 a vector of sample sizes for each group.}
 
-\item{a.time}{A list where each element corresponds to a group (and subgroup if applicable),
-containing time points defining the accrual intervals. Time points must be in increasing order.}
+\item{a.time}{A numeric vector of time points defining the accrual intervals.
+Time points must be in increasing order.}
 
-\item{intensity}{A list where each element corresponds to a group (and subgroup if applicable),
-containing accrual intensities. Cannot be used with proportion. Default is NULL.}
+\item{intensity}{A numeric vector of accrual intensities (rate per time unit) for each interval.
+Cannot be used with proportion. Default is NULL.}
 
-\item{proportion}{A list where each element corresponds to a group (and subgroup if applicable),
-containing accrual proportions. Cannot be used with intensity. Default is NULL.}
+\item{proportion}{A numeric vector of accrual proportions for each interval that sum to 1.
+Cannot be used with intensity. Default is NULL.}
 
 \item{e.time}{A list where each element corresponds to a group (and subgroup if applicable),
 containing time points defining the survival time intervals. Last element must be Inf.}
@@ -40,10 +40,12 @@ containing time points defining the survival time intervals. Last element must b
 containing hazard rates for survival time. All values must be positive.}
 
 \item{d.time}{A list where each element corresponds to a group (and subgroup if applicable),
-containing time points defining the dropout time intervals. Last element must be Inf.}
+containing time points defining the dropout time intervals. Last element must be Inf.
+Can be NULL if no dropout is assumed. Default is NULL.}
 
 \item{d.hazard}{A list where each element corresponds to a group (and subgroup if applicable),
-containing hazard rates for dropout time. All values must be positive.}
+containing hazard rates for dropout time. All values must be positive.
+Can be NULL if no dropout is assumed. Default is NULL.}
 
 \item{seed}{A positive integer for random seed setting. Default is NULL.}
 }
@@ -74,20 +76,19 @@ package. It supports:
 
 \describe{
 \item{Multiple Treatment Groups}{
-Each group can have different accrual patterns, survival distributions,
-and dropout rates.
+Each group can have different survival distributions and dropout rates.
 }
 \item{Subgroup Analysis}{
 Within each treatment group, subgroups can be defined with distinct
 characteristics (e.g., different biomarker status).
 }
 \item{Flexible Accrual Patterns}{
-Each group/subgroup can have unique recruitment patterns using either
-intensity rates or proportion-based allocation.
+Common accrual patterns across all groups/subgroups.
 }
 \item{Complex Survival Scenarios}{
 Supports delayed treatment effects, time-varying hazards, and different
-dropout patterns across groups.
+dropout patterns across groups. Dropout can be disabled by setting
+d.time and d.hazard to NULL.
 }
 }
 
@@ -97,115 +98,61 @@ maximum flexibility while maintaining computational efficiency.
 \examples{
 library(data.table)
 
-# Example 1: Simple two-group trial without subgroups
-set.seed(123)
+# Example 1: Standard two-group trial without subgroups
 trial1 <- simTrial(
   nsim = 100,
-  N = list(group1 = 100, group2 = 100),
-  a.time = list(
-    group1 = c(0, 24),
-    group2 = c(0, 24)
-  ),
-  intensity = list(
-    group1 = 100/24,  # Control group
-    group2 = 100/24   # Treatment group
-  ),
-  e.time = list(
-    group1 = c(0, Inf),
-    group2 = c(0, Inf)
-  ),
-  e.hazard = list(
-    group1 = log(2) / 12,    # Control: median = 12 months
-    group2 = log(2) / 15     # Treatment: median = 15 months
-  ),
-  d.time = list(
-    group1 = c(0, Inf),
-    group2 = c(0, Inf)
-  ),
-  d.hazard = list(
-    group1 = -log(1 - 0.1) / 12,  # 10\% annual dropout
-    group2 = -log(1 - 0.1) / 12   # Same dropout rate
-  )
+  N = list(control = 100, treatment = 100),
+  a.time = c(0, 24),
+  intensity = 200/24,
+  e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+  e.hazard = list(control = 0.08, treatment = 0.05),
+  d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+  d.hazard = list(control = 0.01, treatment = 0.01)
 )
 
-# Summary of first simulation
-print(trial1[simID == 1, .N, by = group])
-
-# Example 2: Two groups with subgroups (biomarker positive/negative)
+# Example 2: Trial with subgroups and common accrual
 trial2 <- simTrial(
-  nsim = 50,
+  nsim = 100,
   N = list(
-    group1 = c(A = 50, B = 50),    # Control: 50 biomarker+, 50 biomarker-
-    group2 = c(A = 60, B = 40)     # Treatment: 60 biomarker+, 40 biomarker-
+    control = c(A = 25, B = 112, C = 113),
+    treatment = c(A = 25, B = 112, C = 113)
   ),
-  a.time = list(
-    group1 = list(A = c(0, 12), B = c(0, 18)),
-    group2 = list(A = c(0, 12), B = c(0, 18))
-  ),
-  intensity = list(
-    group1 = list(A = 50/12, B = 50/18),
-    group2 = list(A = 60/12, B = 40/18)
-  ),
+  a.time = c(0, 5, 10, 15, 20, 25),
+  intensity = c(3.5, 14.3, 28.9, 43.6, 45),
   e.time = list(
-    group1 = list(A = c(0, Inf), B = c(0, Inf)),
-    group2 = list(A = c(0, Inf), B = c(0, Inf))
+    control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
+    treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
   ),
   e.hazard = list(
-    group1 = list(A = 0.08, B = 0.12),    # Control: better prognosis for A
-    group2 = list(A = 0.05, B = 0.08)     # Treatment: benefit in both subgroups
+    control = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811),
+    treatment = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3)
   ),
   d.time = list(
-    group1 = list(A = c(0, Inf), B = c(0, Inf)),
-    group2 = list(A = c(0, Inf), B = c(0, Inf))
+    control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
+    treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
   ),
   d.hazard = list(
-    group1 = list(A = 0.01, B = 0.015),   # Slightly higher dropout in B
-    group2 = list(A = 0.01, B = 0.015)
-  )
+    control = list(A = 0.01, B = 0.01, C = 0.01),
+    treatment = list(A = 0.01, B = 0.01, C = 0.01)
+  ),
+  seed = 1
 )
 
-# Analyze subgroup effects
-subgroup_summary <- trial2[simID == 1, .(
-  n_patients = .N,
-  events = sum(1 - dropout),
-  median_tte = median(tte)
-), by = .(group, subgroup)]
-print(subgroup_summary)
-
-# Example 3: Complex trial with delayed treatment effect
+# Example 3: Trial without dropout
 trial3 <- simTrial(
   nsim = 100,
-  N = list(control = 150, treatment = 150),
-  a.time = list(
-    control = c(0, 6, 12, 18),
-    treatment = c(0, 6, 12, 18)
-  ),
-  intensity = list(
-    control = c(10, 15, 20),     # Varying recruitment rates
-    treatment = c(10, 15, 20)
-  ),
-  e.time = list(
-    control = c(0, Inf),
-    treatment = c(0, 6, Inf)     # Treatment effect after 6 months
-  ),
-  e.hazard = list(
-    control = 0.1,              # Constant hazard
-    treatment = c(0.1, 0.06)    # Reduced hazard after 6 months
-  ),
-  d.time = list(
-    control = c(0, Inf),
-    treatment = c(0, Inf)
-  ),
-  d.hazard = list(
-    control = 0.02,
-    treatment = 0.02
-  ),
-  seed = 789
+  N = list(control = 100, treatment = 100),
+  a.time = c(0, 18),
+  intensity = 200/18,
+  e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+  e.hazard = list(control = 0.08, treatment = 0.05),
+  d.time = NULL,  # No dropout
+  d.hazard = NULL
 )
 
 # Perform log-rank test on first simulation
 test_data <- trial3[simID == 1]
-lr_result <- FastLRtest(
+lr_result <- lrtest(
   time = test_data$tte,
   event = 1 - test_data$dropout,
   group = test_data$group,
@@ -213,69 +160,6 @@ lr_result <- FastLRtest(
   side = 2
 )
 cat("Log-rank chi-square statistic:", lr_result, "\n")
-
-# Visualize survival curves for delayed effect
-library(survival)
-km_fit <- survfit(Surv(tte, 1 - dropout) ~ group, data = test_data)
-plot(km_fit, col = c("red", "blue"),
-     main = "Survival Curves with Delayed Treatment Effect",
-     xlab = "Time (months)", ylab = "Survival Probability")
-legend("topright", c("Control", "Treatment"), col = c("red", "blue"), lty = 1)
-
-# Example 4: Trial with proportional accrual
-trial4 <- simTrial(
-  nsim = 200,
-  N = list(arm1 = 100, arm2 = 100, arm3 = 100),
-  a.time = list(
-    arm1 = c(0, 12, 24),
-    arm2 = c(0, 12, 24),
-    arm3 = c(0, 12, 24)
-  ),
-  proportion = list(
-    arm1 = c(0.4, 0.6),  # 40\% in first 12 months, 60\% in next 12
-    arm2 = c(0.3, 0.7),  # Different pattern for arm 2
-    arm3 = c(0.5, 0.5)   # Even split for arm 3
-  ),
-  e.time = list(
-    arm1 = c(0, Inf),
-    arm2 = c(0, Inf),
-    arm3 = c(0, Inf)
-  ),
-  e.hazard = list(
-    arm1 = 0.12,    # Control
-    arm2 = 0.09,    # Low dose
-    arm3 = 0.07     # High dose
-  ),
-  d.time = list(
-    arm1 = c(0, Inf),
-    arm2 = c(0, Inf),
-    arm3 = c(0, Inf)
-  ),
-  d.hazard = list(
-    arm1 = 0.015,
-    arm2 = 0.020,   # Slightly higher dropout with treatment
-    arm3 = 0.025    # Highest dropout with high dose
-  )
-)
-
-# Calculate power across simulations for pairwise comparisons
-power_analysis <- trial4[, {
-  # Control vs Low dose
-  lr1 <- FastLRtest(tte[group \%in\% c(1,2)],
-                    1 - dropout[group \%in\% c(1,2)],
-                    group[group \%in\% c(1,2)], 1, 2)
-  # Control vs High dose
-  lr2 <- FastLRtest(tte[group \%in\% c(1,3)],
-                    1 - dropout[group \%in\% c(1,3)],
-                    group[group \%in\% c(1,3)], 1, 2)
-
-  list(control_vs_low = lr1 > qchisq(0.95, 1),
-       control_vs_high = lr2 > qchisq(0.95, 1))
-}, by = simID]
-
-# Power calculation
-cat("Power (Control vs Low dose):", mean(power_analysis$control_vs_low), "\n")
-cat("Power (Control vs High dose):", mean(power_analysis$control_vs_high), "\n")
 
 }
 \references{
@@ -292,5 +176,5 @@ Statistical Monitoring of Clinical Trials: A Unified Approach. Springer.
 \seealso{
 \code{\link{simData}} for single-group simulation,
 \code{\link{analysisData}} for creating analysis datasets,
-\code{\link{FastLRtest}} and \code{\link{FastHRest}} for statistical analysis
+\code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis
 }
