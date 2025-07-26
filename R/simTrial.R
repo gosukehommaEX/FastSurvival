@@ -10,12 +10,13 @@
 #' @param N A list where each element corresponds to a group, and if subgroups exist,
 #'   each element is a named vector with subgroup sample sizes. If no subgroups,
 #'   a vector of sample sizes for each group.
-#' @param a.time A numeric vector of time points defining the accrual intervals.
-#'   Time points must be in increasing order.
-#' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval.
-#'   Cannot be used with proportion. Default is NULL.
-#' @param proportion A numeric vector of accrual proportions for each interval that sum to 1.
-#'   Cannot be used with intensity. Default is NULL.
+#' @param a.time A numeric vector of time points defining the accrual intervals for common accrual,
+#'   OR a named list where each element corresponds to a subgroup with time points defining
+#'   the accrual intervals. Time points must be in increasing order.
+#' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval
+#'   when using common accrual. Cannot be used with proportion or when a.time is a list. Default is NULL.
+#' @param proportion A numeric vector of accrual proportions for each interval that sum to 1
+#'   when using common accrual. Cannot be used with intensity or when a.time is a list. Default is NULL.
 #' @param e.time A list where each element corresponds to a group (and subgroup if applicable),
 #'   containing time points defining the survival time intervals. Last element must be Inf.
 #' @param e.hazard A list where each element corresponds to a group (and subgroup if applicable),
@@ -58,7 +59,8 @@
 #'     characteristics (e.g., different biomarker status).
 #'   }
 #'   \item{Flexible Accrual Patterns}{
-#'     Common accrual patterns across all groups/subgroups.
+#'     Common accrual patterns across all groups/subgroups, OR subgroup-specific
+#'     accrual patterns with delayed starts.
 #'   }
 #'   \item{Complex Survival Scenarios}{
 #'     Supports delayed treatment effects, time-varying hazards, and different
@@ -125,10 +127,29 @@
 #'   d.hazard = NULL
 #' )
 #'
+#' # Example 4: Trial with delayed subgroup accrual
+#' trial4 <- simTrial(
+#'   nsim = 100,
+#'   N = list(control = c(A = 50, B = 75), treatment = c(A = 50, B = 75)),
+#'   a.time = list(A = c(6, 12, 24), B = c(0, 6, 12, 24)),  # Delayed start for A
+#'   overall.time = c(0, 6, 12, 24),
+#'   overall.intensity = c(10, 15, 20),
+#'   e.time = list(
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
+#'   ),
+#'   e.hazard = list(
+#'     control = list(A = 0.08, B = 0.08),
+#'     treatment = list(A = 0.05, B = 0.05)
+#'   ),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
 #' @seealso
 #' \code{\link{simData}} for single-group simulation,
 #' \code{\link{analysisData}} for creating analysis datasets,
-#' \code{\link{FastLRtest}} and \code{\link{FastHRest}} for statistical analysis
+#' \code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis
 #'
 #' @references
 #' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
@@ -152,7 +173,7 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
     set.seed(seed)
   }
 
-  # Validate input parameters
+  # Input validation
   if (is.null(intensity) && is.null(proportion) && is.null(overall.intensity)) {
     stop("Either intensity, proportion, or overall.intensity must be specified")
   }
@@ -176,15 +197,19 @@ simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL
   # Check if we have subgroups in N parameter structure
   has_subgroups <- check_subgroup_structure(N)
 
-  # For delayed subgroup scenarios (future enhancement)
-  if (is.list(a.time) && !is.null(overall.time) && !is.null(overall.intensity)) {
-    stop("Delayed subgroup accrual functionality is not yet implemented. Use common a.time for all groups.")
-  }
+  # Determine accrual scenario
+  is_delayed_subgroup <- is.list(a.time) && !is.null(overall.time) && !is.null(overall.intensity)
 
-  # Create parameter table
-  param_dt <- create_parameter_table_standard(N, a.time, intensity, proportion,
-                                              e.time, e.hazard, d.time, d.hazard,
-                                              has_subgroups, has_dropout)
+  # Create parameter table based on scenario
+  if (is_delayed_subgroup) {
+    param_dt <- create_parameter_table_delayed(N, a.time, overall.time, overall.intensity,
+                                               e.time, e.hazard, d.time, d.hazard,
+                                               has_subgroups, has_dropout)
+  } else {
+    param_dt <- create_parameter_table_standard(N, a.time, intensity, proportion,
+                                                e.time, e.hazard, d.time, d.hazard,
+                                                has_subgroups, has_dropout)
+  }
 
   # Generate data for all combinations using data.table operations
   all_data_list <- vector("list", nrow(param_dt))
@@ -318,6 +343,57 @@ create_parameter_table_standard <- function(N, a.time, intensity, proportion,
   return(param_dt)
 }
 
+# Helper function: Create parameter table for delayed subgroup scenarios
+create_parameter_table_delayed <- function(N, a.time, overall.time, overall.intensity,
+                                           e.time, e.hazard, d.time, d.hazard,
+                                           has_subgroups, has_dropout) {
+
+  # Extract combinations into data.table format
+  combinations <- extract_combinations_standard(N, has_subgroups)
+
+  # Create parameter data.table
+  param_dt <- data.table(
+    group = combinations$group,
+    subgroup = combinations$subgroup,
+    combination_key = combinations$combination_key
+  )
+
+  # Add parameter values using data.table operations
+  param_dt[, `:=`(
+    n_val = extract_parameter_values_standard(N, combination_key, has_subgroups),
+    a_time_val = extract_parameter_values_delayed(a.time, combination_key, has_subgroups),
+    e_time_val = extract_parameter_values_standard(e.time, combination_key, has_subgroups),
+    e_hazard_val = extract_parameter_values_standard(e.hazard, combination_key, has_subgroups)
+  )]
+
+  # Handle dropout parameters
+  if (has_dropout) {
+    param_dt[, `:=`(
+      d_time_val = extract_parameter_values_standard(d.time, combination_key, has_subgroups),
+      d_hazard_val = extract_parameter_values_standard(d.hazard, combination_key, has_subgroups)
+    )]
+  } else {
+    param_dt[, `:=`(
+      d_time_val = list(NULL),
+      d_hazard_val = list(NULL)
+    )]
+  }
+
+  # Calculate proportions for delayed subgroup accrual
+  proportions_dt <- calculate_delayed_proportions(N, a.time, overall.time, overall.intensity, has_subgroups)
+
+  # Merge proportions back to main parameter table
+  param_dt <- param_dt[proportions_dt, on = "combination_key"]
+
+  # Set accrual parameters
+  param_dt[, `:=`(
+    intensity_val = list(NULL),
+    proportion_val = proportion_val
+  )]
+
+  return(param_dt)
+}
+
 # Helper function: Extract group and subgroup combinations
 extract_combinations_standard <- function(param_list, has_subgroups) {
 
@@ -409,4 +485,83 @@ extract_parameter_values_standard <- function(param_list, combination_keys, has_
   }
 
   return(result)
+}
+
+# Helper function: Extract parameter values for delayed scenarios
+extract_parameter_values_delayed <- function(a.time, combination_keys, has_subgroups) {
+
+  result <- vector("list", length(combination_keys))
+
+  for (i in seq_along(combination_keys)) {
+    key <- combination_keys[i]
+
+    if (has_subgroups && grepl("_", key)) {
+      # Parse subgroup from key
+      parts <- strsplit(key, "_")[[1]]
+      subgroup_name <- parts[2]
+
+      if (subgroup_name %in% names(a.time)) {
+        result[[i]] <- a.time[[subgroup_name]]
+      } else {
+        result[[i]] <- NA
+      }
+    } else {
+      # Handle case without subgroups - use first element
+      result[[i]] <- a.time[[1]]
+    }
+  }
+
+  return(result)
+}
+
+# Helper function: Calculate proportions for delayed subgroup accrual
+calculate_delayed_proportions <- function(N, a.time, overall.time, overall.intensity, has_subgroups) {
+
+  # Calculate proportions for each combination
+  combinations <- extract_combinations_standard(N, has_subgroups)
+  result_dt <- data.table(
+    combination_key = combinations$combination_key,
+    proportion_val = vector("list", length(combinations$combination_key))
+  )
+
+  for (i in seq_along(combinations$combination_key)) {
+    key <- combinations$combination_key[i]
+
+    if (has_subgroups && grepl("_", key)) {
+      # Parse subgroup from key
+      parts <- strsplit(key, "_")[[1]]
+      subgroup_name <- parts[2]
+
+      if (subgroup_name %in% names(a.time)) {
+        subgroup_time <- a.time[[subgroup_name]]
+        n_intervals <- length(subgroup_time) - 1
+
+        if (n_intervals > 0) {
+          # Create uniform proportions for this subgroup's time intervals
+          proportions <- rep(1/n_intervals, n_intervals)
+          result_dt$proportion_val[[i]] <- proportions
+        } else {
+          result_dt$proportion_val[[i]] <- NULL
+        }
+      } else {
+        result_dt$proportion_val[[i]] <- NULL
+      }
+    } else {
+      # Handle case without subgroups - use first a.time element
+      if (is.list(a.time) && length(a.time) > 0) {
+        first_time <- a.time[[1]]
+        n_intervals <- length(first_time) - 1
+        if (n_intervals > 0) {
+          proportions <- rep(1/n_intervals, n_intervals)
+          result_dt$proportion_val[[i]] <- proportions
+        } else {
+          result_dt$proportion_val[[i]] <- NULL
+        }
+      } else {
+        result_dt$proportion_val[[i]] <- NULL
+      }
+    }
+  }
+
+  return(result_dt)
 }
