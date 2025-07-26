@@ -517,6 +517,26 @@ extract_parameter_values_delayed <- function(a.time, combination_keys, has_subgr
 # Helper function: Calculate proportions for delayed subgroup accrual
 calculate_delayed_proportions <- function(N, a.time, overall.time, overall.intensity, has_subgroups) {
 
+  # Calculate total patients for each subgroup
+  total_patients_by_subgroup <- list()
+  if (has_subgroups) {
+    for (group_name in names(N)) {
+      if (is.vector(N[[group_name]]) && !is.null(names(N[[group_name]]))) {
+        for (subgroup_name in names(N[[group_name]])) {
+          if (is.null(total_patients_by_subgroup[[subgroup_name]])) {
+            total_patients_by_subgroup[[subgroup_name]] <- 0
+          }
+          total_patients_by_subgroup[[subgroup_name]] <-
+            total_patients_by_subgroup[[subgroup_name]] + N[[group_name]][subgroup_name]
+        }
+      }
+    }
+  }
+
+  # Calculate expected recruitment based on overall.intensity and overall.time
+  overall_intervals <- diff(overall.time)
+  total_expected_recruitment <- sum(overall.intensity * overall_intervals)
+
   # Calculate proportions for each combination
   combinations <- extract_combinations_standard(N, has_subgroups)
   result_dt <- data.table(
@@ -537,9 +557,40 @@ calculate_delayed_proportions <- function(N, a.time, overall.time, overall.inten
         n_intervals <- length(subgroup_time) - 1
 
         if (n_intervals > 0) {
-          # Create uniform proportions for this subgroup's time intervals
-          proportions <- rep(1/n_intervals, n_intervals)
-          result_dt$proportion_val[[i]] <- proportions
+          # Calculate time-weighted proportions based on overlap with overall.time
+          interval_proportions <- numeric(n_intervals)
+
+          for (j in seq_len(n_intervals)) {
+            interval_start <- subgroup_time[j]
+            interval_end <- subgroup_time[j + 1]
+
+            # Find overlapping periods with overall.time
+            overlap_total <- 0
+            for (k in seq_len(length(overall.intensity))) {
+              overall_start <- overall.time[k]
+              overall_end <- overall.time[k + 1]
+
+              # Calculate overlap
+              overlap_start <- max(interval_start, overall_start)
+              overlap_end <- min(interval_end, overall_end)
+
+              if (overlap_start < overlap_end) {
+                overlap_duration <- overlap_end - overlap_start
+                overlap_total <- overlap_total + (overall.intensity[k] * overlap_duration)
+              }
+            }
+
+            interval_proportions[j] <- overlap_total
+          }
+
+          # Normalize to proportions
+          if (sum(interval_proportions) > 0) {
+            interval_proportions <- interval_proportions / sum(interval_proportions)
+          } else {
+            interval_proportions <- rep(1/n_intervals, n_intervals)
+          }
+
+          result_dt$proportion_val[[i]] <- interval_proportions
         } else {
           result_dt$proportion_val[[i]] <- NULL
         }
@@ -547,16 +598,11 @@ calculate_delayed_proportions <- function(N, a.time, overall.time, overall.inten
         result_dt$proportion_val[[i]] <- NULL
       }
     } else {
-      # Handle case without subgroups - use first a.time element
-      if (is.list(a.time) && length(a.time) > 0) {
-        first_time <- a.time[[1]]
-        n_intervals <- length(first_time) - 1
-        if (n_intervals > 0) {
-          proportions <- rep(1/n_intervals, n_intervals)
-          result_dt$proportion_val[[i]] <- proportions
-        } else {
-          result_dt$proportion_val[[i]] <- NULL
-        }
+      # Handle case without subgroups - use overall intensity pattern
+      overall_intervals <- diff(overall.time)
+      if (length(overall_intervals) > 0) {
+        proportions <- (overall.intensity * overall_intervals) / sum(overall.intensity * overall_intervals)
+        result_dt$proportion_val[[i]] <- proportions
       } else {
         result_dt$proportion_val[[i]] <- NULL
       }
