@@ -80,6 +80,30 @@
 #' # View results for first simulation
 #' print(overall_results[simID == 1])
 #'
+#' # Example with subgroups
+#' subgroup_trial <- simTrial(
+#'   nsim = 30,
+#'   N = list(
+#'     control = c(A = 50, B = 50),
+#'     treatment = c(A = 50, B = 50)
+#'   ),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
+#'   ),
+#'   e.hazard = list(
+#'     control = list(A = 0.08, B = 0.12),
+#'     treatment = list(A = 0.05, B = 0.08)
+#'   ),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
+#' subgroup_analysis <- analysisData(subgroup_trial, E = c(50, 100))
+#' subgroup_overall <- overallSummary(subgroup_analysis, control = 1)
+#'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
 #' \code{\link{lrtest}} for log-rank test implementation,

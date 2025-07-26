@@ -127,67 +127,20 @@
 #'
 #' print(time_events[simID == 1])
 #'
-#' # Example 3: Subgroup analysis capability
-#' # Analyze treatment effect by subgroup at final analysis
-#' final_analysis <- analysis_events[analysis == 3 & simID == 1]
+#' # Example 3: Simple trial without subgroups
+#' simple_trial <- simTrial(
+#'   nsim = 50,
+#'   N = list(control = 100, treatment = 100),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.05),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
 #'
-#' subgroup_results <- final_analysis[, {
-#'   if (sum(event) >= 10) {  # Ensure sufficient events
-#'     hr_result <- esthr(tte, event, group, 1, "LR")
-#'     list(hazard_ratio = hr_result$HR, events = sum(event))
-#'   } else {
-#'     list(hazard_ratio = NA, events = sum(event))
-#'   }
-#' }, by = subgroup]
-#'
-#' cat("Subgroup analysis results:\n")
-#' print(subgroup_results)
-#'
-#' # Example 4: Power analysis across simulations
-#' # Calculate power for the final analysis (analysis 3)
-#' power_results <- analysis_events[analysis == 3, {
-#'   lr_stat <- lrtest(tte, event, group, 1, 2)
-#'   p_value <- 1 - pchisq(lr_stat, 1)
-#'   list(significant = p_value < 0.05, total_events = sum(event))
-#' }, by = simID]
-#'
-#' power <- mean(power_results$significant)
-#' cat("Statistical power at final analysis:", round(power, 3), "\n")
-#'
-#' # Distribution of event counts at final analysis
-#' hist(power_results$total_events,
-#'      main = "Distribution of Events at Final Analysis",
-#'      xlab = "Number of Events", ylab = "Frequency", breaks = 20)
-#'
-#' # Example 5: Adaptive design simulation
-#' # Early stopping for efficacy or futility
-#' adaptive_results <- analysis_events[, {
-#'   lr_stat <- lrtest(tte, event, group, 1, 2)
-#'   p_value <- 1 - pchisq(lr_stat, 1)
-#'
-#'   # Simple stopping rules
-#'   stop_efficacy <- (analysis <= 2 & p_value < 0.005) | (analysis == 3 & p_value < 0.05)
-#'   stop_futility <- analysis <= 2 & p_value > 0.8
-#'
-#'   list(
-#'     p_value = p_value,
-#'     stop_efficacy = stop_efficacy,
-#'     stop_futility = stop_futility,
-#'     continue = !stop_efficacy & !stop_futility
-#'   )
-#' }, by = .(simID, analysis)]
-#'
-#' # Summary of adaptive design outcomes
-#' adaptive_summary <- adaptive_results[, .(
-#'   early_efficacy = any(stop_efficacy[analysis <= 2]),
-#'   early_futility = any(stop_futility[analysis <= 2]),
-#'   completed = all(!stop_efficacy[analysis <= 2]) & all(!stop_futility[analysis <= 2])
-#' ), by = simID]
-#'
-#' cat("Adaptive design outcomes:\n")
-#' cat("Early efficacy stop:", mean(adaptive_summary$early_efficacy), "\n")
-#' cat("Early futility stop:", mean(adaptive_summary$early_futility), "\n")
-#' cat("Completed to final:", mean(adaptive_summary$completed), "\n")
+#' simple_analysis <- analysisData(simple_trial, E = c(50, 100))
+#' print(head(simple_analysis))
 #'
 #' @seealso
 #' \code{\link{simTrial}} for generating the input trial data,

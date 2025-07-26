@@ -114,6 +114,11 @@
 #'   d.hazard = NULL
 #' )
 #'
+#' # Simplified analysis for no dropout case
+#' analysis_no_dropout <- analysisData(trial_data_no_dropout, E = c(50, 100))
+#' overall_no_dropout <- overallSummary(analysis_no_dropout, control = 1, side = 2)
+#' print(head(overall_no_dropout))
+#'
 #' @seealso
 #' \code{\link{overallSummary}} for generating the input overall summary data,
 #' \code{\link{analysisData}} for creating analysis datasets

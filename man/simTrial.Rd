@@ -14,6 +14,8 @@ simTrial(
   e.hazard,
   d.time = NULL,
   d.hazard = NULL,
+  overall.time = NULL,
+  overall.intensity = NULL,
   seed = NULL
 )
 }
@@ -24,14 +26,15 @@ simTrial(
 each element is a named vector with subgroup sample sizes. If no subgroups,
 a vector of sample sizes for each group.}
 
-\item{a.time}{A numeric vector of time points defining the accrual intervals.
-Time points must be in increasing order.}
+\item{a.time}{A numeric vector of time points defining the accrual intervals for common accrual,
+OR a named list where each element corresponds to a subgroup with time points defining
+the accrual intervals. Time points must be in increasing order.}
 
-\item{intensity}{A numeric vector of accrual intensities (rate per time unit) for each interval.
-Cannot be used with proportion. Default is NULL.}
+\item{intensity}{A numeric vector of accrual intensities (rate per time unit) for each interval
+when using common accrual. Cannot be used with proportion or when a.time is a list. Default is NULL.}
 
-\item{proportion}{A numeric vector of accrual proportions for each interval that sum to 1.
-Cannot be used with intensity. Default is NULL.}
+\item{proportion}{A numeric vector of accrual proportions for each interval that sum to 1
+when using common accrual. Cannot be used with intensity or when a.time is a list. Default is NULL.}
 
 \item{e.time}{A list where each element corresponds to a group (and subgroup if applicable),
 containing time points defining the survival time intervals. Last element must be Inf.}
@@ -46,6 +49,12 @@ Can be NULL if no dropout is assumed. Default is NULL.}
 \item{d.hazard}{A list where each element corresponds to a group (and subgroup if applicable),
 containing hazard rates for dropout time. All values must be positive.
 Can be NULL if no dropout is assumed. Default is NULL.}
+
+\item{overall.time}{A numeric vector of overall study timeline when a.time is a named list with
+different subgroup timings. Required for delayed subgroup scenarios. Default is NULL.}
+
+\item{overall.intensity}{A numeric vector of overall intensity targets when a.time is a named list.
+Used for delayed subgroup scenarios to maintain overall recruitment targets. Default is NULL.}
 
 \item{seed}{A positive integer for random seed setting. Default is NULL.}
 }
@@ -83,7 +92,8 @@ Within each treatment group, subgroups can be defined with distinct
 characteristics (e.g., different biomarker status).
 }
 \item{Flexible Accrual Patterns}{
-Common accrual patterns across all groups/subgroups.
+Common accrual patterns across all groups/subgroups, OR subgroup-specific
+accrual patterns with delayed starts.
 }
 \item{Complex Survival Scenarios}{
 Supports delayed treatment effects, time-varying hazards, and different
@@ -150,16 +160,24 @@ trial3 <- simTrial(
   d.hazard = NULL
 )
 
-# Perform log-rank test on first simulation
-test_data <- trial3[simID == 1]
-lr_result <- lrtest(
-  time = test_data$tte,
-  event = 1 - test_data$dropout,
-  group = test_data$group,
-  control = 1,
-  side = 2
+# Example 4: Trial with delayed subgroup accrual
+trial4 <- simTrial(
+  nsim = 100,
+  N = list(control = c(A = 50, B = 75), treatment = c(A = 50, B = 75)),
+  a.time = list(A = c(6, 12, 24), B = c(0, 6, 12, 24)),  # Delayed start for A
+  overall.time = c(0, 6, 12, 24),
+  overall.intensity = c(10, 15, 20),
+  e.time = list(
+    control = list(A = c(0, Inf), B = c(0, Inf)),
+    treatment = list(A = c(0, Inf), B = c(0, Inf))
+  ),
+  e.hazard = list(
+    control = list(A = 0.08, B = 0.08),
+    treatment = list(A = 0.05, B = 0.05)
+  ),
+  d.time = NULL,  # No dropout
+  d.hazard = NULL
 )
-cat("Log-rank chi-square statistic:", lr_result, "\n")
 
 }
 \references{

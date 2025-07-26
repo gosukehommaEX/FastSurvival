@@ -69,7 +69,7 @@ For each analysis, the function:
 }
 
 The resulting dataset can be used directly with survival analysis functions
-like \code{\link{FastLRtest}} and \code{\link{FastHRest}}.
+like \code{\link{lrtest}} and \code{\link{esthr}}.
 }
 \examples{
 library(data.table)
@@ -81,22 +81,8 @@ trial_data <- simTrial(
     control = c(A = 25, B = 112, C = 113),
     treatment = c(A = 25, B = 112, C = 113)
   ),
-  a.time = list(
-    control = list(A = c(0, 5, 10, 15, 20, 25),
-                   B = c(0, 5, 10, 15, 20, 25),
-                   C = c(0, 5, 10, 15, 20, 25)),
-    treatment = list(A = c(0, 5, 10, 15, 20, 25),
-                     B = c(0, 5, 10, 15, 20, 25),
-                     C = c(0, 5, 10, 15, 20, 25))
-  ),
-  intensity = list(
-    control = list(A = c(3.5, 14.3, 28.9, 43.6, 45),
-                   B = c(3.5, 14.3, 28.9, 43.6, 45),
-                   C = c(3.5, 14.3, 28.9, 43.6, 45)),
-    treatment = list(A = c(3.5, 14.3, 28.9, 43.6, 45),
-                     B = c(3.5, 14.3, 28.9, 43.6, 45),
-                     C = c(3.5, 14.3, 28.9, 43.6, 45))
-  ),
+  a.time = c(0, 5, 10, 15, 20, 25),
+  intensity = c(3.5, 14.3, 28.9, 43.6, 45),
   e.time = list(
     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
@@ -131,7 +117,7 @@ print(event_summary[simID == 1])  # Show first simulation
 
 # Perform log-rank tests at each analysis timepoint
 lr_results <- analysis_events[simID == 1, {
-  lr_stat <- FastLRtest(tte, event, group, 1, 2)
+  lr_stat <- lrtest(tte, event, group, 1, 2)
   p_value <- 1 - pchisq(lr_stat, 1)
   list(lr_statistic = lr_stat, p_value = p_value)
 }, by = analysis]
@@ -152,67 +138,20 @@ time_events <- analysis_time[, .(
 
 print(time_events[simID == 1])
 
-# Example 3: Subgroup analysis capability
-# Analyze treatment effect by subgroup at final analysis
-final_analysis <- analysis_events[analysis == 3 & simID == 1]
+# Example 3: Simple trial without subgroups
+simple_trial <- simTrial(
+  nsim = 50,
+  N = list(control = 100, treatment = 100),
+  a.time = c(0, 18),
+  intensity = 200/18,
+  e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+  e.hazard = list(control = 0.08, treatment = 0.05),
+  d.time = NULL,  # No dropout
+  d.hazard = NULL
+)
 
-subgroup_results <- final_analysis[, {
-  if (sum(event) >= 10) {  # Ensure sufficient events
-    hr_result <- FastHRest(tte, event, group, 1, "LR")
-    list(hazard_ratio = hr_result$HR, events = sum(event))
-  } else {
-    list(hazard_ratio = NA, events = sum(event))
-  }
-}, by = subgroup]
-
-cat("Subgroup analysis results:\n")
-print(subgroup_results)
-
-# Example 4: Power analysis across simulations
-# Calculate power for the final analysis (analysis 3)
-power_results <- analysis_events[analysis == 3, {
-  lr_stat <- FastLRtest(tte, event, group, 1, 2)
-  p_value <- 1 - pchisq(lr_stat, 1)
-  list(significant = p_value < 0.05, total_events = sum(event))
-}, by = simID]
-
-power <- mean(power_results$significant)
-cat("Statistical power at final analysis:", round(power, 3), "\n")
-
-# Distribution of event counts at final analysis
-hist(power_results$total_events,
-     main = "Distribution of Events at Final Analysis",
-     xlab = "Number of Events", ylab = "Frequency", breaks = 20)
-
-# Example 5: Adaptive design simulation
-# Early stopping for efficacy or futility
-adaptive_results <- analysis_events[, {
-  lr_stat <- FastLRtest(tte, event, group, 1, 2)
-  p_value <- 1 - pchisq(lr_stat, 1)
-
-  # Simple stopping rules
-  stop_efficacy <- (analysis <= 2 & p_value < 0.005) | (analysis == 3 & p_value < 0.05)
-  stop_futility <- analysis <= 2 & p_value > 0.8
-
-  list(
-    p_value = p_value,
-    stop_efficacy = stop_efficacy,
-    stop_futility = stop_futility,
-    continue = !stop_efficacy & !stop_futility
-  )
-}, by = .(simID, analysis)]
-
-# Summary of adaptive design outcomes
-adaptive_summary <- adaptive_results[, .(
-  early_efficacy = any(stop_efficacy[analysis <= 2]),
-  early_futility = any(stop_futility[analysis <= 2]),
-  completed = all(!stop_efficacy[analysis <= 2]) & all(!stop_futility[analysis <= 2])
-), by = simID]
-
-cat("Adaptive design outcomes:\n")
-cat("Early efficacy stop:", mean(adaptive_summary$early_efficacy), "\n")
-cat("Early futility stop:", mean(adaptive_summary$early_futility), "\n")
-cat("Completed to final:", mean(adaptive_summary$completed), "\n")
+simple_analysis <- analysisData(simple_trial, E = c(50, 100))
+print(head(simple_analysis))
 
 }
 \references{
@@ -227,6 +166,6 @@ Adaptive Designs in Clinical Trials. Springer.
 }
 \seealso{
 \code{\link{simTrial}} for generating the input trial data,
-\code{\link{FastLRtest}} and \code{\link{FastHRest}} for statistical analysis,
+\code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis,
 \code{\link[survival]{Surv}} for creating survival objects
 }
