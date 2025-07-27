@@ -361,7 +361,7 @@ create_parameter_table_delayed <- function(N, a.time, overall.time, overall.inte
   # Add parameter values using data.table operations
   param_dt[, `:=`(
     n_val = extract_parameter_values_standard(N, combination_key, has_subgroups),
-    a_time_val = extract_parameter_values_delayed(a.time, combination_key, has_subgroups),
+    a_time_val = list(overall.time),  # Use overall.time for all subgroups
     e_time_val = extract_parameter_values_standard(e.time, combination_key, has_subgroups),
     e_hazard_val = extract_parameter_values_standard(e.hazard, combination_key, has_subgroups)
   )]
@@ -392,6 +392,101 @@ create_parameter_table_delayed <- function(N, a.time, overall.time, overall.inte
   )]
 
   return(param_dt)
+}
+
+# Helper function: Calculate proportions for delayed subgroup accrual
+calculate_delayed_proportions <- function(N, a.time, overall.time, overall.intensity, has_subgroups) {
+
+  # Calculate proportions based on overall.time and overall.intensity
+  n_overall_intervals <- length(overall.time) - 1
+  if (n_overall_intervals <= 0) {
+    stop("overall.time must have at least 2 time points")
+  }
+
+  # Calculate interval lengths for overall timeline
+  interval_lengths <- diff(overall.time)
+
+  # Calculate base proportions based on overall.intensity
+  if (length(overall.intensity) == 1) {
+    # Single intensity value - proportional to interval lengths
+    base_proportions <- interval_lengths / sum(interval_lengths)
+  } else if (length(overall.intensity) == n_overall_intervals) {
+    # Multiple intensity values - proportional to intensity * length
+    expected_counts <- overall.intensity * interval_lengths
+    base_proportions <- expected_counts / sum(expected_counts)
+  } else {
+    stop("overall.intensity length must be 1 or equal to number of intervals in overall.time")
+  }
+
+  # Get combinations
+  combinations <- extract_combinations_standard(N, has_subgroups)
+
+  # Create result data.table
+  result_dt <- data.table(
+    combination_key = combinations$combination_key,
+    proportion_val = vector("list", length(combinations$combination_key))
+  )
+
+  for (i in seq_along(combinations$combination_key)) {
+    key <- combinations$combination_key[i]
+
+    if (has_subgroups && grepl("_", key)) {
+      # Parse subgroup from key
+      parts <- strsplit(key, "_")[[1]]
+      subgroup_name <- parts[2]
+
+      if (subgroup_name %in% names(a.time)) {
+        subgroup_time <- a.time[[subgroup_name]]
+        subgroup_start <- subgroup_time[1]
+        subgroup_end <- subgroup_time[length(subgroup_time)]
+
+        # Find which overall intervals this subgroup is active in
+        active_intervals <- integer(0)
+        for (j in seq_len(n_overall_intervals)) {
+          overall_start <- overall.time[j]
+          overall_end <- overall.time[j + 1]
+
+          # Check if intervals overlap
+          if (overall_start < subgroup_end && overall_end > subgroup_start) {
+            active_intervals <- c(active_intervals, j)
+          }
+        }
+
+        if (length(active_intervals) > 0) {
+          # Adjust proportions for delayed start
+          adjusted_proportions <- base_proportions[active_intervals]
+
+          # For delayed subgroups, adjust the first interval proportion
+          # to account for the delayed start within that interval
+          if (length(active_intervals) > 0) {
+            first_interval_idx <- active_intervals[1]
+            first_overall_start <- overall.time[first_interval_idx]
+            first_overall_end <- overall.time[first_interval_idx + 1]
+
+            # Calculate the proportion of the first interval that the subgroup is active
+            if (subgroup_start > first_overall_start) {
+              active_fraction <- (first_overall_end - subgroup_start) / (first_overall_end - first_overall_start)
+              adjusted_proportions[1] <- adjusted_proportions[1] * active_fraction
+            }
+          }
+
+          # Normalize to sum to 1
+          adjusted_proportions <- adjusted_proportions / sum(adjusted_proportions)
+          result_dt$proportion_val[[i]] <- adjusted_proportions
+        } else {
+          # No active intervals - shouldn't happen with valid input
+          result_dt$proportion_val[[i]] <- NULL
+        }
+      } else {
+        result_dt$proportion_val[[i]] <- NULL
+      }
+    } else {
+      # Handle case without subgroups - use full base proportions
+      result_dt$proportion_val[[i]] <- base_proportions
+    }
+  }
+
+  return(result_dt)
 }
 
 # Helper function: Extract group and subgroup combinations
@@ -512,102 +607,4 @@ extract_parameter_values_delayed <- function(a.time, combination_keys, has_subgr
   }
 
   return(result)
-}
-
-# Helper function: Calculate proportions for delayed subgroup accrual
-calculate_delayed_proportions <- function(N, a.time, overall.time, overall.intensity, has_subgroups) {
-
-  # Calculate total patients for each subgroup
-  total_patients_by_subgroup <- list()
-  if (has_subgroups) {
-    for (group_name in names(N)) {
-      if (is.vector(N[[group_name]]) && !is.null(names(N[[group_name]]))) {
-        for (subgroup_name in names(N[[group_name]])) {
-          if (is.null(total_patients_by_subgroup[[subgroup_name]])) {
-            total_patients_by_subgroup[[subgroup_name]] <- 0
-          }
-          total_patients_by_subgroup[[subgroup_name]] <-
-            total_patients_by_subgroup[[subgroup_name]] + N[[group_name]][subgroup_name]
-        }
-      }
-    }
-  }
-
-  # Calculate expected recruitment based on overall.intensity and overall.time
-  overall_intervals <- diff(overall.time)
-  total_expected_recruitment <- sum(overall.intensity * overall_intervals)
-
-  # Calculate proportions for each combination
-  combinations <- extract_combinations_standard(N, has_subgroups)
-  result_dt <- data.table(
-    combination_key = combinations$combination_key,
-    proportion_val = vector("list", length(combinations$combination_key))
-  )
-
-  for (i in seq_along(combinations$combination_key)) {
-    key <- combinations$combination_key[i]
-
-    if (has_subgroups && grepl("_", key)) {
-      # Parse subgroup from key
-      parts <- strsplit(key, "_")[[1]]
-      subgroup_name <- parts[2]
-
-      if (subgroup_name %in% names(a.time)) {
-        subgroup_time <- a.time[[subgroup_name]]
-        n_intervals <- length(subgroup_time) - 1
-
-        if (n_intervals > 0) {
-          # Calculate time-weighted proportions based on overlap with overall.time
-          interval_proportions <- numeric(n_intervals)
-
-          for (j in seq_len(n_intervals)) {
-            interval_start <- subgroup_time[j]
-            interval_end <- subgroup_time[j + 1]
-
-            # Find overlapping periods with overall.time
-            overlap_total <- 0
-            for (k in seq_len(length(overall.intensity))) {
-              overall_start <- overall.time[k]
-              overall_end <- overall.time[k + 1]
-
-              # Calculate overlap
-              overlap_start <- max(interval_start, overall_start)
-              overlap_end <- min(interval_end, overall_end)
-
-              if (overlap_start < overlap_end) {
-                overlap_duration <- overlap_end - overlap_start
-                overlap_total <- overlap_total + (overall.intensity[k] * overlap_duration)
-              }
-            }
-
-            interval_proportions[j] <- overlap_total
-          }
-
-          # Normalize to proportions
-          if (sum(interval_proportions) > 0) {
-            interval_proportions <- interval_proportions / sum(interval_proportions)
-          } else {
-            interval_proportions <- rep(1/n_intervals, n_intervals)
-          }
-
-          result_dt$proportion_val[[i]] <- interval_proportions
-        } else {
-          result_dt$proportion_val[[i]] <- NULL
-        }
-      } else {
-        result_dt$proportion_val[[i]] <- NULL
-      }
-    } else {
-      # Handle case without subgroups - use overall intensity pattern
-      overall_intervals <- diff(overall.time)
-      if (length(overall_intervals) > 0) {
-        proportions <- (overall.intensity * overall_intervals) / sum(overall.intensity * overall_intervals)
-        result_dt$proportion_val[[i]] <- proportions
-      } else {
-        result_dt$proportion_val[[i]] <- NULL
-      }
-    }
-  }
-
-  return(result_dt)
 }
