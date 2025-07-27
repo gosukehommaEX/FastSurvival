@@ -46,122 +46,6 @@
 #'   \item{dropout}{Dropout indicator (1 = dropout occurred, 0 = event occurred)}
 #' }
 #'
-#' @details
-#' This function is the main workhorse for clinical trial simulation in the FastSurvival
-#' package. It supports:
-#'
-#' \describe{
-#'   \item{Multiple Treatment Groups}{
-#'     Each group can have different survival distributions and dropout rates.
-#'   }
-#'   \item{Subgroup Analysis}{
-#'     Within each treatment group, subgroups can be defined with distinct
-#'     characteristics (e.g., different biomarker status).
-#'   }
-#'   \item{Flexible Accrual Patterns}{
-#'     Common accrual patterns across all groups/subgroups, OR subgroup-specific
-#'     accrual patterns with delayed starts.
-#'   }
-#'   \item{Complex Survival Scenarios}{
-#'     Supports delayed treatment effects, time-varying hazards, and different
-#'     dropout patterns across groups. Dropout can be disabled by setting
-#'     d.time and d.hazard to NULL.
-#'   }
-#' }
-#'
-#' The function uses piecewise exponential and uniform distributions to provide
-#' maximum flexibility while maintaining computational efficiency.
-#'
-#' @examples
-#' library(data.table)
-#'
-#' # Example 1: Standard two-group trial without subgroups
-#' trial1 <- simTrial(
-#'   nsim = 100,
-#'   N = list(control = 100, treatment = 100),
-#'   a.time = c(0, 24),
-#'   intensity = 200/24,
-#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
-#'   e.hazard = list(control = 0.08, treatment = 0.05),
-#'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
-#'   d.hazard = list(control = 0.01, treatment = 0.01)
-#' )
-#'
-#' # Example 2: Trial with subgroups and common accrual
-#' trial2 <- simTrial(
-#'   nsim = 100,
-#'   N = list(
-#'     control = c(A = 25, B = 112, C = 113),
-#'     treatment = c(A = 25, B = 112, C = 113)
-#'   ),
-#'   a.time = c(0, 5, 10, 15, 20, 25),
-#'   intensity = c(3.5, 14.3, 28.9, 43.6, 45),
-#'   e.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
-#'   ),
-#'   e.hazard = list(
-#'     control = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811),
-#'     treatment = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3)
-#'   ),
-#'   d.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
-#'   ),
-#'   d.hazard = list(
-#'     control = list(A = 0.01, B = 0.01, C = 0.01),
-#'     treatment = list(A = 0.01, B = 0.01, C = 0.01)
-#'   ),
-#'   seed = 1
-#' )
-#'
-#' # Example 3: Trial without dropout
-#' trial3 <- simTrial(
-#'   nsim = 100,
-#'   N = list(control = 100, treatment = 100),
-#'   a.time = c(0, 18),
-#'   intensity = 200/18,
-#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
-#'   e.hazard = list(control = 0.08, treatment = 0.05),
-#'   d.time = NULL,  # No dropout
-#'   d.hazard = NULL
-#' )
-#'
-#' # Example 4: Trial with delayed subgroup accrual
-#' trial4 <- simTrial(
-#'   nsim = 100,
-#'   N = list(control = c(A = 50, B = 75), treatment = c(A = 50, B = 75)),
-#'   a.time = list(A = c(6, 12, 24), B = c(0, 6, 12, 24)),  # Delayed start for A
-#'   overall.time = c(0, 6, 12, 24),
-#'   overall.intensity = c(10, 15, 20),
-#'   e.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
-#'   ),
-#'   e.hazard = list(
-#'     control = list(A = 0.08, B = 0.08),
-#'     treatment = list(A = 0.05, B = 0.05)
-#'   ),
-#'   d.time = NULL,  # No dropout
-#'   d.hazard = NULL
-#' )
-#'
-#' @seealso
-#' \code{\link{simData}} for single-group simulation,
-#' \code{\link{analysisData}} for creating analysis datasets,
-#' \code{\link{lrtest}} and \code{\link{esthr}} for statistical analysis
-#'
-#' @references
-#' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
-#' Design and monitoring of survival trials in complex scenarios.
-#' Statistics in Medicine, 38(2), 192-209.
-#'
-#' Friedman, L. M., Furberg, C. D., & DeMets, D. L. (2010).
-#' Fundamentals of Clinical Trials (4th ed.). Springer.
-#'
-#' Proschan, M. A., Lan, K. K. G., & Wittes, J. T. (2006).
-#' Statistical Monitoring of Clinical Trials: A Unified Approach. Springer.
-#'
 #' @import data.table
 #' @export
 simTrial <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
@@ -395,29 +279,21 @@ create_parameter_table_delayed <- function(N, a.time, overall.time, overall.inte
   return(param_dt)
 }
 
-# Helper function: Calculate proportions for delayed subgroup accrual with dynamic intensity adjustment
+# Helper function: Calculate proportions for delayed subgroup accrual - FINAL CORRECTED VERSION
 calculate_delayed_proportions <- function(N, a.time, overall.time, overall.intensity, has_subgroups) {
 
-  # Calculate proportions based on overall.time and overall.intensity
+  # Validate inputs
   n_overall_intervals <- length(overall.time) - 1
   if (n_overall_intervals <= 0) {
     stop("overall.time must have at least 2 time points")
   }
 
-  # Calculate interval lengths for overall timeline
-  interval_lengths <- diff(overall.time)
-
-  # Calculate base proportions based on overall.intensity
-  if (length(overall.intensity) == 1) {
-    # Single intensity value - proportional to interval lengths
-    base_proportions <- interval_lengths / sum(interval_lengths)
-  } else if (length(overall.intensity) == n_overall_intervals) {
-    # Multiple intensity values - proportional to intensity * length
-    expected_counts <- overall.intensity * interval_lengths
-    base_proportions <- expected_counts / sum(expected_counts)
-  } else {
-    stop("overall.intensity length must be 1 or equal to number of intervals in overall.time")
+  if (length(overall.intensity) != 1) {
+    stop("This implementation requires a single overall.intensity value")
   }
+
+  # Calculate interval lengths
+  interval_lengths <- diff(overall.time)
 
   # Get combinations and calculate total sample sizes by subgroup
   combinations <- extract_combinations_standard(N, has_subgroups)
@@ -438,71 +314,19 @@ calculate_delayed_proportions <- function(N, a.time, overall.time, overall.inten
     }
   }
 
-  # Calculate dynamic intensity adjustment
-  # For each interval, determine which subgroups are active and adjust intensity
-  adjusted_proportions_by_subgroup <- list()
-
-  for (subgroup_name in names(subgroup_totals)) {
-    if (subgroup_name %in% names(a.time)) {
-      subgroup_time <- a.time[[subgroup_name]]
-      subgroup_start <- subgroup_time[1]
-      subgroup_end <- subgroup_time[length(subgroup_time)]
-
-      # Find active intervals for this subgroup
-      active_intervals <- integer(0)
-      for (j in seq_len(n_overall_intervals)) {
-        overall_start <- overall.time[j]
-        overall_end <- overall.time[j + 1]
-
-        if (overall_start < subgroup_end && overall_end > subgroup_start) {
-          active_intervals <- c(active_intervals, j)
-        }
-      }
-
-      if (length(active_intervals) > 0) {
-        # Calculate adjusted proportions considering delayed start
-        adjusted_props <- numeric(length(active_intervals))
-
-        for (k in seq_along(active_intervals)) {
-          interval_idx <- active_intervals[k]
-          interval_start <- max(overall.time[interval_idx], subgroup_start)
-          interval_end <- min(overall.time[interval_idx + 1], subgroup_end)
-
-          # Active duration in this interval
-          active_duration <- interval_end - interval_start
-          total_interval_duration <- overall.time[interval_idx + 1] - overall.time[interval_idx]
-
-          # Base proportion for this interval
-          adjusted_props[k] <- base_proportions[interval_idx] * (active_duration / total_interval_duration)
-        }
-
-        # Normalize to sum to 1
-        if (sum(adjusted_props) > 0) {
-          adjusted_props <- adjusted_props / sum(adjusted_props)
-        }
-
-        adjusted_proportions_by_subgroup[[subgroup_name]] <- list(
-          intervals = active_intervals,
-          proportions = adjusted_props
-        )
-      }
-    }
-  }
-
   # Calculate target patients per interval based on overall intensity
-  if (length(overall.intensity) == 1) {
-    target_by_interval <- rep(overall.intensity, n_overall_intervals) * interval_lengths
-  } else {
-    target_by_interval <- overall.intensity * interval_lengths
-  }
+  target_by_interval <- overall.intensity * interval_lengths
 
-  # Calculate available subgroups and their sample sizes for each interval
-  available_subgroups_by_interval <- vector("list", n_overall_intervals)
-  total_available_by_interval <- numeric(n_overall_intervals)
+  # For each interval, determine active subgroups and calculate their exact allocation
+  subgroup_allocation_by_interval <- list()
 
   for (j in seq_len(n_overall_intervals)) {
-    available_subgroups <- character(0)
-    available_total <- 0
+    interval_start <- overall.time[j]
+    interval_end <- overall.time[j + 1]
+
+    # Find active subgroups in this interval
+    active_subgroups <- character(0)
+    active_totals <- numeric(0)
 
     for (subgroup_name in names(subgroup_totals)) {
       if (subgroup_name %in% names(a.time)) {
@@ -510,80 +334,27 @@ calculate_delayed_proportions <- function(N, a.time, overall.time, overall.inten
         subgroup_start <- subgroup_time[1]
         subgroup_end <- subgroup_time[length(subgroup_time)]
 
-        # Check if this subgroup is active in interval j
-        interval_start <- overall.time[j]
-        interval_end <- overall.time[j + 1]
-
+        # Check if active in this interval
         if (interval_start < subgroup_end && interval_end > subgroup_start) {
-          available_subgroups <- c(available_subgroups, subgroup_name)
-          available_total <- available_total + subgroup_totals[[subgroup_name]]
+          active_subgroups <- c(active_subgroups, subgroup_name)
+          active_totals <- c(active_totals, subgroup_totals[[subgroup_name]])
         }
       }
     }
 
-    available_subgroups_by_interval[[j]] <- available_subgroups
-    total_available_by_interval[j] <- available_total
-  }
-
-  # Calculate proportional allocation for each interval to meet target
-  allocation_by_interval_subgroup <- array(0, dim = c(n_overall_intervals, length(names(subgroup_totals))))
-  dimnames(allocation_by_interval_subgroup) <- list(
-    paste0("interval_", seq_len(n_overall_intervals)),
-    names(subgroup_totals)
-  )
-
-  for (j in seq_len(n_overall_intervals)) {
-    if (total_available_by_interval[j] > 0) {
-      # Distribute target proportionally among available subgroups
-      for (subgroup_name in available_subgroups_by_interval[[j]]) {
-        subgroup_proportion <- subgroup_totals[[subgroup_name]] / total_available_by_interval[j]
-        allocation_by_interval_subgroup[j, subgroup_name] <- target_by_interval[j] * subgroup_proportion
-      }
+    # Calculate proportional allocation for this interval to meet target intensity
+    if (length(active_subgroups) > 0) {
+      total_active <- sum(active_totals)
+      # Allocate target patients proportionally among active subgroups
+      allocations <- (active_totals / total_active) * target_by_interval[j]
+      names(allocations) <- active_subgroups
+      subgroup_allocation_by_interval[[j]] <- allocations
+    } else {
+      subgroup_allocation_by_interval[[j]] <- numeric(0)
     }
   }
 
-  # Calculate final proportions for each subgroup
-  final_proportions_by_subgroup <- list()
-
-  for (subgroup_name in names(subgroup_totals)) {
-    if (subgroup_name %in% names(a.time)) {
-      subgroup_time <- a.time[[subgroup_name]]
-      subgroup_start <- subgroup_time[1]
-      subgroup_end <- subgroup_time[length(subgroup_time)]
-
-      # Find active intervals
-      active_intervals <- integer(0)
-      active_allocations <- numeric(0)
-
-      for (j in seq_len(n_overall_intervals)) {
-        interval_start <- overall.time[j]
-        interval_end <- overall.time[j + 1]
-
-        if (interval_start < subgroup_end && interval_end > subgroup_start) {
-          active_intervals <- c(active_intervals, j)
-
-          # Adjust allocation for partial overlap within interval
-          overlap_start <- max(interval_start, subgroup_start)
-          overlap_end <- min(interval_end, subgroup_end)
-          overlap_fraction <- (overlap_end - overlap_start) / (interval_end - interval_start)
-
-          adjusted_allocation <- allocation_by_interval_subgroup[j, subgroup_name] * overlap_fraction
-          active_allocations <- c(active_allocations, adjusted_allocation)
-        }
-      }
-
-      # Convert allocations to proportions
-      if (length(active_allocations) > 0 && sum(active_allocations) > 0) {
-        proportions <- active_allocations / sum(active_allocations)
-        final_proportions_by_subgroup[[subgroup_name]] <- list(
-          intervals = active_intervals,
-          proportions = proportions
-        )
-      }
-    }
-  }
-
-  # Apply final proportions to create result data.table
+  # Create result data.table
   result_dt <- data.table(
     combination_key = combinations$combination_key,
     proportion_val = vector("list", length(combinations$combination_key))
@@ -597,14 +368,60 @@ calculate_delayed_proportions <- function(N, a.time, overall.time, overall.inten
       parts <- strsplit(key, "_")[[1]]
       subgroup_name <- parts[2]
 
-      if (subgroup_name %in% names(final_proportions_by_subgroup)) {
-        subgroup_info <- final_proportions_by_subgroup[[subgroup_name]]
-        result_dt$proportion_val[[i]] <- subgroup_info$proportions
+      if (subgroup_name %in% names(a.time)) {
+        subgroup_time <- a.time[[subgroup_name]]
+        subgroup_start <- subgroup_time[1]
+        subgroup_end <- subgroup_time[length(subgroup_time)]
+
+        # Collect allocations for this subgroup across all intervals where it's active
+        allocations <- numeric(0)
+        active_interval_indices <- integer(0)
+
+        for (j in seq_len(n_overall_intervals)) {
+          interval_start <- overall.time[j]
+          interval_end <- overall.time[j + 1]
+
+          # Check if this subgroup is active in this interval
+          if (interval_start < subgroup_end && interval_end > subgroup_start) {
+            interval_allocations <- subgroup_allocation_by_interval[[j]]
+            if (subgroup_name %in% names(interval_allocations)) {
+              allocations <- c(allocations, interval_allocations[subgroup_name])
+              active_interval_indices <- c(active_interval_indices, j)
+            }
+          }
+        }
+
+        # Convert to proportions that sum to 1
+        if (length(allocations) > 0 && sum(allocations) > 0) {
+          proportions <- allocations / sum(allocations)
+          result_dt$proportion_val[[i]] <- proportions
+        } else {
+          # Fallback: uniform distribution over available intervals for this subgroup
+          active_intervals <- integer(0)
+          for (j in seq_len(n_overall_intervals)) {
+            interval_start <- overall.time[j]
+            interval_end <- overall.time[j + 1]
+            if (interval_start < subgroup_end && interval_end > subgroup_start) {
+              active_intervals <- c(active_intervals, j)
+            }
+          }
+
+          if (length(active_intervals) > 0) {
+            active_lengths <- interval_lengths[active_intervals]
+            proportions <- active_lengths / sum(active_lengths)
+            result_dt$proportion_val[[i]] <- proportions
+          } else {
+            result_dt$proportion_val[[i]] <- c(1.0)
+          }
+        }
       } else {
+        # Fallback to base proportions
+        base_proportions <- interval_lengths / sum(interval_lengths)
         result_dt$proportion_val[[i]] <- base_proportions
       }
     } else {
-      # Handle case without subgroups - use full base proportions
+      # Handle case without subgroups - use base proportions
+      base_proportions <- interval_lengths / sum(interval_lengths)
       result_dt$proportion_val[[i]] <- base_proportions
     }
   }
