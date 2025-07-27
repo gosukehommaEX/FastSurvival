@@ -361,7 +361,8 @@ create_parameter_table_delayed <- function(N, a.time, overall.time, overall.inte
   # Add parameter values using data.table operations
   param_dt[, `:=`(
     n_val = extract_parameter_values_standard(N, combination_key, has_subgroups),
-    a_time_val = list(overall.time),  # Use overall.time for all subgroups
+    # Use subgroup-specific accrual times instead of overall.time
+    a_time_val = extract_parameter_values_delayed(a.time, combination_key, has_subgroups),
     e_time_val = extract_parameter_values_standard(e.time, combination_key, has_subgroups),
     e_hazard_val = extract_parameter_values_standard(e.hazard, combination_key, has_subgroups)
   )]
