@@ -1,9 +1,9 @@
-#' Simulate survival data for clinical trials using dplyr
+#' Simulate survival data for clinical trials using tidyverse
 #'
 #' This function generates simulation datasets for clinical trials with time-to-event
-#' endpoints using dplyr for efficient data manipulation. It accounts for piecewise
-#' uniform distribution for patient accrual and piecewise exponential distributions for
-#' patient survival time and dropout time during the trial.
+#' endpoints using tidyverse packages for efficient data manipulation. It accounts for
+#' piecewise uniform distribution for patient accrual and piecewise exponential
+#' distributions for patient survival time and dropout time during the trial.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
 #' @param n A positive integer specifying the total sample size per simulation.
@@ -73,11 +73,11 @@
 #'   nsim = 100,
 #'   n = 200,
 #'   a.time = c(0, 24),
-#'   intensity = 200/24,  # Constant rate: 200 patients over 24 months
+#'   intensity = 200/24,
 #'   e.time = c(0, Inf),
-#'   e.hazard = log(2) / 12,  # Median survival = 12 months
+#'   e.hazard = log(2) / 12,
 #'   d.time = c(0, Inf),
-#'   d.hazard = -log(1 - 0.1) / 12,  # 10% dropout rate per year
+#'   d.hazard = -log(1 - 0.1) / 12,
 #'   seed = 123
 #' )
 #' print(data1)
@@ -87,31 +87,24 @@
 #'   nsim = 50,
 #'   n = 300,
 #'   a.time = c(0, 6, 12, 18, 24),
-#'   intensity = c(5, 15, 25, 10),  # Varying recruitment rates
+#'   intensity = c(5, 15, 25, 10),
 #'   e.time = c(0, 6, Inf),
-#'   e.hazard = c(0.1, 0.05),  # Hazard decreases after 6 months (delayed effect)
-#'   d.time = NULL,  # No dropout
+#'   e.hazard = c(0.1, 0.05),
+#'   d.time = NULL,
 #'   d.hazard = NULL,
 #'   seed = 456
 #' )
-#'
-#' # Check that dropout column is all zeros
-#' print(data2 %>% filter(dropout == 1))
 #'
 #' @seealso
 #' \code{\link{simTrial}} for multi-arm clinical trial simulation,
 #' \code{\link{rpieceexp}} and \code{\link{rpieceunif}} for the underlying distributions,
 #' \code{\link{analysisData}} for creating analysis datasets
 #'
-#' @references
-#' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
-#' Design and monitoring of survival trials in complex scenarios.
-#' Statistics in Medicine, 38(2), 192-209.
-#'
 #' @import dplyr
+#' @importFrom stats runif
 #' @export
-simData <- function(nsim = 1e+3, n, a.time, intensity = NULL, proportion = NULL, e.time,
-                    e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
+simData <- function(nsim = 1000, n, a.time, intensity = NULL, proportion = NULL,
+                    e.time, e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
 
   # Set seed if provided
   if (!is.null(seed)) {
@@ -139,39 +132,31 @@ simData <- function(nsim = 1e+3, n, a.time, intensity = NULL, proportion = NULL,
   # Check if dropout is assumed
   has_dropout <- !is.null(d.time) && !is.null(d.hazard)
 
-  # Create the main dataset
+  # Create the main dataset using tidyverse approach
   dataset <- tibble(
-    simID = rep(1:nsim, each = n), # Simulation ID
+    simID = rep(1:nsim, each = n),
     patientID = rep(1:n, nsim)
   ) %>%
     group_by(simID) %>%
     mutate(
-      accrual.time = rpieceunif(n, a.time, intensity, proportion), # Accrual time
-      surv.time = rpieceexp(n, e.time, e.hazard)
-    )
-
-  # Generate dropout times based on whether dropout is assumed
-  if (has_dropout) {
-    # Generate dropout times using high-performance base function
-    dataset <- dataset %>%
-      mutate(
-        dropout.time = rpieceexp(n, d.time, d.hazard) # Time at dropout
-      )
-  } else {
-    # Set dropout.time to Inf (no dropout)
-    dataset <- dataset %>%
-      mutate(
-        dropout.time = Inf # Time at dropout
-      )
-  }
-
-  # Calculate total time
-  dataset <- dataset %>%
+      # Generate accrual times using rpieceunif
+      accrual.time = rpieceunif(n, a.time, intensity, proportion),
+      # Generate survival times using rpieceexp
+      surv.time = rpieceexp(n, e.time, e.hazard),
+      # Generate dropout times based on whether dropout is assumed
+      dropout.time = if (has_dropout) {
+        rpieceexp(n, d.time, d.hazard)
+      } else {
+        rep(Inf, n)
+      }
+    ) %>%
     mutate(
-      tte = pmin(surv.time, dropout.time), # Time-to-event
-      total = accrual.time + tte, # Total time (accrual + time-to-event)
-      dropout = as.numeric(dropout.time < surv.time) # Dropout indicator
-    )
+      # Calculate time-to-event and total time
+      tte = pmin(surv.time, dropout.time),
+      total = accrual.time + tte,
+      dropout = as.numeric(dropout.time < surv.time)
+    ) %>%
+    ungroup()
 
   return(dataset)
 }

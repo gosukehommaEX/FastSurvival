@@ -48,7 +48,7 @@
 #'   }
 #'   \item{Log-rank based (LR)}{
 #'     Uses the log-rank statistic: \deqn{HR = \exp\left(\frac{(1+r)Z}{\sqrt{r(O_1 + O_0)}}\right)}
-#'     where \eqn{r} is the allocation ratio of the treatment group, and \eqn{Z} is the standardized log-rank statistic.
+#'     where \eqn{r} is the allocation ratio and \eqn{Z} is the standardized log-rank statistic.
 #'   }
 #'   \item{Cox regression}{
 #'     Uses the standard Cox proportional hazards model via \code{\link[survival]{coxph}}.
@@ -73,32 +73,9 @@
 #' veteran_hr <- do.call(rbind, veteran_results)
 #' print(veteran_hr)
 #'
-#' # Performance comparison with Cox regression
-#' \dontrun{
-#' library(microbenchmark)
-#' microbenchmark(
-#'   esthr_Cox  = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
-#'   esthr_PY   = esthr(veteran$time, veteran$status, veteran$trt, 1, 'PY'),
-#'   esthr_Pike = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Pike'),
-#'   esthr_Peto = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Peto'),
-#'   esthr_LR   = esthr(veteran$time, veteran$status, veteran$trt, 1, 'LR'),
-#'   times = 100
-#' )
-#' }
-#'
 #' @seealso
 #' \code{\link[survival]{coxph}} for standard Cox regression,
 #' \code{\link{lrtest}} for log-rank test statistics
-#'
-#' @references
-#' Pike, M. C., et al. (1979). Design and analysis of randomized clinical trials
-#' requiring prolonged observation of each patient. British Journal of Cancer, 40, 1-39.
-#'
-#' Peto, R., et al. (1977). Design and analysis of randomized clinical trials
-#' requiring prolonged observation of each patient. British Journal of Cancer, 35, 1-39.
-#'
-#' Cox, D. R. (1972). Regression models and life-tables. Journal of the Royal
-#' Statistical Society, 34(2), 187-220.
 #'
 #' @importFrom survival coxph Surv
 #' @importFrom stats coef
@@ -118,16 +95,21 @@ esthr <- function(time, event, group, control, method, time_ranks = NULL, event_
     stop("No events observed in the data")
   }
 
-  # Convert groups to numeric values
+  # Convert groups to binary indicator (0 = control, 1 = treatment)
   j <- as.numeric(group != control)
 
-  if(method == 'PY') {
-    # Person-Year method - no ranking needed
-    HR <- (sum(event * j) / sum(time * j)) / ((sum(event * (1 - j)) / sum(time * (1 - j))))
-  } else if(method == 'Cox') {
-    # Cox proportional hazards regression - no ranking needed
+  # Method-specific calculations
+  if (method == 'PY') {
+    # Person-Year method - direct calculation without ranking
+    rate_treatment <- sum(event * j) / sum(time * j)
+    rate_control <- sum(event * (1 - j)) / sum(time * (1 - j))
+    HR <- rate_treatment / rate_control
+
+  } else if (method == 'Cox') {
+    # Cox proportional hazards regression
     cox.fit <- coxph(Surv(time, event) ~ j)
     HR <- exp(coef(cox.fit)[1])
+
   } else {
     # Common calculations for Pike, Peto, and LR methods
     # Use pre-computed ranks if available, otherwise compute
@@ -144,7 +126,7 @@ esthr <- function(time, event, group, control, method, time_ranks = NULL, event_
       t.k <- event_times
     }
 
-    # Define numbers at risk
+    # Calculate numbers at risk using vectorized operations
     n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]
     n.1k[is.na(n.1k)] <- 0
     n.0k <- rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
@@ -164,24 +146,28 @@ esthr <- function(time, event, group, control, method, time_ranks = NULL, event_
     E1 <- sum(e.jk * (n.1k / n.jk))
     E0 <- sum(e.jk * (n.0k / n.jk))
 
-    # Calculate variance
-    V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
-
-    if(method == 'Pike') {
-      # Pike method
+    # Method-specific hazard ratio calculations
+    if (method == 'Pike') {
       HR <- (O1 * E0) / (O0 * E1)
-    } else if(method == 'Peto') {
-      # Peto method
+
+    } else if (method == 'Peto') {
+      V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk^2 * (n.jk - 1)), na.rm = TRUE)
       HR <- exp((O1 - E1) / V1)
-    } else if(method == 'LR') {
-      # Log-rank test based method
-      r <- (length(j) - sum(j)) / sum(j)
+
+    } else if (method == 'LR') {
+      # Log-rank test based method with allocation ratio
+      r <- sum(1 - j) / sum(j)  # Control/Treatment ratio
+      V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk^2 * (n.jk - 1)), na.rm = TRUE)
       LR <- (O1 - E1) / sqrt(V1)
       HR <- exp((1 + r) * LR / sqrt(r * (O1 + O0)))
     }
   }
 
   # Return result as data.frame
-  result <- data.frame(method = method, HR = HR, stringsAsFactors = FALSE)
+  result <- data.frame(
+    method = method,
+    HR = HR,
+    stringsAsFactors = FALSE
+  )
   return(result)
 }

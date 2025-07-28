@@ -2,6 +2,8 @@
 #'
 #' This function calculates the log-rank test statistic for comparing survival curves
 #' between two groups. It can return either one-sided or two-sided test statistics.
+#' The implementation is optimized for performance compared to standard survival
+#' analysis functions.
 #'
 #' @param time A numeric vector representing the event times for all subjects.
 #' @param event A numeric vector representing the event indicator for all subjects
@@ -48,16 +50,6 @@
 #' cat("survdiff chi-square:", survdiff_result$chisq, "\n")
 #' cat("lrtest chi-square:", chisq_stat, "\n")
 #'
-#' # Performance comparison
-#' \dontrun{
-#' library(microbenchmark)
-#' microbenchmark(
-#'   survdiff = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-#'   lrtest = lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
-#'   times = 100
-#' )
-#' }
-#'
 #' @seealso
 #' \code{\link[survival]{survdiff}} for the standard implementation,
 #' \code{\link{esthr}} for hazard ratio estimation
@@ -77,7 +69,7 @@ lrtest <- function(time, event, group, control, side, time_ranks = NULL, event_t
     stop("No events observed in the data")
   }
 
-  # Convert groups to numeric values
+  # Convert groups to binary indicator (0 = control, 1 = treatment)
   j <- as.numeric(group != control)
 
   # Use pre-computed ranks if available, otherwise compute
@@ -94,7 +86,8 @@ lrtest <- function(time, event, group, control, side, time_ranks = NULL, event_t
     t.k <- event_times
   }
 
-  # Define numbers at risk
+  # Calculate numbers at risk at each event time
+  # Using vectorized operations for efficiency
   n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]
   n.1k[is.na(n.1k)] <- 0
   n.0k <- rev(cumsum(rev(tabulate(time * (1 - j)))))[t.k]
@@ -110,20 +103,18 @@ lrtest <- function(time, event, group, control, side, time_ranks = NULL, event_t
 
   # Calculate observed and expected events
   O1 <- sum(e.1k)
-  O0 <- sum(e.0k)
   E1 <- sum(e.jk * (n.1k / n.jk))
-  E0 <- sum(e.jk * (n.0k / n.jk))
 
-  # Calculate variance
-  V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk ^ 2 * (n.jk - 1)), na.rm = TRUE)
+  # Calculate variance using optimized formula
+  V1 <- sum((n.1k * n.0k * e.jk * (n.jk - e.jk)) / (n.jk^2 * (n.jk - 1)), na.rm = TRUE)
 
-  # Log-rank test statistic
+  # Compute log-rank test statistic
   LR <- (O1 - E1) / sqrt(V1)
 
   # Return based on side argument
   if (side == 1) {
     return(LR)  # One-sided test statistic (Z-score)
-  } else if (side == 2) {
+  } else {
     return(LR^2)  # Two-sided test statistic (chi-square)
   }
 }

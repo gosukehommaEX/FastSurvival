@@ -44,17 +44,9 @@
 #' hist(samples2, main = "Piecewise Uniform Distribution (Proportions)",
 #'      xlab = "Time", breaks = 20)
 #'
-#' # Simple example with single interval
-#' time_simple <- c(0, 10)
-#' intensity_simple <- 5
-#' samples3 <- rpieceunif(500, time_simple, intensity = intensity_simple)
-#' hist(samples3, main = "Single Interval Uniform Distribution",
-#'      xlab = "Time", breaks = 15)
-#'
 #' # Clinical trial recruitment example
-#' # Slow start, ramp up, then slow down
 #' trial_time <- c(0, 3, 9, 15, 18)
-#' trial_intensity <- c(2, 8, 12, 4)  # patients per month
+#' trial_intensity <- c(2, 8, 12, 4)
 #' recruitment <- rpieceunif(200, trial_time, intensity = trial_intensity)
 #' plot(sort(recruitment), 1:200, type = "s",
 #'      xlab = "Time (months)", ylab = "Cumulative Patients",
@@ -63,11 +55,6 @@
 #' @seealso
 #' \code{\link{rpieceexp}} for piecewise exponential distribution,
 #' \code{\link{simData}} for survival data simulation using piecewise distributions
-#'
-#' @references
-#' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
-#' Design and monitoring of survival trials in complex scenarios.
-#' Statistics in Medicine, 38(2), 192-209.
 #'
 #' @importFrom stats runif
 #' @export
@@ -81,7 +68,12 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
     stop("Cannot specify both intensity and proportion arguments")
   }
 
-  # Input validation for proportion
+  # Common validation for time vector
+  if (any(diff(time) <= 0)) {
+    stop("Time vector must be strictly increasing")
+  }
+
+  # Proportion-based implementation
   if (!is.null(proportion)) {
     if (length(time) != length(proportion) + 1) {
       stop("Length of time must be one more than length of proportion")
@@ -91,21 +83,20 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
       stop("All proportions must be non-negative")
     }
 
-    if (abs(sum(proportion) - 1) > .Machine$double.eps^0.5) {
+    tolerance <- .Machine$double.eps^0.5
+    if (abs(sum(proportion) - 1) > tolerance) {
       stop("Proportions must sum to 1")
     }
 
-    # Calculate cumulative proportions for each interval
+    # Calculate cumulative proportions for interval selection
     cumulative_props <- cumsum(proportion)
 
-    # Generate random numbers for interval selection
+    # Generate random numbers for interval selection using vectorized approach
     u <- runif(n)
+    interval_idx <- as.numeric(cut(u, breaks = c(0, cumulative_props),
+                                   labels = FALSE, include.lowest = TRUE))
 
-    # Vectorized interval assignment
-    # Use cut() to assign intervals based on cumulative proportions
-    interval_idx <- as.numeric(cut(u, breaks = c(0, cumulative_props), labels = FALSE, include.lowest = TRUE))
-
-    # Generate uniform random numbers within assigned intervals (vectorized)
+    # Generate uniform random numbers within assigned intervals
     start_times <- time[interval_idx]
     end_times <- time[interval_idx + 1]
     result <- runif(n, min = start_times, max = end_times)
@@ -113,7 +104,7 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
     return(result)
   }
 
-  # Original intensity-based implementation
+  # Intensity-based implementation
   if (length(time) != length(intensity) + 1) {
     stop("Length of time must be one more than length of intensity")
   }
@@ -122,28 +113,20 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
     stop("All intensities must be positive")
   }
 
-  if (any(diff(time) <= 0)) {
-    stop("Time vector must be strictly increasing")
-  }
-
-  # Calculate interval lengths
+  # Calculate interval lengths and expected counts
   interval_lengths <- diff(time)
-
-  # Calculate total expected number of observations in each interval
   expected_counts <- intensity * interval_lengths
 
-  # Calculate cumulative proportions for each interval
+  # Convert to proportions for uniform selection
   total_expected <- sum(expected_counts)
   cumulative_props <- cumsum(expected_counts) / total_expected
 
-  # Generate random numbers for interval selection
+  # Generate random numbers for interval selection using vectorized approach
   u <- runif(n)
+  interval_idx <- as.numeric(cut(u, breaks = c(0, cumulative_props),
+                                 labels = FALSE, include.lowest = TRUE))
 
-  # Vectorized interval assignment
-  # Use cut() to assign intervals based on cumulative proportions
-  interval_idx <- as.numeric(cut(u, breaks = c(0, cumulative_props), labels = FALSE, include.lowest = TRUE))
-
-  # Generate uniform random numbers within assigned intervals (vectorized)
+  # Generate uniform random numbers within assigned intervals
   start_times <- time[interval_idx]
   end_times <- time[interval_idx + 1]
   result <- runif(n, min = start_times, max = end_times)
