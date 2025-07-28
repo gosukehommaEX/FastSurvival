@@ -80,6 +80,30 @@
 #' # View results for first simulation
 #' print(overall_results[simID == 1])
 #'
+#' # Example with subgroups
+#' subgroup_trial <- simTrial(
+#'   nsim = 30,
+#'   N = list(
+#'     control = c(A = 50, B = 50),
+#'     treatment = c(A = 50, B = 50)
+#'   ),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
+#'   ),
+#'   e.hazard = list(
+#'     control = list(A = 0.08, B = 0.12),
+#'     treatment = list(A = 0.05, B = 0.08)
+#'   ),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
+#' subgroup_analysis <- analysisData(subgroup_trial, E = c(50, 100))
+#' subgroup_overall <- overallSummary(subgroup_analysis, control = 1)
+#'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
 #' \code{\link{lrtest}} for log-rank test implementation,
@@ -118,8 +142,22 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     is_treatment = as.integer(group != control)
   )]
 
-  # Helper function for log-rank test computation
-  compute_lr_stats <- function(tte_vec, event_vec, group_vec) {
+  # Pre-compute ranks and event times for each (simID, analysis) combination
+  # This is the key optimization - compute ranks once for all combinations
+  data[, `:=`(
+    time_ranks = rank(tte, ties.method = "min")
+  ), by = .(simID, analysis)]
+
+  # Pre-compute unique event times for each (simID, analysis) combination
+  event_times_dt <- data[event == 1, .(
+    event_times = list(sort(unique(time_ranks)))
+  ), by = .(simID, analysis)]
+
+  # Merge event times back to main data
+  data <- data[event_times_dt, on = .(simID, analysis)]
+
+  # Helper function for log-rank test computation (optimized)
+  compute_lr_stats <- function(tte_vec, event_vec, group_vec, time_ranks_vec, event_times_vec) {
     if (length(unique(group_vec)) != 2 || sum(event_vec) < 2) {
       return(list(lr_statistic = NA_real_, lr_pvalue = NA_real_))
     }
@@ -131,12 +169,13 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      lr_stat <- lrtest(tte_vec, event_vec, group_vec, control, side)
+      # Use optimized lrtest with pre-computed ranks and event times
+      lr_stat <- lrtest(tte_vec, event_vec, group_vec, control, side,
+                        time_ranks = time_ranks_vec, event_times = event_times_vec)
 
       # Calculate p-value based on side parameter
       if (side == 1) {
         # One-sided test: lr_stat is Z-score
-        # For beneficial treatment (HR < 1), we want P(Z <= lr_stat)
         lr_pvalue <- pnorm(lr_stat)
       } else {
         # Two-sided test: lr_stat is chi-square
@@ -149,8 +188,8 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     })
   }
 
-  # Helper function for hazard ratio computation
-  compute_hr <- function(tte_vec, event_vec, group_vec) {
+  # Helper function for hazard ratio computation (optimized)
+  compute_hr <- function(tte_vec, event_vec, group_vec, time_ranks_vec, event_times_vec) {
     if (length(unique(group_vec)) != 2) {
       return(NA_real_)
     }
@@ -162,15 +201,20 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method)
+      # Use optimized esthr with pre-computed ranks and event times
+      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method,
+                         time_ranks = time_ranks_vec, event_times = event_times_vec)
       hr_result$HR
     }, error = function(e) {
       NA_real_
     })
   }
 
-  # Overall population analysis using data.table operations
+  # Overall population analysis using data.table operations with pre-computed values
   overall_results <- data[, {
+    # Extract first event_times list for this group
+    event_times_vec <- event_times[[1]]
+
     # Basic statistics computed in single pass
     list(
       subgroup = "Overall",
@@ -181,9 +225,9 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
       events_total = sum(event),
       events_control = sum(event * is_control),
       events_treatment = sum(event * is_treatment),
-      # Compute statistical tests
-      lr_stats = list(compute_lr_stats(tte, event, group)),
-      hazard_ratio = compute_hr(tte, event, group)
+      # Compute statistical tests with pre-computed values
+      lr_stats = list(compute_lr_stats(tte, event, group, time_ranks, event_times_vec)),
+      hazard_ratio = compute_hr(tte, event, group, time_ranks, event_times_vec)
     )
   }, by = .(simID, analysis)]
 
@@ -200,7 +244,7 @@ overallSummary <- function(data, control = 1, side = 2, hr_est_method = "Cox") {
   overall_results[, hr_method := hr_est_method]
 
   # Remove temporary columns from original data
-  data[, `:=`(is_control = NULL, is_treatment = NULL)]
+  data[, `:=`(is_control = NULL, is_treatment = NULL, time_ranks = NULL, event_times = NULL)]
 
   # Set optimal column order
   setcolorder(overall_results, c("simID", "analysis", "subgroup", "analysis_time",

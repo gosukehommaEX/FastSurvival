@@ -11,6 +11,10 @@
 #'   the control group.
 #' @param side A numeric value indicating the type of test: 1 for one-sided test,
 #'   2 for two-sided test (returns chi-square statistic).
+#' @param time_ranks A numeric vector of pre-computed ranks for time. If NULL,
+#'   ranks will be computed internally. Default is NULL.
+#' @param event_times A numeric vector of pre-computed unique event times. If NULL,
+#'   will be computed internally. Default is NULL.
 #'
 #' @return A numeric value of the log-rank test statistic. For \code{side = 1},
 #'   returns the standardized log-rank statistic (Z-score). For \code{side = 2},
@@ -59,7 +63,7 @@
 #' \code{\link{esthr}} for hazard ratio estimation
 #'
 #' @export
-lrtest <- function(time, event, group, control, side) {
+lrtest <- function(time, event, group, control, side, time_ranks = NULL, event_times = NULL) {
   # Input validation
   if (length(time) != length(event) || length(time) != length(group)) {
     stop("Arguments 'time', 'event', and 'group' must have the same length")
@@ -76,11 +80,19 @@ lrtest <- function(time, event, group, control, side) {
   # Convert groups to numeric values
   j <- as.numeric(group != control)
 
-  # Convert time to integer values to handle ties
-  time <- rank(time, ties.method = "min")
+  # Use pre-computed ranks if available, otherwise compute
+  if (is.null(time_ranks)) {
+    time <- rank(time, ties.method = "min")
+  } else {
+    time <- time_ranks
+  }
 
-  # Times when events occurred
-  t.k <- sort.int(unique.default(time[event == 1]))
+  # Use pre-computed event times if available, otherwise compute
+  if (is.null(event_times)) {
+    t.k <- sort.int(unique.default(time[event == 1]))
+  } else {
+    t.k <- event_times
+  }
 
   # Define numbers at risk
   n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]

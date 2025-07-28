@@ -102,6 +102,23 @@
 #'
 #' print(results)
 #'
+#' # Example with no dropout
+#' trial_data_no_dropout <- simTrial(
+#'   nsim = 500,
+#'   N = list(control = 100, treatment = 100),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.05),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
+#' # Simplified analysis for no dropout case
+#' analysis_no_dropout <- analysisData(trial_data_no_dropout, E = c(50, 100))
+#' overall_no_dropout <- overallSummary(analysis_no_dropout, control = 1, side = 2)
+#' print(head(overall_no_dropout))
+#'
 #' @seealso
 #' \code{\link{overallSummary}} for generating the input overall summary data,
 #' \code{\link{analysisData}} for creating analysis datasets

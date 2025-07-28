@@ -12,8 +12,8 @@ simData(
   proportion = NULL,
   e.time,
   e.hazard,
-  d.time,
-  d.hazard,
+  d.time = NULL,
+  d.hazard = NULL,
   seed = NULL
 )
 }
@@ -43,10 +43,11 @@ The length should be one less than the length of e.time. All values must be posi
 
 \item{d.time}{A numeric vector of time points defining the dropout time intervals.
 The length must be one more than the length of d.hazard. The last element must be Inf.
-Time points must be in increasing order.}
+Time points must be in increasing order. Can be NULL if no dropout is assumed. Default is NULL.}
 
 \item{d.hazard}{A numeric vector of hazard rates for dropout time in each interval.
-The length should be one less than the length of d.time. All values must be positive.}
+The length should be one less than the length of d.time. All values must be positive.
+Can be NULL if no dropout is assumed. Default is NULL.}
 
 \item{seed}{A positive integer for random seed setting. Default is NULL.}
 }
@@ -84,12 +85,13 @@ delayed treatment effects or changing baseline risks over time.
 }
 \item{Dropout Times}{
 Also modeled using piecewise exponential distribution to account for
-time-varying dropout rates.
+time-varying dropout rates. Can be disabled by setting d.time and d.hazard to NULL.
 }
 }
 
 The observed time-to-event is the minimum of survival time and dropout time.
 The total time from study start combines accrual time and time-to-event.
+When dropout is not assumed, dropout.time is set to Inf and dropout indicator is 0.
 }
 \examples{
 library(data.table)
@@ -108,7 +110,7 @@ data1 <- simData(
 )
 print(data1[1:10])  # Show first 10 observations
 
-# Simulation with non-uniform accrual (slow start, ramp up, slow down)
+# Simulation without dropout
 data2 <- simData(
   nsim = 50,
   N = 300,
@@ -116,57 +118,13 @@ data2 <- simData(
   intensity = c(5, 15, 25, 10),  # Varying recruitment rates
   e.time = c(0, 6, Inf),
   e.hazard = c(0.1, 0.05),  # Hazard decreases after 6 months (delayed effect)
-  d.time = c(0, Inf),
-  d.hazard = 0.02,  # Constant low dropout rate
+  d.time = NULL,  # No dropout
+  d.hazard = NULL,
   seed = 456
 )
 
-# Visualize accrual pattern
-accrual_times <- data2[simID == 1, accrual.time]
-hist(accrual_times, breaks = 20, main = "Patient Accrual Pattern",
-     xlab = "Accrual Time (months)", ylab = "Number of Patients")
-
-# Simulation using proportions for accrual
-data3 <- simData(
-  nsim = 200,
-  N = 400,
-  a.time = c(0, 12, 24),
-  proportion = c(0.3, 0.7),  # 30\% in first 12 months, 70\% in next 12
-  e.time = c(0, Inf),
-  e.hazard = 0.08,
-  d.time = c(0, Inf),
-  d.hazard = 0.01
-)
-
-# Calculate summary statistics
-summary_stats <- data3[, .(
-  median_tte = median(tte),
-  dropout_rate = mean(dropout),
-  total_events = sum(1 - dropout),
-  study_duration = max(total)
-), by = simID]
-
-print(summary_stats[1:10])
-
-# Advanced example: Time-varying hazards for complex scenarios
-data4 <- simData(
-  nsim = 100,
-  N = 500,
-  a.time = c(0, 18),  # 18-month accrual
-  intensity = 500/18,
-  e.time = c(0, 3, 12, Inf),  # Multiple change points
-  e.hazard = c(0.15, 0.08, 0.05),  # Decreasing hazard (treatment effect)
-  d.time = c(0, 6, Inf),
-  d.hazard = c(0.08, 0.03),  # Higher early dropout, then lower
-  seed = 789
-)
-
-# Analyze survival patterns
-library(survival)
-surv_data <- data4[simID == 1]
-km_fit <- survfit(Surv(tte, 1 - dropout) ~ 1, data = surv_data)
-plot(km_fit, main = "Kaplan-Meier Survival Curve (First Simulation)",
-     xlab = "Time (months)", ylab = "Survival Probability")
+# Check that dropout column is all zeros
+print(data2[simID == 1, .(dropout_rate = mean(dropout))])
 
 }
 \references{

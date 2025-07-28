@@ -18,6 +18,10 @@
 #'     \item \code{"LR"}: Log-rank test based method
 #'     \item \code{"Cox"}: Cox proportional hazards regression
 #'   }
+#' @param time_ranks A numeric vector of pre-computed ranks for time. If NULL,
+#'   ranks will be computed internally. Default is NULL.
+#' @param event_times A numeric vector of pre-computed unique event times. If NULL,
+#'   will be computed internally. Default is NULL.
 #'
 #' @return A data.frame with two columns:
 #'   \itemize{
@@ -99,7 +103,7 @@
 #' @importFrom survival coxph Surv
 #' @importFrom stats coef
 #' @export
-esthr <- function(time, event, group, control, method) {
+esthr <- function(time, event, group, control, method, time_ranks = NULL, event_times = NULL) {
   # Input validation
   if (length(time) != length(event) || length(time) != length(group)) {
     stop("Arguments 'time', 'event', and 'group' must have the same length")
@@ -117,20 +121,28 @@ esthr <- function(time, event, group, control, method) {
   # Convert groups to numeric values
   j <- as.numeric(group != control)
 
-  # Convert time to integer values to handle ties
-  time <- rank(time, ties.method = "min")
-
   if(method == 'PY') {
-    # Person-Year method
+    # Person-Year method - no ranking needed
     HR <- (sum(event * j) / sum(time * j)) / ((sum(event * (1 - j)) / sum(time * (1 - j))))
   } else if(method == 'Cox') {
-    # Cox proportional hazards regression
+    # Cox proportional hazards regression - no ranking needed
     cox.fit <- coxph(Surv(time, event) ~ j)
     HR <- exp(coef(cox.fit)[1])
   } else {
     # Common calculations for Pike, Peto, and LR methods
-    # Times when events occurred
-    t.k <- sort.int(unique.default(time[event == 1]))
+    # Use pre-computed ranks if available, otherwise compute
+    if (is.null(time_ranks)) {
+      time <- rank(time, ties.method = "min")
+    } else {
+      time <- time_ranks
+    }
+
+    # Use pre-computed event times if available, otherwise compute
+    if (is.null(event_times)) {
+      t.k <- sort.int(unique.default(time[event == 1]))
+    } else {
+      t.k <- event_times
+    }
 
     # Define numbers at risk
     n.1k <- rev(cumsum(rev(tabulate(time * j))))[t.k]

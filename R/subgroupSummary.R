@@ -73,7 +73,7 @@
 #'   seed = 123
 #' )
 #'
-#' #' # Create analysis datasets
+#' # Create analysis datasets
 #' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate subgroup summary
@@ -81,6 +81,30 @@
 #'
 #' # View results for first simulation, first analysis
 #' print(subgroup_results[simID == 1 & analysis == 1])
+#'
+#' # Example with no dropout
+#' trial_data_no_dropout <- simTrial(
+#'   nsim = 50,
+#'   N = list(
+#'     control = c(A = 50, B = 50),
+#'     treatment = c(A = 50, B = 50)
+#'   ),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
+#'   ),
+#'   e.hazard = list(
+#'     control = list(A = 0.08, B = 0.12),
+#'     treatment = list(A = 0.05, B = 0.08)
+#'   ),
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
+#' )
+#'
+#' analysis_data_no_dropout <- analysisData(trial_data_no_dropout, E = c(50, 100, 150))
+#' subgroup_results_no_dropout <- subgroupSummary(analysis_data_no_dropout, control = 1)
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
@@ -115,8 +139,22 @@ subgroupSummary <- function(data, control = 1, hr_est_method = "Cox") {
     is_treatment = as.integer(group != control)
   )]
 
-  # Helper function for hazard ratio computation
-  compute_hr <- function(tte_vec, event_vec, group_vec) {
+  # Pre-compute ranks and event times for each (simID, analysis, subgroup) combination
+  # This is the key optimization - compute ranks once for all combinations
+  data[, `:=`(
+    time_ranks = rank(tte, ties.method = "min")
+  ), by = .(simID, analysis, subgroup)]
+
+  # Pre-compute unique event times for each (simID, analysis, subgroup) combination
+  event_times_dt <- data[event == 1, .(
+    event_times = list(sort(unique(time_ranks)))
+  ), by = .(simID, analysis, subgroup)]
+
+  # Merge event times back to main data
+  data <- data[event_times_dt, on = .(simID, analysis, subgroup)]
+
+  # Helper function for hazard ratio computation (optimized)
+  compute_hr <- function(tte_vec, event_vec, group_vec, time_ranks_vec, event_times_vec) {
     if (length(unique(group_vec)) != 2) {
       return(NA_real_)
     }
@@ -128,15 +166,20 @@ subgroupSummary <- function(data, control = 1, hr_est_method = "Cox") {
     }
 
     tryCatch({
-      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method)
+      # Use optimized esthr with pre-computed ranks and event times
+      hr_result <- esthr(tte_vec, event_vec, group_vec, control, hr_est_method,
+                         time_ranks = time_ranks_vec, event_times = event_times_vec)
       hr_result$HR
     }, error = function(e) {
       NA_real_
     })
   }
 
-  # Subgroup analysis using data.table operations
+  # Subgroup analysis using data.table operations with pre-computed values
   subgroup_results <- data[, {
+    # Extract first event_times list for this group (handle case where event_times might be NULL)
+    event_times_vec <- if(length(event_times) > 0) event_times[[1]] else integer(0)
+
     list(
       n_total = .N,
       n_control = sum(is_control),
@@ -144,7 +187,7 @@ subgroupSummary <- function(data, control = 1, hr_est_method = "Cox") {
       events_total = sum(event),
       events_control = sum(event * is_control),
       events_treatment = sum(event * is_treatment),
-      hazard_ratio = compute_hr(tte, event, group)
+      hazard_ratio = compute_hr(tte, event, group, time_ranks, event_times_vec)
     )
   }, by = .(simID, analysis, subgroup)]
 
@@ -152,7 +195,7 @@ subgroupSummary <- function(data, control = 1, hr_est_method = "Cox") {
   subgroup_results[, hr_method := hr_est_method]
 
   # Remove temporary columns from original data
-  data[, `:=`(is_control = NULL, is_treatment = NULL)]
+  data[, `:=`(is_control = NULL, is_treatment = NULL, time_ranks = NULL, event_times = NULL)]
 
   # Set optimal column order
   setcolorder(subgroup_results, c("simID", "analysis", "subgroup", "hazard_ratio", "hr_method",
