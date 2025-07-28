@@ -2,8 +2,6 @@
 #'
 #' This function calculates the log-rank test statistic for comparing survival curves
 #' between two groups. It can return either one-sided or two-sided test statistics.
-#' The implementation is optimized for performance compared to standard survival
-#' analysis functions.
 #'
 #' @param time A numeric vector representing the event times for all subjects.
 #' @param event A numeric vector representing the event indicator for all subjects
@@ -59,13 +57,6 @@
 #' @seealso
 #' \code{\link[survival]{survdiff}} for the standard implementation,
 #' \code{\link{esthr}} for hazard ratio estimation
-#'
-#' @references
-#' Mantel, N. (1966). Evaluation of survival data and two new rank order statistics
-#' arising in its consideration. Cancer Chemotherapy Reports, 50(3), 163-270.
-#'
-#' Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test procedures.
-#' Journal of the Royal Statistical Society, 135(2), 185-207.
 #'
 #' @export
 lrtest <- function(time, event, group, control, side) {

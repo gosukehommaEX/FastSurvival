@@ -88,9 +88,6 @@
 #' Design and monitoring of survival trials in complex scenarios.
 #' Statistics in Medicine, 38(2), 192-209.
 #'
-#' Friedman, L. M., Furberg, C. D., & DeMets, D. L. (2010).
-#' Fundamentals of Clinical Trials (4th ed.). Springer.
-#'
 #' @importFrom stats runif
 #' @export
 rpieceexp <- function(n, time, hazard) {

@@ -1,12 +1,12 @@
-#' Simulate survival data for clinical trials using data.table
+#' Simulate survival data for clinical trials using dplyr
 #'
 #' This function generates simulation datasets for clinical trials with time-to-event
-#' endpoints using data.table for efficient data manipulation. It accounts for piecewise
+#' endpoints using dplyr for efficient data manipulation. It accounts for piecewise
 #' uniform distribution for patient accrual and piecewise exponential distributions for
 #' patient survival time and dropout time during the trial.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
-#' @param N A positive integer specifying the total sample size per simulation.
+#' @param n A positive integer specifying the total sample size per simulation.
 #' @param a.time A numeric vector of time points defining the accrual intervals.
 #'   The length must be one more than the length of intensity (when used) or proportion (when used).
 #'   Time points must be in increasing order.
@@ -29,9 +29,10 @@
 #'   Can be NULL if no dropout is assumed. Default is NULL.
 #' @param seed A positive integer for random seed setting. Default is NULL.
 #'
-#' @return A data.table containing the simulated survival data with the following columns:
+#' @return A tibble containing the simulated survival data with the following columns:
 #' \describe{
 #'   \item{simID}{Simulation iteration ID (1 to nsim)}
+#'   \item{patientID}{Patient ID (1 to n)}
 #'   \item{accrual.time}{Patient accrual time from study start}
 #'   \item{surv.time}{Survival time from patient entry}
 #'   \item{dropout.time}{Time to dropout from patient entry}
@@ -65,12 +66,12 @@
 #' When dropout is not assumed, dropout.time is set to Inf and dropout indicator is 0.
 #'
 #' @examples
-#' library(data.table)
+#' library(dplyr)
 #'
 #' # Basic simulation with uniform accrual over 24 months
 #' data1 <- simData(
 #'   nsim = 100,
-#'   N = 200,
+#'   n = 200,
 #'   a.time = c(0, 24),
 #'   intensity = 200/24,  # Constant rate: 200 patients over 24 months
 #'   e.time = c(0, Inf),
@@ -79,12 +80,12 @@
 #'   d.hazard = -log(1 - 0.1) / 12,  # 10% dropout rate per year
 #'   seed = 123
 #' )
-#' print(data1[1:10])  # Show first 10 observations
+#' print(data1)
 #'
 #' # Simulation without dropout
 #' data2 <- simData(
 #'   nsim = 50,
-#'   N = 300,
+#'   n = 300,
 #'   a.time = c(0, 6, 12, 18, 24),
 #'   intensity = c(5, 15, 25, 10),  # Varying recruitment rates
 #'   e.time = c(0, 6, Inf),
@@ -95,7 +96,7 @@
 #' )
 #'
 #' # Check that dropout column is all zeros
-#' print(data2[simID == 1, .(dropout_rate = mean(dropout))])
+#' print(data2 %>% filter(dropout == 1))
 #'
 #' @seealso
 #' \code{\link{simTrial}} for multi-arm clinical trial simulation,
@@ -107,13 +108,9 @@
 #' Design and monitoring of survival trials in complex scenarios.
 #' Statistics in Medicine, 38(2), 192-209.
 #'
-#' Lachin, J. M., & Foulkes, M. A. (1986). Evaluation of sample size and power
-#' for analyses of survival with allowance for nonuniform patient entry, losses
-#' to follow-up, noncompliance, and stratification. Biometrics, 42(3), 507-519.
-#'
-#' @import data.table
+#' @import dplyr
 #' @export
-simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL, e.time,
+simData <- function(nsim = 1e+3, n, a.time, intensity = NULL, proportion = NULL, e.time,
                     e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
 
   # Set seed if provided
@@ -142,41 +139,39 @@ simData <- function(nsim = 1e+3, N, a.time, intensity = NULL, proportion = NULL,
   # Check if dropout is assumed
   has_dropout <- !is.null(d.time) && !is.null(d.hazard)
 
-  # Pre-calculate total sample size for efficient memory allocation
-  total_n <- N * nsim
-
-  # Create the main data.table with simID using efficient rep.int
-  dt <- data.table(
-    simID = rep.int(seq_len(nsim), rep.int(N, nsim))
-  )
-
-  # Generate accrual times using high-performance base function
-  dt[, accrual.time := rpieceunif(.N, a.time, intensity, proportion)]
-
-  # Generate survival times using high-performance base function
-  dt[, surv.time := rpieceexp(.N, e.time, e.hazard)]
+  # Create the main dataset
+  dataset <- tibble(
+    simID = rep(1:nsim, each = n), # Simulation ID
+    patientID = rep(1:n, nsim)
+  ) %>%
+    group_by(simID) %>%
+    mutate(
+      accrual.time = rpieceunif(n, a.time, intensity, proportion), # Accrual time
+      surv.time = rpieceexp(n, e.time, e.hazard)
+    )
 
   # Generate dropout times based on whether dropout is assumed
   if (has_dropout) {
     # Generate dropout times using high-performance base function
-    dt[, dropout.time := rpieceexp(.N, d.time, d.hazard)]
+    dataset <- dataset %>%
+      mutate(
+        dropout.time = rpieceexp(n, d.time, d.hazard) # Time at dropout
+      )
   } else {
     # Set dropout.time to Inf (no dropout)
-    dt[, dropout.time := Inf]
+    dataset <- dataset %>%
+      mutate(
+        dropout.time = Inf # Time at dropout
+      )
   }
 
-  # Calculate derived variables using data.table's efficient operations
-  # Use := for reference modification (no copying)
-  dt[, `:=`(
-    tte = pmin(surv.time, dropout.time),
-    dropout = as.integer(dropout.time < surv.time)
-  )]
+  # Calculate total time
+  dataset <- dataset %>%
+    mutate(
+      tte = pmin(surv.time, dropout.time), # Time-to-event
+      total = accrual.time + tte, # Total time (accrual + time-to-event)
+      dropout = as.numeric(dropout.time < surv.time) # Dropout indicator
+    )
 
-  # Calculate total time using data.table's efficient column operations
-  dt[, total := accrual.time + tte]
-
-  # Set column order efficiently without copying
-  setcolorder(dt, c("simID", "accrual.time", "surv.time", "dropout.time", "tte", "total", "dropout"))
-
-  return(dt)
+  return(dataset)
 }

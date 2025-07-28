@@ -65,9 +65,9 @@
 #' \code{\link{simData}} for survival data simulation using piecewise distributions
 #'
 #' @references
-#' Lachin, J. M., & Foulkes, M. A. (1986). Evaluation of sample size and power
-#' for analyses of survival with allowance for nonuniform patient entry, losses
-#' to follow-up, noncompliance, and stratification. Biometrics, 42(3), 507-519.
+#' Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
+#' Design and monitoring of survival trials in complex scenarios.
+#' Statistics in Medicine, 38(2), 192-209.
 #'
 #' @importFrom stats runif
 #' @export

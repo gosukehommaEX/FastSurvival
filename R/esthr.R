@@ -43,8 +43,8 @@
 #'     where \eqn{V_1} is the variance of the log-rank statistic.
 #'   }
 #'   \item{Log-rank based (LR)}{
-#'     Uses the log-rank statistic: \deqn{HR = \exp\left(\frac{2Z}{\sqrt{O_1 + O_0}}\right)}
-#'     where \eqn{Z} is the standardized log-rank statistic.
+#'     Uses the log-rank statistic: \deqn{HR = \exp\left(\frac{(1+r)Z}{\sqrt{r(O_1 + O_0)}}\right)}
+#'     where \eqn{r} is the allocation ratio of the treatment group, and \eqn{Z} is the standardized log-rank statistic.
 #'   }
 #'   \item{Cox regression}{
 #'     Uses the standard Cox proportional hazards model via \code{\link[survival]{coxph}}.
@@ -73,9 +73,11 @@
 #' \dontrun{
 #' library(microbenchmark)
 #' microbenchmark(
-#'   Cox_standard = coxph(Surv(time, status) ~ trt, data = veteran),
-#'   esthr_Cox = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
+#'   esthr_Cox  = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
+#'   esthr_PY   = esthr(veteran$time, veteran$status, veteran$trt, 1, 'PY'),
 #'   esthr_Pike = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Pike'),
+#'   esthr_Peto = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Peto'),
+#'   esthr_LR   = esthr(veteran$time, veteran$status, veteran$trt, 1, 'LR'),
 #'   times = 100
 #' )
 #' }
@@ -161,8 +163,9 @@ esthr <- function(time, event, group, control, method) {
       HR <- exp((O1 - E1) / V1)
     } else if(method == 'LR') {
       # Log-rank test based method
+      r <- (length(j) - sum(j)) / sum(j)
       LR <- (O1 - E1) / sqrt(V1)
-      HR <- exp(2 * LR / sqrt(O1 + O0))
+      HR <- exp((1 + r) * LR / sqrt(r * (O1 + O0)))
     }
   }
 
