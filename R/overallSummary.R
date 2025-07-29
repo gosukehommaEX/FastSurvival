@@ -60,46 +60,25 @@
 #'
 #' # Generate trial data
 #' trial_data <- simTrial(
-#'   nsim = 100,
-#'   n = list(
-#'     control = c(A = 25, B = 112, C = 113),
-#'     treatment = c(A = 25, B = 112, C = 113)
-#'   ),
-#'   a.time = c(0, 12.5),
-#'   intensity = 40,
-#'   e.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
-#'   ),
-#'   e.hazard = list(
-#'     control = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3),
-#'     treatment = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811)
-#'   ),
-#'   d.time = NULL,
-#'   d.hazard = NULL,
-#'   seed = 1
+#'   nsim = 50,
+#'   N = list(control = 100, treatment = 100),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.05),
+#'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   d.hazard = list(control = 0.01, treatment = 0.01),
+#'   seed = 123
 #' )
 #'
 #' # Create analysis datasets
-#' analysis_data <- analysisData(trial_data, E = c(141, 246, 352))
+#' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate overall population summary
 #' overall_results <- overallSummary(analysis_data, control = 1, side = 2, hr_est_method = "Cox")
 #'
 #' # View results for first simulation
 #' print(overall_results[overall_results$simID == 1, ])
-#'
-#' # Summary across simulations
-#' summary_stats <- overall_results %>%
-#'   group_by(analysis) %>%
-#'   summarise(
-#'     mean_hr = mean(hazard_ratio, na.rm = TRUE),
-#'     median_hr = median(hazard_ratio, na.rm = TRUE),
-#'     power = mean(lr_pvalue < 0.05, na.rm = TRUE),
-#'     mean_events = mean(events_total, na.rm = TRUE),
-#'     .groups = 'drop'
-#'   )
-#' print(summary_stats)
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,

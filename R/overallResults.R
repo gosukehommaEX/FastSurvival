@@ -70,43 +70,34 @@
 #'
 #' # Generate trial data
 #' trial_data <- simTrial(
-#'   nsim = 100,
-#'   n = list(
-#'     control = c(A = 25, B = 112, C = 113),
-#'     treatment = c(A = 25, B = 112, C = 113)
-#'   ),
-#'   a.time = c(0, 12.5),
-#'   intensity = 40,
-#'   e.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
-#'   ),
-#'   e.hazard = list(
-#'     control = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3),
-#'     treatment = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811)
-#'   ),
-#'   d.time = NULL,
-#'   d.hazard = NULL,
-#'   seed = 1
+#'   nsim = 1000,
+#'   N = list(control = 100, treatment = 100),
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.05),
+#'   d.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   d.hazard = list(control = 0.01, treatment = 0.01),
+#'   seed = 123
 #' )
 #'
 #' # Create analysis datasets
-#' analysis_data <- analysisData(trial_data, E = c(141, 246, 352))
+#' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate overall summary
 #' overall_data <- overallSummary(analysis_data, control = 1, side = 1, hr_est_method = "LR")
 #'
 #' # Define stopping boundaries
-#' futility_bounds <- c(0.788, NA, -2)  # HR-based futility at analyses 1 and 3
-#' efficacy_bounds <- c(NA, -2.44, -2)  # p-value-based efficacy at analyses 2 and 3
+#' futility_bounds <- c(0.8, NA, 1.2)  # HR-based futility at analyses 1 and 3
+#' efficacy_bounds <- c(NA, 0.025, 0.05)  # p-value-based efficacy at analyses 2 and 3
 #'
 #' # Calculate stopping probabilities
 #' results <- overallResults(
 #'   data = overall_data,
 #'   futility_bounds = futility_bounds,
-#'   futility_bounds_type = "test_statistic",
+#'   futility_bounds_type = "hr",
 #'   efficacy_bounds = efficacy_bounds,
-#'   efficacy_bounds_type = "test_statistic"
+#'   efficacy_bounds_type = "p_val"
 #' )
 #'
 #' print(results)
@@ -116,6 +107,7 @@
 #' \code{\link{analysisData}} for creating analysis datasets
 #'
 #' @import dplyr
+#' @importFrom tidyr complete pivot_wider
 #' @export
 overallResults <- function(data, futility_bounds, futility_bounds_type,
                            efficacy_bounds, efficacy_bounds_type) {

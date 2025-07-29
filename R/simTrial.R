@@ -228,41 +228,54 @@ simTrial <- function(nsim = 1000, N, a.time, intensity = NULL, proportion = NULL
     # Use extractIntensity to calculate proportions for delayed accrual
     proportions_result <- extractIntensity(N, overall.time, overall.intensity, a.time)
 
-    # Convert to unique time intervals
-    all_times <- sort(unique(c(overall.time, unlist(a.time))))
-    time_points <- c(all_times[1], all_times[length(all_times)])  # Just start and end
-
     for (i in seq_len(nrow(param_combinations))) {
       combo <- param_combinations[i, ]
 
       # Extract sample size for this combination
       n_val <- extract_sample_size(N, combo$group, combo$subgroup, has_subgroups)
 
-      # Get proportion for this subgroup from extractIntensity
       if (has_subgroups && !is.na(combo$subgroup)) {
+        # Get proportion for this subgroup from extractIntensity
         prop_col_name <- paste0(combo$subgroup, "_proportion")
         if (prop_col_name %in% names(proportions_result)) {
-          accrual_proportions <- proportions_result[[prop_col_name]]
+          subgroup_proportions <- proportions_result[[prop_col_name]]
         } else {
-          # Fallback: uniform distribution
-          accrual_proportions <- rep(1/nrow(proportions_result), nrow(proportions_result))
+          subgroup_proportions <- rep(0, nrow(proportions_result))
         }
+
+        # Calculate actual patient numbers for each period (using your approach)
+        n_each_period <- pmax(1, round(subgroup_proportions * n_val))
+
+        # Adjust the last period to ensure total equals n_val
+        if (sum(n_each_period) != n_val) {
+          last_active_idx <- max(which(n_each_period > 0))
+          n_each_period[last_active_idx] <- n_each_period[last_active_idx] + (n_val - sum(n_each_period))
+        }
+
+        # Convert back to proportions, keeping only active periods
+        active_periods <- n_each_period > 0
+        final_proportions <- n_each_period[active_periods] / n_val
+
+        # Get corresponding time points for active periods
+        time_intervals <- sort(unique(c(overall.time, unlist(a.time))))
+        active_time_start <- time_intervals[which(active_periods)]
+        active_time_end <- time_intervals[which(active_periods) + 1]
+        active_time_points <- c(active_time_start[1], active_time_end)
+
+        # Generate accrual times using the calculated proportions
+        accrual_times <- rpieceunif(
+          n = n_val * nsim,
+          time = active_time_points,
+          proportion = final_proportions
+        )
       } else {
-        # Use first subgroup's proportions as fallback
-        first_prop_col <- names(proportions_result)[2]  # Skip interval column
-        accrual_proportions <- proportions_result[[first_prop_col]]
+        # Fallback for cases without subgroups
+        accrual_times <- rpieceunif(
+          n = n_val * nsim,
+          time = c(min(overall.time), max(overall.time)),
+          proportion = 1
+        )
       }
-
-      # Create time vector for rpieceunif (start, interval_ends)
-      all_times_sorted <- sort(unique(c(overall.time, unlist(a.time))))
-      time_vector <- all_times_sorted
-
-      # Generate accrual times using rpieceunif with the proportions
-      accrual_times <- rpieceunif(
-        n = n_val * nsim,
-        time = time_vector,
-        proportion = accrual_proportions
-      )
 
       # Extract survival parameters
       e_time_val <- extract_parameter(e.time, combo$group, combo$subgroup, has_subgroups)

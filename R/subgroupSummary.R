@@ -47,57 +47,33 @@
 #'
 #' # Generate trial data with subgroups
 #' trial_data <- simTrial(
-#'   nsim = 100,
-#'   n = list(
-#'     control = c(A = 25, B = 112, C = 113),
-#'     treatment = c(A = 25, B = 112, C = 113)
+#'   nsim = 50,
+#'   N = list(
+#'     control = c(A = 50, B = 50),
+#'     treatment = c(A = 50, B = 50)
 #'   ),
-#'   a.time = c(0, 12.5),
-#'   intensity = 40,
+#'   a.time = c(0, 18),
+#'   intensity = 200/18,
 #'   e.time = list(
-#'     control = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf)),
-#'     treatment = list(A = c(0, Inf), B = c(0, Inf), C = c(0, Inf))
+#'     control = list(A = c(0, Inf), B = c(0, Inf)),
+#'     treatment = list(A = c(0, Inf), B = c(0, Inf))
 #'   ),
 #'   e.hazard = list(
-#'     control = list(A = log(2) / 4.3, B = log(2) / 4.3, C = log(2) / 4.3),
-#'     treatment = list(A = log(2) / 5.811, B = log(2) / 5.811, C = log(2) / 5.811)
+#'     control = list(A = 0.08, B = 0.12),
+#'     treatment = list(A = 0.05, B = 0.08)
 #'   ),
-#'   d.time = NULL,
-#'   d.hazard = NULL,
-#'   seed = 1
+#'   d.time = NULL,  # No dropout
+#'   d.hazard = NULL
 #' )
 #'
 #' # Create analysis datasets
-#' analysis_data <- analysisData(trial_data, E = c(141, 246, 352))
+#' analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
 #'
 #' # Generate subgroup summary
 #' subgroup_results <- subgroupSummary(analysis_data, control = 1, hr_est_method = "Cox")
 #'
 #' # View results for first simulation, first analysis
 #' print(subgroup_results[subgroup_results$simID == 1 & subgroup_results$analysis == 1, ])
-#'
-#' # Summary across simulations by subgroup
-#' subgroup_summary <- subgroup_results %>%
-#'   group_by(analysis, subgroup) %>%
-#'   summarise(
-#'     mean_hr = mean(hazard_ratio, na.rm = TRUE),
-#'     median_hr = median(hazard_ratio, na.rm = TRUE),
-#'     mean_events = mean(events_total, na.rm = TRUE),
-#'     mean_patients = mean(n_total, na.rm = TRUE),
-#'     .groups = 'drop'
-#'   )
-#' print(subgroup_summary)
-#'
-#' # Compare with overall results
-#' overall_results <- overallSummary(analysis_data, control = 1, hr_est_method = "Cox")
-#' overall_comparison <- overall_results %>%
-#'   group_by(analysis) %>%
-#'   summarise(
-#'     overall_mean_hr = mean(hazard_ratio, na.rm = TRUE),
-#'     overall_mean_events = mean(events_total, na.rm = TRUE),
-#'     .groups = 'drop'
-#'   )
-#' print(overall_comparison)
 #'
 #' @seealso
 #' \code{\link{analysisData}} for creating the input analysis datasets,
