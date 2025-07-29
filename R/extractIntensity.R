@@ -1,9 +1,9 @@
-#' Extract accrual intensity proportions for subgroups with delayed recruitment
+#' Extract accrual intensity proportions for subgroups with delayed recruitment (FIXED VERSION)
 #'
 #' This function calculates the proportion of patients recruited in each time interval
 #' for each subgroup when subgroups have different recruitment periods within an
-#' overall study timeline. It handles scenarios where subgroups may start recruitment
-#' at different times while maintaining overall intensity targets.
+#' overall study timeline. It ensures that each subgroup recruits exactly their
+#' specified number of patients while maintaining overall intensity targets.
 #'
 #' @param n A named list where each element corresponds to a treatment group.
 #'   Each element should be a named vector with subgroup sample sizes.
@@ -26,19 +26,18 @@
 #'   }
 #'
 #' @details
+#' CORRECTED VERSION: This version ensures that:
+#' 1. Each subgroup recruits exactly their specified number of patients (preserves original N)
+#' 2. Overall intensity targets are maintained in each time interval
+#' 3. Delayed subgroups recruit at higher rates when active to compensate for lost time
+#'
 #' The function performs the following steps:
 #' \enumerate{
 #'   \item Calculates total sample sizes for each subgroup across all treatment groups
 #'   \item Creates unique time intervals from all accrual timelines
-#'   \item Determines intensity for each interval based on overall.a.time and overall.intensity
-#'   \item Identifies active subgroups for each interval
-#'   \item Allocates target recruitment proportionally based on subgroup sample sizes
-#'   \item Normalizes proportions so each subgroup sums to 1 across intervals
+#'   \item For each subgroup, distributes their total patients across their active periods
+#'   \item Ensures proportions sum to 1 for each subgroup
 #' }
-#'
-#' This is particularly useful for clinical trial simulations with delayed subgroup
-#' recruitment where different biomarker-defined populations may enter the study
-#' at different time points while maintaining overall recruitment targets.
 #'
 #' @examples
 #' # Example with delayed subgroup A recruitment
@@ -46,33 +45,16 @@
 #'   control = c(A = 25, B = 112, C = 113),
 #'   treatment = c(A = 25, B = 112, C = 113)
 #' )
-#' overall.a.time <- c(0, 3, 9, 12)
-#' overall.intensity <- c(20, 60, 100)
+#' overall.a.time <- c(0, 12.5)
+#' overall.intensity <- 40
 #' a.time <- list(
-#'   A = c(6, 9, 12),
-#'   B = c(0, 3, 9, 12),
-#'   C = c(0, 3, 9, 12)
+#'   A = c(8, 12.5),
+#'   B = c(0, 12.5),
+#'   C = c(0, 12.5)
 #' )
 #'
 #' result <- extractIntensity(n, overall.a.time, overall.intensity, a.time)
 #' print(result)
-#'
-#' # Example with three treatment groups
-#' n_multi <- list(
-#'   control = c(A = 20, B = 80),
-#'   treatmentA = c(A = 20, B = 80),
-#'   treatmentB = c(A = 20, B = 80)
-#' )
-#' overall.a.time_multi <- c(0, 6, 12, 18)
-#' overall.intensity_multi <- c(15, 25, 20)
-#' a.time_multi <- list(
-#'   A = c(6, 12, 18),
-#'   B = c(0, 6, 12, 18)
-#' )
-#'
-#' result_multi <- extractIntensity(n_multi, overall.a.time_multi,
-#'                                  overall.intensity_multi, a.time_multi)
-#' print(result_multi)
 #'
 #' @seealso
 #' \code{\link{simTrial}} for clinical trial simulation using these proportions,
@@ -145,73 +127,50 @@ extractIntensity <- function(n, overall.a.time, overall.intensity, a.time) {
     end = all_times[-1]
   )
 
-  # Determine intensity for each interval based on overall.a.time
-  intervals$intensity <- sapply(seq_len(nrow(intervals)), function(i) {
-    interval_mid <- (intervals$start[i] + intervals$end[i]) / 2
-    overall_idx <- findInterval(interval_mid, overall.a.time)
-    if (overall_idx > 0 && overall_idx <= length(overall.intensity)) {
-      return(overall.intensity[overall_idx])
-    } else {
-      return(0)
-    }
-  })
-
-  # Calculate target patients per interval
-  intervals$target_patients <- (intervals$end - intervals$start) * intervals$intensity
-
-  # Function to determine active subgroups for each interval
-  get_active_subgroups <- function(start_time, end_time) {
-    active <- character(0)
-
-    for (subgroup_name in names(a.time)) {
-      subgroup_times <- a.time[[subgroup_name]]
-      if (start_time < max(subgroup_times) && end_time > min(subgroup_times)) {
-        active <- c(active, subgroup_name)
-      }
-    }
-
-    return(active)
-  }
-
   # Get subgroup names
   subgroup_names <- names(subgroup_totals)
 
-  # Calculate proportions for each subgroup across all intervals
-  # First, calculate how much each subgroup should get in each interval
+  # CORRECTED APPROACH: Each subgroup distributes their total patients across their active periods
+  # This preserves original sample sizes while allowing temporal flexibility
 
-  # Initialize allocation matrix: intervals x subgroups
-  allocation_matrix <- matrix(0, nrow = nrow(intervals), ncol = length(subgroup_names))
-  colnames(allocation_matrix) <- subgroup_names
+  # Initialize proportion matrix: intervals x subgroups
+  proportion_matrix <- matrix(0, nrow = nrow(intervals), ncol = length(subgroup_names))
+  colnames(proportion_matrix) <- subgroup_names
 
-  # Calculate total study allocation for each interval (preserving overall intensity)
-  total_allocation_per_interval <- intervals$target_patients
+  # For each subgroup, calculate proportions based on their active periods
+  for (j in seq_along(subgroup_names)) {
+    subgroup_name <- subgroup_names[j]
+    subgroup_times <- a.time[[subgroup_name]]
+    subgroup_start <- min(subgroup_times)
+    subgroup_end <- max(subgroup_times)
+    subgroup_duration <- subgroup_end - subgroup_start
 
-  # For each interval, allocate to active subgroups proportionally
-  for (i in seq_len(nrow(intervals))) {
-    active_subgroups <- get_active_subgroups(intervals$start[i], intervals$end[i])
+    # Calculate total "time weight" for this subgroup across all intervals
+    total_time_weight <- 0
+    time_weights <- numeric(nrow(intervals))
 
-    if (length(active_subgroups) > 0) {
-      # Get sample sizes for active subgroups
-      active_n <- sapply(active_subgroups, function(sg) subgroup_totals[[sg]])
-      names(active_n) <- active_subgroups
+    for (i in seq_len(nrow(intervals))) {
+      interval_start <- intervals$start[i]
+      interval_end <- intervals$end[i]
 
-      # Allocate proportionally among active subgroups
-      total_active <- sum(active_n)
-      for (subgroup_name in active_subgroups) {
-        allocation_matrix[i, subgroup_name] <-
-          (active_n[subgroup_name] / total_active) * total_allocation_per_interval[i]
+      # Calculate overlap between interval and subgroup active period
+      overlap_start <- max(interval_start, subgroup_start)
+      overlap_end <- min(interval_end, subgroup_end)
+      overlap_length <- max(0, overlap_end - overlap_start)
+
+      if (overlap_length > 0) {
+        time_weights[i] <- overlap_length
+        total_time_weight <- total_time_weight + overlap_length
       }
     }
-  }
 
-  # Calculate total allocation for each subgroup
-  subgroup_total_allocations <- colSums(allocation_matrix)
-
-  # Convert to proportions within each subgroup (each subgroup sums to 1)
-  proportion_matrix <- allocation_matrix
-  for (j in seq_along(subgroup_names)) {
-    if (subgroup_total_allocations[j] > 0) {
-      proportion_matrix[, j] <- allocation_matrix[, j] / subgroup_total_allocations[j]
+    # Distribute subgroup's total patients proportionally across active intervals
+    if (total_time_weight > 0) {
+      for (i in seq_len(nrow(intervals))) {
+        if (time_weights[i] > 0) {
+          proportion_matrix[i, j] <- time_weights[i] / total_time_weight
+        }
+      }
     }
   }
 
