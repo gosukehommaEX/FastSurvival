@@ -88,8 +88,26 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
       stop("Proportions must sum to 1")
     }
 
+    # Handle zero proportions by filtering out intervals with zero probability
+    active_intervals <- which(proportion > tolerance)
+
+    if (length(active_intervals) == 0) {
+      stop("All proportions are effectively zero")
+    }
+
+    # Filter to active intervals only
+    active_proportion <- proportion[active_intervals]
+    active_time_start <- time[active_intervals]
+    active_time_end <- time[active_intervals + 1]
+
+    # Renormalize active proportions to sum to 1
+    active_proportion <- active_proportion / sum(active_proportion)
+
     # Calculate cumulative proportions for interval selection
-    cumulative_props <- cumsum(proportion)
+    cumulative_props <- cumsum(active_proportion)
+
+    # Ensure the last cumulative proportion is exactly 1
+    cumulative_props[length(cumulative_props)] <- 1.0
 
     # Generate random numbers for interval selection using vectorized approach
     u <- runif(n)
@@ -97,8 +115,8 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
                                    labels = FALSE, include.lowest = TRUE))
 
     # Generate uniform random numbers within assigned intervals
-    start_times <- time[interval_idx]
-    end_times <- time[interval_idx + 1]
+    start_times <- active_time_start[interval_idx]
+    end_times <- active_time_end[interval_idx]
     result <- runif(n, min = start_times, max = end_times)
 
     return(result)
@@ -117,9 +135,25 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
   interval_lengths <- diff(time)
   expected_counts <- intensity * interval_lengths
 
+  # Handle zero expected counts
+  tolerance <- .Machine$double.eps^0.5
+  active_intervals <- which(expected_counts > tolerance)
+
+  if (length(active_intervals) == 0) {
+    stop("All intensities result in effectively zero expected counts")
+  }
+
+  # Filter to active intervals only
+  active_expected_counts <- expected_counts[active_intervals]
+  active_time_start <- time[active_intervals]
+  active_time_end <- time[active_intervals + 1]
+
   # Convert to proportions for uniform selection
-  total_expected <- sum(expected_counts)
-  cumulative_props <- cumsum(expected_counts) / total_expected
+  total_expected <- sum(active_expected_counts)
+  cumulative_props <- cumsum(active_expected_counts) / total_expected
+
+  # Ensure the last cumulative proportion is exactly 1
+  cumulative_props[length(cumulative_props)] <- 1.0
 
   # Generate random numbers for interval selection using vectorized approach
   u <- runif(n)
@@ -127,8 +161,8 @@ rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
                                  labels = FALSE, include.lowest = TRUE))
 
   # Generate uniform random numbers within assigned intervals
-  start_times <- time[interval_idx]
-  end_times <- time[interval_idx + 1]
+  start_times <- active_time_start[interval_idx]
+  end_times <- active_time_end[interval_idx]
   result <- runif(n, min = start_times, max = end_times)
 
   return(result)
