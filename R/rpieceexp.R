@@ -53,11 +53,6 @@
 #' control_times <- rpieceexp(500, time_trial, hazard_control)
 #' treatment_times <- rpieceexp(500, time_trial, hazard_treatment)
 #'
-#' @seealso
-#' \code{\link{rpieceunif}} for piecewise uniform distribution,
-#' \code{\link{simData}} for survival data simulation,
-#' \code{\link[stats]{rexp}} for standard exponential distribution
-#'
 #' @importFrom stats runif
 #' @export
 rpieceexp <- function(n, time, hazard) {
@@ -92,9 +87,13 @@ rpieceexp <- function(n, time, hazard) {
   # Apply inverse CDF method
   target_hazard <- -log(u)
 
-  # Find which interval each target falls into using vectorized approach
-  interval_idx <- findInterval(target_hazard, cumulative_hazard, rightmost.closed = TRUE)
-  interval_idx <- pmax(1, pmin(interval_idx, n_intervals))
+  # Find which interval each target falls into using cut (more efficient)
+  breaks_vec <- c(-Inf, cumulative_hazard[-1], Inf)
+  interval_idx <- as.numeric(cut(target_hazard,
+                                 breaks = breaks_vec,
+                                 labels = FALSE,
+                                 include.lowest = TRUE,
+                                 right = FALSE))
 
   # Vectorized calculation of final times
   start_times <- time[interval_idx]
