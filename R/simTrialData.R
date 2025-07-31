@@ -2,23 +2,29 @@
 #'
 #' This function generates simulation datasets for clinical trials with multiple treatment
 #' groups using group-wise operations. It supports flexible accrual patterns (piecewise
-#' uniform or piecewise Poisson) and optional dropout modeling.
+#' uniform, piecewise Poisson, or piecewise exponential) and optional dropout modeling.
 #'
 #' @param nsim A positive integer specifying the number of simulation iterations. Default is 1000.
 #' @param n A named list where each element corresponds to a group with sample sizes.
 #'   Example: list(control = 100, treatment = 100) for two groups.
 #' @param a.dist A character string specifying the accrual distribution. Must be one of
-#'   "pieceunif" (piecewise uniform) or "piecepois" (piecewise Poisson). Default is "pieceunif".
+#'   "pieceunif" (piecewise uniform), "piecepois" (piecewise Poisson), or
+#'   "pieceexp" (piecewise exponential). Default is "pieceunif".
 #' @param a.time A numeric vector of time points defining the accrual intervals.
 #'   For pieceunif: length should be one more than length of intensity/proportion.
 #'   For piecepois: length should be equal to length of rate.
+#'   For pieceexp: length should be one more than length of hazard, with last element as Inf.
 #'   Time points must be in increasing order.
 #' @param intensity A numeric vector of accrual intensities (rate per time unit) for each interval
-#'   when using piecewise uniform distribution. Cannot be used with proportion. Default is NULL.
+#'   when using piecewise uniform distribution. Cannot be used with proportion, rate, or hazard. Default is NULL.
 #' @param proportion A numeric vector of accrual proportions for each interval that sum to 1
-#'   when using piecewise uniform distribution. Cannot be used with intensity. Default is NULL.
+#'   when using piecewise uniform distribution. Cannot be used with intensity, rate, or hazard. Default is NULL.
 #' @param rate A numeric vector of rates for each interval when using piecewise Poisson distribution.
-#'   Length must equal length of a.time. All values must be non-negative. Default is NULL.
+#'   Length must equal length of a.time. All values must be non-negative. Cannot be used with
+#'   intensity, proportion, or hazard. Default is NULL.
+#' @param hazard A numeric vector of hazard rates for each interval when using piecewise exponential
+#'   distribution. Length should be one less than length of a.time. All values must be positive.
+#'   Cannot be used with intensity, proportion, or rate. Default is NULL.
 #' @param continuous A logical value for piecewise Poisson distribution. If TRUE, uses continuous
 #'   Poisson process; if FALSE, uses discrete intervals. Default is FALSE.
 #' @param e.time A named list where each element corresponds to a group, containing time points
@@ -54,7 +60,7 @@
 #' The function supports:
 #' \describe{
 #'   \item{Multiple Groups}{Any number of treatment groups can be specified.}
-#'   \item{Flexible Accrual}{Choose between piecewise uniform or piecewise Poisson distributions.}
+#'   \item{Flexible Accrual}{Choose between piecewise uniform, piecewise Poisson, or piecewise exponential distributions.}
 #'   \item{Optional Dropout}{Dropout can be disabled by setting d.time and d.hazard to NULL.}
 #'   \item{Statistical Correctness}{Each simulation generates independent samples.}
 #' }
@@ -110,6 +116,18 @@
 #'   seed = 123
 #' )
 #'
+#' # Example 4: Trial with piecewise exponential accrual
+#' trial4 <- simTrialData(
+#'   nsim = 100,
+#'   n = list(control = 150, treatment = 150),
+#'   a.dist = 'pieceexp',
+#'   a.time = c(0, 6, 12, Inf),
+#'   hazard = c(0.2, 0.1, 0.05),
+#'   e.time = list(control = c(0, Inf), treatment = c(0, Inf)),
+#'   e.hazard = list(control = 0.08, treatment = 0.06),
+#'   seed = 456
+#' )
+#'
 #' @seealso
 #' \code{\link{rpieceunif}} for piecewise uniform distribution,
 #' \code{\link{rpieceexp}} for piecewise exponential distribution,
@@ -119,8 +137,8 @@
 #' @importFrom tibble tibble
 #' @export
 simTrialData <- function(nsim = 1000, n, a.dist = 'pieceunif', a.time,
-                         intensity = NULL, proportion = NULL, rate = NULL, continuous = FALSE,
-                         e.time, e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
+                         intensity = NULL, proportion = NULL, rate = NULL, hazard = NULL,
+                         continuous = FALSE, e.time, e.hazard, d.time = NULL, d.hazard = NULL, seed = NULL) {
 
   # Set seed if provided
   if (!is.null(seed)) {
@@ -132,17 +150,26 @@ simTrialData <- function(nsim = 1000, n, a.dist = 'pieceunif', a.time,
     stop("n must be a list with at least 1 group")
   }
 
-  if (!a.dist %in% c('pieceunif', 'piecepois')) {
-    stop("a.dist must be either 'pieceunif' or 'piecepois'")
+  if (!a.dist %in% c('pieceunif', 'piecepois', 'pieceexp')) {
+    stop("a.dist must be one of: 'pieceunif', 'piecepois', or 'pieceexp'")
   }
 
-  # Validate accrual parameters
+  # Check for mutually exclusive accrual parameters
+  accrual_params <- list(intensity = intensity, proportion = proportion, rate = rate, hazard = hazard)
+  non_null_params <- accrual_params[!sapply(accrual_params, is.null)]
+
+  if (length(non_null_params) == 0) {
+    stop("One of intensity, proportion, rate, or hazard must be specified")
+  }
+
+  if (length(non_null_params) > 1) {
+    stop("Only one of intensity, proportion, rate, or hazard can be specified")
+  }
+
+  # Validate accrual parameters based on distribution type
   if (a.dist == 'pieceunif') {
     if (is.null(intensity) && is.null(proportion)) {
       stop("Either intensity or proportion must be specified for pieceunif distribution")
-    }
-    if (!is.null(intensity) && !is.null(proportion)) {
-      stop("Cannot specify both intensity and proportion for pieceunif distribution")
     }
     # Check length consistency
     if (!is.null(intensity) && length(a.time) != length(intensity) + 1) {
@@ -157,6 +184,19 @@ simTrialData <- function(nsim = 1000, n, a.dist = 'pieceunif', a.time,
     }
     if (length(a.time) != length(rate)) {
       stop("For piecepois distribution: length of a.time must equal length of rate")
+    }
+  } else if (a.dist == 'pieceexp') {
+    if (is.null(hazard)) {
+      stop("hazard must be specified for pieceexp distribution")
+    }
+    if (length(a.time) != length(hazard) + 1) {
+      stop("For pieceexp distribution: length of a.time must be one more than length of hazard")
+    }
+    if (!is.infinite(a.time[length(a.time)])) {
+      stop("For pieceexp distribution: last element of a.time must be Inf")
+    }
+    if (any(hazard <= 0)) {
+      stop("All hazard rates must be positive for pieceexp distribution")
     }
   }
 
@@ -183,11 +223,13 @@ simTrialData <- function(nsim = 1000, n, a.dist = 'pieceunif', a.time,
   ) %>%
     group_by(simID) %>%
     mutate(
-      # Generate accrual times
+      # Generate accrual times based on distribution type
       accrual.time = if (a.dist == 'pieceunif') {
         rpieceunif(N, a.time, intensity, proportion)
       } else if (a.dist == 'piecepois') {
         rpiecepois(N, a.time, rate, continuous)
+      } else if (a.dist == 'pieceexp') {
+        rpieceexp(N, a.time, hazard)
       },
       # Generate survival times
       survival.time = do.call(c, lapply(names(n), function(i) {
