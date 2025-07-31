@@ -10,8 +10,8 @@ esthr(
   group,
   control,
   method,
-  time_ranks = NULL,
-  event_times = NULL
+  handling_tie = TRUE,
+  is_sorted = FALSE
 )
 }
 \arguments{
@@ -34,11 +34,11 @@ the control group.}
 \item \code{"Cox"}: Cox proportional hazards regression
 }}
 
-\item{time_ranks}{A numeric vector of pre-computed ranks for time. If NULL,
-ranks will be computed internally. Default is NULL.}
+\item{handling_tie}{A logical value indicating whether to handle tied observations.
+Set to FALSE for simulation data with continuous distributions (faster). Default is TRUE.}
 
-\item{event_times}{A numeric vector of pre-computed unique event times. If NULL,
-will be computed internally. Default is NULL.}
+\item{is_sorted}{A logical value indicating whether the data is already sorted by time.
+Set to TRUE for pre-sorted data to skip sorting operations (faster). Default is FALSE.}
 }
 \value{
 A data.frame with two columns:
@@ -70,13 +70,16 @@ Estimates HR as: \deqn{HR = \exp\left(\frac{O_1 - E_1}{V_1}\right)}
 where \eqn{V_1} is the variance of the log-rank statistic.
 }
 \item{Log-rank based (LR)}{
-Uses the log-rank statistic: \deqn{HR = \exp\left(\frac{2Z}{\sqrt{O_1 + O_0}}\right)}
-where \eqn{Z} is the standardized log-rank statistic.
+Uses the log-rank statistic: \deqn{HR = \exp\left(\frac{(1+r)Z}{\sqrt{r(O_1 + O_0)}}\right)}
+where \eqn{r} is the allocation ratio and \eqn{Z} is the standardized log-rank statistic.
 }
 \item{Cox regression}{
 Uses the standard Cox proportional hazards model via \code{\link[survival]{coxph}}.
 }
 }
+
+When \code{is_sorted = TRUE}, the function assumes the data is already sorted
+by time and skips sorting operations for additional speed improvement.
 }
 \examples{
 library(survival)
@@ -96,27 +99,16 @@ veteran_results <- lapply(methods, function(m) {
 veteran_hr <- do.call(rbind, veteran_results)
 print(veteran_hr)
 
-# Performance comparison with Cox regression
-\dontrun{
-library(microbenchmark)
-microbenchmark(
-  Cox_standard = coxph(Surv(time, status) ~ trt, data = veteran),
-  esthr_Cox = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Cox'),
-  esthr_Pike = esthr(veteran$time, veteran$status, veteran$trt, 1, 'Pike'),
-  times = 100
-)
-}
+# Ultra-fast version for pre-sorted simulation data
+set.seed(123)
+n <- 1000
+group_sim <- rep(c(1, 2), each = n/2)
+time_sim <- c(rexp(n/2, 0.1), rexp(n/2, 0.15))
+event_sim <- rep(1, n)
+ord <- order(time_sim)
+hr_fast <- esthr(time_sim[ord], event_sim[ord], group_sim[ord], 1, "Pike", is_sorted = TRUE)
+print(hr_fast)
 
-}
-\references{
-Pike, M. C., et al. (1979). Design and analysis of randomized clinical trials
-requiring prolonged observation of each patient. British Journal of Cancer, 40, 1-39.
-
-Peto, R., et al. (1977). Design and analysis of randomized clinical trials
-requiring prolonged observation of each patient. British Journal of Cancer, 35, 1-39.
-
-Cox, D. R. (1972). Regression models and life-tables. Journal of the Royal
-Statistical Society, 34(2), 187-220.
 }
 \seealso{
 \code{\link[survival]{coxph}} for standard Cox regression,

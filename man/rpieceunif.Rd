@@ -10,16 +10,13 @@ rpieceunif(n, time, intensity = NULL, proportion = NULL)
 \item{n}{A positive integer specifying the number of observations to generate.}
 
 \item{time}{A numeric vector of time points defining the intervals.
-The length of time should be one more than the length of intensity or proportion.
-Time points must be in increasing order.}
+The length of time should be one more than the length of intensity or proportion.}
 
 \item{intensity}{A numeric vector of intensities (rate per time unit) for each interval.
-The length should be one less than the length of time. Cannot be used with proportion.
-All values must be positive. Default is NULL.}
+The length should be one less than the length of time. Cannot be used with proportion.}
 
 \item{proportion}{A numeric vector of proportions for each interval that sum to 1.
-The length should be one less than the length of time. Cannot be used with intensity.
-All values must be non-negative and sum to 1. Default is NULL.}
+The length should be one less than the length of time. Cannot be used with intensity.}
 }
 \value{
 A numeric vector of random numbers from the piecewise uniform distribution.
@@ -27,58 +24,26 @@ A numeric vector of random numbers from the piecewise uniform distribution.
 \description{
 This function generates random numbers from a piecewise uniform distribution
 where each time interval has a different intensity (rate per time unit) or
-a specified proportion of observations. This is particularly useful for modeling
-non-uniform recruitment patterns in clinical trials.
-}
-\details{
-The piecewise uniform distribution allows for non-constant recruitment rates
-across different time intervals. This is commonly used in clinical trial
-simulations where patient recruitment patterns vary over time.
-
-When using \code{intensity}, the probability of recruitment in interval \eqn{i}
-is proportional to \eqn{intensity_i \times (time_{i+1} - time_i)}.
-
-When using \code{proportion}, the values directly specify the probability
-of recruitment in each interval.
+a specified proportion of observations.
 }
 \examples{
-# Generate 1000 random numbers with varying intensities
+# Generate 100 random numbers with time intervals [0,6), [6,12), [12,18), [18,24)
+# and intensities that sum to 100 total expected observations
 time <- c(0, 6, 12, 18, 24)
-intensity <- c(10, 20, 30, 40)
-samples <- rpieceunif(1000, time, intensity = intensity)
-hist(samples, main = "Piecewise Uniform Distribution (Intensity)",
-     xlab = "Time", breaks = 20)
+intensity <- c(100/(6*4), 100/(6*4), 100/(6*4), 100/(6*4))  # Equal intensity per interval
+samples <- rpieceunif(100, time, intensity)
+hist(samples, main = "Piecewise Uniform Distribution")
 
-# Generate 1000 random numbers with specified proportions
+# Generate 100 random numbers with specified proportions
 time <- c(0, 6, 12, 18, 24)
 proportion <- c(0.1, 0.2, 0.3, 0.4)
-samples2 <- rpieceunif(1000, time, proportion = proportion)
-hist(samples2, main = "Piecewise Uniform Distribution (Proportions)",
-     xlab = "Time", breaks = 20)
+samples2 <- rpieceunif(100, time, proportion = proportion)
+hist(samples2, main = "Piecewise Uniform with Proportions")
 
-# Simple example with single interval
-time_simple <- c(0, 10)
-intensity_simple <- 5
-samples3 <- rpieceunif(500, time_simple, intensity = intensity_simple)
-hist(samples3, main = "Single Interval Uniform Distribution",
-     xlab = "Time", breaks = 15)
+# Example with single interval where intensity * interval length = n
+time2 <- c(0, 10)
+intensity2 <- 5  # 5 * 10 = 50
+samples3 <- rpieceunif(50, time2, intensity2)
+hist(samples3, main = "Single Interval with Matching Expected Count")
 
-# Clinical trial recruitment example
-# Slow start, ramp up, then slow down
-trial_time <- c(0, 3, 9, 15, 18)
-trial_intensity <- c(2, 8, 12, 4)  # patients per month
-recruitment <- rpieceunif(200, trial_time, intensity = trial_intensity)
-plot(sort(recruitment), 1:200, type = "s",
-     xlab = "Time (months)", ylab = "Cumulative Patients",
-     main = "Clinical Trial Recruitment Pattern")
-
-}
-\references{
-Lachin, J. M., & Foulkes, M. A. (1986). Evaluation of sample size and power
-for analyses of survival with allowance for nonuniform patient entry, losses
-to follow-up, noncompliance, and stratification. Biometrics, 42(3), 507-519.
-}
-\seealso{
-\code{\link{rpieceexp}} for piecewise exponential distribution,
-\code{\link{simData}} for survival data simulation using piecewise distributions
 }

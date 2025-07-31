@@ -24,8 +24,8 @@ A numeric vector of random numbers from the piecewise exponential distribution.
 \description{
 This function generates random numbers from a piecewise exponential distribution
 where each time interval has a different hazard rate. This implementation follows
-the approach described in Luo et al. (2019) and is commonly used for modeling
-time-to-event data with non-constant hazard rates over time.
+established methodologies and is commonly used for modeling time-to-event data
+with non-constant hazard rates over time.
 }
 \details{
 The piecewise exponential distribution allows for modeling survival times where
@@ -48,58 +48,20 @@ hazard1 <- 0.1
 samples1 <- rpieceexp(1000, time1, hazard1)
 hist(samples1, main = "Standard Exponential Distribution",
      xlab = "Time", probability = TRUE, breaks = 30)
-# Overlay theoretical density
-x <- seq(0, max(samples1), length.out = 100)
-lines(x, 0.1 * exp(-0.1 * x), col = "red", lwd = 2)
 
 # Piecewise exponential with increasing hazard
 time2 <- c(0, 5, 10, Inf)
-hazard2 <- c(0.05, 0.15, 0.25)  # Increasing hazard over time
+hazard2 <- c(0.05, 0.15, 0.25)
 samples2 <- rpieceexp(1000, time2, hazard2)
 hist(samples2, main = "Piecewise Exponential (Increasing Hazard)",
      xlab = "Time", probability = TRUE, breaks = 30)
 
-# Piecewise exponential with decreasing hazard (improving prognosis)
-time3 <- c(0, 2, 6, 12, Inf)
-hazard3 <- c(0.8, 0.4, 0.2, 0.1)  # Decreasing hazard
-samples3 <- rpieceexp(1000, time3, hazard3)
-hist(samples3, main = "Piecewise Exponential (Decreasing Hazard)",
-     xlab = "Time", probability = TRUE, breaks = 30)
-
 # Clinical trial example: delayed treatment effect
-# High initial hazard, then lower after treatment kicks in
-time_trial <- c(0, 3, Inf)  # Treatment effect starts at 3 months
-hazard_control <- c(0.2, 0.2)  # Constant hazard for control
-hazard_treatment <- c(0.2, 0.1)  # Reduced hazard after 3 months
+time_trial <- c(0, 3, Inf)
+hazard_control <- c(0.2, 0.2)
+hazard_treatment <- c(0.2, 0.1)
 
 control_times <- rpieceexp(500, time_trial, hazard_control)
 treatment_times <- rpieceexp(500, time_trial, hazard_treatment)
 
-# Compare survival curves
-library(survival)
-combined_data <- data.frame(
-  time = c(control_times, treatment_times),
-  event = rep(1, 1000),
-  group = rep(c("Control", "Treatment"), each = 500)
-)
-
-plot(survfit(Surv(time, event) ~ group, data = combined_data),
-     main = "Survival Curves with Delayed Treatment Effect",
-     xlab = "Time", ylab = "Survival Probability",
-     col = c("red", "blue"))
-legend("topright", c("Control", "Treatment"), col = c("red", "blue"), lty = 1)
-
-}
-\references{
-Luo, X., Mao, X., Chen, X., Qiu, J., Bai, S., & Quan, H. (2019).
-Design and monitoring of survival trials in complex scenarios.
-Statistics in Medicine, 38(2), 192-209.
-
-Friedman, L. M., Furberg, C. D., & DeMets, D. L. (2010).
-Fundamentals of Clinical Trials (4th ed.). Springer.
-}
-\seealso{
-\code{\link{rpieceunif}} for piecewise uniform distribution,
-\code{\link{simData}} for survival data simulation,
-\code{\link[stats]{rexp}} for standard exponential distribution
 }

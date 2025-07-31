@@ -10,8 +10,8 @@ lrtest(
   group,
   control,
   side,
-  time_ranks = NULL,
-  event_times = NULL
+  handling_tie = TRUE,
+  is_sorted = FALSE
 )
 }
 \arguments{
@@ -28,11 +28,11 @@ the control group.}
 \item{side}{A numeric value indicating the type of test: 1 for one-sided test,
 2 for two-sided test (returns chi-square statistic).}
 
-\item{time_ranks}{A numeric vector of pre-computed ranks for time. If NULL,
-ranks will be computed internally. Default is NULL.}
+\item{handling_tie}{A logical value indicating whether to handle tied observations.
+Set to FALSE for simulation data with continuous distributions (faster). Default is TRUE.}
 
-\item{event_times}{A numeric vector of pre-computed unique event times. If NULL,
-will be computed internally. Default is NULL.}
+\item{is_sorted}{A logical value indicating whether the data is already sorted by time.
+Set to TRUE for pre-sorted data to skip sorting operations (faster). Default is FALSE.}
 }
 \value{
 A numeric value of the log-rank test statistic. For \code{side = 1},
@@ -43,7 +43,7 @@ returns the chi-square statistic (Z^2).
 This function calculates the log-rank test statistic for comparing survival curves
 between two groups. It can return either one-sided or two-sided test statistics.
 The implementation is optimized for performance compared to standard survival
-analysis functions.
+analysis functions, with optional tie handling for maximum speed.
 }
 \details{
 The log-rank test is a non-parametric test used to compare the survival
@@ -51,8 +51,14 @@ distributions of two groups. This implementation uses an optimized algorithm
 that is significantly more efficient than the standard \code{\link[survival]{survdiff}}
 function while producing equivalent results.
 
-The function converts event times to ranks to handle tied observations and
-computes the test statistic using the standard log-rank formula:
+When \code{handling_tie = FALSE}, the function assumes no tied event times
+(suitable for simulation data from continuous distributions) and uses a faster
+algorithm that avoids ranking and tabulation operations.
+
+When \code{is_sorted = TRUE}, the function assumes the data is already sorted
+by time and skips sorting operations for additional speed improvement.
+
+The function computes the test statistic using the standard log-rank formula:
 \deqn{Z = \frac{O_1 - E_1}{\sqrt{V_1}}}
 where \eqn{O_1} is the observed number of events in group 1, \eqn{E_1} is the
 expected number of events in group 1, and \eqn{V_1} is the variance.
@@ -60,36 +66,25 @@ expected number of events in group 1, and \eqn{V_1} is the variance.
 \examples{
 library(survival)
 
-# One-sided log-rank test
+# One-sided log-rank test with tie handling
 z_stat <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 1)
 cat("One-sided Z statistic:", z_stat, "\n")
 
-# Two-sided log-rank test (chi-square)
-chisq_stat <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
+# Two-sided log-rank test without tie handling (faster for simulation data)
+set.seed(123)
+n <- 1000
+group_sim <- rep(c(1, 2), each = n/2)
+time_sim <- c(rexp(n/2, 0.1), rexp(n/2, 0.15))
+event_sim <- rep(1, n)
+chisq_stat <- lrtest(time_sim, event_sim, group_sim, 1, 2, handling_tie = FALSE)
 cat("Chi-square statistic:", chisq_stat, "\n")
 
-# Compare with survdiff
-survdiff_result <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
-cat("survdiff chi-square:", survdiff_result$chisq, "\n")
-cat("lrtest chi-square:", chisq_stat, "\n")
+# Ultra-fast version for pre-sorted simulation data
+ord <- order(time_sim)
+chisq_stat_fast <- lrtest(time_sim[ord], event_sim[ord], group_sim[ord], 1, 2,
+                         handling_tie = FALSE, is_sorted = TRUE)
+cat("Ultra-fast result:", chisq_stat_fast, "\n")
 
-# Performance comparison
-\dontrun{
-library(microbenchmark)
-microbenchmark(
-  survdiff = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-  lrtest = lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
-  times = 100
-)
-}
-
-}
-\references{
-Mantel, N. (1966). Evaluation of survival data and two new rank order statistics
-arising in its consideration. Cancer Chemotherapy Reports, 50(3), 163-270.
-
-Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test procedures.
-Journal of the Royal Statistical Society, 135(2), 185-207.
 }
 \seealso{
 \code{\link[survival]{survdiff}} for the standard implementation,

@@ -34,7 +34,7 @@
 #' samples3 <- rpieceunif(50, time2, intensity2)
 #' hist(samples3, main = "Single Interval with Matching Expected Count")
 #'
-#' @import stats runif
+#' @importFrom stats runif
 #' @export
 rpieceunif <- function(n, time, intensity = NULL, proportion = NULL) {
   # Input validation for mutual exclusivity
