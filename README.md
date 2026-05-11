@@ -18,13 +18,14 @@ where the standard iterative or object-building overhead of `survfit()`,
 
 | Function | Replaces | Speed gain |
 |----------|----------|------------|
-| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~80x |
-| `survdiff_fast()` | `survdiff()` | ~10x |
-| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~30x |
+| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~63x |
+| `survdiff_fast()` | `survdiff()` | ~8x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~17x |
 | `simdata_fast()` | Custom simulation scripts | — |
 
-Speed gains are approximate medians from benchmarks on a typical phase-3
-trial dataset (n = 600). Results vary by hardware and sample size.
+Speed gains are median times from 1,000 microbenchmark replicates on a
+typical phase-3 trial dataset (n = 600, event rate 80%). Results vary by
+hardware and sample size.
 
 ## Installation
 
@@ -48,22 +49,22 @@ t_s <- ovarian$futime[ord]
 e_s <- ovarian$fustat[ord]
 
 survfit_fast(t_s, e_s, t_eval = 500, conf.type = "log")
-#>      surv   std.err lower .95 upper .95
-#> 0.638...
+#>       surv    std.err      lower      upper
+#> 0.59607843 0.09992615 0.42914950 0.82793874
 
 # ----------------------------------------------------------------
 # survdiff_fast(): log-rank test
 # ----------------------------------------------------------------
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
               control = 1, side = 2)
-#> [1] 1.06...   # chi-square statistic
+#> [1] 1.06274
 
 # ----------------------------------------------------------------
 # coxph_fast(): hazard ratio via PiHE (closed-form)
 # ----------------------------------------------------------------
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
-#>      coef exp(coef)  se(coef)  lower .95  upper .95
-#> -0.596...  0.551...  0.587...  0.174...   1.739...
+#>       coef  exp(coef)   se(coef)  lower .95  upper .95
+#> -0.5963800  0.5508019  0.5868442  0.1743704  1.7398754
 
 # ----------------------------------------------------------------
 # simdata_fast(): clinical trial simulation
