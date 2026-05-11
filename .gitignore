@@ -2,3 +2,16 @@
 .Rhistory
 .RData
 .Ruserdata
+*.Rproj
+.DS_Store
+
+# R package build artifacts
+*.tar.gz
+*.zip
+/doc/
+/Meta/
+/man/*.rd.bak
+NAMESPACE.bak
+
+# roxygen2
+/inst/doc/

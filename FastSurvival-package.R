@@ -1,0 +1,45 @@
+#' FastSurvival: Fast Survival Analysis Functions for Simulation Studies
+#'
+#' @description
+#' FastSurvival provides fast alternatives to the standard survival analysis
+#' functions in the \pkg{survival} package. Every function is designed for
+#' repeated evaluation inside large simulation loops, such as adaptive
+#' sample-size re-estimation, probability-of-success calculations, and
+#' regional consistency evaluation in multi-regional clinical trials.
+#'
+#' @details
+#' The package exports four functions:
+#'
+#' \describe{
+#'   \item{\code{\link{survfit_fast}}}{Kaplan-Meier survival probability,
+#'     standard error, and confidence interval at a single specified time
+#'     point. Uses binary search for O(log n) index lookup and processes
+#'     only event positions in the Greenwood sum, making it approximately
+#'     80 times faster than \code{survfit()} plus \code{summary()} for
+#'     repeated single-time-point evaluations.}
+#'   \item{\code{\link{survdiff_fast}}}{Log-rank test statistic (one-sided
+#'     Z-score or two-sided chi-square) for two-group survival data.
+#'     Avoids S3 object construction and formula parsing overhead of
+#'     \code{survdiff()}.}
+#'   \item{\code{\link{coxph_fast}}}{Closed-form hazard ratio estimator
+#'     via the Pike-Halley method (PiHE), with Wald confidence interval.
+#'     PiHE anchors at the Pike estimate and applies a single analytic
+#'     Halley correction to the Cox partial likelihood score, achieving
+#'     residual error of order O_p(n^{-3/2}) relative to the Cox MLE
+#'     while running approximately 30 times faster than \code{coxph()}.}
+#'   \item{\code{\link{simdata_fast}}}{Clinical trial data simulator for
+#'     one- and two-group time-to-event trials. Supports piecewise uniform
+#'     accrual, simple and piecewise exponential survival and dropout times,
+#'     and uses \pkg{dqrng} for fast random number generation.}
+#' }
+#'
+#' @references
+#' Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+#' estimator. Manuscript under review.
+#'
+#' Bender, R., Augustin, T., & Blettner, M. (2005). Generating survival
+#' times to simulate Cox proportional hazards models. Statistics in
+#' Medicine, 24(11), 1713-1723.
+#'
+#' @keywords internal
+"_PACKAGE"

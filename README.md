@@ -1,198 +1,159 @@
 # FastSurvival
 
 <!-- badges: start -->
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/FastSurvival)](http://cran.r-project.org/package=FastSurvival)
+[![R-CMD-check](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-The goal of FastSurvival is to provide efficient implementations of (1) log-rank test, (2) hazard ratio estimation, and (3) simulation dataset generation for survival analysis.
+FastSurvival provides fast alternatives to the standard survival analysis
+functions in the
+[survival](https://cran.r-project.org/package=survival) package.
+Every function is designed for repeated evaluation inside large simulation
+loops — adaptive sample-size re-estimation, probability-of-success
+calculations, regional consistency evaluation in multi-regional trials —
+where the standard iterative or object-building overhead of `survfit()`,
+`survdiff()`, and `coxph()` becomes a computational bottleneck.
 
-## Features
+## Functions
 
-- **Log-rank Test**: Efficient computation of log-rank test statistics
-- **Multiple Hazard Ratio Estimation Methods**: Support for Person-Year, Pike, Peto, Log-rank based, and Cox regression methods
-- **High-Performance Simulation**: Generate simulation datasets with piecewise exponential and uniform distributions
-- **Clinical Trial Support**: Specialized functions for clinical trial data simulation and analysis
-- **Optimized R Implementation**: Core functions optimized for performance using efficient R programming techniques
+| Function | Replaces | Speed gain |
+|----------|----------|------------|
+| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~80x |
+| `survdiff_fast()` | `survdiff()` | ~10x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~30x |
+| `simdata_fast()` | Custom simulation scripts | — |
+
+Speed gains are approximate medians from benchmarks on a typical phase-3
+trial dataset (n = 600). Results vary by hardware and sample size.
 
 ## Installation
 
-You can install the development version of FastSurvival from [GitHub](https://github.com/) with:
-
-``` r
-# install.packages("devtools")
-devtools::install_github("gosukehommaEX/FastSurvival")
+```r
+# Install from GitHub
+# install.packages("remotes")
+remotes::install_github("gosukehommaEX/FastSurvival")
 ```
 
-## Usage
+## Quick start
 
-### Log-rank Test
-
-Compare the log-rank test results between FastSurvival and the standard `survdiff()` function:
-
-``` r
+```r
+library(FastSurvival)
 library(survival)
-library(FastSurvival)
-library(microbenchmark)
 
-# Compare log-rank test results
-survdiff_result <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
-lrtest_result <- lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2)
+# ----------------------------------------------------------------
+# survfit_fast(): Kaplan-Meier at a single time point
+# ----------------------------------------------------------------
+ord <- order(ovarian$futime)
+t_s <- ovarian$futime[ord]
+e_s <- ovarian$fustat[ord]
 
-print(list(
-  survdiff_chisq = survdiff_result[['chisq']], 
-  lrtest_chisq = lrtest_result
-))
+survfit_fast(t_s, e_s, t_eval = 500, conf.type = "log")
+#>      surv   std.err lower .95 upper .95
+#> 0.638...
 
-# Performance comparison
-microbenchmark(
-  survdiff_result = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-  lrtest_result = lrtest(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 2),
-  times = 100
+# ----------------------------------------------------------------
+# survdiff_fast(): log-rank test
+# ----------------------------------------------------------------
+survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+              control = 1, side = 2)
+#> [1] 1.06...   # chi-square statistic
+
+# ----------------------------------------------------------------
+# coxph_fast(): hazard ratio via PiHE (closed-form)
+# ----------------------------------------------------------------
+coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+#>      coef exp(coef)  se(coef)  lower .95  upper .95
+#> -0.596...  0.551...  0.587...  0.174...   1.739...
+
+# ----------------------------------------------------------------
+# simdata_fast(): clinical trial simulation
+# ----------------------------------------------------------------
+
+# Two-group trial, simple exponential, no dropout
+df <- simdata_fast(
+  nsim     = 1000,
+  n        = c(100, 100),
+  a.time   = c(0, 12),
+  a.rate   = 200 / 12,
+  e.median = list(18, 24),
+  seed     = 1
+)
+head(df)
+
+# Two-group trial, piecewise exponential (delayed treatment effect)
+df2 <- simdata_fast(
+  nsim     = 1000,
+  n        = c(100, 100),
+  a.time   = c(0, 12),
+  a.rate   = 200 / 12,
+  e.hazard = list(c(0.08, 0.08), c(0.08, 0.04)),
+  e.time   = c(0, 6, Inf),
+  seed     = 2
 )
 ```
 
-### Hazard Ratio Estimation
+## Design principles
 
-Compare hazard ratio estimates using different methods:
+**survfit_fast** evaluates the Kaplan-Meier estimator at a single specified
+time point using binary search (`findInterval()`), processing only the
+observations up to that point. This makes it orders of magnitude faster than
+`survfit()` when the same sorted data are evaluated repeatedly at a fixed
+landmark time inside a simulation loop.
 
-``` r
-library(survival)
+**survdiff_fast** computes the log-rank statistic using the same
+rank-based at-risk counting as `survdiff()` but avoids the overhead of
+S3 object construction and formula parsing. It returns either a one-sided
+Z-score (`side = 1`) or a two-sided chi-square statistic (`side = 2`).
+
+**coxph_fast** implements the Pike-Halley Estimator (PiHE) proposed by
+Homma (2025). PiHE anchors at the Pike closed-form estimate and applies a
+single analytic Halley correction to the Cox partial likelihood score. The
+residual error relative to the Cox MLE satisfies
+|PiHE - Cox| = O_p(n^{-3/2}), compared with O_p(n^{-1/2}) for Peto and
+Pike. On the `pharmacoSmoking` dataset (tie rate 77.5%), PiHE reproduces
+the Breslow-based Cox MLE to within 1.10e-08. The Wald confidence interval
+uses the observed information at the Pike anchor as the variance estimate.
+
+**simdata_fast** generates individual patient data for one- or two-group
+time-to-event trials. Accrual times follow a piecewise uniform distribution.
+Survival and dropout times follow either a simple or piecewise exponential
+distribution, selected automatically based on whether a scalar or vector
+hazard is supplied. All random number generation uses
+[dqrng](https://cran.r-project.org/package=dqrng) for speed.
+
+## Using the functions together
+
+A typical simulation workflow combines all four functions:
+
+```r
 library(FastSurvival)
 
-# Cox proportional hazards model (reference)
-coxph_result <- data.frame(
-  method = 'CoxPH', 
-  HR = exp(coef(coxph(Surv(futime, fustat) ~ rx, data = ovarian)))
+results <- vector("list", 1000L)
+
+df <- simdata_fast(
+  nsim     = 1000,
+  n        = c(100, 100),
+  a.time   = c(0, 12),
+  a.rate   = 200 / 12,
+  e.hazard = list(0.08, 0.05),
+  d.hazard = list(0.01, 0.01),
+  seed     = 42
 )
 
-# FastSurvival methods
-methods <- c('PY', 'Pike', 'Peto', 'LR', 'Cox')
-esthr_results <- lapply(methods, function(method) {
-  esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, method)
-})
+for (s in seq_len(1000L)) {
+  d <- df[df$sim == s, ]
+  results[[s]] <- coxph_fast(d$tte, d$event, d$group, control = 1)
+}
 
-# Combine results
-all_results <- do.call(rbind, c(list(coxph_result), esthr_results))
-print(all_results)
-
-# Performance comparison
-microbenchmark(
-  CoxPH = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
-  esthr_PY = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'PY'),
-  esthr_Pike = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Pike'),
-  esthr_Peto = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'Peto'),
-  esthr_LR = esthr(ovarian$futime, ovarian$fustat, ovarian$rx, 2, 'LR'),
-  times = 100
-)
+hr_mat <- do.call(rbind, results)
+colMeans(hr_mat)
 ```
 
-### Random Number Generation
+## Reference
 
-Generate random numbers from piecewise distributions:
+Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+estimator. *Manuscript under review.*
 
-``` r
-library(FastSurvival)
+## License
 
-# Piecewise exponential distribution
-time_points <- c(0, 5, 10, Inf)
-hazard_rates <- c(0.1, 0.3, 0.2)
-samples_exp <- rpieceexp(1000, time_points, hazard_rates)
-
-# Piecewise uniform distribution  
-time_intervals <- c(0, 6, 12, 18, 24)
-intensities <- c(10, 20, 30, 40)
-samples_unif <- rpieceunif(100, time_intervals, intensity = intensities)
-
-# Plot histograms
-par(mfrow = c(1, 2))
-hist(samples_exp, main = "Piecewise Exponential", xlab = "Time")
-hist(samples_unif, main = "Piecewise Uniform", xlab = "Time")
-```
-
-### Clinical Trial Simulation
-
-Simulate clinical trial data with complex scenarios:
-
-``` r
-library(FastSurvival)
-library(data.table)
-
-# Simulate trial data for two groups
-trial_data <- simTrial(
-  nsim = 100,
-  N = list(group1 = 100, group2 = 100),
-  a.time = c(0, 24),
-  intensity = 200/24,
-  e.time = list(
-    group1 = c(0, Inf),
-    group2 = c(0, Inf)
-  ),
-  e.hazard = list(
-    group1 = log(2) / 12,
-    group2 = log(2) / 15
-  ),
-  d.time = list(
-    group1 = c(0, Inf),
-    group2 = c(0, Inf)
-  ),
-  d.hazard = list(
-    group1 = -log(1 - 0.1) / 12,
-    group2 = -log(1 - 0.1) / 12
-  )
-)
-
-# Create analysis datasets
-analysis_data <- analysisData(trial_data, E = c(50, 100, 150))
-
-head(analysis_data)
-
-# Trial without dropout
-trial_data_no_dropout <- simTrial(
-  nsim = 100,
-  N = list(control = 100, treatment = 100),
-  a.time = c(0, 24),
-  intensity = 200/24,
-  e.time = list(
-    control = c(0, Inf),
-    treatment = c(0, Inf)
-  ),
-  e.hazard = list(
-    control = log(2) / 12,
-    treatment = log(2) / 15
-  ),
-  d.time = NULL,  # No dropout
-  d.hazard = NULL
-)
-```
-
-## Performance Benefits
-
-FastSurvival provides significant performance improvements over standard R survival analysis functions:
-
-- **Log-rank test**: ~10-15x faster than `survdiff()`
-- **Hazard ratio estimation**: ~5-10x faster than `coxph()` for simple cases
-- **Simulation**: Optimized R implementation for large-scale simulations
-
-## Available Functions
-
-### Core Functions
-- `lrtest()`: Log-rank test calculation
-- `esthr()`: Hazard ratio estimation with multiple methods
-
-### Distribution Functions  
-- `rpieceexp()`: Random number generation from piecewise exponential distribution
-- `rpieceunif()`: Random number generation from piecewise uniform distribution
-
-### Simulation Functions
-- `simData()`: Basic survival data simulation
-- `simTrial()`: Clinical trial data simulation
-- `analysisData()`: Create analysis datasets from trial simulations
-
-### Analysis Functions
-- `overallSummary()`: Overall population analysis summary
-- `subgroupSummary()`: Subgroup analysis summary
-- `overallResults()`: Adaptive trial stopping probabilities
-
-## References
-
-The methodology is based on established survival analysis techniques and optimized implementations for computational efficiency in clinical trial simulations and survival data analysis.
+MIT © 2025 Gosuke Homma
