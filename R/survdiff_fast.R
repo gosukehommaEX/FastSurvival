@@ -86,6 +86,7 @@
 #' Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test
 #' procedures. Journal of the Royal Statistical Society, 135(2), 185-207.
 #'
+#' @importFrom stats qnorm
 #' @export
 survdiff_fast <- function(time, event, group, control, side,
                           presorted = FALSE) {

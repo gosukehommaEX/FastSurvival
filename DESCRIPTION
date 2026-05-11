@@ -25,10 +25,9 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
-    survival,
-    dqrng,
-    stats
+    dqrng
 Suggests:
+    survival,
     microbenchmark,
     testthat (>= 3.0.0),
     knitr,

@@ -75,8 +75,8 @@ Third, the closed-form Halley correction is applied:
 delta_hat = U_0 / I_0 - J_0 U_0^2 / (2 I_0^3)
 theta_hat = theta_0 exp(delta_hat)
 
-The residual error satisfies |theta_hat - theta_Cox| = O_p(n^{-3/2}),
-three orders of magnitude faster than the O_p(n^{-1/2}) rate of Peto and
+The residual error satisfies |theta_hat - theta_Cox| = O_p(n^\{-3/2\}),
+three orders of magnitude faster than the O_p(n^\{-1/2\}) rate of Peto and
 Pike, and the per-call cost is approximately thirty times lower than that
 of the iterative Cox solver (Homma, 2025).
 
@@ -84,7 +84,7 @@ The Wald standard error on the log scale is SE = 1 / sqrt(I_0), where I_0
 is the observed information evaluated at the Pike anchor. This is the same
 quantity used in the Wald confidence interval reported by
 \code{summary(coxph(...))}, which is based on the observed information at
-the MLE. Because the Pike anchor lies within O_p(n^{-1/2}) of the Cox MLE,
+the MLE. Because the Pike anchor lies within O_p(n^\{-1/2\}) of the Cox MLE,
 the difference between I_0 and the information at the MLE is negligible for
 the purpose of interval construction.
 

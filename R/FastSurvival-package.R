@@ -25,7 +25,7 @@
 #'     via the Pike-Halley method (PiHE), with Wald confidence interval.
 #'     PiHE anchors at the Pike estimate and applies a single analytic
 #'     Halley correction to the Cox partial likelihood score, achieving
-#'     residual error of order O_p(n^{-3/2}) relative to the Cox MLE
+#'     residual error of order O_p(n^\{-3/2\}) relative to the Cox MLE
 #'     while running approximately 30 times faster than \code{coxph()}.}
 #'   \item{\code{\link{simdata_fast}}}{Clinical trial data simulator for
 #'     one- and two-group time-to-event trials. Supports piecewise uniform

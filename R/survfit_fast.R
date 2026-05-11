@@ -15,7 +15,7 @@
 #'
 #' The standard error is estimated by Greenwood's formula:
 #'
-#' SE[S(t)] = S(t) * sqrt(sum_{t_i <= t, d_i > 0} d_i / (n_i * (n_i - d_i)))
+#' SE[S(t)] = S(t) * sqrt(sum_\{t_i <= t, d_i > 0\} d_i / (n_i * (n_i - d_i)))
 #'
 #' where d_i is the number of events and n_i is the number at risk at time t_i.
 #' The output field \code{std.err} follows the convention of
@@ -99,6 +99,7 @@
 #' @seealso
 #' \code{\link[survival]{survfit}} for the standard KM estimator.
 #'
+#' @importFrom stats qnorm
 #' @export
 survfit_fast <- function(t_sorted, e_sorted, t_eval,
                          conf.int = 0.95, conf.type = "log",
