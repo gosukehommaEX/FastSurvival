@@ -12,18 +12,20 @@ Every function is designed for repeated evaluation inside large simulation
 loops — adaptive sample-size re-estimation, probability-of-success
 calculations, regional consistency evaluation in multi-regional trials —
 where the standard iterative or object-building overhead of `survfit()`,
-`survdiff()`, and `coxph()` becomes a computational bottleneck.
+`survdiff()`, and `coxph()` becomes a computational bottleneck. Core
+computations are implemented in C++ via
+[Rcpp](https://cran.r-project.org/package=Rcpp) for maximum performance.
 
 ## Functions
 
-| Function | Replaces | Speed gain |
-|----------|----------|------------|
-| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~63x |
-| `survdiff_fast()` | `survdiff()` | ~8x |
-| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~17x |
+| Function | Replaces | Approximate speed gain |
+|----------|----------|------------------------|
+| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~100x |
+| `survdiff_fast()` | `survdiff()` | ~100x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~100x |
 | `simdata_fast()` | Custom simulation scripts | — |
 
-Speed gains are median times from 1,000 microbenchmark replicates on a
+Speed gains are based on median times from microbenchmark replicates on a
 typical phase-3 trial dataset (n = 600, event rate 80%). Results vary by
 hardware and sample size.
 
@@ -60,7 +62,7 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 #> [1] 1.06274
 
 # ----------------------------------------------------------------
-# coxph_fast(): hazard ratio via PiHE (closed-form)
+# coxph_fast(): hazard ratio via the Pike-Halley Estimator (closed-form)
 # ----------------------------------------------------------------
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 #>       coef  exp(coef)   se(coef)  lower .95  upper .95
@@ -96,30 +98,39 @@ df2 <- simdata_fast(
 ## Design principles
 
 **survfit_fast** evaluates the Kaplan-Meier estimator at a single specified
-time point using binary search (`findInterval()`), processing only the
-observations up to that point. This makes it orders of magnitude faster than
-`survfit()` when the same sorted data are evaluated repeatedly at a fixed
+time point. A C++ backend locates the evaluation cutoff via binary search,
+then accumulates the Kaplan-Meier product and the Greenwood variance sum in
+a single scan over event positions, without constructing intermediate
+vectors. This makes it orders of magnitude faster than `survfit()` plus
+`summary()` when the same sorted data are evaluated repeatedly at a fixed
 landmark time inside a simulation loop.
 
-**survdiff_fast** computes the log-rank statistic using the same
-rank-based at-risk counting as `survdiff()` but avoids the overhead of
-S3 object construction and formula parsing. It returns either a one-sided
-Z-score (`side = 1`) or a two-sided chi-square statistic (`side = 2`).
+**survdiff_fast** computes the log-rank statistic using a two-pointer merge
+scan over the pooled sorted data, walking the time axis once while
+maintaining per-group at-risk counters and processing tied event times
+atomically. The C++ backend avoids the rank construction, `tabulate()`, and
+reverse cumulative sum operations of the standard R implementation, and the
+function itself bypasses the S3 object construction and formula parsing of
+`survdiff()`. It returns either a one-sided Z-score (`side = 1`) or a
+two-sided chi-square statistic (`side = 2`).
 
-**coxph_fast** implements the Pike-Halley Estimator (PiHE) proposed by
-Homma (2025). PiHE anchors at the Pike closed-form estimate and applies a
-single analytic Halley correction to the Cox partial likelihood score. The
-residual error relative to the Cox MLE satisfies
-|PiHE - Cox| = O_p(n^{-3/2}), compared with O_p(n^{-1/2}) for Peto and
-Pike. On the `pharmacoSmoking` dataset (tie rate 77.5%), PiHE reproduces
-the Breslow-based Cox MLE to within 1.10e-08. The Wald confidence interval
-uses the observed information at the Pike anchor as the variance estimate.
+**coxph_fast** implements the Pike-Halley Estimator proposed by Homma
+(2025), a closed-form approximation to the Cox partial likelihood maximizer.
+The estimator anchors at the Pike closed-form estimate and applies a single
+analytic Halley correction to the Cox score, giving residual error of order
+O_p(n^{-3/2}) relative to the Cox maximum likelihood estimate. On the
+`pharmacoSmoking` dataset (tie rate 77.5%), the Pike-Halley Estimator
+reproduces the Breslow-based Cox estimate to within on the order of 1e-08.
+The Wald confidence interval uses the observed information at the Pike
+anchor as the variance estimate. The C++ backend performs group splitting,
+at-risk counting, and per-distinct-event-time accumulation in a single pass.
 
 **simdata_fast** generates individual patient data for one- or two-group
 time-to-event trials. Accrual times follow a piecewise uniform distribution.
 Survival and dropout times follow either a simple or piecewise exponential
 distribution, selected automatically based on whether a scalar or vector
-hazard is supplied. All random number generation uses
+hazard is supplied. C++ backends handle piecewise sampling and two-group
+interleaving, and random number generation uses
 [dqrng](https://cran.r-project.org/package=dqrng) for speed.
 
 ## Using the functions together
@@ -150,10 +161,13 @@ hr_mat <- do.call(rbind, results)
 colMeans(hr_mat)
 ```
 
-## Reference
+## References
 
 Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. *Manuscript under review.*
+
+Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd ed.).
+Chapman and Hall/CRC.
 
 ## License
 

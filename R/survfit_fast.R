@@ -3,9 +3,9 @@
 #' @description
 #' Computes the Kaplan-Meier survival probability at a specified time point,
 #' together with a standard error and confidence interval based on Greenwood's
-#' variance formula. The function is a fully vectorized implementation that
-#' avoids R-level loops and is designed for repeated use inside iterative
-#' algorithms where many KM evaluations are required.
+#' variance formula. The C++ backend performs binary search for the evaluation
+#' cutoff and accumulates the KM product and Greenwood sum in a single scan
+#' over event positions only, without constructing intermediate vectors.
 #'
 #' @details
 #' The KM estimate at time \code{t_eval} is defined as the product-limit
@@ -28,16 +28,10 @@
 #' \code{t_eval}), the standard error is zero and the confidence interval
 #' collapses to \code{[0, 0]}, consistent with \code{\link[survival]{survfit}}.
 #'
-#' When \code{presorted = TRUE} (default), the cutoff index is located via
-#' \code{findInterval()}, which uses binary search and runs in O(log n).
-#' When \code{presorted = FALSE}, the data are sorted internally before
-#' computation; this is convenient for one-off calls but removes the
-#' opportunity to reuse the same sorted arrays across many calls.
-#'
-#' Only observations at or before \code{t_eval} contribute to the KM product
-#' and the Greenwood sum. Among those, only event positions (e_sorted == 1)
-#' enter the Greenwood summation, so the inner loop over censored observations
-#' is avoided entirely.
+#' When \code{presorted = TRUE} (default), \code{t_sorted} and \code{e_sorted}
+#' are assumed to be sorted in ascending order of time. When
+#' \code{presorted = FALSE}, the vectors are sorted internally before
+#' computation.
 #'
 #' Three confidence interval types are supported via \code{conf.type}:
 #'
@@ -63,17 +57,15 @@
 #'   Must be one of \code{"plain"}, \code{"log"}, or \code{"log-log"}.
 #'   Defaults to \code{"log"}.
 #' @param presorted A logical value. If \code{TRUE} (default), \code{t_sorted}
-#'   and \code{e_sorted} are assumed to be sorted in ascending order of time,
-#'   and \code{findInterval()} is used for O(log n) index lookup. If
-#'   \code{FALSE}, the vectors are sorted internally before computation.
+#'   and \code{e_sorted} are assumed to be sorted in ascending order of time.
+#'   If \code{FALSE}, the vectors are sorted internally before computation.
 #'
 #' @return A named numeric vector of length 4 with elements \code{surv},
 #'   \code{std.err}, \code{lower}, and \code{upper}, representing the KM
 #'   survival estimate, the Greenwood standard error SE[S(t)], and the lower
 #'   and upper confidence limits at \code{t_eval}.
 #'   Returns \code{c(surv = NA_real_, std.err = NA_real_, lower = NA_real_,
-#'   upper = NA_real_)} when \code{n} is zero or \code{t_eval} precedes all
-#'   observations.
+#'   upper = NA_real_)} when \code{n} is zero.
 #'
 #' @examples
 #' set.seed(42)
@@ -99,6 +91,14 @@
 #' @seealso
 #' \code{\link[survival]{survfit}} for the standard KM estimator.
 #'
+#' @references
+#' Kaplan, E. L., and Paul M. (1991). Nonparametric Estimation from
+#' Incomplete Observations. Journal of the American Statistical Association,
+#' 53(282), 457-481.
+#'
+#' Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
+#' Chapman and Hall/CRC.
+#'
 #' @importFrom stats qnorm
 #' @export
 survfit_fast <- function(t_sorted, e_sorted, t_eval,
@@ -118,36 +118,19 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
     e_sorted <- e_sorted[ord]
   }
 
-  # Binary search for the last index <= t_eval (O(log n) when presorted)
-  m <- findInterval(t_eval, t_sorted)
-  if (m == 0L) {
-    # t_eval is before any observation: S(t) = 1 by convention
-    return(c(surv = 1, std.err = 0, lower = 1, upper = 1))
-  }
+  # C++ core: binary search + single scan -> c(surv, gw_sum)
+  # e_sorted is passed as-is (numeric or integer); km_core accepts numeric,
+  # avoiding an as.integer() copy on the R side.
+  res    <- km_core(t_sorted, e_sorted, t_eval)
+  surv   <- res[1L]
+  gw_sum <- res[2L]
 
-  # Restrict to observations up to t_eval
-  e_m <- e_sorted[seq_len(m)]
+  if (is.na(surv)) return(na_out)
+  if (surv == 0)   return(c(surv = 0, std.err = 0, lower = 0, upper = 0))
 
-  # Event positions within 1..m (avoids processing censored rows)
-  ev_pos  <- which(e_m == 1L)
-  n_ev_m  <- length(ev_pos)
-
-  # At-risk count at each event position: n - (pos - 1)
-  n_risk_ev <- n - ev_pos + 1L
-
-  # KM survival estimate: product only over event positions
-  surv <- prod(1 - 1L / n_risk_ev)
-
-  # S(t) = 0: standard error is zero, CI collapses to [0, 0]
-  if (surv == 0) return(c(surv = 0, std.err = 0, lower = 0, upper = 0))
-
-  # Greenwood standard error: SE[S(t)] = S(t) * sqrt(sum 1 / (n_i * (n_i - 1)))
-  gw_sum  <- sum(1 / (n_risk_ev * (n_risk_ev - 1L)))
   std.err <- surv * sqrt(gw_sum)
+  z       <- qnorm(1 - (1 - conf.int) / 2)
 
-  z <- qnorm(1 - (1 - conf.int) / 2)
-
-  # Confidence interval by type
   ci <- if (conf.type == "plain") {
     c(lower = max(0, surv - z * std.err),
       upper = min(1, surv + z * std.err))
@@ -155,7 +138,6 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
     c(lower = surv * exp(-z * std.err / surv),
       upper = surv * exp( z * std.err / surv))
   } else {
-    # log-log scale
     if (surv >= 1) return(c(surv = surv, std.err = std.err,
                             lower = NA_real_, upper = NA_real_))
     log_s    <- log(surv)

@@ -11,11 +11,13 @@ Authors@R: person(
 Description: Provides fast alternatives to standard survival analysis functions
     in the 'survival' package. The package implements a single-time-point
     Kaplan-Meier estimator (survfit_fast()), a log-rank test (survdiff_fast()),
-    a closed-form hazard ratio estimator based on the Pike-Halley method
-    (coxph_fast()), and a clinical trial data simulator (simdata_fast()).
+    a closed-form hazard ratio estimator based on the Pike-Halley Estimator
+    method (coxph_fast()), and a clinical trial data simulator (simdata_fast()).
     All functions are designed for repeated evaluation inside large simulation
     loops, such as adaptive sample-size re-estimation, probability-of-success
     calculations, and regional consistency evaluation in multi-regional trials.
+    Core computations are implemented in C++ via 'Rcpp' for maximum performance.
+    Methodological background is described in Collett (2014, ISBN:9780429196294).
 License: MIT + file LICENSE
 URL: https://github.com/gosukehommaEX/FastSurvival
 BugReports: https://github.com/gosukehommaEX/FastSurvival/issues
@@ -25,6 +27,10 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
+    dqrng,
+    Rcpp
+LinkingTo:
+    Rcpp,
     dqrng
 Suggests:
     survival,

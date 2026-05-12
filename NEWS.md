@@ -1,13 +1,24 @@
 # FastSurvival 0.1.0
 
 * Initial release.
+* Core computations implemented in C++ via `Rcpp` for use inside large
+  simulation loops.
 * `survfit_fast()`: single-time-point Kaplan-Meier estimator with Greenwood
-  standard error and plain / log / log-log confidence intervals.
+  standard error and plain / log / log-log confidence intervals. The C++
+  backend locates the evaluation cutoff via binary search and accumulates
+  the Kaplan-Meier product and Greenwood variance sum in a single scan over
+  event positions.
 * `survdiff_fast()`: log-rank test returning a one-sided Z-score or a
-  two-sided chi-square statistic.
+  two-sided chi-square statistic. The C++ backend uses a two-pointer merge
+  scan over pooled sorted vectors, eliminating the rank construction,
+  `tabulate()`, and reverse cumulative sum operations of the standard
+  implementation.
 * `coxph_fast()`: closed-form hazard ratio estimator via the Pike-Halley
-  method (PiHE) with Wald confidence interval.
+  Estimator method with Wald confidence interval. The C++ backend performs
+  group splitting, at-risk counting, and per-distinct-event-time
+  accumulation in a single pass.
 * `simdata_fast()`: clinical trial data simulator supporting one- and
-  two-group designs, piecewise uniform accrual, simple and piecewise
-  exponential survival and dropout times, and fast random number generation
-  via `dqrng`.
+  two-group designs, piecewise uniform accrual, and simple and piecewise
+  exponential survival and dropout times. C++ backends handle piecewise
+  sampling and two-group interleaving, and random number generation uses
+  `dqrng`.

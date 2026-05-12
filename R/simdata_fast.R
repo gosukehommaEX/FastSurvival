@@ -5,8 +5,9 @@
 #' trials. Patient accrual times are drawn from a piecewise uniform
 #' distribution. Survival and dropout times are drawn from either a simple
 #' exponential or a piecewise exponential distribution, depending on whether
-#' a scalar or vector hazard is supplied. All random number generation uses
-#' \code{dqrng} for maximum speed.
+#' a scalar or vector hazard is supplied. Random number generation uses
+#' \code{dqrng} for speed. C++ backends handle piecewise sampling and
+#' two-group interleaving to minimise R-level overhead.
 #'
 #' @details
 #' For each patient, three times are generated independently:
@@ -146,7 +147,7 @@
 #' )
 #' head(df4)
 #'
-#' @importFrom dqrng dqset.seed dqrunif dqrexp
+#' @importFrom dqrng dqset.seed dqrexp
 #' @export
 simdata_fast <- function(nsim     = 1000,
                          n,
@@ -170,8 +171,7 @@ simdata_fast <- function(nsim     = 1000,
   #  Resolve group sizes
   # ------------------------------------------------------------------ #
   if (length(n) == 1L) {
-    # Scalar n: split by allocation ratio into two groups
-    n_grp <- round(n * alloc / sum(alloc))
+    n_grp    <- round(n * alloc / sum(alloc))
     n_groups <- 2L
   } else if (length(n) == 2L) {
     n_grp    <- n
@@ -180,7 +180,6 @@ simdata_fast <- function(nsim     = 1000,
     stop("'n' must be a scalar (total N) or a vector of length 2 (per-group)")
   }
 
-  # One-group mode: n is scalar AND both e.hazard/e.median are not lists
   is_two_group <- n_groups == 2L && (
     is.list(e.hazard) || is.list(e.median) ||
       is.list(d.hazard) || is.list(d.median)
@@ -190,7 +189,6 @@ simdata_fast <- function(nsim     = 1000,
          "Wrap group-specific parameters in list().")
   }
 
-  # For one-group: treat as single group
   if (!is_two_group) {
     n_grp    <- if (length(n) == 1L) n else n[1L]
     n_groups <- 1L
@@ -205,11 +203,7 @@ simdata_fast <- function(nsim     = 1000,
   if (is.null(e.hazard) && is.null(e.median)) {
     stop("One of 'e.hazard' or 'e.median' must be supplied")
   }
-
-  # Convert e.median to e.hazard
-  if (!is.null(e.median)) {
-    e.hazard <- convert_median_to_hazard(e.median)
-  }
+  if (!is.null(e.median)) e.hazard <- convert_median_to_hazard(e.median)
 
   # ------------------------------------------------------------------ #
   #  Validate and resolve d.hazard / d.median
@@ -218,9 +212,7 @@ simdata_fast <- function(nsim     = 1000,
   if (!is.null(d.hazard) && !is.null(d.median)) {
     stop("Specify exactly one of 'd.hazard' and 'd.median', not both")
   }
-  if (!is.null(d.median)) {
-    d.hazard <- convert_median_to_hazard(d.median)
-  }
+  if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
 
   # ------------------------------------------------------------------ #
   #  Validate accrual parameters
@@ -231,25 +223,27 @@ simdata_fast <- function(nsim     = 1000,
   if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
   if (any(diff(a.time) <= 0)) stop("'a.time' must be strictly increasing")
 
+  # Pre-compute accrual cumulative probability table (shared across groups)
+  lengths_a <- diff(a.time)
+  weights_a <- a.rate * lengths_a
+  cum_p_a   <- cumsum(weights_a / sum(weights_a))
+
   # ------------------------------------------------------------------ #
   #  Simulate each group and combine
   # ------------------------------------------------------------------ #
-  n_total_sim <- nsim * sum(n_grp)
-
   if (n_groups == 1L) {
     df <- simulate_group(
       nsim     = nsim,
       n        = n_grp,
       group_id = 1L,
       a.time   = a.time,
-      a.rate   = a.rate,
+      cum_p_a  = cum_p_a,
       e.hazard = if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard,
       e.time   = e.time,
       d.hazard = if (has_dropout) (if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard) else NULL,
       d.time   = d.time
     )
   } else {
-    # Resolve e.time per group (shared or group-specific)
     e.time_ctrl <- resolve_time_arg(e.time, 1L)
     e.time_trt  <- resolve_time_arg(e.time, 2L)
     d.time_ctrl <- if (has_dropout) resolve_time_arg(d.time, 1L) else NULL
@@ -260,7 +254,7 @@ simdata_fast <- function(nsim     = 1000,
       n        = n_grp[1L],
       group_id = 1L,
       a.time   = a.time,
-      a.rate   = a.rate,
+      cum_p_a  = cum_p_a,
       e.hazard = if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard,
       e.time   = e.time_ctrl,
       d.hazard = if (has_dropout) (if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard) else NULL,
@@ -272,16 +266,16 @@ simdata_fast <- function(nsim     = 1000,
       n        = n_grp[2L],
       group_id = 2L,
       a.time   = a.time,
-      a.rate   = a.rate,
+      cum_p_a  = cum_p_a,
       e.hazard = if (is.list(e.hazard)) e.hazard[[2L]] else e.hazard,
       e.time   = e.time_trt,
       d.hazard = if (has_dropout) (if (is.list(d.hazard)) d.hazard[[2L]] else d.hazard) else NULL,
       d.time   = d.time_trt
     )
 
-    df <- rbind(df_ctrl, df_trt)
-    df <- df[order(df$sim, df$group), ]
-    rownames(df) <- NULL
+    # C++ interleave: replaces rbind() + order()
+    df <- interleave_groups(df_ctrl, df_trt, nsim,
+                            as.integer(n_grp[1L]), as.integer(n_grp[2L]))
   }
 
   df
@@ -290,25 +284,23 @@ simdata_fast <- function(nsim     = 1000,
 # ------------------------------------------------------------------ #
 #  Internal helper: simulate one group
 # ------------------------------------------------------------------ #
-simulate_group <- function(nsim, n, group_id, a.time, a.rate,
+simulate_group <- function(nsim, n, group_id, a.time, cum_p_a,
                            e.hazard, e.time, d.hazard, d.time) {
-
   total_n <- nsim * n
 
-  # Accrual times from piecewise uniform distribution
-  accrual_time <- rpiece_unif(total_n, a.time, a.rate)
+  # Accrual times via C++ piecewise uniform sampler
+  accrual_time <- rpiece_unif_cpp(total_n, a.time, cum_p_a)
 
   # Survival times
-  surv_time <- rpiece_exp(total_n, e.hazard, e.time)
+  surv_time <- rpiece_exp_r(total_n, e.hazard, e.time)
 
   # Dropout times
   dropout_time <- if (!is.null(d.hazard)) {
-    rpiece_exp(total_n, d.hazard, d.time)
+    rpiece_exp_r(total_n, d.hazard, d.time)
   } else {
     rep(Inf, total_n)
   }
 
-  # Derived columns
   tte           <- pmin(surv_time, dropout_time)
   event         <- as.integer(surv_time <= dropout_time)
   calendar_time <- accrual_time + tte
@@ -326,38 +318,13 @@ simulate_group <- function(nsim, n, group_id, a.time, a.rate,
 }
 
 # ------------------------------------------------------------------ #
-#  Internal helper: piecewise uniform sampler (accrual)
+#  Internal helper: piecewise exponential sampler
 # ------------------------------------------------------------------ #
-rpiece_unif <- function(n, a.time, a.rate) {
-  # Interval lengths and selection probabilities
-  lengths <- diff(a.time)
-  weights <- a.rate * lengths
-  probs   <- weights / sum(weights)
-  cum_p   <- cumsum(probs)
-
-  # Assign each observation to an interval via inverse CDF
-  u   <- dqrng::dqrunif(n)
-  idx <- findInterval(u, c(0, cum_p), rightmost.closed = TRUE)
-  idx <- pmax(1L, pmin(idx, length(a.rate)))
-
-  # Uniform draw within the assigned interval
-  lo  <- a.time[idx]
-  hi  <- a.time[idx + 1L]
-  lo + dqrng::dqrunif(n) * (hi - lo)
-}
-
-# ------------------------------------------------------------------ #
-#  Internal helper: piecewise exponential sampler (survival/dropout)
-# ------------------------------------------------------------------ #
-rpiece_exp <- function(n, hazard, e.time) {
-
-  # Simple exponential: scalar hazard or no change points
+rpiece_exp_r <- function(n, hazard, e.time) {
   if (length(hazard) == 1L) {
     return(dqrng::dqrexp(n, rate = hazard))
   }
 
-  # Piecewise exponential: inverse-CDF method
-  # e.time must be c(0, t1, ..., Inf)
   if (is.null(e.time)) {
     stop("'e.time' must be supplied when 'e.hazard' (or 'e.median') is a vector")
   }
@@ -369,21 +336,12 @@ rpiece_exp <- function(n, hazard, e.time) {
   }
 
   n_int    <- length(hazard)
-  fin_time <- e.time[seq_len(n_int)]          # finite left endpoints
-  lengths  <- diff(e.time[seq_len(n_int)])    # finite interval lengths
+  fin_time <- e.time[seq_len(n_int)]
+  lengths  <- diff(e.time[seq_len(n_int)])
+  cum_haz  <- c(0, cumsum(hazard[-n_int] * lengths))
 
-  # Cumulative hazard at each change point: H(t_j) = sum_{i<j} h_i * l_i
-  cum_haz <- c(0, cumsum(hazard[-n_int] * lengths))
-
-  # Draw total hazard accumulation via exponential
-  target <- dqrng::dqrexp(n, rate = 1)
-
-  # Find interval: largest j such that cum_haz[j] <= target
-  idx <- findInterval(target, cum_haz, rightmost.closed = FALSE)
-  idx <- pmax(1L, pmin(idx, n_int))
-
-  # Residual time within the interval
-  fin_time[idx] + (target - cum_haz[idx]) / hazard[idx]
+  # C++ piecewise exponential sampler
+  rpiece_exp_cpp(n, hazard, fin_time, cum_haz)
 }
 
 # ------------------------------------------------------------------ #

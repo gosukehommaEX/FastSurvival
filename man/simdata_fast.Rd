@@ -95,8 +95,9 @@ Simulates individual patient data for one- or two-group time-to-event
 trials. Patient accrual times are drawn from a piecewise uniform
 distribution. Survival and dropout times are drawn from either a simple
 exponential or a piecewise exponential distribution, depending on whether
-a scalar or vector hazard is supplied. All random number generation uses
-\code{dqrng} for maximum speed.
+a scalar or vector hazard is supplied. Random number generation uses
+\code{dqrng} for speed. C++ backends handle piecewise sampling and
+two-group interleaving to minimise R-level overhead.
 }
 \details{
 For each patient, three times are generated independently:

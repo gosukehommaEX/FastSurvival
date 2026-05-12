@@ -51,6 +51,9 @@ Pike-Halley Estimator (PiHE), a pure closed-form approximation to the
 Cox partial likelihood maximizer. The function returns the point estimate,
 its standard error on the log scale, and a Wald-type confidence interval,
 using output names consistent with \code{summary(survival::coxph(...))}.
+The C++ backend accepts pooled sorted vectors directly, performing group
+splitting and all accumulation in a single C++ pass without intermediate
+R-level vector copies.
 }
 \details{
 Let t_k (k = 1, ..., K) denote the distinct observed event times in the
@@ -88,10 +91,12 @@ the MLE. Because the Pike anchor lies within O_p(n^\{-1/2\}) of the Cox MLE,
 the difference between I_0 and the information at the MLE is negligible for
 the purpose of interval construction.
 
-Numbers at risk are computed by a single reverse cumulative sum over the
-sorted data. Distinct event times are aggregated in a \code{tapply}-free
-pass. When \code{presorted = TRUE}, the internal \code{order()} call is
-skipped for additional speed inside simulation loops.
+The C++ core (\code{pihe_core}) accepts the pooled sorted data together
+with an integer group indicator and performs group splitting, at-risk
+counting, and per-distinct-event-time accumulation in a single left-to-right
+scan. This eliminates the \code{rev(cumsum(rev(...)))}, \code{tapply()},
+\code{which()}, \code{diff()}, and group-split vector copies present in the
+pure-R version.
 }
 \examples{
 library(survival)
@@ -124,9 +129,12 @@ microbenchmark(
 Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. (manuscript under review)
 
-Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
+Berry, G., and Kitchin, R. M., and Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. Statistics in
 Medicine, 10(5), 749-755.
+
+Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
+Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link[survival]{coxph}} for the standard iterative Cox estimator.

@@ -31,9 +31,8 @@ Must be one of \code{"plain"}, \code{"log"}, or \code{"log-log"}.
 Defaults to \code{"log"}.}
 
 \item{presorted}{A logical value. If \code{TRUE} (default), \code{t_sorted}
-and \code{e_sorted} are assumed to be sorted in ascending order of time,
-and \code{findInterval()} is used for O(log n) index lookup. If
-\code{FALSE}, the vectors are sorted internally before computation.}
+and \code{e_sorted} are assumed to be sorted in ascending order of time.
+If \code{FALSE}, the vectors are sorted internally before computation.}
 }
 \value{
 A named numeric vector of length 4 with elements \code{surv},
@@ -41,15 +40,14 @@ A named numeric vector of length 4 with elements \code{surv},
   survival estimate, the Greenwood standard error SE[S(t)], and the lower
   and upper confidence limits at \code{t_eval}.
   Returns \code{c(surv = NA_real_, std.err = NA_real_, lower = NA_real_,
-  upper = NA_real_)} when \code{n} is zero or \code{t_eval} precedes all
-  observations.
+  upper = NA_real_)} when \code{n} is zero.
 }
 \description{
 Computes the Kaplan-Meier survival probability at a specified time point,
 together with a standard error and confidence interval based on Greenwood's
-variance formula. The function is a fully vectorized implementation that
-avoids R-level loops and is designed for repeated use inside iterative
-algorithms where many KM evaluations are required.
+variance formula. The C++ backend performs binary search for the evaluation
+cutoff and accumulates the KM product and Greenwood sum in a single scan
+over event positions only, without constructing intermediate vectors.
 }
 \details{
 The KM estimate at time \code{t_eval} is defined as the product-limit
@@ -72,16 +70,10 @@ When \code{S(t_eval) = 0} (all subjects have experienced the event by
 \code{t_eval}), the standard error is zero and the confidence interval
 collapses to \code{[0, 0]}, consistent with \code{\link[survival]{survfit}}.
 
-When \code{presorted = TRUE} (default), the cutoff index is located via
-\code{findInterval()}, which uses binary search and runs in O(log n).
-When \code{presorted = FALSE}, the data are sorted internally before
-computation; this is convenient for one-off calls but removes the
-opportunity to reuse the same sorted arrays across many calls.
-
-Only observations at or before \code{t_eval} contribute to the KM product
-and the Greenwood sum. Among those, only event positions (e_sorted == 1)
-enter the Greenwood summation, so the inner loop over censored observations
-is avoided entirely.
+When \code{presorted = TRUE} (default), \code{t_sorted} and \code{e_sorted}
+are assumed to be sorted in ascending order of time. When
+\code{presorted = FALSE}, the vectors are sorted internally before
+computation.
 
 Three confidence interval types are supported via \code{conf.type}:
 
@@ -116,6 +108,14 @@ library(survival)
 fit <- survfit(Surv(t_raw, e_raw) ~ 1, conf.type = "plain")
 summary(fit, times = 10)
 
+}
+\references{
+Kaplan, E. L., and Paul M. (1991). Nonparametric Estimation from
+Incomplete Observations. Journal of the American Statistical Association,
+53(282), 457-481.
+
+Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
+Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link[survival]{survfit}} for the standard KM estimator.

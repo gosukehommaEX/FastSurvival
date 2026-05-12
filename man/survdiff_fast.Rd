@@ -35,8 +35,10 @@ A single numeric value: the Z-score when \code{side = 1}, or the
 \description{
 Computes the log-rank test statistic for comparing survival curves between
 two groups. Returns either a one-sided Z-score or a two-sided chi-square
-statistic. The implementation is optimized for performance relative to
-\code{\link[survival]{survdiff}}.
+statistic. The C++ backend walks the pooled sorted data in a single pass,
+maintaining per-group at-risk counters and processing tied blocks
+atomically. The R-level group-splitting copies present in the previous
+design are eliminated.
 }
 \details{
 The log-rank statistic is computed as:
@@ -45,20 +47,21 @@ Z = (O_1 - E_1) / sqrt(V_1)
 
 where O_1 is the observed number of events in the treatment group, E_1 is
 the expected number under the null hypothesis of equal survival, and V_1 is
-the hypergeometric variance. Tied event times are handled via the standard
-rank-based approach: times are converted to integer ranks with
-\code{ties.method = "min"}, and at-risk counts and event counts are
-accumulated over distinct rank values.
+the hypergeometric variance. Tied event times are handled correctly: all
+subjects sharing the same event time form a tied block, and the block is
+processed atomically inside the C++ scan.
 
 When \code{presorted = TRUE}, the input vectors are assumed to be sorted in
-ascending order of \code{time} and \code{\link{rank}} is called directly
-without an additional \code{\link{order}} pass. When \code{presorted = FALSE}
-(default), the function sorts internally via \code{rank()}, which handles
-unsorted input correctly regardless.
+ascending order of \code{time} and the internal \code{order()} call is
+skipped. When \code{presorted = FALSE} (default), sorting is handled
+internally. In simulation loops where the data are generated in sorted order,
+setting \code{presorted = TRUE} avoids one O(n log n) pass.
 
-In practice the two paths produce identical results; \code{presorted = TRUE}
-removes the overhead of a redundant index computation when the caller has
-already sorted the data, which is useful inside simulation loops.
+The C++ core (\code{logrank_core}) receives the pooled sorted data and an
+integer group indicator directly, walks the vector once, and updates per-group
+at-risk counts and per-tied-block statistics in a single pass. No group-split
+vectors are allocated on the R side, eliminating four vector copies of size n
+that the previous design required for every call.
 }
 \examples{
 library(survival)
@@ -92,10 +95,10 @@ microbenchmark(
 \references{
 Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. Cancer Chemotherapy Reports,
-50(3), 163-270.
+50(3), 163-170.
 
-Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test
-procedures. Journal of the Royal Statistical Society, 135(2), 185-207.
+Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
+Chapman and Hall/CRC.
 }
 \seealso{
 \code{\link[survival]{survdiff}} for the standard implementation.
