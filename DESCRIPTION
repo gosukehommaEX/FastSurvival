@@ -22,6 +22,7 @@ License: MIT + file LICENSE
 URL: https://github.com/gosukehommaEX/FastSurvival
 BugReports: https://github.com/gosukehommaEX/FastSurvival/issues
 Encoding: UTF-8
+Language: en-US
 LazyData: false
 Depends:
     R (>= 4.1.0)

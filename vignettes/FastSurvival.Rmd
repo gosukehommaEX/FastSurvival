@@ -31,7 +31,7 @@ This vignette has three parts:
 2. **Speed comparison**: measure execution times against the `survival`
    package using `microbenchmark`.
 3. **Simulation example**: generate data with `simdata_fast()` (`nsim = 100`)
-   and summarise the results of applying the three analysis functions to
+   and summarize the results of applying the three analysis functions to
    each simulated trial.
 
 ```{r load-pkg}
@@ -224,9 +224,9 @@ for (s in seq_len(nsim)) {
 }
 ```
 
-## 3.3 Summarise the results across 100 simulations
+## 3.3 Summarize the results across 100 simulations
 
-```{r summarise}
+```{r summarize}
 # Landmark survival in the treatment group at t = 18
 km_summary <- c(
   mean_surv    = mean(km_mat[, "surv"]),

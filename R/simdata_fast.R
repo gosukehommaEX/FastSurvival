@@ -7,7 +7,7 @@
 #' exponential or a piecewise exponential distribution, depending on whether
 #' a scalar or vector hazard is supplied. Random number generation uses
 #' \code{dqrng} for speed. C++ backends handle piecewise sampling and
-#' two-group interleaving to minimise R-level overhead.
+#' two-group interleaving to minimize R-level overhead.
 #'
 #' @details
 #' For each patient, three times are generated independently:
@@ -34,7 +34,7 @@
 #'
 #' Exactly one of \code{e.hazard} and \code{e.median} must be supplied.
 #' Exactly one of \code{d.hazard} and \code{d.median} must be supplied when
-#' dropout is modelled; both must be \code{NULL} to suppress dropout entirely.
+#' dropout is modeled; both must be \code{NULL} to suppress dropout entirely.
 #'
 #' For a two-group trial, group-specific parameters are passed as a list of
 #' length 2, where element 1 corresponds to the control group and element 2
@@ -90,7 +90,7 @@
 #'   \item{\code{accrual_time}}{Patient accrual time from study start.}
 #'   \item{\code{surv_time}}{Survival time from patient entry.}
 #'   \item{\code{dropout_time}}{Dropout time from patient entry
-#'     (\code{Inf} when dropout is not modelled).}
+#'     (\code{Inf} when dropout is not modeled).}
 #'   \item{\code{tte}}{Observed time-to-event:
 #'     \code{pmin(surv_time, dropout_time)}.}
 #'   \item{\code{event}}{Event indicator: 1 if \code{surv_time <=
