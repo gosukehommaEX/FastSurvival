@@ -35,25 +35,29 @@ and \code{e_sorted} are assumed to be sorted in ascending order of time.
 If \code{FALSE}, the vectors are sorted internally before computation.}
 }
 \value{
-A named numeric vector of length 4 with elements \code{surv},
-  \code{std.err}, \code{lower}, and \code{upper}, representing the KM
-  survival estimate, the Greenwood standard error SE[S(t)], and the lower
-  and upper confidence limits at \code{t_eval}.
-  Returns \code{c(surv = NA_real_, std.err = NA_real_, lower = NA_real_,
-  upper = NA_real_)} when \code{n} is zero.
+An object of class \code{"survfit_fast"}, which is a named numeric
+  vector of length 4 with elements \code{surv}, \code{std.err},
+  \code{lower}, and \code{upper}, representing the Kaplan-Meier survival
+  estimate, the Greenwood standard error SE[S(t)], and the lower and upper
+  confidence limits at \code{t_eval}. The evaluation time, confidence
+  level, and confidence interval type are stored as attributes
+  \code{t_eval}, \code{conf.int}, and \code{conf.type}.
+  Returns a vector of \code{NA_real_} values (still with class
+  \code{"survfit_fast"}) when \code{n} is zero.
 }
 \description{
 Computes the Kaplan-Meier survival probability at a specified time point,
 together with a standard error and confidence interval based on Greenwood's
 variance formula. The C++ backend performs binary search for the evaluation
-cutoff and accumulates the KM product and Greenwood sum in a single scan
-over event positions only, without constructing intermediate vectors.
+cutoff and accumulates the Kaplan-Meier product and Greenwood sum in a
+single scan over event positions only, without constructing intermediate
+vectors.
 }
 \details{
-The KM estimate at time \code{t_eval} is defined as the product-limit
-estimator evaluated at the largest observed event time less than or equal
-to \code{t_eval}. If \code{t_eval} is smaller than the first observed
-event time, \code{S(t) = 1} and the standard error is zero.
+The Kaplan-Meier estimate at time \code{t_eval} is defined as the
+product-limit estimator evaluated at the largest observed event time less
+than or equal to \code{t_eval}. If \code{t_eval} is smaller than the first
+observed event time, \code{S(t) = 1} and the standard error is zero.
 
 The standard error is estimated by Greenwood's formula:
 
@@ -86,6 +90,12 @@ Three confidence interval types are supported via \code{conf.type}:
   \item \code{"log-log"}: Interval on the complementary log-log scale,
     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).
 }
+
+The returned object has class \code{"survfit_fast"} and is a named numeric
+vector of length 4 with the evaluation time \code{t_eval}, the confidence
+level \code{conf.int}, and the confidence interval type \code{conf.type}
+stored as attributes. A \code{print()} method formats the result similarly
+to \code{print(summary(survival::survfit(...)))}.
 }
 \examples{
 set.seed(42)
@@ -110,13 +120,11 @@ summary(fit, times = 10)
 
 }
 \references{
-Kaplan, E. L., and Paul M. (1991). Nonparametric Estimation from
-Incomplete Observations. Journal of the American Statistical Association,
-53(282), 457-481.
-
-Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
-Chapman and Hall/CRC.
+Kaplan, E. L., & Meier, P. (1958). Nonparametric Estimation from Incomplete
+Observations. Journal of the American Statistical Association, 53(282),
+457–481.
 }
 \seealso{
-\code{\link[survival]{survfit}} for the standard KM estimator.
+\code{\link[survival]{survfit}} for the standard Kaplan-Meier estimator.
+\code{\link{print.survfit_fast}} for the print method.
 }

@@ -20,14 +20,14 @@ computations are implemented in C++ via
 
 | Function | Replaces | Approximate speed gain |
 |----------|----------|------------------------|
-| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~100x |
-| `survdiff_fast()` | `survdiff()` | ~100x |
-| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~100x |
+| `survfit_fast()` | `survfit()` + `summary()` at a single time point | ~50x |
+| `survdiff_fast()` | `survdiff()` | ~40x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~30x |
 | `simdata_fast()` | Custom simulation scripts | — |
 
-Speed gains are based on median times from microbenchmark replicates on a
-typical phase-3 trial dataset (n = 600, event rate 80%). Results vary by
-hardware and sample size.
+Speed gains are based on median times from 1,000 microbenchmark replicates
+on a typical phase-3 trial dataset (n = 600, event rate 80%) with
+\code{presorted = TRUE}. Results vary by hardware and sample size.
 
 ## Installation
 
@@ -51,22 +51,17 @@ t_s <- ovarian$futime[ord]
 e_s <- ovarian$fustat[ord]
 
 survfit_fast(t_s, e_s, t_eval = 500, conf.type = "log")
-#>       surv    std.err      lower      upper
-#> 0.59607843 0.09992615 0.42914950 0.82793874
 
 # ----------------------------------------------------------------
 # survdiff_fast(): log-rank test
 # ----------------------------------------------------------------
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
               control = 1, side = 2)
-#> [1] 1.06274
 
 # ----------------------------------------------------------------
 # coxph_fast(): hazard ratio via the Pike-Halley Estimator (closed-form)
 # ----------------------------------------------------------------
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
-#>       coef  exp(coef)   se(coef)  lower .95  upper .95
-#> -0.5963800  0.5508019  0.5868442  0.1743704  1.7398754
 
 # ----------------------------------------------------------------
 # simdata_fast(): clinical trial simulation
@@ -94,6 +89,13 @@ df2 <- simdata_fast(
   seed     = 2
 )
 ```
+
+The three analysis functions return S3-class objects
+(`survfit_fast`, `survdiff_fast`, `coxph_fast`) with `print()` methods that
+display the results in a format similar to the corresponding `survival`
+package functions. Each object is internally a numeric vector, so it can be
+used directly in arithmetic, subsetting, and aggregation after stripping
+the class (see the simulation example below).
 
 ## Design principles
 
@@ -135,12 +137,13 @@ interleaving, and random number generation uses
 
 ## Using the functions together
 
-A typical simulation workflow combines all four functions:
+A typical simulation workflow combines all four functions. Inside the loop
+the returned objects can be stored as-is. When aggregating results across
+simulations, strip the S3 class with `unclass()` so that `rbind()` produces
+an ordinary numeric matrix:
 
 ```r
 library(FastSurvival)
-
-results <- vector("list", 1000L)
 
 df <- simdata_fast(
   nsim     = 1000,
@@ -152,12 +155,13 @@ df <- simdata_fast(
   seed     = 42
 )
 
+results <- vector("list", 1000L)
 for (s in seq_len(1000L)) {
   d <- df[df$sim == s, ]
   results[[s]] <- coxph_fast(d$tte, d$event, d$group, control = 1)
 }
 
-hr_mat <- do.call(rbind, results)
+hr_mat <- do.call(rbind, lapply(results, unclass))
 colMeans(hr_mat)
 ```
 

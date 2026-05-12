@@ -3,10 +3,9 @@
 #' @description
 #' Computes the log-rank test statistic for comparing survival curves between
 #' two groups. Returns either a one-sided Z-score or a two-sided chi-square
-#' statistic. The C++ backend walks the pooled sorted data in a single pass,
-#' maintaining per-group at-risk counters and processing tied blocks
-#' atomically. The R-level group-splitting copies present in the previous
-#' design are eliminated.
+#' statistic. The C++ backend uses a two-pointer merge scan over pooled sorted
+#' vectors, eliminating the \code{rank()} call that dominates the pure-R
+#' implementation.
 #'
 #' @details
 #' The log-rank statistic is computed as:
@@ -17,7 +16,7 @@
 #' the expected number under the null hypothesis of equal survival, and V_1 is
 #' the hypergeometric variance. Tied event times are handled correctly: all
 #' subjects sharing the same event time form a tied block, and the block is
-#' processed atomically inside the C++ scan.
+#' processed atomically in the two-pointer merge.
 #'
 #' When \code{presorted = TRUE}, the input vectors are assumed to be sorted in
 #' ascending order of \code{time} and the internal \code{order()} call is
@@ -25,11 +24,17 @@
 #' internally. In simulation loops where the data are generated in sorted order,
 #' setting \code{presorted = TRUE} avoids one O(n log n) pass.
 #'
-#' The C++ core (\code{logrank_core}) receives the pooled sorted data and an
-#' integer group indicator directly, walks the vector once, and updates per-group
-#' at-risk counts and per-tied-block statistics in a single pass. No group-split
-#' vectors are allocated on the R side, eliminating four vector copies of size n
-#' that the previous design required for every call.
+#' The C++ core (\code{logrank_core}) walks the pooled sorted data with a
+#' single two-pointer scan, maintaining running at-risk counts per group. No
+#' rank vector is constructed, so the dominant O(n log n) cost of \code{rank()}
+#' in the pure-R version is removed.
+#'
+#' The returned object has class \code{"survdiff_fast"} and is a length-one
+#' numeric value (Z-score or chi-square) with the underlying counts O_0, E_0,
+#' O_1, E_1, V_1, the requested \code{side}, and the total sample size stored
+#' as attributes. A \code{print()} method formats the result similarly to
+#' \code{print(survival::survdiff(...))}, displaying observed and expected
+#' event counts for both the control and treatment groups.
 #'
 #' @param time A numeric vector of follow-up times for all subjects.
 #' @param event An integer or numeric vector of event indicators
@@ -46,22 +51,26 @@
 #'   \code{time}, and the internal \code{order()} call is skipped. If
 #'   \code{FALSE} (default), sorting is handled internally.
 #'
-#' @return A single numeric value: the Z-score when \code{side = 1}, or the
-#'   chi-square statistic when \code{side = 2}. Returns \code{NA_real_} when
+#' @return An object of class \code{"survdiff_fast"}, which is a length-one
+#'   numeric value with attributes \code{O0}, \code{E0}, \code{O1}, \code{E1},
+#'   \code{V1}, \code{side}, and \code{n}. The numeric value is the Z-score
+#'   when \code{side = 1}, or the chi-square statistic when \code{side = 2}.
+#'   Returns \code{NA_real_} (still with class \code{"survdiff_fast"}) when
 #'   \code{V1 = 0} (e.g., all events in one group).
 #'
 #' @examples
 #' library(survival)
 #'
 #' # Two-sided test: compare with survdiff
-#' chisq_fast <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 2)
-#' chisq_ref  <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)$chisq
-#' cat("survdiff_fast:", chisq_fast, "\n")
-#' cat("survdiff     :", chisq_ref,  "\n")
+#' fit <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 2)
+#' fit
+#'
+#' chisq_ref <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)$chisq
+#' cat("survdiff_fast chi-square:", as.numeric(fit), "\n")
+#' cat("survdiff      chi-square:", chisq_ref,       "\n")
 #'
 #' # One-sided test (Z-score)
-#' z_stat <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1)
-#' cat("One-sided Z:", z_stat, "\n")
+#' survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1)
 #'
 #' # presorted = TRUE: sort once outside, reuse inside a loop
 #' ord <- order(ovarian$futime)
@@ -80,14 +89,16 @@
 #'
 #' @seealso
 #' \code{\link[survival]{survdiff}} for the standard implementation.
+#' \code{\link{print.survdiff_fast}} for the print method.
 #'
 #' @references
 #' Mantel, N. (1966). Evaluation of survival data and two new rank order
-#' statistics arising in its consideration. Cancer Chemotherapy Reports,
-#' 50(3), 163-170.
+#' statistics arising in its consideration. \emph{Cancer Chemotherapy
+#' Reports}, \emph{50}(3), 163-170.
 #'
-#' Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
-#' Chapman and Hall/CRC.
+#' Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test
+#' procedures. \emph{Journal of the Royal Statistical Society. Series A
+#' (General)}, \emph{135}(2), 185-198.
 #'
 #' @export
 survdiff_fast <- function(time, event, group, control, side,
@@ -102,6 +113,8 @@ survdiff_fast <- function(time, event, group, control, side,
   if (sum(event) == 0L) {
     stop("No events observed in the data")
   }
+
+  n_total <- length(time)
 
   # Treatment indicator: 1 = treatment, 0 = control
   j <- as.integer(group != control)
@@ -122,9 +135,27 @@ survdiff_fast <- function(time, event, group, control, side,
   E1  <- ovr[2L]
   V1  <- ovr[3L]
 
-  if (!is.finite(V1) || V1 == 0) return(NA_real_)
+  # Control-group counts: O0 = total events - O1, E0 = total events - E1
+  total_events <- sum(event)
+  O0           <- total_events - O1
+  E0           <- total_events - E1
 
-  LR <- (O1 - E1) / sqrt(V1)
+  if (!is.finite(V1) || V1 == 0) {
+    return(structure(
+      NA_real_,
+      O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
+      side = side, n = n_total,
+      class = "survdiff_fast"
+    ))
+  }
 
-  if (side == 1L) LR else LR^2
+  LR  <- (O1 - E1) / sqrt(V1)
+  val <- if (side == 1L) LR else LR^2
+
+  structure(
+    val,
+    O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
+    side = side, n = n_total,
+    class = "survdiff_fast"
+  )
 }

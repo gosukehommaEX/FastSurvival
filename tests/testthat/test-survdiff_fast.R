@@ -18,7 +18,7 @@ test_that("survdiff_fast chi-square is non-negative", {
   group <- rep(c(1L, 2L), each = n / 2)
 
   res <- survdiff_fast(time, event, group, control = 1, side = 2)
-  expect_gte(res, 0)
+  expect_gte(as.numeric(res), 0)
 })
 
 test_that("survdiff_fast side=1 and side=2 are consistent (Z^2 = chi-sq)", {
@@ -30,7 +30,7 @@ test_that("survdiff_fast side=1 and side=2 are consistent (Z^2 = chi-sq)", {
 
   z   <- survdiff_fast(time, event, group, control = 1, side = 1)
   chi <- survdiff_fast(time, event, group, control = 1, side = 2)
-  expect_equal(z^2, chi, tolerance = 1e-10)
+  expect_equal(as.numeric(z) ^ 2, as.numeric(chi), tolerance = 1e-10)
 })
 
 test_that("survdiff_fast presorted=TRUE and presorted=FALSE agree", {
@@ -45,7 +45,7 @@ test_that("survdiff_fast presorted=TRUE and presorted=FALSE agree", {
                            control = 1, side = 2, presorted = TRUE)
   res_uns <- survdiff_fast(time, event, group,
                            control = 1, side = 2, presorted = FALSE)
-  expect_equal(res_pre, res_uns, tolerance = 1e-10)
+  expect_equal(as.numeric(res_pre), as.numeric(res_uns), tolerance = 1e-10)
 })
 
 test_that("survdiff_fast result is symmetric under group relabeling", {
@@ -60,8 +60,8 @@ test_that("survdiff_fast result is symmetric under group relabeling", {
   z_21 <- survdiff_fast(time, event, group, control = 2, side = 1)
   chi  <- survdiff_fast(time, event, group, control = 1, side = 2)
 
-  expect_equal(z_12, -z_21, tolerance = 1e-10)
-  expect_equal(z_12^2, chi, tolerance = 1e-10)
+  expect_equal(as.numeric(z_12), -as.numeric(z_21), tolerance = 1e-10)
+  expect_equal(as.numeric(z_12) ^ 2, as.numeric(chi), tolerance = 1e-10)
 })
 
 test_that("survdiff_fast agrees with survival::survdiff chi-square", {
@@ -75,7 +75,7 @@ test_that("survdiff_fast agrees with survival::survdiff chi-square", {
   res <- survdiff_fast(time, event, group, control = 1, side = 2)
   ref <- survival::survdiff(survival::Surv(time, event) ~ group)
 
-  expect_equal(res, ref$chisq, tolerance = 1e-6)
+  expect_equal(as.numeric(res), ref$chisq, tolerance = 1e-6)
 })
 
 test_that("survdiff_fast stops when no events observed", {

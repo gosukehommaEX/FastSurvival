@@ -28,7 +28,7 @@
 #'
 #' @keywords internal
 km_core <- function(t_sorted, e_sorted, t_eval) {
-    .Call('_FastSurvival_km_core', PACKAGE = 'FastSurvival', t_sorted, e_sorted, t_eval)
+    .Call(`_FastSurvival_km_core`, t_sorted, e_sorted, t_eval)
 }
 
 #' Core log-rank computation on pooled sorted vectors (C++ backend)
@@ -53,7 +53,7 @@ km_core <- function(t_sorted, e_sorted, t_eval) {
 #'
 #' @keywords internal
 logrank_core <- function(time_sorted, event_sorted, j_sorted) {
-    .Call('_FastSurvival_logrank_core', PACKAGE = 'FastSurvival', time_sorted, event_sorted, j_sorted)
+    .Call(`_FastSurvival_logrank_core`, time_sorted, event_sorted, j_sorted)
 }
 
 #' Core PiHE hazard ratio computation (C++ backend)
@@ -86,18 +86,18 @@ logrank_core <- function(time_sorted, event_sorted, j_sorted) {
 #'
 #' @keywords internal
 pihe_core <- function(time_sorted, event_sorted, j_sorted) {
-    .Call('_FastSurvival_pihe_core', PACKAGE = 'FastSurvival', time_sorted, event_sorted, j_sorted)
+    .Call(`_FastSurvival_pihe_core`, time_sorted, event_sorted, j_sorted)
 }
 
 rpiece_unif_cpp <- function(n, a_time, cum_p) {
-    .Call('_FastSurvival_rpiece_unif_cpp', PACKAGE = 'FastSurvival', n, a_time, cum_p)
+    .Call(`_FastSurvival_rpiece_unif_cpp`, n, a_time, cum_p)
 }
 
 rpiece_exp_cpp <- function(n, hazard, fin_time, cum_haz) {
-    .Call('_FastSurvival_rpiece_exp_cpp', PACKAGE = 'FastSurvival', n, hazard, fin_time, cum_haz)
+    .Call(`_FastSurvival_rpiece_exp_cpp`, n, hazard, fin_time, cum_haz)
 }
 
 interleave_groups <- function(df_ctrl, df_trt, nsim, n_ctrl, n_trt) {
-    .Call('_FastSurvival_interleave_groups', PACKAGE = 'FastSurvival', df_ctrl, df_trt, nsim, n_ctrl, n_trt)
+    .Call(`_FastSurvival_interleave_groups`, df_ctrl, df_trt, nsim, n_ctrl, n_trt)
 }
 

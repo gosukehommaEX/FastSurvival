@@ -1,14 +1,13 @@
-#' Fast Closed-Form Hazard Ratio Estimation via PiHE
+#' Fast Closed-Form Hazard Ratio Estimation via the Pike-Halley Estimator
 #'
 #' @description
 #' Estimates the hazard ratio for a two-group parallel trial using the
-#' Pike-Halley Estimator (PiHE), a pure closed-form approximation to the
-#' Cox partial likelihood maximizer. The function returns the point estimate,
-#' its standard error on the log scale, and a Wald-type confidence interval,
-#' using output names consistent with \code{summary(survival::coxph(...))}.
-#' The C++ backend accepts pooled sorted vectors directly, performing group
-#' splitting and all accumulation in a single C++ pass without intermediate
-#' R-level vector copies.
+#' Pike-Halley Estimator, a pure closed-form approximation to the Cox partial
+#' likelihood maximizer. The function returns the point estimate, its standard
+#' error on the log scale, and a Wald-type confidence interval, using output
+#' names consistent with \code{summary(survival::coxph(...))}. The C++ backend
+#' accepts pooled sorted vectors directly, performing group splitting and all
+#' accumulation in a single C++ pass without intermediate R-level vector copies.
 #'
 #' @details
 #' Let t_k (k = 1, ..., K) denote the distinct observed event times in the
@@ -18,10 +17,10 @@
 #' and O_k = O_T_k + O_C_k. Define E_T = sum n_T_k O_k / n_k and
 #' E_C = sum n_C_k O_k / n_k as the log-rank expected event totals.
 #'
-#' The PiHE estimator is obtained in three steps. First, the Pike anchor is
-#' computed as theta_0 = (O_T E_C) / (O_C E_T). Second, the score U_0, the
-#' observed information I_0, and the third-order curvature term J_0 of the
-#' Breslow partial likelihood are evaluated at eta_0 = log(theta_0):
+#' The Pike-Halley Estimator is obtained in three steps. First, the Pike
+#' anchor is computed as theta_0 = (O_T E_C) / (O_C E_T). Second, the score
+#' U_0, the observed information I_0, and the third-order curvature term J_0
+#' of the Breslow partial likelihood are evaluated at eta_0 = log(theta_0):
 #'
 #' p_k = n_T_k theta_0 / (n_C_k + n_T_k theta_0)
 #' U_0 = sum (O_T_k - O_k p_k)
@@ -42,9 +41,10 @@
 #' is the observed information evaluated at the Pike anchor. This is the same
 #' quantity used in the Wald confidence interval reported by
 #' \code{summary(coxph(...))}, which is based on the observed information at
-#' the MLE. Because the Pike anchor lies within O_p(n^\{-1/2\}) of the Cox MLE,
-#' the difference between I_0 and the information at the MLE is negligible for
-#' the purpose of interval construction.
+#' the maximum likelihood estimate. Because the Pike anchor lies within
+#' O_p(n^\{-1/2\}) of the Cox maximum likelihood estimate, the difference
+#' between I_0 and the information at the maximum likelihood estimate is
+#' negligible for the purpose of interval construction.
 #'
 #' The C++ core (\code{pihe_core}) accepts the pooled sorted data together
 #' with an integer group indicator and performs group splitting, at-risk
@@ -52,6 +52,10 @@
 #' scan. This eliminates the \code{rev(cumsum(rev(...)))}, \code{tapply()},
 #' \code{which()}, \code{diff()}, and group-split vector copies present in the
 #' pure-R version.
+#'
+#' The returned object has class \code{"coxph_fast"} and is a named numeric
+#' vector of length 5. A \code{print()} method formats the result similarly
+#' to \code{summary(coxph(...))}.
 #'
 #' @param time A numeric vector of follow-up times for all subjects (pooled
 #'   over both groups).
@@ -69,8 +73,9 @@
 #'   ascending order of \code{time}, and the internal \code{order()} call is
 #'   skipped. If \code{FALSE} (default), sorting is handled internally.
 #'
-#' @return A named numeric vector of length 5 with elements matching the
-#'   column names of \code{summary(coxph(...))$coefficients} and
+#' @return An object of class \code{"coxph_fast"}, which is a named numeric
+#'   vector of length 5 with elements matching the column names of
+#'   \code{summary(coxph(...))$coefficients} and
 #'   \code{summary(coxph(...))$conf.int}:
 #' \describe{
 #'   \item{\code{coef}}{Log hazard ratio log(theta_hat).}
@@ -82,8 +87,9 @@
 #'     \code{"lower .90"} when \code{conf.int = 0.90}).}
 #'   \item{\code{upper .95}}{Upper bound of the Wald confidence interval.}
 #' }
-#' Returns a vector of \code{NA_real_} values when the estimate cannot be
-#' computed (e.g., no events, all events in one group, or \code{I_0 = 0}).
+#' Returns a vector of \code{NA_real_} values (still with class
+#' \code{"coxph_fast"}) when the estimate cannot be computed (e.g., no
+#' events, all events in one group, or \code{I_0 = 0}).
 #'
 #' @examples
 #' library(survival)
@@ -92,8 +98,9 @@
 #' # coxph() treats rx as numeric with rx=1 as the reference (control),
 #' # so set control = 1 for a consistent comparison.
 #' fit_fast <- coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
-#' fit_cox  <- summary(coxph(Surv(futime, fustat) ~ rx, data = ovarian))
+#' fit_fast
 #'
+#' fit_cox <- summary(coxph(Surv(futime, fustat) ~ rx, data = ovarian))
 #' cat("coxph_fast HR :", fit_fast["exp(coef)"], "\n")
 #' cat("coxph      HR :", fit_cox$coefficients[, "exp(coef)"], "\n")
 #'
@@ -113,17 +120,15 @@
 #'
 #' @seealso
 #' \code{\link[survival]{coxph}} for the standard iterative Cox estimator.
+#' \code{\link{print.coxph_fast}} for the print method.
 #'
 #' @references
 #' Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-#' estimator. (manuscript under review)
+#' estimator. Manuscript under review.
 #'
-#' Berry, G., and Kitchin, R. M., and Mock, P. A. (1991). A comparison of two
-#' simple hazard ratio estimators based on the logrank test. Statistics in
-#' Medicine, 10(5), 749-755.
-#'
-#' Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
-#' Chapman and Hall/CRC.
+#' Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
+#' simple hazard ratio estimators based on the logrank test.
+#' \emph{Statistics in Medicine}, \emph{10}(5), 749-755.
 #'
 #' @importFrom stats qnorm setNames
 #' @export
@@ -132,11 +137,11 @@ coxph_fast <- function(time, event, group, control,
 
   # Prepare NA output with coxph-compatible names
   ci_lab <- conf.int * 100
+  ci_lo  <- sprintf("lower .%g", ci_lab)
+  ci_hi  <- sprintf("upper .%g", ci_lab)
   na_out <- setNames(
     rep(NA_real_, 5L),
-    c("coef", "exp(coef)", "se(coef)",
-      sprintf("lower .%g", ci_lab),
-      sprintf("upper .%g", ci_lab))
+    c("coef", "exp(coef)", "se(coef)", ci_lo, ci_hi)
   )
 
   # Input validation
@@ -144,7 +149,9 @@ coxph_fast <- function(time, event, group, control,
   if (length(event) != n || length(group) != n) {
     stop("'time', 'event', and 'group' must have the same length")
   }
-  if (n == 0L || sum(event) == 0L) return(na_out)
+  if (n == 0L || sum(event) == 0L) {
+    return(structure(na_out, conf.int = conf.int, class = "coxph_fast"))
+  }
 
   # Treatment indicator: 1 = treatment, 0 = control
   if (is.factor(group)) group <- as.character(group)
@@ -163,7 +170,9 @@ coxph_fast <- function(time, event, group, control,
   # C++ core: single scan over pooled sorted data -> c(theta_0, U_0, I_0, J_0)
   res <- pihe_core(time, event, j)
 
-  if (anyNA(res)) return(na_out)
+  if (anyNA(res)) {
+    return(structure(na_out, conf.int = conf.int, class = "coxph_fast"))
+  }
 
   theta_0 <- res[1L]
   U_0     <- res[2L]
@@ -179,12 +188,12 @@ coxph_fast <- function(time, event, group, control,
   coef    <- log(theta_hat)
   z       <- qnorm(1 - (1 - conf.int) / 2)
 
-  setNames(
+  out <- setNames(
     c(coef, theta_hat, se_coef,
       exp(coef - z * se_coef),
       exp(coef + z * se_coef)),
-    c("coef", "exp(coef)", "se(coef)",
-      sprintf("lower .%g", ci_lab),
-      sprintf("upper .%g", ci_lab))
+    c("coef", "exp(coef)", "se(coef)", ci_lo, ci_hi)
   )
+
+  structure(out, conf.int = conf.int, class = "coxph_fast")
 }

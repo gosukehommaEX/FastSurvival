@@ -4,14 +4,15 @@
 #' Computes the Kaplan-Meier survival probability at a specified time point,
 #' together with a standard error and confidence interval based on Greenwood's
 #' variance formula. The C++ backend performs binary search for the evaluation
-#' cutoff and accumulates the KM product and Greenwood sum in a single scan
-#' over event positions only, without constructing intermediate vectors.
+#' cutoff and accumulates the Kaplan-Meier product and Greenwood sum in a
+#' single scan over event positions only, without constructing intermediate
+#' vectors.
 #'
 #' @details
-#' The KM estimate at time \code{t_eval} is defined as the product-limit
-#' estimator evaluated at the largest observed event time less than or equal
-#' to \code{t_eval}. If \code{t_eval} is smaller than the first observed
-#' event time, \code{S(t) = 1} and the standard error is zero.
+#' The Kaplan-Meier estimate at time \code{t_eval} is defined as the
+#' product-limit estimator evaluated at the largest observed event time less
+#' than or equal to \code{t_eval}. If \code{t_eval} is smaller than the first
+#' observed event time, \code{S(t) = 1} and the standard error is zero.
 #'
 #' The standard error is estimated by Greenwood's formula:
 #'
@@ -45,6 +46,12 @@
 #'     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).
 #' }
 #'
+#' The returned object has class \code{"survfit_fast"} and is a named numeric
+#' vector of length 4 with the evaluation time \code{t_eval}, the confidence
+#' level \code{conf.int}, and the confidence interval type \code{conf.type}
+#' stored as attributes. A \code{print()} method formats the result similarly
+#' to \code{print(summary(survival::survfit(...)))}.
+#'
 #' @param t_sorted A numeric vector of event or censoring times. Must be
 #'   sorted in ascending order when \code{presorted = TRUE}.
 #' @param e_sorted An integer or numeric vector of event indicators
@@ -60,12 +67,15 @@
 #'   and \code{e_sorted} are assumed to be sorted in ascending order of time.
 #'   If \code{FALSE}, the vectors are sorted internally before computation.
 #'
-#' @return A named numeric vector of length 4 with elements \code{surv},
-#'   \code{std.err}, \code{lower}, and \code{upper}, representing the KM
-#'   survival estimate, the Greenwood standard error SE[S(t)], and the lower
-#'   and upper confidence limits at \code{t_eval}.
-#'   Returns \code{c(surv = NA_real_, std.err = NA_real_, lower = NA_real_,
-#'   upper = NA_real_)} when \code{n} is zero.
+#' @return An object of class \code{"survfit_fast"}, which is a named numeric
+#'   vector of length 4 with elements \code{surv}, \code{std.err},
+#'   \code{lower}, and \code{upper}, representing the Kaplan-Meier survival
+#'   estimate, the Greenwood standard error SE[S(t)], and the lower and upper
+#'   confidence limits at \code{t_eval}. The evaluation time, confidence
+#'   level, and confidence interval type are stored as attributes
+#'   \code{t_eval}, \code{conf.int}, and \code{conf.type}.
+#'   Returns a vector of \code{NA_real_} values (still with class
+#'   \code{"survfit_fast"}) when \code{n} is zero.
 #'
 #' @examples
 #' set.seed(42)
@@ -89,15 +99,13 @@
 #' summary(fit, times = 10)
 #'
 #' @seealso
-#' \code{\link[survival]{survfit}} for the standard KM estimator.
+#' \code{\link[survival]{survfit}} for the standard Kaplan-Meier estimator.
+#' \code{\link{print.survfit_fast}} for the print method.
 #'
 #' @references
-#' Kaplan, E. L., and Paul M. (1991). Nonparametric Estimation from
-#' Incomplete Observations. Journal of the American Statistical Association,
-#' 53(282), 457-481.
-#'
-#' Collett, D. (2014). Modelling Survival Data in Medical Research (3rd ed.).
-#' Chapman and Hall/CRC.
+#' Kaplan, E. L., & Meier, P. (1958). Nonparametric Estimation from Incomplete
+#' Observations. Journal of the American Statistical Association, 53(282),
+#' 457–481.
 #'
 #' @importFrom stats qnorm
 #' @export
@@ -107,9 +115,16 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
   conf.type <- match.arg(conf.type, choices = c("plain", "log", "log-log"))
   na_out <- c(surv = NA_real_, std.err = NA_real_,
               lower = NA_real_, upper = NA_real_)
+  wrap <- function(v) {
+    structure(v,
+              t_eval    = t_eval,
+              conf.int  = conf.int,
+              conf.type = conf.type,
+              class     = "survfit_fast")
+  }
 
   n <- length(t_sorted)
-  if (n == 0L) return(na_out)
+  if (n == 0L) return(wrap(na_out))
 
   # Sort internally when presorted = FALSE
   if (!presorted) {
@@ -119,14 +134,14 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
   }
 
   # C++ core: binary search + single scan -> c(surv, gw_sum)
-  # e_sorted is passed as-is (numeric or integer); km_core accepts numeric,
-  # avoiding an as.integer() copy on the R side.
   res    <- km_core(t_sorted, e_sorted, t_eval)
   surv   <- res[1L]
   gw_sum <- res[2L]
 
-  if (is.na(surv)) return(na_out)
-  if (surv == 0)   return(c(surv = 0, std.err = 0, lower = 0, upper = 0))
+  if (is.na(surv)) return(wrap(na_out))
+  if (surv == 0) {
+    return(wrap(c(surv = 0, std.err = 0, lower = 0, upper = 0)))
+  }
 
   std.err <- surv * sqrt(gw_sum)
   z       <- qnorm(1 - (1 - conf.int) / 2)
@@ -138,8 +153,10 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
     c(lower = surv * exp(-z * std.err / surv),
       upper = surv * exp( z * std.err / surv))
   } else {
-    if (surv >= 1) return(c(surv = surv, std.err = std.err,
-                            lower = NA_real_, upper = NA_real_))
+    if (surv >= 1) {
+      return(wrap(c(surv = surv, std.err = std.err,
+                    lower = NA_real_, upper = NA_real_)))
+    }
     log_s    <- log(surv)
     se_ll    <- std.err / (surv * abs(log_s))
     theta_lo <- log(-log_s) - z * se_ll
@@ -148,5 +165,5 @@ survfit_fast <- function(t_sorted, e_sorted, t_eval,
       upper = exp(-exp(theta_lo)))
   }
 
-  c(surv = surv, std.err = std.err, ci)
+  wrap(c(surv = surv, std.err = std.err, ci))
 }
