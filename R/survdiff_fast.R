@@ -77,7 +77,7 @@
 #' survdiff_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #'               control = 2, side = 2, presorted = TRUE)
 #'
-#' \dontrun{
+#' \donttest{
 #' library(microbenchmark)
 #' microbenchmark(
 #'   survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,

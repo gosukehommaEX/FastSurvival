@@ -1,7 +1,7 @@
 # FastSurvival 0.1.0
 
 * Initial release.
-* Core computations implemented in C++ via `Rcpp` for use inside large
+* Core computations implemented in `C++` via `Rcpp` for use inside large
   simulation loops.
 * `survfit_fast()`: single-time-point Kaplan-Meier estimator with Greenwood
   standard error and plain / log / log-log confidence intervals. The C++

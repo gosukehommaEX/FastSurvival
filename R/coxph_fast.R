@@ -109,7 +109,7 @@
 #' coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #'            control = 1, presorted = TRUE)
 #'
-#' \dontrun{
+#' \donttest{
 #' library(microbenchmark)
 #' microbenchmark(
 #'   coxph_fast = coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2),
