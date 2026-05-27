@@ -3,6 +3,9 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CRAN status](https://www.r-pkg.org/badges/version/FastSurvival)](https://CRAN.R-project.org/package=FastSurvival)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
+[![CRAN downloads total](https://cranlogs.r-pkg.org/badges/grand-total/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
 <!-- badges: end -->
 
 FastSurvival provides fast alternatives to the standard survival analysis
