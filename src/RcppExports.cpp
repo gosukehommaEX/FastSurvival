@@ -49,6 +49,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rmst_core
+NumericVector rmst_core(const NumericVector& t_sorted, const NumericVector& e_sorted, double tau);
+RcppExport SEXP _FastSurvival_rmst_core(SEXP t_sortedSEXP, SEXP e_sortedSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type t_sorted(t_sortedSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type e_sorted(e_sortedSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(rmst_core(t_sorted, e_sorted, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rpiece_unif_cpp
 NumericVector rpiece_unif_cpp(int n, const NumericVector& a_time, const NumericVector& cum_p);
 RcppExport SEXP _FastSurvival_rpiece_unif_cpp(SEXP nSEXP, SEXP a_timeSEXP, SEXP cum_pSEXP) {
@@ -96,6 +109,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
+    {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
     {"_FastSurvival_rpiece_unif_cpp", (DL_FUNC) &_FastSurvival_rpiece_unif_cpp, 3},
     {"_FastSurvival_rpiece_exp_cpp", (DL_FUNC) &_FastSurvival_rpiece_exp_cpp, 4},
     {"_FastSurvival_interleave_groups", (DL_FUNC) &_FastSurvival_interleave_groups, 5},

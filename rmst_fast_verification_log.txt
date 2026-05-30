@@ -1,0 +1,4 @@
+rmst_fast verification log
+2026-05-30 16:56:22 
+survRM2 available:  TRUE 
+
