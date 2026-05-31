@@ -10,6 +10,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// ahsw_core
+NumericVector ahsw_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, double tau);
+RcppExport SEXP _FastSurvival_ahsw_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(ahsw_core(time_sorted, event_sorted, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
 // analysis_cut_core
 List analysis_cut_core(const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, double cutoff);
 RcppExport SEXP _FastSurvival_analysis_cut_core(SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP cutoffSEXP) {
@@ -34,6 +47,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const NumericVector& >::type cal_event(cal_eventSEXP);
     Rcpp::traits::input_parameter< int >::type target(targetSEXP);
     rcpp_result_gen = Rcpp::wrap(nth_event_time_core(cal_event, target));
+    return rcpp_result_gen;
+END_RCPP
+}
+// combo_logrank_core
+List combo_logrank_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted, const NumericVector& rho_vec, const NumericVector& gamma_vec);
+RcppExport SEXP _FastSurvival_combo_logrank_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP, SEXP rho_vecSEXP, SEXP gamma_vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j_sorted(j_sortedSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type rho_vec(rho_vecSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type gamma_vec(gamma_vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(combo_logrank_core(time_sorted, event_sorted, j_sorted, rho_vec, gamma_vec));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -194,8 +222,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FastSurvival_ahsw_core", (DL_FUNC) &_FastSurvival_ahsw_core, 3},
     {"_FastSurvival_analysis_cut_core", (DL_FUNC) &_FastSurvival_analysis_cut_core, 5},
     {"_FastSurvival_nth_event_time_core", (DL_FUNC) &_FastSurvival_nth_event_time_core, 2},
+    {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
