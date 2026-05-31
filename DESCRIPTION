@@ -34,6 +34,7 @@ LinkingTo:
     dqrng
 Suggests:
     survival,
+    survRM2,
     microbenchmark,
     testthat (>= 3.0.0),
     knitr,

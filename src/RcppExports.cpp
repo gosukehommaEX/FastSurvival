@@ -10,6 +10,33 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// analysis_cut_core
+List analysis_cut_core(const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, double cutoff);
+RcppExport SEXP _FastSurvival_analysis_cut_core(SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP cutoffSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type accrual(accrualSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type tte(tteSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event(eventSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j(jSEXP);
+    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
+    rcpp_result_gen = Rcpp::wrap(analysis_cut_core(accrual, tte, event, j, cutoff));
+    return rcpp_result_gen;
+END_RCPP
+}
+// nth_event_time_core
+double nth_event_time_core(const NumericVector& cal_event, int target);
+RcppExport SEXP _FastSurvival_nth_event_time_core(SEXP cal_eventSEXP, SEXP targetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type cal_event(cal_eventSEXP);
+    Rcpp::traits::input_parameter< int >::type target(targetSEXP);
+    rcpp_result_gen = Rcpp::wrap(nth_event_time_core(cal_event, target));
+    return rcpp_result_gen;
+END_RCPP
+}
 // km_core
 NumericVector km_core(const NumericVector& t_sorted, const NumericVector& e_sorted, double t_eval);
 RcppExport SEXP _FastSurvival_km_core(SEXP t_sortedSEXP, SEXP e_sortedSEXP, SEXP t_evalSEXP) {
@@ -89,6 +116,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcat_cpp
+IntegerVector rcat_cpp(int n, const NumericVector& cum_p);
+RcppExport SEXP _FastSurvival_rcat_cpp(SEXP nSEXP, SEXP cum_pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type cum_p(cum_pSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcat_cpp(n, cum_p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // interleave_groups
 DataFrame interleave_groups(const DataFrame& df_ctrl, const DataFrame& df_trt, int nsim, int n_ctrl, int n_trt);
 RcppExport SEXP _FastSurvival_interleave_groups(SEXP df_ctrlSEXP, SEXP df_trtSEXP, SEXP nsimSEXP, SEXP n_ctrlSEXP, SEXP n_trtSEXP) {
@@ -106,12 +145,15 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FastSurvival_analysis_cut_core", (DL_FUNC) &_FastSurvival_analysis_cut_core, 5},
+    {"_FastSurvival_nth_event_time_core", (DL_FUNC) &_FastSurvival_nth_event_time_core, 2},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
     {"_FastSurvival_rpiece_unif_cpp", (DL_FUNC) &_FastSurvival_rpiece_unif_cpp, 3},
     {"_FastSurvival_rpiece_exp_cpp", (DL_FUNC) &_FastSurvival_rpiece_exp_cpp, 4},
+    {"_FastSurvival_rcat_cpp", (DL_FUNC) &_FastSurvival_rcat_cpp, 2},
     {"_FastSurvival_interleave_groups", (DL_FUNC) &_FastSurvival_interleave_groups, 5},
     {NULL, NULL, 0}
 };

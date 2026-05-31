@@ -43,9 +43,11 @@
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
 #' @param side An integer, either 1 or 2. If \code{side = 1}, returns the
-#'   standardized log-rank statistic (Z-score, positive when the treatment
-#'   group has fewer events than expected). If \code{side = 2}, returns the
-#'   chi-square statistic (Z^2).
+#'   standardized log-rank statistic (Z-score), defined as
+#'   \code{(O_1 - E_1) / sqrt(V_1)} for the treatment group, so the Z-score is
+#'   negative when the treatment group has fewer events than expected (a
+#'   protective treatment effect). If \code{side = 2}, returns the chi-square
+#'   statistic (Z^2).
 #' @param presorted A logical value. If \code{TRUE}, \code{time}, \code{event},
 #'   and \code{group} are assumed to be sorted in ascending order of
 #'   \code{time}, and the internal \code{order()} call is skipped. If

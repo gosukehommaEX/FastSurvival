@@ -95,3 +95,36 @@ test_that("survdiff_fast stops when input lengths differ", {
     "same length"
   )
 })
+
+test_that("survdiff_fast Z is negative when treatment has fewer events", {
+  # Treatment (group 2) has a lower hazard, so it should have fewer events
+  # than expected, giving a negative signed Z = (O1 - E1) / sqrt(V1).
+  set.seed(101)
+  n     <- 400
+  time  <- c(rexp(n / 2, 0.20), rexp(n / 2, 0.05))  # ctrl high, trt low hazard
+  event <- rep(1L, n)
+  group <- rep(c(1L, 2L), each = n / 2)             # 1 = control, 2 = treatment
+
+  z <- survdiff_fast(time, event, group, control = 1, side = 1)
+  expect_lt(as.numeric(z), 0)
+})
+
+test_that("survdiff_fast signed Z direction matches survival::survdiff (O-E)", {
+  skip_if_not_installed("survival")
+  set.seed(102)
+  n     <- 300
+  time  <- c(rexp(n / 2, 0.20), rexp(n / 2, 0.06))
+  event <- rbinom(n, 1, 0.85)
+  group <- rep(c(1L, 2L), each = n / 2)
+
+  z <- as.numeric(survdiff_fast(time, event, group, control = 1, side = 1))
+
+  ref <- survival::survdiff(survival::Surv(time, event) ~ group)
+  # survival's obs/exp: row 2 is the treatment group (group == 2).
+  oe_trt <- ref$obs[2L] - ref$exp[2L]
+
+  # Both quantities are (O - E) for the treatment group, so they share sign.
+  expect_equal(sign(z), sign(oe_trt))
+  # Magnitude check: Z^2 equals the chi-square statistic.
+  expect_equal(z ^ 2, ref$chisq, tolerance = 1e-6)
+})

@@ -94,12 +94,53 @@ NumericVector rpiece_exp_cpp(
 }
 
 // ------------------------------------------------------------------ //
+//  Internal: categorical sampler (subgroup labels)
+// ------------------------------------------------------------------ //
+// Assigns each subject a subgroup label in 1..K by sampling from a
+// categorical distribution defined by the cumulative prevalence table
+// cum_p (cum_p[K-1] == 1). One uniform draw per subject is mapped to a
+// label via binary search, mirroring the interval-selection step of
+// rpiece_unif_cpp. Returns 1-based integer labels for direct use as an R
+// factor / column.
+//
+// [[Rcpp::export]]
+IntegerVector rcat_cpp(
+    int n,
+    const NumericVector& cum_p    // cumulative prevalence (length = K, last = 1)
+) {
+  const int K = cum_p.size();
+  IntegerVector out(n);
+
+  // Draw n uniforms via dqrng
+  NumericVector u = dqrng::dqrunif(n);
+
+  for (int i = 0; i < n; ++i) {
+    const double ui = u[i];
+
+    // Binary search: smallest k such that cum_p[k] >= ui
+    int lo = 0, hi = K - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (cum_p[mid] < ui) lo = mid + 1; else hi = mid;
+    }
+
+    out[i] = lo + 1;  // 1-based subgroup label
+  }
+
+  return out;
+}
+
+// ------------------------------------------------------------------ //
 //  Internal: build sorted two-group output without rbind + order
 // ------------------------------------------------------------------ //
 // Interleaves control (group=1) and treatment (group=2) rows in sim order
 // directly, avoiding rbind() followed by order(df$sim, df$group).
 // Uses memcpy for contiguous blocks of rows (per simulation, per group),
 // which is substantially faster than per-element copies.
+//
+// This fast path is used for the no-subgroup two-group case (the 8-column
+// schema). When subgroups are present the wrapper carries an extra column
+// and performs the interleave in R, so this function is left unchanged.
 //
 // [[Rcpp::export]]
 DataFrame interleave_groups(

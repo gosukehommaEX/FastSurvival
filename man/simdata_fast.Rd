@@ -16,120 +16,151 @@ simdata_fast(
   d.hazard = NULL,
   d.median = NULL,
   d.time = NULL,
-  seed = NULL
+  seed = NULL,
+  prevalence = NULL,
+  fixed.alloc = FALSE
 )
 }
 \arguments{
-\item{nsim}{A positive integer specifying the number of simulation
-iterations. Default is 1000.}
+\item{nsim}{A positive integer, the number of simulation iterations.
+Default is 1000.}
 
 \item{n}{A positive integer (one group) or a numeric vector of length 2
-(two groups: \code{c(n_control, n_treatment)}) specifying the per-group
-sample sizes per simulation. Alternatively, supply the total sample size
-as a scalar together with \code{alloc} to split automatically.}
+(two groups). Alternatively a scalar total sample size together with
+\code{alloc}.}
 
-\item{alloc}{A numeric vector of length 2 specifying the allocation ratio
-\code{c(control, treatment)}. Used only when \code{n} is a scalar.
-Default is \code{c(1, 1)}.}
+\item{alloc}{A numeric vector of length 2 giving the allocation ratio
+\code{c(control, treatment)}. Used only when \code{n} is a scalar.}
 
 \item{a.time}{A numeric vector of accrual interval boundaries
-\code{c(0, t1, ..., T)} with \code{a.time[1] = 0}. Must be strictly
-increasing. The last element is the end of the accrual window.}
+\code{c(0, t1, ..., T)}, strictly increasing.}
 
-\item{a.rate}{A numeric vector of accrual rates (patients per time unit)
-for each interval. Length must equal \code{length(a.time) - 1}. All
-values must be positive.}
+\item{a.rate}{A numeric vector of accrual rates, of length
+\code{length(a.time) - 1}, all positive.}
 
-\item{e.hazard}{Hazard rate(s) for the event time. For a simple exponential,
-supply a scalar (one group) or a list of two scalars (two groups). For a
-piecewise exponential, supply a numeric vector (one group) or a list of
-two numeric vectors (two groups); \code{e.time} must then also be
-supplied. Cannot be used together with \code{e.median}.}
+\item{e.hazard}{Event hazard spec. A scalar or vector for one group, a list
+of two for two groups; with subgroups, a group element may be a list with
+one spec per cell. Cannot be used with \code{e.median}.}
 
-\item{e.median}{Median survival time(s) for the event time. Same structure
-as \code{e.hazard}. Converted internally via
-\code{hazard = log(2) / median}. Cannot be used together with
-\code{e.hazard}.}
+\item{e.median}{Event median spec, same structure as \code{e.hazard},
+converted via \code{log(2) / median}. Cannot be used with \code{e.hazard}.}
 
-\item{e.time}{Interval boundaries for a piecewise exponential event time,
-of the form \code{c(0, t1, ..., Inf)}. Required when \code{e.hazard} or
-\code{e.median} is a vector of length > 1. For two groups, supply a list
-of two boundary vectors if the change points differ between groups, or a
-single vector if they are shared.}
+\item{e.time}{Piecewise interval boundaries for the event time,
+\code{c(0, t1, ..., Inf)}. Same structure rules as \code{e.hazard}.}
 
-\item{d.hazard}{Hazard rate(s) for the dropout time. Same structure as
-\code{e.hazard}. Set both \code{d.hazard} and \code{d.median} to
-\code{NULL} to suppress dropout. Cannot be used together with
-\code{d.median}.}
+\item{d.hazard}{Dropout hazard spec, same structure as \code{e.hazard}. Set
+\code{d.hazard} and \code{d.median} both to \code{NULL} to suppress
+dropout. Cannot be used with \code{d.median}.}
 
-\item{d.median}{Median dropout time(s). Same structure as \code{e.median}.
-Cannot be used together with \code{d.hazard}.}
+\item{d.median}{Dropout median spec. Cannot be used with \code{d.hazard}.}
 
-\item{d.time}{Interval boundaries for a piecewise exponential dropout time.
-Same structure as \code{e.time}.}
+\item{d.time}{Piecewise interval boundaries for the dropout time.}
 
-\item{seed}{A single integer for reproducibility. Passed to
-\code{dqrng::dqset.seed}. Default is \code{NULL} (no seed).}
+\item{seed}{A single integer for reproducibility, passed to
+\code{dqrng::dqset.seed}. Default \code{NULL}.}
+
+\item{prevalence}{Subgroup prevalence specification. \code{NULL} (default)
+means no subgroups. Otherwise a numeric vector (one factor), a list of
+numeric vectors (independent factors), an array (joint distribution of
+correlated factors), or a named list
+\code{list(control = ..., treatment = ...)} for group-specific
+composition. Values must be positive and are normalized internally. See
+Details.}
+
+\item{fixed.alloc}{A logical value controlling how patients are assigned to
+subgroup cells. When \code{FALSE} (default), each patient is assigned at
+random by a categorical draw from \code{prevalence}, so cell sizes are
+random with the given expected proportions. When \code{TRUE}, cell sizes
+are fixed deterministically: each cell receives \code{floor(n * p)}
+patients and any remainder is distributed one per cell from the first
+cell onward, so the last cells absorb the rounding shortfall. For
+example, \code{n = 99} with \code{prevalence = c(0.5, 0.5)} gives 50 and
+49, and \code{n = 100} with \code{prevalence = c(1/3, 1/3, 1/3)} gives
+34, 33, and 33. Fixed allocation consumes no random numbers for the
+assignment. Ignored when \code{prevalence} is \code{NULL}.}
 }
 \value{
-A \code{data.frame} with \code{nsim * sum(n)} rows and the
-  following columns:
-\describe{
-  \item{\code{sim}}{Simulation ID (integer, 1 to \code{nsim}).}
-  \item{\code{group}}{Group label (integer: 1 for control, 2 for
-    treatment). Always 1 for one-group simulations.}
-  \item{\code{accrual_time}}{Patient accrual time from study start.}
-  \item{\code{surv_time}}{Survival time from patient entry.}
-  \item{\code{dropout_time}}{Dropout time from patient entry
-    (\code{Inf} when dropout is not modeled).}
-  \item{\code{tte}}{Observed time-to-event:
-    \code{pmin(surv_time, dropout_time)}.}
-  \item{\code{event}}{Event indicator: 1 if \code{surv_time <=
-    dropout_time}, 0 otherwise.}
-  \item{\code{calendar_time}}{Calendar time from study start:
-    \code{accrual_time + tte}.}
-}
+A \code{data.frame} with \code{nsim * sum(n)} rows. Without
+  subgroups the columns are \code{sim}, \code{group}, \code{accrual_time},
+  \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
+  \code{calendar_time}. With a single-factor \code{prevalence}, an integer
+  column \code{subgroup} is inserted after \code{group}. With several
+  factors, the columns \code{subgroup1}, \code{subgroup2}, and so on are
+  inserted instead, one per factor.
 }
 \description{
 Simulates individual patient data for one- or two-group time-to-event
-trials. Patient accrual times are drawn from a piecewise uniform
-distribution. Survival and dropout times are drawn from either a simple
-exponential or a piecewise exponential distribution, depending on whether
-a scalar or vector hazard is supplied. Random number generation uses
-\code{dqrng} for speed. C++ backends handle piecewise sampling and
-two-group interleaving to minimize R-level overhead.
+trials, with optional patient subgroups defined by one or more factors.
+Patient accrual times are drawn from a piecewise uniform distribution.
+Survival and dropout times are drawn from either a simple exponential or a
+piecewise exponential distribution, depending on whether a scalar or vector
+hazard is supplied. When subgroups are requested, each patient is assigned
+to a cell of the cross-classification of the factors by a categorical draw,
+and survival and dropout hazards may differ across cells. Random number
+generation uses \code{dqrng} for speed. C++ backends handle piecewise
+sampling, cell assignment, and two-group interleaving to minimize R-level
+overhead.
 }
 \details{
 For each patient, three times are generated independently:
 
 \describe{
   \item{Accrual time}{Drawn from a piecewise uniform distribution defined
-    by \code{a.time} and \code{a.rate}. The probability of falling in
-    interval j is proportional to \code{a.rate[j] * (a.time[j+1] - a.time[j])}.}
+    by \code{a.time} and \code{a.rate}.}
   \item{Survival time}{Drawn from a simple exponential distribution when
-    \code{e.hazard} is a scalar (or \code{e.median} is a scalar), or from
-    a piecewise exponential distribution when \code{e.hazard} is a vector
-    (with \code{e.time} required). The inverse-CDF method is used for the
-    piecewise case.}
-  \item{Dropout time}{Drawn from the same family as survival time, governed
-    by \code{d.hazard} / \code{d.median} and \code{d.time}. Set to
-    \code{Inf} when \code{d.hazard} and \code{d.median} are both
-    \code{NULL} (no dropout).}
+    the hazard spec is a scalar, or from a piecewise exponential
+    distribution when it is a vector (with matching \code{e.time}).}
+  \item{Dropout time}{Drawn from the same family, governed by
+    \code{d.hazard} / \code{d.median} and \code{d.time}, or set to
+    \code{Inf} when dropout is not modeled.}
 }
 
-The observed time-to-event is \code{tte = pmin(surv_time, dropout_time)}.
-The event indicator is \code{1} when \code{surv_time <= dropout_time} and
-\code{0} otherwise. The calendar time is
-\code{calendar_time = accrual_time + tte}.
+The observed time-to-event is \code{tte = pmin(surv_time, dropout_time)},
+the event indicator is \code{1} when \code{surv_time <= dropout_time}, and
+the calendar time is \code{accrual_time + tte}.
 
 Exactly one of \code{e.hazard} and \code{e.median} must be supplied.
 Exactly one of \code{d.hazard} and \code{d.median} must be supplied when
-dropout is modeled; both must be \code{NULL} to suppress dropout entirely.
+dropout is modeled; both must be \code{NULL} to suppress dropout.
 
 For a two-group trial, group-specific parameters are passed as a list of
-length 2, where element 1 corresponds to the control group and element 2
-to the treatment group. For a one-group trial, plain vectors or scalars
-are passed directly.
+length 2, where element 1 is the control group and element 2 the treatment
+group. For a one-group trial, plain vectors or scalars are passed directly.
+
+Subgroups are activated by \code{prevalence}, which accepts four forms:
+
+\describe{
+  \item{A numeric vector}{One factor with as many levels as the length of
+    the vector. The output gains a single integer column \code{subgroup}.}
+  \item{A list of numeric vectors}{Several independent factors, one vector
+    of marginal prevalence per factor. The factors are assigned
+    independently (their joint distribution is the product of the
+    marginals). The output gains one integer column per factor,
+    \code{subgroup1}, \code{subgroup2}, and so on.}
+  \item{An array}{Several factors with a joint distribution given directly
+    by the array, allowing the factors to be correlated. The dimensions of
+    the array are the numbers of factor levels. The output gains one
+    integer column per factor, \code{subgroup1}, \code{subgroup2}, and so
+    on.}
+  \item{A named list \code{list(control = ..., treatment = ...)}}{Two
+    group-specific specifications, each itself one of the three forms
+    above, so that the subgroup composition may differ between groups
+    (as in stratified randomization). Both groups must use the same number
+    of factors and the same number of levels per factor.}
+}
+
+Cells of the factor cross-classification are ordered column-major: the
+first factor varies fastest, matching the ordering of \code{array} and
+\code{expand.grid} in R. Cell-specific event hazards are supplied in this
+order. For a one-group trial, \code{e.hazard} is either a single spec
+(broadcast to all cells) or a list with one spec per cell. For a two-group
+trial, \code{e.hazard} is a list of length 2, and each group element is
+itself either a single spec (broadcast to that group's cells) or a list
+with one spec per cell. The same broadcasting rule applies to
+\code{e.median}, \code{d.hazard}, \code{d.median}, \code{e.time}, and
+\code{d.time}. In subgroup mode a two-group trial must be declared through
+a length-2 \code{n} or a group-specific \code{prevalence}, so a top-level
+hazard list is never ambiguous between groups and cells.
 }
 \examples{
 # One-group simulation, simple exponential, no dropout
@@ -155,28 +186,53 @@ df2 <- simdata_fast(
 )
 head(df2)
 
-# Two-group simulation, piecewise exponential (delayed treatment effect)
+# One factor with three levels: single subgroup column
 df3 <- simdata_fast(
-  nsim     = 100,
-  n        = c(100, 100),
-  a.time   = c(0, 12),
-  a.rate   = 200 / 12,
-  e.hazard = list(c(0.08, 0.08), c(0.08, 0.04)),
-  e.time   = c(0, 6, Inf),
-  seed     = 3
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  e.hazard   = list(list(0.10, 0.08, 0.06), 0.05),
+  prevalence = c(0.5, 0.3, 0.2),
+  seed       = 3
 )
 head(df3)
 
-# Two-group via total n + allocation ratio
+# Two independent factors (2 x 2): columns subgroup1 and subgroup2.
+# Four cells in column-major order: (1,1), (2,1), (1,2), (2,2).
 df4 <- simdata_fast(
-  nsim     = 100,
-  n        = 200,
-  alloc    = c(1, 1),
-  a.time   = c(0, 12),
-  a.rate   = 200 / 12,
-  e.hazard = list(0.08, 0.05),
-  seed     = 4
+  nsim       = 100,
+  n          = 200,
+  a.time     = c(0, 12),
+  a.rate     = 200 / 12,
+  e.hazard   = list(0.10, 0.08, 0.07, 0.05),
+  prevalence = list(c(0.5, 0.5), c(0.6, 0.4)),
+  seed       = 4
 )
 head(df4)
+
+# Two correlated factors via a joint-distribution array (2 x 2)
+df5 <- simdata_fast(
+  nsim       = 100,
+  n          = 200,
+  a.time     = c(0, 12),
+  a.rate     = 200 / 12,
+  e.hazard   = 0.08,
+  prevalence = array(c(0.40, 0.10, 0.15, 0.35), dim = c(2, 2)),
+  seed       = 5
+)
+head(df5)
+
+# Group-specific composition (stratified randomization)
+df6 <- simdata_fast(
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  e.hazard   = list(0.10, 0.05),
+  prevalence = list(control = c(0.7, 0.3), treatment = c(0.5, 0.5)),
+  seed       = 6
+)
+head(df6)
 
 }
