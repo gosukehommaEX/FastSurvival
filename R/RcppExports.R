@@ -144,3 +144,133 @@ interleave_groups <- function(df_ctrl, df_trt, nsim, n_ctrl, n_trt) {
     .Call(`_FastSurvival_interleave_groups`, df_ctrl, df_trt, nsim, n_ctrl, n_trt)
 }
 
+#' Core stratified log-rank computation on stratum-blocked sorted vectors
+#'
+#' @description
+#' Internal C++ function that computes the stratified log-rank totals O1, E1,
+#' and V1 from a dataset sorted by stratum first and by time within stratum.
+#' Each stratum is processed as an independent contiguous block using the
+#' same single-pass two-group scan as \code{logrank_core}, and the per-stratum
+#' O1, E1, and V1 are accumulated into the returned totals. Tied event times
+#' are processed atomically within each stratum. A stratum that contains only
+#' one group contributes zero to all three totals, matching the behaviour of
+#' \code{\link[survival]{survdiff}} with a \code{strata()} term. Not intended
+#' to be called directly by users; use \code{survdiff_fast()} with the
+#' \code{strata} argument instead.
+#'
+#' @param time_sorted A numeric vector of follow-up times sorted by stratum
+#'   first and by ascending time within each stratum.
+#' @param event_sorted An integer vector of event indicators (1 = event,
+#'   0 = censored), aligned with \code{time_sorted}.
+#' @param j_sorted An integer vector of group indicators (1 = treatment,
+#'   0 = control), aligned with \code{time_sorted}.
+#' @param strata_sorted An integer vector of stratum identifiers, aligned with
+#'   \code{time_sorted}. Rows of the same stratum must be contiguous, which is
+#'   guaranteed when the data are sorted by stratum first.
+#'
+#' @return A numeric vector of length 3: \code{c(O1, E1, V1)}, the stratified
+#'   observed events, expected events, and variance for the treatment group.
+#'
+#' @keywords internal
+stratified_logrank_core <- function(time_sorted, event_sorted, j_sorted, strata_sorted) {
+    .Call(`_FastSurvival_stratified_logrank_core`, time_sorted, event_sorted, j_sorted, strata_sorted)
+}
+
+#' Core stratified weighted log-rank computation (C++ backend)
+#'
+#' @description
+#' Internal C++ function that computes the stratified weighted log-rank totals
+#' from a dataset sorted by stratum first and by time within stratum. Each
+#' stratum is processed as an independent weighted log-rank test using the same
+#' logic as \code{weighted_logrank_core}, with weights derived from the
+#' within-stratum pooled Kaplan-Meier estimate, and the per-stratum numerator U
+#' and variance V are accumulated into the returned totals. The overall
+#' statistic is Z = sum U / sqrt(sum V). This matches the stratified weighted
+#' log-rank test of Magirr, which sums the per-stratum U and V and standardizes
+#' once. Not intended to be called directly by users; use
+#' \code{survdiff_fast()} with both \code{weight} and \code{strata} instead.
+#'
+#' @details
+#' The scheme codes match \code{weighted_logrank_core}: 0 = Fleming-Harrington
+#' G(rho, gamma); 1 = modestly-weighted with cap \code{1 / S(t_star)} computed
+#' within each stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The left-continuous
+#' pooled Kaplan-Meier estimate is restarted at 1 at the beginning of every
+#' stratum, so the weights of each stratum depend only on that stratum's
+#' pooled data. For the modestly-weighted scheme the weight cap is determined
+#' in a first pass within each stratum before accumulation.
+#'
+#' @param time_sorted A numeric vector of follow-up times sorted by stratum
+#'   first and by ascending time within each stratum.
+#' @param event_sorted An integer vector of event indicators (1 = event,
+#'   0 = censored), aligned with \code{time_sorted}.
+#' @param j_sorted An integer vector of group indicators (1 = treatment,
+#'   0 = control), aligned with \code{time_sorted}.
+#' @param strata_sorted An integer vector of stratum identifiers, aligned with
+#'   \code{time_sorted}. Rows of the same stratum must be contiguous.
+#' @param scheme An integer weight-scheme code: 0 = Fleming-Harrington,
+#'   1 = modestly-weighted, 2 = Gehan-Breslow, 3 = Tarone-Ware.
+#' @param rho A numeric Fleming-Harrington first parameter (scheme 0).
+#' @param gamma A numeric Fleming-Harrington second parameter (scheme 0).
+#' @param t_star A numeric timepoint for the modestly-weighted scheme
+#'   (scheme 1).
+#'
+#' @return A numeric vector of length 3: \code{c(O1, U, V)}, where O1 is the
+#'   pooled observed number of events in the treatment group, U is the summed
+#'   weighted numerator, and V is the summed weighted variance.
+#'
+#' @keywords internal
+stratified_weighted_logrank_core <- function(time_sorted, event_sorted, j_sorted, strata_sorted, scheme, rho, gamma, t_star) {
+    .Call(`_FastSurvival_stratified_weighted_logrank_core`, time_sorted, event_sorted, j_sorted, strata_sorted, scheme, rho, gamma, t_star)
+}
+
+#' Core weighted log-rank computation on pooled sorted vectors (C++ backend)
+#'
+#' @description
+#' Internal C++ function that computes the weighted log-rank numerator U and
+#' variance V directly from a pooled sorted dataset and a group indicator.
+#' Four weight schemes are supported, selected by \code{scheme}: Fleming-
+#' Harrington G(rho, gamma), the modestly-weighted log-rank test, Gehan-
+#' Breslow, and Tarone-Ware. The weights are functions of the left-continuous
+#' pooled Kaplan-Meier estimate (for Fleming-Harrington and the modestly-
+#' weighted test) or of the at-risk count (for Gehan-Breslow and Tarone-Ware).
+#' Tied event times are processed atomically. Not intended to be called
+#' directly by users; use \code{survdiff_fast()} with the \code{weight}
+#' argument instead.
+#'
+#' @details
+#' The scheme codes are: 0 = Fleming-Harrington G(rho, gamma) with weight
+#' \code{S_minus^rho * (1 - S_minus)^gamma}; 1 = modestly-weighted log-rank
+#' with weight \code{min(1 / S_minus, max_weight)}, where \code{max_weight}
+#' is the reciprocal of the smallest right-continuous pooled Kaplan-Meier
+#' value at or after \code{t_star} (and is 1 when \code{t_star = 0});
+#' 2 = Gehan-Breslow with weight \code{n_j}; 3 = Tarone-Ware with weight
+#' \code{sqrt(n_j)}. Here \code{S_minus} is the left-continuous pooled
+#' Kaplan-Meier estimate just prior to each event time, initialized at 1.
+#' The modestly-weighted scheme requires the largest weight to be known before
+#' accumulation, so its \code{max_weight} is obtained in a first pass over the
+#' event times; the other schemes accumulate in a single pass.
+#'
+#' @param time_sorted A numeric vector of pooled follow-up times sorted in
+#'   ascending order.
+#' @param event_sorted An integer vector of event indicators (1 = event,
+#'   0 = censored), aligned with \code{time_sorted}.
+#' @param j_sorted An integer vector of group indicators (1 = treatment,
+#'   0 = control), aligned with \code{time_sorted}.
+#' @param scheme An integer weight-scheme code: 0 = Fleming-Harrington,
+#'   1 = modestly-weighted, 2 = Gehan-Breslow, 3 = Tarone-Ware.
+#' @param rho A numeric Fleming-Harrington first parameter (used when
+#'   \code{scheme = 0}).
+#' @param gamma A numeric Fleming-Harrington second parameter (used when
+#'   \code{scheme = 0}).
+#' @param t_star A numeric timepoint for the modestly-weighted scheme (used
+#'   when \code{scheme = 1}).
+#'
+#' @return A numeric vector of length 3: \code{c(O1, U, V)}, where O1 is the
+#'   observed number of events in the treatment group, U is the weighted
+#'   log-rank numerator sum w (O1 - E1), and V is the weighted variance.
+#'
+#' @keywords internal
+weighted_logrank_core <- function(time_sorted, event_sorted, j_sorted, scheme, rho, gamma, t_star) {
+    .Call(`_FastSurvival_weighted_logrank_core`, time_sorted, event_sorted, j_sorted, scheme, rho, gamma, t_star)
+}
+

@@ -143,6 +143,55 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// stratified_logrank_core
+NumericVector stratified_logrank_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted, const IntegerVector& strata_sorted);
+RcppExport SEXP _FastSurvival_stratified_logrank_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP, SEXP strata_sortedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j_sorted(j_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type strata_sorted(strata_sortedSEXP);
+    rcpp_result_gen = Rcpp::wrap(stratified_logrank_core(time_sorted, event_sorted, j_sorted, strata_sorted));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stratified_weighted_logrank_core
+NumericVector stratified_weighted_logrank_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted, const IntegerVector& strata_sorted, int scheme, double rho, double gamma, double t_star);
+RcppExport SEXP _FastSurvival_stratified_weighted_logrank_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP, SEXP strata_sortedSEXP, SEXP schemeSEXP, SEXP rhoSEXP, SEXP gammaSEXP, SEXP t_starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j_sorted(j_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type strata_sorted(strata_sortedSEXP);
+    Rcpp::traits::input_parameter< int >::type scheme(schemeSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type t_star(t_starSEXP);
+    rcpp_result_gen = Rcpp::wrap(stratified_weighted_logrank_core(time_sorted, event_sorted, j_sorted, strata_sorted, scheme, rho, gamma, t_star));
+    return rcpp_result_gen;
+END_RCPP
+}
+// weighted_logrank_core
+NumericVector weighted_logrank_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted, int scheme, double rho, double gamma, double t_star);
+RcppExport SEXP _FastSurvival_weighted_logrank_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP, SEXP schemeSEXP, SEXP rhoSEXP, SEXP gammaSEXP, SEXP t_starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j_sorted(j_sortedSEXP);
+    Rcpp::traits::input_parameter< int >::type scheme(schemeSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type t_star(t_starSEXP);
+    rcpp_result_gen = Rcpp::wrap(weighted_logrank_core(time_sorted, event_sorted, j_sorted, scheme, rho, gamma, t_star));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_analysis_cut_core", (DL_FUNC) &_FastSurvival_analysis_cut_core, 5},
@@ -155,6 +204,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_rpiece_exp_cpp", (DL_FUNC) &_FastSurvival_rpiece_exp_cpp, 4},
     {"_FastSurvival_rcat_cpp", (DL_FUNC) &_FastSurvival_rcat_cpp, 2},
     {"_FastSurvival_interleave_groups", (DL_FUNC) &_FastSurvival_interleave_groups, 5},
+    {"_FastSurvival_stratified_logrank_core", (DL_FUNC) &_FastSurvival_stratified_logrank_core, 4},
+    {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},
+    {"_FastSurvival_weighted_logrank_core", (DL_FUNC) &_FastSurvival_weighted_logrank_core, 7},
     {NULL, NULL, 0}
 };
 
