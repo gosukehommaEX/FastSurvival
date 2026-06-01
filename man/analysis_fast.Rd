@@ -14,7 +14,16 @@ analysis_fast(
   t.eval = NULL,
   conf.int = 0.95,
   side = 2,
-  by.subgroup = FALSE
+  by.subgroup = FALSE,
+  weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
+  rho = 0,
+  gamma = 0,
+  t_star = NULL,
+  strata = NULL,
+  mc.rho = c(0, 0, 1, 1),
+  mc.gamma = c(0, 1, 0, 1),
+  abseps = 1e-05,
+  maxpts = 25000
 )
 }
 \arguments{
@@ -32,35 +41,79 @@ per look. Mutually exclusive with \code{time.looks}.}
 Mutually exclusive with \code{event.looks}.}
 
 \item{stat}{A character vector naming the statistics to compute. Any subset
-of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, and \code{"km"}.
-Defaults to \code{"logrank"}.}
+of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
+\code{"maxcombo"}, and \code{"ahsw"}. Defaults to \code{"logrank"}.}
 
 \item{tau}{A single positive numeric value, the restriction horizon for
-\code{"rmst"}. Required only when \code{"rmst"} is requested.}
+\code{"rmst"} and the truncation time for \code{"ahsw"}. Required only when
+\code{"rmst"} or \code{"ahsw"} is requested.}
 
 \item{t.eval}{A single positive numeric value, the landmark time for
 \code{"km"}. Required only when \code{"km"} is requested.}
 
 \item{conf.int}{A single numeric value in (0, 1), the confidence level for
-\code{"coxph"} and \code{"rmst"}. Defaults to 0.95.}
+\code{"coxph"}, \code{"rmst"}, and \code{"ahsw"}. Defaults to 0.95.}
 
-\item{side}{An integer, either 1 or 2, controlling the p-values. When
-\code{side = 2} (default), two-sided p-values \code{2 pnorm(-|z|)} are
-reported. When \code{side = 1}, the one-sided p-value in the direction of
-treatment benefit is reported for each statistic. The test statistics
-themselves are always reported with their natural sign, so the choice of
-\code{side} affects only the p-value columns. For log-rank and Cox the
-benefit direction is a negative Z (the one-sided p-value is the lower
-tail \code{pnorm(z)}); for RMST it is a positive Z (the upper tail
-\code{pnorm(-z)}). For group-sequential boundary comparisons (for example
-with gsDesign or rpact), align the sign of the reported Z with the
-boundary convention before comparing.}
+\item{side}{An integer, either 1 or 2. When \code{side = 2} (default),
+two-sided p-values \code{2 pnorm(-|z|)} are reported for log-rank, Cox, and
+RMST, and the two-sided max-combo test is used. When \code{side = 1}, the
+one-sided p-value in the direction of treatment benefit is reported for
+each of those statistics, and the one-sided max-combo test is used. The
+test statistics themselves are always reported with their natural sign, so
+the choice of \code{side} affects only the p-value columns. For log-rank
+and Cox the benefit direction is a negative Z (the one-sided p-value is the
+lower tail \code{pnorm(z)}); for RMST it is a positive Z (the upper tail
+\code{pnorm(-z)}). The AHSW p-values are always two-sided. For
+group-sequential boundary comparisons (for example with gsDesign or
+rpact), align the sign of the reported Z with the boundary convention
+before comparing.}
 
 \item{by.subgroup}{A logical value. When \code{TRUE}, the analysis is also
 reported within each subgroup level, and the output gains a
 \code{population} column (long form). When \code{FALSE} (default), only
 the whole-population analysis is returned and no \code{population} column
 is added. Requires at least one subgroup column in \code{data}.}
+
+\item{weight}{A character string naming the weight scheme for the
+\code{"logrank"} statistic. \code{"logrank"} (default) is the ordinary
+unweighted test. \code{"fh"} is the Fleming-Harrington G(rho, gamma) test,
+\code{"mwlrt"} is the modestly-weighted log-rank test (requires
+\code{t_star}), \code{"gehan"} is Gehan-Breslow, and \code{"tarone-ware"}
+is Tarone-Ware. See \code{\link{survdiff_fast}}.}
+
+\item{rho}{A numeric Fleming-Harrington first parameter, used only when
+\code{weight = "fh"}. Defaults to 0.}
+
+\item{gamma}{A numeric Fleming-Harrington second parameter, used only when
+\code{weight = "fh"}. Defaults to 0.}
+
+\item{t_star}{A single non-negative numeric value, the timepoint of the
+modestly-weighted log-rank test. Required only when \code{weight =
+"mwlrt"}.}
+
+\item{strata}{An optional character vector naming one or more subgroup
+columns of \code{data} to use as the stratification variable for the
+\code{"logrank"} statistic. \code{NULL} (default) gives the unstratified
+test. When several columns are named their interaction defines the strata.
+Stratification applies only to the \code{"logrank"} statistic; the other
+statistics ignore it.}
+
+\item{mc.rho}{A numeric vector of Fleming-Harrington first parameters for the
+\code{"maxcombo"} statistic, one per component weight. Defaults to
+\code{c(0, 0, 1, 1)}.}
+
+\item{mc.gamma}{A numeric vector of Fleming-Harrington second parameters for
+the \code{"maxcombo"} statistic, aligned with \code{mc.rho}. Defaults to
+\code{c(0, 1, 0, 1)}.}
+
+\item{abseps}{A single positive numeric value, the absolute error tolerance
+passed to the multivariate normal integration of the \code{"maxcombo"}
+p-value. Defaults to 1e-5.}
+
+\item{maxpts}{A single positive integer, the maximum number of function
+evaluations for the quasi-Monte-Carlo integration used by the
+\code{"maxcombo"} p-value when four or more weights are supplied. Defaults
+to 25000.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -79,10 +132,15 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{cox.z}, \code{cox.p}, \code{cox.lower}, and \code{cox.upper} for
   \code{"coxph"}; \code{rmst.ctrl}, \code{rmst.trt}, \code{rmst.diff},
   \code{rmst.diff.lower}, \code{rmst.diff.upper}, \code{rmst.z}, and
-  \code{rmst.p} for \code{"rmst"}; and \code{km.surv.ctrl} and
-  \code{km.surv.trt} for \code{"km"}. The Z columns \code{logrank.z},
-  \code{cox.z}, and \code{rmst.z} carry the natural sign of each test, and
-  the p-value columns follow \code{side}.
+  \code{rmst.p} for \code{"rmst"}; \code{km.surv.ctrl} and
+  \code{km.surv.trt} for \code{"km"}; \code{maxcombo.stat} and
+  \code{maxcombo.p} for \code{"maxcombo"}; and \code{ahsw.ah.ctrl},
+  \code{ahsw.ah.trt}, \code{ahsw.rah}, \code{ahsw.rah.lower},
+  \code{ahsw.rah.upper}, \code{ahsw.p.rah}, \code{ahsw.dah},
+  \code{ahsw.dah.lower}, \code{ahsw.dah.upper}, and \code{ahsw.p.dah} for
+  \code{"ahsw"}. The Z columns \code{logrank.z}, \code{cox.z}, and
+  \code{rmst.z} carry the natural sign of each test, and the p-value columns
+  follow \code{side} except for the AHSW p-values, which are two-sided.
 }
 \description{
 Performs interim or sequential analyses of simulated two-group
@@ -92,11 +150,11 @@ defined either by a target cumulative number of events
 At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing \code{\link{survdiff_fast}},
-\code{\link{coxph_fast}}, \code{\link{rmst_fast}}, and
-\code{\link{survfit_fast}}. Optionally the same statistics are also reported
-within each subgroup. The censoring and time sorting are handled by a C++
-backend, and the analysis cores are called with \code{presorted = TRUE}, so
-each look avoids a redundant sort.
+\code{\link{coxph_fast}}, \code{\link{rmst_fast}}, \code{\link{survfit_fast}},
+\code{\link{maxcombo_fast}}, and \code{\link{ahsw_fast}}. Optionally the same
+statistics are also reported within each subgroup. The censoring and time
+sorting are handled by a C++ backend, and the analysis cores are called with
+\code{presorted = TRUE}, so each look avoids a redundant sort.
 }
 \details{
 The input \code{data} is the data frame returned by
@@ -124,7 +182,41 @@ overall analysis and for every subgroup analysis at that look.
 Exactly one of \code{event.looks} and \code{time.looks} must be supplied.
 
 The statistics are selected with \code{stat}, which may name one or more of
-\code{"logrank"}, \code{"coxph"}, \code{"rmst"}, and \code{"km"}.
+\code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
+\code{"maxcombo"}, and \code{"ahsw"}.
+
+The \code{"logrank"} statistic is configurable. By default it is the
+ordinary unweighted, unstratified two-group log-rank test and reproduces the
+behaviour of earlier versions of this function exactly. A non-default
+\code{weight} selects a weighted log-rank test (Fleming-Harrington,
+modestly-weighted, Gehan-Breslow, or Tarone-Ware) for non-proportional
+hazards, and a non-\code{NULL} \code{strata} selects the stratified test,
+summing the per-stratum contributions. The two options combine to give the
+stratified weighted log-rank test. Whatever configuration is chosen, the
+result is written to the same \code{logrank.z}, \code{logrank.chisq}, and
+\code{logrank.p} columns; the unweighted unstratified case is the \code{K = 1}
+single-stratum degenerate form of the general statistic. The columns
+\code{rho}, \code{gamma}, and \code{t_star} parametrize \code{weight}, and
+\code{strata} names one or more subgroup columns of \code{data} used as the
+stratification variable. The stratification is determined on the whole cut
+data, independently of the \code{population} marginalization, so a stratified
+overall analysis is the canonical primary test; in a single-subgroup
+population the stratum is constant and the stratified test degenerates to the
+ordinary one within that subset.
+
+The \code{"maxcombo"} statistic is the max-combo test of \code{mc.rho} and
+\code{mc.gamma} Fleming-Harrington weights. Its \code{maxcombo.stat} is the
+most extreme component (\code{min} of the component Z-scores when
+\code{side = 1}, so that a negative value favours treatment, and the maximum
+absolute component when \code{side = 2}), and \code{maxcombo.p} is the joint
+multivariate-normal p-value, which already follows \code{side}.
+
+The \code{"ahsw"} statistic is the average hazard with survival weight of Uno
+and Horiguchi on the window from 0 to \code{tau}. It reports the per-group
+average hazards, the ratio (RAH) and difference (DAH) contrasts with their
+confidence intervals, and two-sided p-values for both contrasts. The AHSW
+p-values are always two-sided and do not depend on \code{side}, matching
+\code{\link{ahsw_fast}}.
 
 When \code{by.subgroup = TRUE}, the output is given in long form with a
 \code{population} column. Each \code{(sim, look)} produces one row for the
@@ -156,14 +248,25 @@ df <- simdata_fast(
 res1 <- analysis_fast(df, control = 1, event.looks = c(80, 140))
 head(res1)
 
-# Subgroup analysis in long form
+# Stratified log-rank on the subgroup factor
 res2 <- analysis_fast(df, control = 1, time.looks = 24,
-                      stat = c("logrank", "coxph"), by.subgroup = TRUE)
+                      stat = "logrank", strata = "subgroup")
 head(res2)
+
+# Fleming-Harrington G(0, 1) weighted log-rank for delayed effects
+res3 <- analysis_fast(df, control = 1, time.looks = 24,
+                      stat = "logrank", weight = "fh", rho = 0, gamma = 1)
+head(res3)
+
+# Max-combo and AHSW together
+res4 <- analysis_fast(df, control = 1, time.looks = 24,
+                      stat = c("maxcombo", "ahsw"), tau = 18)
+head(res4)
 
 }
 \seealso{
 \code{\link{simdata_fast}}, \code{\link{survdiff_fast}},
   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
-  \code{\link{survfit_fast}}.
+  \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
+  \code{\link{ahsw_fast}}.
 }
