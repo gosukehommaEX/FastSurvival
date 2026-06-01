@@ -41,8 +41,8 @@ print.survdiff_fast <- function(x, digits = max(1L, getOption("digits") - 3L), .
   wt   <- attr(x, "weight")
   n_str <- attr(x, "strata")
 
-  # Header. The unweighted (standard or stratified) log-rank display is
-  # unchanged. A weighted test names its scheme and notes stratification.
+  # Header. All variants carry the (two-group) scope tag for consistency with
+  # the other test summaries in the package.
   if (is.null(wt)) {
     cat("Log-rank test (two-group)\n\n")
   } else {
@@ -55,10 +55,10 @@ print.survdiff_fast <- function(x, digits = max(1L, getOption("digits") - 3L), .
       "Weighted log-rank test"
     )
     if (!is.null(n_str)) {
-      cat(sprintf("Stratified %s (%d strata)\n\n",
+      cat(sprintf("Stratified %s (two-group, %d strata)\n\n",
                   scheme_label, n_str))
     } else {
-      cat(sprintf("%s\n\n", scheme_label))
+      cat(sprintf("%s (two-group)\n\n", scheme_label))
     }
   }
   cat(sprintf("  N = %d\n", n))

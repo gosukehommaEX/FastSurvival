@@ -91,6 +91,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// milestone_core
+List milestone_core(NumericVector time, IntegerVector status, IntegerVector grp, double tau, bool presorted);
+RcppExport SEXP _FastSurvival_milestone_core(SEXP timeSEXP, SEXP statusSEXP, SEXP grpSEXP, SEXP tauSEXP, SEXP presortedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type grp(grpSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< bool >::type presorted(presortedSEXP);
+    rcpp_result_gen = Rcpp::wrap(milestone_core(time, status, grp, tau, presorted));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pihe_core
 NumericVector pihe_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted);
 RcppExport SEXP _FastSurvival_pihe_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP) {
@@ -228,6 +243,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},
+    {"_FastSurvival_milestone_core", (DL_FUNC) &_FastSurvival_milestone_core, 5},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
     {"_FastSurvival_rpiece_unif_cpp", (DL_FUNC) &_FastSurvival_rpiece_unif_cpp, 3},

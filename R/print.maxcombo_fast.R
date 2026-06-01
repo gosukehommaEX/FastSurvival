@@ -45,7 +45,7 @@ print.maxcombo_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
     return(invisible(x))
   }
 
-  # Table of component Z-scores, one row per Fleming-Harrington weight
+  # Table of component Z-scores, one row per Fleming-Harrington weight.
   tab <- matrix(
     z,
     ncol = 1L,

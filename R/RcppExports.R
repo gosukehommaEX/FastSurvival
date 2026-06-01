@@ -159,6 +159,10 @@ logrank_core <- function(time_sorted, event_sorted, j_sorted) {
     .Call(`_FastSurvival_logrank_core`, time_sorted, event_sorted, j_sorted)
 }
 
+milestone_core <- function(time, status, grp, tau, presorted) {
+    .Call(`_FastSurvival_milestone_core`, time, status, grp, tau, presorted)
+}
+
 #' Core PiHE hazard ratio computation (C++ backend)
 #'
 #' @description

@@ -19,11 +19,12 @@ global option \code{getOption("digits")}.}
 Invisibly returns \code{x}.
 }
 \description{
-Formats and prints an \code{ahsw_fast} object. It shows the truncation time
-and control label, the per-group average hazard with survival weight, and the
-between-group contrasts: the ratio of average hazards (treatment over
-control) and the difference of average hazards (treatment minus control),
-each with a confidence interval and a two-sided p-value.
+Formats and prints an \code{ahsw_fast} object. The header shows the
+truncation time and the control label. The body shows the per-group average
+hazard with survival weight, followed by the between-group contrasts: the
+ratio of average hazards (treatment over control) and the difference of
+average hazards (treatment minus control), each with a confidence interval
+and a two-sided p-value.
 }
 \examples{
 library(survival)

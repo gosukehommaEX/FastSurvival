@@ -1,11 +1,12 @@
 #' Print Method for ahsw_fast Objects
 #'
 #' @description
-#' Formats and prints an \code{ahsw_fast} object. It shows the truncation time
-#' and control label, the per-group average hazard with survival weight, and the
-#' between-group contrasts: the ratio of average hazards (treatment over
-#' control) and the difference of average hazards (treatment minus control),
-#' each with a confidence interval and a two-sided p-value.
+#' Formats and prints an \code{ahsw_fast} object. The header shows the
+#' truncation time and the control label. The body shows the per-group average
+#' hazard with survival weight, followed by the between-group contrasts: the
+#' ratio of average hazards (treatment over control) and the difference of
+#' average hazards (treatment minus control), each with a confidence interval
+#' and a two-sided p-value.
 #'
 #' @param x An object of class \code{"ahsw_fast"} returned by
 #'   \code{\link{ahsw_fast}}.
@@ -34,7 +35,7 @@ print.ahsw_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
   ci_lab   <- conf.int * 100
   control  <- attr(x, "control")
 
-  cat("Average hazard with survival weight (AHSW), two-group comparison\n\n")
+  cat("Average hazard with survival weight (two-group)\n\n")
   cat(sprintf("  tau = %g,  control = %s\n\n", tau, format(control)))
 
   if (is.na(x[["ah.ctrl"]]) || is.na(x[["ah.trt"]])) {
@@ -43,7 +44,7 @@ print.ahsw_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
     return(invisible(x))
   }
 
-  # Per-group average hazard
+  # Per-group average hazard.
   g_tab <- matrix(
     c(x[["ah.ctrl"]], x[["ah.trt"]]),
     nrow = 2L,
@@ -52,7 +53,7 @@ print.ahsw_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
   print(round(g_tab, digits = digits))
   cat("\n")
 
-  # Between-group contrasts: ratio (RAH) and difference (DAH)
+  # Between-group contrasts: ratio (RAH) and difference (DAH).
   con_mat <- matrix(
     c(x[["rah"]], x[["rah.lower"]], x[["rah.upper"]], x[["p.rah"]],
       x[["dah"]], x[["dah.lower"]], x[["dah.upper"]], x[["p.dah"]]),

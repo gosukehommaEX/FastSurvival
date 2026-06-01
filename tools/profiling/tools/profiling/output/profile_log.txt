@@ -1,0 +1,119 @@
+FastSurvival trio profile
+2026-06-01 17:02:44 
+
+== Stage timings (median elapsed seconds) == 
+nsim =   500 | rows =   200000 | gen =   0.180 | ana =   0.470 | sum =   0.020 | tot =   0.670 | ana % = 70.1 
+nsim =  1000 | rows =   400000 | gen =   1.040 | ana =   1.180 | sum =   0.020 | tot =   2.240 | ana % = 52.7 
+nsim =  2000 | rows =   800000 | gen =   0.110 | ana =   2.110 | sum =   0.020 | tot =   2.240 | ana % = 94.2 
+nsim =  5000 | rows =  2000000 | gen =   0.290 | ana =   4.960 | sum =   0.010 | tot =   5.260 | ana % = 94.3 
+ 
+== Rprof breakdown at nsim = 4000 == 
+Total profiled time: 6.025 s (sampling interval 0.005 s) 
+ 
+-- by.self (top 20) -- 
+                              self.time self.pct total.time total.pct
+".Call"                           2.360    39.17      2.360     39.17
+"data.frame"                      1.175    19.50      1.945     32.28
+".deparseOpts"                    0.770    12.78      0.770     12.78
+"write_stats"                     0.240     3.98      1.930     32.03
+"FastSurvival::analysis_fast"     0.180     2.99      3.905     64.81
+"coxph_fast"                      0.160     2.66      0.760     12.61
+"survdiff_fast"                   0.115     1.91      0.565      9.38
+"["                               0.105     1.74      0.105      1.74
+"structure"                       0.095     1.58      0.130      2.16
+"setNames"                        0.080     1.33      0.095      1.58
+"unname"                          0.070     1.16      0.175      2.90
+"%in%"                            0.055     0.91      0.060      1.00
+"as.numeric"                      0.055     0.91      0.055      0.91
+"p_from_z"                        0.050     0.83      0.090      1.49
+"sprintf"                         0.045     0.75      0.045      0.75
+"stats::pnorm"                    0.040     0.66      0.040      0.66
+"eval"                            0.035     0.58      6.025    100.00
+"match.arg"                       0.030     0.50      0.120      1.99
+"analysis_cut_core"               0.025     0.41      1.475     24.48
+"split.default"                   0.025     0.41      0.045      0.75
+
+
+ 
+-- by.total (top 20) -- 
+                              total.time total.pct self.time self.pct
+"eval"                             6.025    100.00     0.035     0.58
+"source"                           6.025    100.00     0.000     0.00
+"withVisible"                      6.025    100.00     0.000     0.00
+"FastSurvival::analysis_fast"      3.905     64.81     0.180     2.99
+"run_analyze"                      3.905     64.81     0.000     0.00
+".Call"                            2.360     39.17     2.360    39.17
+"<Anonymous>"                      2.110     35.02     0.000     0.00
+"do.call"                          2.110     35.02     0.000     0.00
+"run_generate"                     2.105     34.94     0.000     0.00
+"simulate_group"                   2.075     34.44     0.010     0.17
+"data.frame"                       1.945     32.28     1.175    19.50
+"write_stats"                      1.930     32.03     0.240     3.98
+"analysis_cut_core"                1.475     24.48     0.025     0.41
+"as.data.frame"                    0.775     12.86     0.000     0.00
+"as.data.frame.numeric"            0.775     12.86     0.000     0.00
+".deparseOpts"                     0.770     12.78     0.770    12.78
+"deparse"                          0.770     12.78     0.000     0.00
+"deparse1"                         0.770     12.78     0.000     0.00
+"force"                            0.770     12.78     0.000     0.00
+"paste"                            0.770     12.78     0.000     0.00
+
+
+ 
+== microbenchmark (nsim = 2000, 10 iterations) == 
+Unit: milliseconds
+      expr       min        lq       mean     median        uq       max neval cld
+  generate   90.6687   94.5368  101.09470   98.66065  109.3880  114.3735    10 a  
+   analyze 1747.1761 1953.2639 1983.22717 1973.50780 2058.1972 2213.0077    10  b 
+ summarize    7.8783    8.7360   10.02572    9.79965   10.4262   14.4162    10   c
+
+
+ 
+== simtrial end-to-end (nsim = 2000), best effort == 
+simtrial (generate+cut+wlr loop): 31.130 s 
+FastSurvival (generate+analyze):  1.880 s 
+ratio simtrial / FastSurvival:    16.56x 
+ 
+== sessionInfo == 
+R version 4.6.0 (2026-04-24 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Japanese_Japan.utf8  LC_CTYPE=Japanese_Japan.utf8    LC_MONETARY=Japanese_Japan.utf8
+[4] LC_NUMERIC=C                    LC_TIME=Japanese_Japan.utf8    
+
+time zone: Asia/Tokyo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] FastSurvival_0.1.0 simtrial_1.0.2     survival_3.8-6     dqrng_0.4.1        testthat_3.3.2    
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1     dplyr_1.2.1          farver_2.1.2         S7_0.2.2             fastmap_1.2.0       
+ [6] TH.data_1.1-5        xopen_1.0.1          digest_0.6.39        lifecycle_1.0.5      waldo_0.6.2         
+[11] ellipsis_0.3.3       processx_3.9.0       magrittr_2.0.5       compiler_4.6.0       rlang_1.2.0         
+[16] tools_4.6.0          gt_1.3.0             data.table_1.18.4    knitr_1.51           prettyunits_1.2.0   
+[21] pkgbuild_1.4.8       curl_7.1.0           r2rtf_1.3.0          xml2_1.5.2           RColorBrewer_1.1-3  
+[26] multcomp_1.4-30      pkgload_1.5.2        withr_3.0.2          purrr_1.2.2          desc_1.4.3          
+[31] grid_4.6.0           diffobj_0.3.6        roxygen2_8.0.0       xtable_1.8-8         future_1.70.0       
+[36] ggplot2_4.0.3        MASS_7.3-65          globals_0.19.1       scales_1.4.0         iterators_1.0.14    
+[41] cli_3.6.6            mvtnorm_1.3-7        crayon_1.5.3         generics_0.1.4       otel_0.2.0          
+[46] rstudioapi_0.18.0    future.apply_1.20.2  sessioninfo_1.2.3    cachem_1.1.0         splines_4.6.0       
+[51] parallel_4.6.0       gsDesign_3.9.0       vctrs_0.7.3          devtools_2.5.2       sandwich_3.1-1      
+[56] Matrix_1.7-5         callr_3.7.6          rcmdcheck_1.4.0      survAH_1.2.0         listenv_0.10.1      
+[61] foreach_1.5.2        tidyr_1.3.2          glue_1.8.1           parallelly_1.47.0    codetools_0.2-20    
+[66] gtable_0.3.6         doFuture_1.2.2       tibble_3.3.1         survRM2_1.0-4        pillar_1.11.1       
+[71] htmltools_0.5.9      brio_1.1.5           R6_2.6.1             microbenchmark_1.5.0 rprojroot_2.1.1     
+[76] evaluate_1.0.5       lattice_0.22-9       memoise_2.0.1        Rcpp_1.1.1-1.1       xfun_0.57           
+[81] zoo_1.8-15           fs_2.1.0             usethis_3.2.1        pkgconfig_2.0.3     
+
+
+ 
+Outputs written to C:\Users\i_lik\OneDrive\00_Amazon_drive\01_研究\22_Survival_analysis\03_Rpackage\02_FastSurvival\FastSurvival\tools\profiling\tools\profiling\output 

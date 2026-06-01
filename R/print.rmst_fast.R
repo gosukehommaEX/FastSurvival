@@ -48,7 +48,8 @@ print.rmst_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) 
 
   # ---- Single-group mode -------------------------------------------------
   if (!two_group) {
-    cat("Restricted mean survival time (RMST)\n\n")
+    cat("Restricted mean survival time (single-group)\n\n")
+    cat(sprintf("  tau = %g\n\n", tau))
     if (is.na(x[["rmst"]])) {
       cat("  Estimate not available.\n")
       return(invisible(x))
@@ -69,7 +70,7 @@ print.rmst_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) 
 
   # ---- Two-group mode ----------------------------------------------------
   control <- attr(x, "control")
-  cat("Restricted mean survival time (RMST), two-group comparison\n\n")
+  cat("Restricted mean survival time (two-group)\n\n")
   cat(sprintf("  tau = %g,  control = %s\n\n", tau, format(control)))
 
   g_tab <- matrix(

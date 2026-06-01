@@ -36,7 +36,7 @@ print.survfit_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ..
   if (is.null(conf.type)) conf.type <- "log"
   ci_lab <- conf.int * 100
 
-  cat("Kaplan-Meier estimate at a single time point\n\n")
+  cat("Kaplan-Meier survival estimate (single time point)\n\n")
 
   if (anyNA(x)) {
     cat("  Estimate not available.\n")
