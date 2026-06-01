@@ -1,130 +1,62 @@
-#' Fast Survival Data Simulation for Clinical Trials
+#' Fast Simulation of Two-Group Time-to-Event Trial Data
 #'
 #' @description
-#' Simulates individual patient data for one- or two-group time-to-event
-#' trials, with optional patient subgroups defined by one or more factors.
-#' Patient accrual times are drawn from a piecewise uniform distribution.
-#' Survival and dropout times are drawn from either a simple exponential or a
-#' piecewise exponential distribution, depending on whether a scalar or vector
-#' hazard is supplied. When subgroups are requested, each patient is assigned
-#' to a cell of the cross-classification of the factors by a categorical draw,
-#' and survival and dropout hazards may differ across cells. Random number
-#' generation uses \code{dqrng} for speed. C++ backends handle piecewise
-#' sampling, cell assignment, and two-group interleaving to minimize R-level
-#' overhead.
+#' Simulates time-to-event trial data for one or two groups across many
+#' simulated trials, with piecewise-uniform accrual, piecewise-exponential
+#' survival and dropout, and optional subgroups defined by a prevalence
+#' specification. The entire generation pipeline (accrual, survival, dropout,
+#' derived columns, and two-group interleaving) runs in a single C++ kernel
+#' that materialises the output data frame once, avoiding intermediate R-level
+#' vector operations and copies. The random-number stream is consumed in the
+#' same order as a per-group reference implementation, so results are
+#' reproducible from \code{seed}.
 #'
 #' @details
-#' For each patient, three times are generated independently:
+#' For each subject the observed time-to-event is
+#' \code{tte = pmin(surv_time, dropout_time)} and \code{event} is 1 when the
+#' survival time occurs first. The calendar time of the observed event is
+#' \code{accrual_time + tte}.
 #'
-#' \describe{
-#'   \item{Accrual time}{Drawn from a piecewise uniform distribution defined
-#'     by \code{a.time} and \code{a.rate}.}
-#'   \item{Survival time}{Drawn from a simple exponential distribution when
-#'     the hazard spec is a scalar, or from a piecewise exponential
-#'     distribution when it is a vector (with matching \code{e.time}).}
-#'   \item{Dropout time}{Drawn from the same family, governed by
-#'     \code{d.hazard} / \code{d.median} and \code{d.time}, or set to
-#'     \code{Inf} when dropout is not modeled.}
-#' }
+#' Survival and dropout are exponential when a single hazard (or median) is
+#' supplied and piecewise-exponential when a vector is supplied together with
+#' the corresponding \code{e.time} or \code{d.time} breakpoints, whose last
+#' element must be \code{Inf}. Group-specific parameters are supplied as a
+#' two-element list (control first, treatment second).
 #'
-#' The observed time-to-event is \code{tte = pmin(surv_time, dropout_time)},
-#' the event indicator is \code{1} when \code{surv_time <= dropout_time}, and
-#' the calendar time is \code{accrual_time + tte}.
+#' When \code{prevalence} is supplied the trial has subgroups. A numeric vector
+#' defines a single factor; a list of numeric vectors defines several
+#' independent factors; a multi-dimensional array defines the joint
+#' distribution of correlated factors. Per-cell hazards may be supplied as a
+#' list with one element per cell. With \code{fixed.alloc = TRUE} the subgroup
+#' sizes are deterministic; otherwise subgroup membership is drawn from the
+#' prevalence distribution.
 #'
-#' Exactly one of \code{e.hazard} and \code{e.median} must be supplied.
-#' Exactly one of \code{d.hazard} and \code{d.median} must be supplied when
-#' dropout is modeled; both must be \code{NULL} to suppress dropout.
+#' @param nsim Number of simulated trials.
+#' @param n Either a single total sample size (split by \code{alloc}) or a
+#'   length-two vector of per-group sample sizes.
+#' @param alloc A length-two allocation ratio, used when \code{n} is scalar.
+#' @param a.time A numeric vector of accrual-interval breakpoints.
+#' @param a.rate A numeric vector of accrual rates, one per accrual interval
+#'   (length \code{length(a.time) - 1}).
+#' @param e.hazard Survival hazard(s). A scalar or vector for one group, or a
+#'   two-element list for two groups; per-cell lists are used with subgroups.
+#' @param e.median Survival median(s); an alternative to \code{e.hazard}.
+#' @param e.time Survival breakpoints for piecewise hazards (last element
+#'   \code{Inf}).
+#' @param d.hazard Dropout hazard(s), same structure as \code{e.hazard}.
+#' @param d.median Dropout median(s); an alternative to \code{d.hazard}.
+#' @param d.time Dropout breakpoints for piecewise hazards.
+#' @param seed Optional integer seed for the \code{dqrng} generator.
+#' @param prevalence Optional subgroup prevalence specification (numeric
+#'   vector, list of vectors, array, or a named \code{control}/\code{treatment}
+#'   list for group-specific prevalence).
+#' @param fixed.alloc Logical; when \code{TRUE} subgroup sizes are
+#'   deterministic rather than drawn.
 #'
-#' For a two-group trial, group-specific parameters are passed as a list of
-#' length 2, where element 1 is the control group and element 2 the treatment
-#' group. For a one-group trial, plain vectors or scalars are passed directly.
-#'
-#' Subgroups are activated by \code{prevalence}, which accepts four forms:
-#'
-#' \describe{
-#'   \item{A numeric vector}{One factor with as many levels as the length of
-#'     the vector. The output gains a single integer column \code{subgroup}.}
-#'   \item{A list of numeric vectors}{Several independent factors, one vector
-#'     of marginal prevalence per factor. The factors are assigned
-#'     independently (their joint distribution is the product of the
-#'     marginals). The output gains one integer column per factor,
-#'     \code{subgroup1}, \code{subgroup2}, and so on.}
-#'   \item{An array}{Several factors with a joint distribution given directly
-#'     by the array, allowing the factors to be correlated. The dimensions of
-#'     the array are the numbers of factor levels. The output gains one
-#'     integer column per factor, \code{subgroup1}, \code{subgroup2}, and so
-#'     on.}
-#'   \item{A named list \code{list(control = ..., treatment = ...)}}{Two
-#'     group-specific specifications, each itself one of the three forms
-#'     above, so that the subgroup composition may differ between groups
-#'     (as in stratified randomization). Both groups must use the same number
-#'     of factors and the same number of levels per factor.}
-#' }
-#'
-#' Cells of the factor cross-classification are ordered column-major: the
-#' first factor varies fastest, matching the ordering of \code{array} and
-#' \code{expand.grid} in R. Cell-specific event hazards are supplied in this
-#' order. For a one-group trial, \code{e.hazard} is either a single spec
-#' (broadcast to all cells) or a list with one spec per cell. For a two-group
-#' trial, \code{e.hazard} is a list of length 2, and each group element is
-#' itself either a single spec (broadcast to that group's cells) or a list
-#' with one spec per cell. The same broadcasting rule applies to
-#' \code{e.median}, \code{d.hazard}, \code{d.median}, \code{e.time}, and
-#' \code{d.time}. In subgroup mode a two-group trial must be declared through
-#' a length-2 \code{n} or a group-specific \code{prevalence}, so a top-level
-#' hazard list is never ambiguous between groups and cells.
-#'
-#' @param nsim A positive integer, the number of simulation iterations.
-#'   Default is 1000.
-#' @param n A positive integer (one group) or a numeric vector of length 2
-#'   (two groups). Alternatively a scalar total sample size together with
-#'   \code{alloc}.
-#' @param alloc A numeric vector of length 2 giving the allocation ratio
-#'   \code{c(control, treatment)}. Used only when \code{n} is a scalar.
-#' @param a.time A numeric vector of accrual interval boundaries
-#'   \code{c(0, t1, ..., T)}, strictly increasing.
-#' @param a.rate A numeric vector of accrual rates, of length
-#'   \code{length(a.time) - 1}, all positive.
-#' @param e.hazard Event hazard spec. A scalar or vector for one group, a list
-#'   of two for two groups; with subgroups, a group element may be a list with
-#'   one spec per cell. Cannot be used with \code{e.median}.
-#' @param e.median Event median spec, same structure as \code{e.hazard},
-#'   converted via \code{log(2) / median}. Cannot be used with \code{e.hazard}.
-#' @param e.time Piecewise interval boundaries for the event time,
-#'   \code{c(0, t1, ..., Inf)}. Same structure rules as \code{e.hazard}.
-#' @param d.hazard Dropout hazard spec, same structure as \code{e.hazard}. Set
-#'   \code{d.hazard} and \code{d.median} both to \code{NULL} to suppress
-#'   dropout. Cannot be used with \code{d.median}.
-#' @param d.median Dropout median spec. Cannot be used with \code{d.hazard}.
-#' @param d.time Piecewise interval boundaries for the dropout time.
-#' @param seed A single integer for reproducibility, passed to
-#'   \code{dqrng::dqset.seed}. Default \code{NULL}.
-#' @param prevalence Subgroup prevalence specification. \code{NULL} (default)
-#'   means no subgroups. Otherwise a numeric vector (one factor), a list of
-#'   numeric vectors (independent factors), an array (joint distribution of
-#'   correlated factors), or a named list
-#'   \code{list(control = ..., treatment = ...)} for group-specific
-#'   composition. Values must be positive and are normalized internally. See
-#'   Details.
-#' @param fixed.alloc A logical value controlling how patients are assigned to
-#'   subgroup cells. When \code{FALSE} (default), each patient is assigned at
-#'   random by a categorical draw from \code{prevalence}, so cell sizes are
-#'   random with the given expected proportions. When \code{TRUE}, cell sizes
-#'   are fixed deterministically: each cell receives \code{floor(n * p)}
-#'   patients and any remainder is distributed one per cell from the first
-#'   cell onward, so the last cells absorb the rounding shortfall. For
-#'   example, \code{n = 99} with \code{prevalence = c(0.5, 0.5)} gives 50 and
-#'   49, and \code{n = 100} with \code{prevalence = c(1/3, 1/3, 1/3)} gives
-#'   34, 33, and 33. Fixed allocation consumes no random numbers for the
-#'   assignment. Ignored when \code{prevalence} is \code{NULL}.
-#'
-#' @return A \code{data.frame} with \code{nsim * sum(n)} rows. Without
-#'   subgroups the columns are \code{sim}, \code{group}, \code{accrual_time},
+#' @return A \code{data.frame} with \code{nsim * sum(n)} rows. The columns are
+#'   \code{sim}, \code{group}, any subgroup columns, \code{accrual_time},
 #'   \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
-#'   \code{calendar_time}. With a single-factor \code{prevalence}, an integer
-#'   column \code{subgroup} is inserted after \code{group}. With several
-#'   factors, the columns \code{subgroup1}, \code{subgroup2}, and so on are
-#'   inserted instead, one per factor.
+#'   \code{calendar_time}.
 #'
 #' @examples
 #' # One-group simulation, simple exponential, no dropout
@@ -187,20 +119,8 @@
 #' )
 #' head(df5)
 #'
-#' # Group-specific composition (stratified randomization)
-#' df6 <- simdata_fast(
-#'   nsim       = 100,
-#'   n          = c(150, 150),
-#'   a.time     = c(0, 12),
-#'   a.rate     = 300 / 12,
-#'   e.hazard   = list(0.10, 0.05),
-#'   prevalence = list(control = c(0.7, 0.3), treatment = c(0.5, 0.5)),
-#'   seed       = 6
-#' )
-#' head(df6)
+#' @seealso \code{\link{analysis_fast}}
 #'
-#' @importFrom dqrng dqset.seed dqrexp
-#' @importFrom stats setNames
 #' @export
 simdata_fast <- function(nsim       = 1000,
                          n,
@@ -217,14 +137,8 @@ simdata_fast <- function(nsim       = 1000,
                          prevalence = NULL,
                          fixed.alloc = FALSE) {
 
-  # ------------------------------------------------------------------ #
-  #  Seed
-  # ------------------------------------------------------------------ #
   if (!is.null(seed)) dqrng::dqset.seed(seed)
 
-  # ------------------------------------------------------------------ #
-  #  Subgroup setup
-  # ------------------------------------------------------------------ #
   use_subgroup        <- !is.null(prevalence)
   group_specific_prev <- use_subgroup && is_group_specific_prev(prevalence)
 
@@ -245,9 +159,6 @@ simdata_fast <- function(nsim       = 1000,
     }
   }
 
-  # ------------------------------------------------------------------ #
-  #  Resolve group sizes
-  # ------------------------------------------------------------------ #
   if (length(n) == 1L) {
     n_grp    <- round(n * alloc / sum(alloc))
     n_groups <- 2L
@@ -258,13 +169,7 @@ simdata_fast <- function(nsim       = 1000,
     stop("'n' must be a scalar (total N) or a vector of length 2 (per-group)")
   }
 
-  # ------------------------------------------------------------------ #
-  #  Resolve group count
-  # ------------------------------------------------------------------ #
   if (use_subgroup) {
-    # In subgroup mode, two groups must be declared via a length-2 'n' or a
-    # group-specific (named) prevalence. A top-level hazard list is otherwise
-    # reserved for per-cell specs in a one-group trial.
     is_two_group <- (length(n) == 2L) || group_specific_prev
   } else {
     is_two_group <- n_groups == 2L && (
@@ -282,8 +187,6 @@ simdata_fast <- function(nsim       = 1000,
     n_groups <- 1L
   }
 
-  # In subgroup two-group mode require length-2 lists for group-specific
-  # parameters, matching the convention used without subgroups.
   if (use_subgroup && is_two_group) {
     chk_two <- function(x, nm) {
       if (!is.null(x) && !(is.list(x) && length(x) == 2L)) {
@@ -297,9 +200,6 @@ simdata_fast <- function(nsim       = 1000,
     chk_two(d.median, "d.median")
   }
 
-  # ------------------------------------------------------------------ #
-  #  Validate and resolve e.hazard / e.median
-  # ------------------------------------------------------------------ #
   if (!is.null(e.hazard) && !is.null(e.median)) {
     stop("Specify exactly one of 'e.hazard' and 'e.median', not both")
   }
@@ -308,113 +208,150 @@ simdata_fast <- function(nsim       = 1000,
   }
   if (!is.null(e.median)) e.hazard <- convert_median_to_hazard(e.median)
 
-  # ------------------------------------------------------------------ #
-  #  Validate and resolve d.hazard / d.median
-  # ------------------------------------------------------------------ #
   has_dropout <- !is.null(d.hazard) || !is.null(d.median)
   if (!is.null(d.hazard) && !is.null(d.median)) {
     stop("Specify exactly one of 'd.hazard' and 'd.median', not both")
   }
   if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
 
-  # ------------------------------------------------------------------ #
-  #  Validate accrual parameters
-  # ------------------------------------------------------------------ #
   if (length(a.rate) != length(a.time) - 1L) {
     stop("'a.rate' must have length equal to length(a.time) - 1")
   }
   if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
   if (any(diff(a.time) <= 0)) stop("'a.time' must be strictly increasing")
 
-  # Pre-compute accrual cumulative probability table (shared across groups)
   lengths_a <- diff(a.time)
   weights_a <- a.rate * lengths_a
   cum_p_a   <- cumsum(weights_a / sum(weights_a))
 
-  # Subgroup cell counts (1 when no subgroups)
   n_cell_ctrl <- if (use_subgroup) spec_ctrl$n_cell else 1L
   n_cell_trt  <- if (use_subgroup) spec_trt$n_cell  else 1L
+  n_cell      <- n_cell_ctrl
 
-  # ------------------------------------------------------------------ #
-  #  Simulate each group and combine
-  # ------------------------------------------------------------------ #
-  if (n_groups == 1L) {
-    e.hazard_grp <- if (use_subgroup) e.hazard else if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard
-    d.hazard_grp <- if (!has_dropout) NULL else if (use_subgroup) d.hazard else if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard
+  # Build the per-cell hazard / piecewise pre-computation lists for one group.
+  # Each returned list has one element per cell: the hazard vector, the finite
+  # breakpoints, and the cumulative hazard at those breakpoints. For a single
+  # hazard the breakpoint / cumulative entries are empty (unused by the kernel).
+  build_exp_specs <- function(hazard_grp, time_grp, n_cell) {
+    haz <- vector("list", n_cell)
+    fin <- vector("list", n_cell)
+    cum <- vector("list", n_cell)
+    for (c in seq_len(n_cell)) {
+      hz <- if (is.list(hazard_grp)) hazard_grp[[c]] else hazard_grp
+      tm <- if (n_cell > 1L && is.list(time_grp)) time_grp[[c]] else time_grp
+      pc <- piecewise_precompute(hz, tm)
+      haz[[c]] <- pc$hazard
+      fin[[c]] <- pc$fin_time
+      cum[[c]] <- pc$cum_haz
+    }
+    list(haz = haz, fin = fin, cum = cum)
+  }
 
-    df <- simulate_group(
-      nsim        = nsim,
-      n           = n_grp,
-      group_id    = 1L,
-      a.time      = a.time,
-      cum_p_a     = cum_p_a,
-      e.hazard    = e.hazard_grp,
-      e.time      = e.time,
-      d.hazard    = d.hazard_grp,
-      d.time      = d.time,
-      n_sub       = n_cell_ctrl,
-      cum_prev    = if (use_subgroup) spec_ctrl$cum_prev else NULL,
-      level_table = if (use_subgroup) spec_ctrl$level_table else NULL,
-      sub_names   = if (use_subgroup) spec_ctrl$sub_names else NULL,
-      cell_prob   = if (use_subgroup) spec_ctrl$cell_prob else NULL,
-      fixed.alloc = fixed.alloc
-    )
+  # Resolve group-level survival hazard specs for control and treatment.
+  if (use_subgroup && is_two_group) {
+    e_haz_c <- if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard
+    e_haz_t <- if (is.list(e.hazard)) e.hazard[[2L]] else e.hazard
+  } else if (n_groups == 2L && !use_subgroup) {
+    e_haz_c <- if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard
+    e_haz_t <- if (is.list(e.hazard)) e.hazard[[2L]] else e.hazard
   } else {
-    e.time_ctrl <- resolve_time_arg(e.time, 1L)
-    e.time_trt  <- resolve_time_arg(e.time, 2L)
-    d.time_ctrl <- if (has_dropout) resolve_time_arg(d.time, 1L) else NULL
-    d.time_trt  <- if (has_dropout) resolve_time_arg(d.time, 2L) else NULL
+    e_haz_c <- e.hazard
+    e_haz_t <- e.hazard
+  }
 
-    df_ctrl <- simulate_group(
-      nsim        = nsim,
-      n           = n_grp[1L],
-      group_id    = 1L,
-      a.time      = a.time,
-      cum_p_a     = cum_p_a,
-      e.hazard    = if (is.list(e.hazard)) e.hazard[[1L]] else e.hazard,
-      e.time      = e.time_ctrl,
-      d.hazard    = if (has_dropout) (if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard) else NULL,
-      d.time      = d.time_ctrl,
-      n_sub       = n_cell_ctrl,
-      cum_prev    = if (use_subgroup) spec_ctrl$cum_prev else NULL,
-      level_table = if (use_subgroup) spec_ctrl$level_table else NULL,
-      sub_names   = if (use_subgroup) spec_ctrl$sub_names else NULL,
-      cell_prob   = if (use_subgroup) spec_ctrl$cell_prob else NULL,
-      fixed.alloc = fixed.alloc
-    )
-
-    df_trt <- simulate_group(
-      nsim        = nsim,
-      n           = n_grp[2L],
-      group_id    = 2L,
-      a.time      = a.time,
-      cum_p_a     = cum_p_a,
-      e.hazard    = if (is.list(e.hazard)) e.hazard[[2L]] else e.hazard,
-      e.time      = e.time_trt,
-      d.hazard    = if (has_dropout) (if (is.list(d.hazard)) d.hazard[[2L]] else d.hazard) else NULL,
-      d.time      = d.time_trt,
-      n_sub       = n_cell_trt,
-      cum_prev    = if (use_subgroup) spec_trt$cum_prev else NULL,
-      level_table = if (use_subgroup) spec_trt$level_table else NULL,
-      sub_names   = if (use_subgroup) spec_trt$sub_names else NULL,
-      cell_prob   = if (use_subgroup) spec_trt$cell_prob else NULL,
-      fixed.alloc = fixed.alloc
-    )
-
-    if (use_subgroup && n_cell_ctrl > 1L) {
-      # Subgroup output carries extra columns, so interleave in R.
-      df <- rbind(df_ctrl, df_trt)
-      df <- df[order(df$sim, df$group), , drop = FALSE]
-      rownames(df) <- NULL
+  d_haz_c <- NULL; d_haz_t <- NULL
+  if (has_dropout) {
+    if (use_subgroup && is_two_group) {
+      d_haz_c <- if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard
+      d_haz_t <- if (is.list(d.hazard)) d.hazard[[2L]] else d.hazard
+    } else if (n_groups == 2L && !use_subgroup) {
+      d_haz_c <- if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard
+      d_haz_t <- if (is.list(d.hazard)) d.hazard[[2L]] else d.hazard
     } else {
-      # C++ interleave: replaces rbind() + order()
-      df <- interleave_groups(df_ctrl, df_trt, nsim,
-                              as.integer(n_grp[1L]), as.integer(n_grp[2L]))
+      d_haz_c <- if (use_subgroup) d.hazard else if (is.list(d.hazard)) d.hazard[[1L]] else d.hazard
+      d_haz_t <- d_haz_c
     }
   }
 
-  df
+  e.time_c <- resolve_time_arg(e.time, 1L)
+  e.time_t <- resolve_time_arg(e.time, 2L)
+  d.time_c <- if (has_dropout) resolve_time_arg(d.time, 1L) else NULL
+  d.time_t <- if (has_dropout) resolve_time_arg(d.time, 2L) else NULL
+
+  e_c <- build_exp_specs(e_haz_c, e.time_c, n_cell_ctrl)
+  e_t <- build_exp_specs(e_haz_t, e.time_t, n_cell_trt)
+  d_c <- if (has_dropout) build_exp_specs(d_haz_c, d.time_c, n_cell_ctrl) else
+    list(haz = list(numeric(0)), fin = list(numeric(0)), cum = list(numeric(0)))
+  d_t <- if (has_dropout) build_exp_specs(d_haz_t, d.time_t, n_cell_trt) else
+    list(haz = list(numeric(0)), fin = list(numeric(0)), cum = list(numeric(0)))
+
+  # Subgroup descriptors.
+  if (use_subgroup) {
+    cum_prev_c   <- spec_ctrl$cum_prev
+    cum_prev_t   <- spec_trt$cum_prev
+    level_tab_c  <- matrix(as.integer(spec_ctrl$level_table),
+                           nrow = nrow(spec_ctrl$level_table))
+    level_tab_t  <- matrix(as.integer(spec_trt$level_table),
+                           nrow = nrow(spec_trt$level_table))
+    sub_names    <- spec_ctrl$sub_names
+    fixed_c      <- if (fixed.alloc) fixed_cell_counts(n_grp[1L], spec_ctrl$cell_prob) else integer(n_cell_ctrl)
+    fixed_t      <- if (fixed.alloc) fixed_cell_counts(if (n_groups == 2L) n_grp[2L] else n_grp[1L], spec_trt$cell_prob) else integer(n_cell_trt)
+  } else {
+    cum_prev_c <- numeric(0); cum_prev_t <- numeric(0)
+    level_tab_c <- matrix(integer(0), nrow = 1L, ncol = 0L)
+    level_tab_t <- matrix(integer(0), nrow = 1L, ncol = 0L)
+    sub_names  <- character(0)
+    fixed_c    <- integer(0); fixed_t <- integer(0)
+  }
+
+  n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
+
+  simdata_core_full(
+    as.integer(nsim), n_grp_int,
+    as.numeric(a.time), as.numeric(cum_p_a),
+    as.integer(n_cell),
+    e_c$haz, e_c$fin, e_c$cum,
+    e_t$haz, e_t$fin, e_t$cum,
+    has_dropout,
+    d_c$haz, d_c$fin, d_c$cum,
+    d_t$haz, d_t$fin, d_t$cum,
+    as.numeric(cum_prev_c), as.numeric(cum_prev_t),
+    level_tab_c, level_tab_t,
+    as.character(sub_names),
+    fixed.alloc,
+    as.integer(fixed_c), as.integer(fixed_t)
+  )
 }
+
+# Piecewise-exponential pre-computation: validates the hazard / breakpoint
+# pair and returns the hazard vector, the finite left breakpoints, and the
+# cumulative hazard at those breakpoints, matching rpiece_exp_r. For a single
+# hazard the breakpoint / cumulative entries are empty.
+piecewise_precompute <- function(hazard, e.time) {
+  if (length(hazard) == 1L) {
+    return(list(hazard = as.numeric(hazard),
+                fin_time = numeric(0), cum_haz = numeric(0)))
+  }
+  if (is.null(e.time)) {
+    stop("'e.time' must be supplied when 'e.hazard' (or 'e.median') is a vector")
+  }
+  if (length(e.time) != length(hazard) + 1L) {
+    stop("length(e.time) must equal length(e.hazard) + 1")
+  }
+  if (!is.infinite(e.time[length(e.time)])) {
+    stop("Last element of 'e.time' must be Inf")
+  }
+  n_int    <- length(hazard)
+  fin_time <- e.time[seq_len(n_int)]
+  lengths  <- diff(e.time[seq_len(n_int)])
+  cum_haz  <- c(0, cumsum(hazard[-n_int] * lengths))
+  list(hazard = as.numeric(hazard),
+       fin_time = as.numeric(fin_time), cum_haz = as.numeric(cum_haz))
+}
+
+# ------------------------------------------------------------------ #
+#  Internal helpers: subgroup prevalence and parameter resolution
+# ------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------ #
 #  Internal helper: detect group-specific prevalence
@@ -486,135 +423,7 @@ fixed_cell_counts <- function(n, p) {
 }
 
 # ------------------------------------------------------------------ #
-#  Internal helper: simulate one group
-# ------------------------------------------------------------------ #
-simulate_group <- function(nsim, n, group_id, a.time, cum_p_a,
-                           e.hazard, e.time, d.hazard, d.time,
-                           n_sub = 1L, cum_prev = NULL,
-                           level_table = NULL, sub_names = NULL,
-                           cell_prob = NULL, fixed.alloc = FALSE) {
-  total_n <- nsim * n
-
-  # Accrual times via C++ piecewise uniform sampler
-  accrual_time <- rpiece_unif_cpp(total_n, a.time, cum_p_a)
-
-  if (n_sub == 1L) {
-    # No subgroups: original code path (unchanged output and RNG order)
-    surv_time <- rpiece_exp_r(total_n, e.hazard, e.time)
-
-    dropout_time <- if (!is.null(d.hazard)) {
-      rpiece_exp_r(total_n, d.hazard, d.time)
-    } else {
-      rep(Inf, total_n)
-    }
-
-    tte           <- pmin(surv_time, dropout_time)
-    event         <- as.integer(surv_time <= dropout_time)
-    calendar_time <- accrual_time + tte
-
-    return(data.frame(
-      sim           = rep(seq_len(nsim), each = n),
-      group         = group_id,
-      accrual_time  = accrual_time,
-      surv_time     = surv_time,
-      dropout_time  = dropout_time,
-      tte           = tte,
-      event         = event,
-      calendar_time = calendar_time
-    ))
-  }
-
-  # Validate cell-specific spec lengths
-  if (is.list(e.hazard) && length(e.hazard) != n_sub) {
-    stop("Cell-specific 'e.hazard' list must have one element per cell (",
-         n_sub, ")")
-  }
-  if (is.list(d.hazard) && length(d.hazard) != n_sub) {
-    stop("Cell-specific 'd.hazard' list must have one element per cell (",
-         n_sub, ")")
-  }
-
-  # Subgroup cell path: assign cells, then draw survival/dropout per cell.
-  # Random assignment uses a categorical draw; fixed assignment uses
-  # deterministic per-cell counts (floor with a front-loaded remainder) and
-  # consumes no random numbers.
-  if (fixed.alloc) {
-    counts   <- fixed_cell_counts(n, cell_prob)
-    cell_one <- rep.int(seq_len(n_sub), counts)
-    cell     <- rep(cell_one, times = nsim)
-  } else {
-    cell <- rcat_cpp(total_n, cum_prev)
-  }
-  surv_time <- numeric(total_n)
-  dropout_time <- rep(Inf, total_n)
-
-  get_sub_spec <- function(spec, s) if (is.list(spec)) spec[[s]] else spec
-
-  for (s in seq_len(n_sub)) {
-    idx <- which(cell == s)
-    if (length(idx) == 0L) next
-    surv_time[idx] <- rpiece_exp_r(length(idx),
-                                   get_sub_spec(e.hazard, s),
-                                   get_sub_spec(e.time, s))
-    if (!is.null(d.hazard)) {
-      dropout_time[idx] <- rpiece_exp_r(length(idx),
-                                        get_sub_spec(d.hazard, s),
-                                        get_sub_spec(d.time, s))
-    }
-  }
-
-  tte           <- pmin(surv_time, dropout_time)
-  event         <- as.integer(surv_time <= dropout_time)
-  calendar_time <- accrual_time + tte
-
-  # Expand cell index into one column per factor
-  sub_cols <- lapply(seq_along(sub_names),
-                     function(f) as.integer(level_table[cell, f]))
-  names(sub_cols) <- sub_names
-
-  base_cols <- c(
-    list(sim = rep(seq_len(nsim), each = n), group = group_id),
-    sub_cols,
-    list(accrual_time  = accrual_time,
-         surv_time     = surv_time,
-         dropout_time  = dropout_time,
-         tte           = tte,
-         event         = event,
-         calendar_time = calendar_time)
-  )
-
-  data.frame(base_cols, stringsAsFactors = FALSE)
-}
-
-# ------------------------------------------------------------------ #
-#  Internal helper: piecewise exponential sampler
-# ------------------------------------------------------------------ #
-rpiece_exp_r <- function(n, hazard, e.time) {
-  if (length(hazard) == 1L) {
-    return(dqrng::dqrexp(n, rate = hazard))
-  }
-
-  if (is.null(e.time)) {
-    stop("'e.time' must be supplied when 'e.hazard' (or 'e.median') is a vector")
-  }
-  if (length(e.time) != length(hazard) + 1L) {
-    stop("length(e.time) must equal length(e.hazard) + 1")
-  }
-  if (!is.infinite(e.time[length(e.time)])) {
-    stop("Last element of 'e.time' must be Inf")
-  }
-
-  n_int    <- length(hazard)
-  fin_time <- e.time[seq_len(n_int)]
-  lengths  <- diff(e.time[seq_len(n_int)])
-  cum_haz  <- c(0, cumsum(hazard[-n_int] * lengths))
-
-  # C++ piecewise exponential sampler
-  rpiece_exp_cpp(n, hazard, fin_time, cum_haz)
-}
-
-# ------------------------------------------------------------------ #
-#  Internal helper: resolve e.time / d.time for a specific group
+#  Internal helper: resolve a possibly group-specific time argument
 # ------------------------------------------------------------------ #
 resolve_time_arg <- function(time_arg, group_idx) {
   if (is.null(time_arg)) return(NULL)

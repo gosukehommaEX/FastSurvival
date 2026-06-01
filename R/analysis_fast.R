@@ -222,62 +222,48 @@
 #'   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
 #'   \code{\link{ahsw_fast}}.
 #'
-#' @importFrom stats pnorm
+#' @importFrom stats pnorm qnorm cov2cor
 #' @export
 analysis_fast <- function(data, control,
-                          event.looks = NULL, time.looks = NULL,
-                          stat = "logrank",
-                          tau = NULL, t.eval = NULL,
-                          conf.int = 0.95,
-                          side = 2,
-                          by.subgroup = FALSE,
-                          weight = c("logrank", "fh", "mwlrt", "gehan",
-                                     "tarone-ware"),
-                          rho = 0, gamma = 0, t_star = NULL,
-                          strata = NULL,
-                          mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
-                          abseps = 1e-5, maxpts = 25000) {
+                           event.looks = NULL, time.looks = NULL,
+                           stat = "logrank",
+                           tau = NULL, t.eval = NULL,
+                           conf.int = 0.95,
+                           side = 2,
+                           by.subgroup = FALSE,
+                           weight = c("logrank", "fh", "mwlrt", "gehan",
+                                      "tarone-ware"),
+                           rho = 0, gamma = 0, t_star = NULL,
+                           strata = NULL,
+                           mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
+                           abseps = 1e-5, maxpts = 25000) {
 
   weight <- match.arg(weight)
 
-  # ------------------------------------------------------------------ #
-  #  Validate inputs
-  # ------------------------------------------------------------------ #
+  # ---- Input validation --------------------------------------------------
   req_cols <- c("sim", "group", "accrual_time", "tte", "event")
   if (!is.data.frame(data) || !all(req_cols %in% names(data))) {
     stop("'data' must be a data frame with columns: ",
          paste(req_cols, collapse = ", "))
   }
-  if (missing(control)) {
-    stop("'control' must be supplied")
-  }
-
   has_event <- !is.null(event.looks)
   has_time  <- !is.null(time.looks)
   if (has_event == has_time) {
-    stop("Supply exactly one of 'event.looks' and 'time.looks'")
+    stop("supply exactly one of 'event.looks' or 'time.looks'")
   }
-  look.type   <- if (has_event) "event" else "time"
-  look.values <- if (has_event) event.looks else time.looks
-  if (length(look.values) < 1L || any(!is.finite(look.values)) ||
-      any(look.values <= 0)) {
-    stop("Look values must be positive and finite")
+  looks     <- if (has_event) event.looks else time.looks
+  look_type <- if (has_event) 0L else 1L
+  if (length(looks) < 1L || any(!is.finite(looks)) || any(looks <= 0)) {
+    stop("'looks' must be positive and finite")
   }
-  if (has_event && any(look.values != round(look.values))) {
-    stop("'event.looks' must contain whole numbers (event counts)")
-  }
-  n.looks <- length(look.values)
 
   allowed_stat <- c("logrank", "coxph", "rmst", "km", "maxcombo", "ahsw")
   if (!all(stat %in% allowed_stat)) {
-    stop("'stat' must be a subset of: ",
-         paste(allowed_stat, collapse = ", "))
+    stop("'stat' must be a subset of: ", paste(allowed_stat, collapse = ", "))
   }
   stat <- unique(stat)
 
-  if (conf.int <= 0 || conf.int >= 1) {
-    stop("'conf.int' must be in (0, 1)")
-  }
+  if (conf.int <= 0 || conf.int >= 1) stop("'conf.int' must be in (0, 1)")
   if (length(side) != 1L || !side %in% c(1, 2)) {
     stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
   }
@@ -301,21 +287,16 @@ analysis_fast <- function(data, control,
     stop("'mc.rho' and 'mc.gamma' must have the same length")
   }
 
-  # ------------------------------------------------------------------ #
-  #  Subgroup columns and population definitions
-  # ------------------------------------------------------------------ #
+  # ---- Subgroup columns and population definitions -----------------------
   sub_cols <- grep("^subgroup([0-9]+)?$", names(data), value = TRUE)
   if (length(sub_cols) > 1L) {
     sfx      <- suppressWarnings(as.integer(sub(".*?([0-9]+)$", "\\1", sub_cols)))
     sub_cols <- sub_cols[order(sfx, sub_cols)]
   }
-
   if (by.subgroup && length(sub_cols) == 0L) {
     stop("'by.subgroup = TRUE' but 'data' has no subgroup columns")
   }
 
-  # Stratification columns (for the log-rank statistic). Independent of the
-  # 'population' marginalization done by 'by.subgroup'.
   use_strata <- !is.null(strata)
   if (use_strata) {
     if (!is.character(strata) || length(strata) < 1L ||
@@ -324,275 +305,238 @@ analysis_fast <- function(data, control,
     }
   }
 
-  # Population list: 'overall' first, then one entry per (factor, level).
-  # Each entry stores the column name, the level value, and the row label.
-  pop_defs <- list(list(col = NA_character_, level = NA_integer_,
+  # Population list: overall first, then one entry per (subgroup column, level).
+  pop_defs <- list(list(col = NA_integer_, level = NA_integer_,
                         label = "overall"))
+  sub_levels <- list()
   if (by.subgroup) {
-    for (cn in sub_cols) {
+    for (ci in seq_along(sub_cols)) {
+      cn   <- sub_cols[ci]
       levs <- sort(unique(data[[cn]]))
+      sub_levels[[cn]] <- levs
       for (lv in levs) {
         pop_defs[[length(pop_defs) + 1L]] <-
-          list(col = cn, level = lv, label = paste0(cn, "_", lv))
+          list(col = ci - 1L, level = as.integer(lv),
+               label = paste0(cn, "_", lv))
       }
     }
   }
-  n_pop <- length(pop_defs)
+  n_pop  <- length(pop_defs)
+  pop_col   <- vapply(pop_defs, function(p) {
+    if (is.na(p$col)) -1L else as.integer(p$col)
+  }, integer(1))
+  pop_level <- vapply(pop_defs, function(p) {
+    if (is.na(p$level)) NA_integer_ else as.integer(p$level)
+  }, integer(1))
+  pop_label <- vapply(pop_defs, function(p) p$label, character(1))
 
-  # ------------------------------------------------------------------ #
-  #  Treatment indicator, per-simulation row index, subgroup vectors
-  # ------------------------------------------------------------------ #
+  # ---- Order data by simulation; build sim row offsets -------------------
+  sim_vec <- data$sim
+  ord     <- order(sim_vec)
+  sim_s   <- sim_vec[ord]
+  sim_ids <- unique(sim_s)
+  nsim    <- length(sim_ids)
+  # 0-based offsets: rows of simulation k are [sim_ptr[k], sim_ptr[k + 1]).
+  counts  <- tabulate(match(sim_s, sim_ids), nbins = nsim)
+  sim_ptr <- as.integer(c(0L, cumsum(counts)))
+
+  accrual <- as.numeric(data$accrual_time)[ord]
+  tte     <- as.numeric(data$tte)[ord]
+  event   <- as.integer(data$event)[ord]
+
   grp <- data$group
   if (is.factor(grp)) grp <- as.character(grp)
-  j_all <- as.integer(grp != control)
+  j_all <- as.integer(grp != control)[ord]
 
-  sg_all <- if (by.subgroup) lapply(sub_cols, function(cn) data[[cn]]) else NULL
-  if (by.subgroup) names(sg_all) <- sub_cols
+  # Subgroup matrix (N x n_subcols), integer labels aligned to ordered data.
+  if (length(sub_cols) > 0L) {
+    sub_mat <- matrix(0L, nrow = nrow(data), ncol = length(sub_cols))
+    for (ci in seq_along(sub_cols)) {
+      sub_mat[, ci] <- as.integer(data[[sub_cols[ci]]])[ord]
+    }
+  } else {
+    sub_mat <- matrix(0L, nrow = nrow(data), ncol = 1L)
+  }
 
-  # Stratum label per row: a single column as-is, or the interaction of several
-  st_all <- if (use_strata) {
-    if (length(strata) == 1L) {
+  # Stratum identifiers (integer codes), aligned to ordered data.
+  if (use_strata) {
+    st_lab <- if (length(strata) == 1L) {
       as.character(data[[strata]])
     } else {
       do.call(paste, c(lapply(strata, function(cn) data[[cn]]), sep = "."))
     }
-  } else NULL
+    strata_int <- as.integer(factor(st_lab))[ord]
+  } else {
+    strata_int <- integer(0)
+  }
 
-  idx_by_sim <- split(seq_len(nrow(data)), data$sim)
-  ord_names  <- order(as.numeric(names(idx_by_sim)))
-  idx_by_sim <- idx_by_sim[ord_names]
-  sim_vals   <- as.numeric(names(idx_by_sim))
-  nsim       <- length(idx_by_sim)
-  total      <- nsim * n.looks * n_pop
+  # ---- Statistic flags and weight scheme code ----------------------------
+  do_logrank  <- "logrank"  %in% stat
+  do_coxph    <- "coxph"    %in% stat
+  do_rmst     <- "rmst"     %in% stat
+  do_km       <- "km"       %in% stat
+  do_maxcombo <- "maxcombo" %in% stat
+  do_ahsw     <- "ahsw"     %in% stat
 
-  # ------------------------------------------------------------------ #
-  #  Pre-allocate output columns
-  # ------------------------------------------------------------------ #
-  out <- list(
-    sim        = numeric(total),
-    look       = integer(total),
-    look.type  = rep(look.type, total),
-    look.value = numeric(total)
+  weight_scheme <- switch(weight,
+    logrank       = -1L,
+    fh            = 0L,
+    mwlrt         = 1L,
+    gehan         = 2L,
+    `tarone-ware` = 3L)
+  t_star_v <- if (weight == "mwlrt") t_star else 0
+  tau_v    <- if (is.null(tau)) 0 else tau
+  teval_v  <- if (is.null(t.eval)) 0 else t.eval
+
+  # ---- Call the fused kernel ---------------------------------------------
+  core <- analysis_loop_core(
+    sim_ptr, accrual, tte, event, j_all,
+    look_type, as.numeric(looks),
+    pop_col, pop_level, sub_mat,
+    if (use_strata) strata_int else integer(0), use_strata,
+    do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw,
+    weight_scheme, rho, gamma, t_star_v,
+    as.numeric(mc.rho), as.numeric(mc.gamma),
+    tau_v, teval_v
   )
-  if (by.subgroup) out$population <- character(total)
-  out$cutoff     <- numeric(total)
-  out$reached    <- logical(total)
-  out$n.enrolled <- integer(total)
-  out$n.event    <- integer(total)
 
-  if ("logrank" %in% stat) {
-    out$logrank.z     <- rep(NA_real_, total)
-    out$logrank.chisq <- rep(NA_real_, total)
-    out$logrank.p     <- rep(NA_real_, total)
-  }
-  if ("coxph" %in% stat) {
-    out$cox.coef  <- rep(NA_real_, total)
-    out$cox.hr    <- rep(NA_real_, total)
-    out$cox.se    <- rep(NA_real_, total)
-    out$cox.z     <- rep(NA_real_, total)
-    out$cox.p     <- rep(NA_real_, total)
-    out$cox.lower <- rep(NA_real_, total)
-    out$cox.upper <- rep(NA_real_, total)
-  }
-  if ("rmst" %in% stat) {
-    out$rmst.ctrl       <- rep(NA_real_, total)
-    out$rmst.trt        <- rep(NA_real_, total)
-    out$rmst.diff       <- rep(NA_real_, total)
-    out$rmst.diff.lower <- rep(NA_real_, total)
-    out$rmst.diff.upper <- rep(NA_real_, total)
-    out$rmst.z          <- rep(NA_real_, total)
-    out$rmst.p          <- rep(NA_real_, total)
-  }
-  if ("km" %in% stat) {
-    out$km.surv.ctrl <- rep(NA_real_, total)
-    out$km.surv.trt  <- rep(NA_real_, total)
-  }
-  if ("maxcombo" %in% stat) {
-    out$maxcombo.stat <- rep(NA_real_, total)
-    out$maxcombo.p    <- rep(NA_real_, total)
-  }
-  if ("ahsw" %in% stat) {
-    out$ahsw.ah.ctrl   <- rep(NA_real_, total)
-    out$ahsw.ah.trt    <- rep(NA_real_, total)
-    out$ahsw.rah       <- rep(NA_real_, total)
-    out$ahsw.rah.lower <- rep(NA_real_, total)
-    out$ahsw.rah.upper <- rep(NA_real_, total)
-    out$ahsw.p.rah     <- rep(NA_real_, total)
-    out$ahsw.dah       <- rep(NA_real_, total)
-    out$ahsw.dah.lower <- rep(NA_real_, total)
-    out$ahsw.dah.upper <- rep(NA_real_, total)
-    out$ahsw.p.dah     <- rep(NA_real_, total)
-  }
+  total <- nsim * length(looks) * n_pop
+  z_mult <- qnorm(1 - (1 - conf.int) / 2)
 
-  # ------------------------------------------------------------------ #
-  #  Two-sided / one-sided p-value from a signed Z statistic.
-  #  'eff_dir' is the sign of Z that corresponds to treatment benefit:
-  #  -1 for log-rank and Cox (benefit gives a negative Z), +1 for RMST
-  #  (benefit gives a positive Z). The one-sided p-value is the tail in the
-  #  benefit direction, so the three statistics share the same one-sided
-  #  interpretation despite their differing natural signs.
-  # ------------------------------------------------------------------ #
+  # p-value helper matching analysis_fast's p_from_z.
   p_from_z <- function(z, eff_dir) {
-    if (is.na(z)) return(NA_real_)
+    out <- rep(NA_real_, length(z))
+    ok  <- !is.na(z)
     if (side == 2L) {
-      2 * stats::pnorm(-abs(z))
+      out[ok] <- 2 * pnorm(-abs(z[ok]))
     } else if (eff_dir < 0) {
-      stats::pnorm(z)
+      out[ok] <- pnorm(z[ok])
     } else {
-      stats::pnorm(-z)
+      out[ok] <- pnorm(-z[ok])
     }
+    out
   }
 
-  # ------------------------------------------------------------------ #
-  #  Statistic writer for one population (subset of a look's cut data).
-  #  'sc' is the stratum label vector aligned with (tc, ec, jc), or NULL when
-  #  stratification is not requested.
-  # ------------------------------------------------------------------ #
-  write_stats <- function(pos, tc, ec, jc, sc) {
-    n_ev <- sum(ec)
-    n0   <- sum(jc == 0L)
-    n1   <- sum(jc == 1L)
-    both <- n0 > 0L && n1 > 0L
+  # ---- Assemble the output frame in analysis_fast column order -----------
+  out <- list()
+  # Kernel cell order is (sim outer, then look, then population), so the
+  # identifier columns are built to match that nesting exactly.
+  out$sim <- rep(sim_ids, each = length(looks) * n_pop)
+  out$look <- rep(rep(seq_along(looks), each = n_pop), times = nsim)
+  out$look.value <- rep(rep(looks, each = n_pop), times = nsim)
+  if (by.subgroup) {
+    out$population <- rep(pop_label, times = nsim * length(looks))
+  }
+  out$cutoff     <- core$cutoff
+  out$reached    <- as.logical(core$reached)
+  out$n.enrolled <- core$n_enrolled
+  out$n.event    <- core$n_event
 
-    out$n.enrolled[pos] <<- length(tc)
-    out$n.event[pos]    <<- n_ev
-
-    if ("logrank" %in% stat && n_ev > 0L && both) {
-      # Unstratified: the cut data are already time-sorted, so presorted = TRUE.
-      # Stratified: the cut data are sorted by time only, not by stratum then
-      # time, so presorted = FALSE and survdiff_fast re-sorts internally.
-      z <- if (is.null(sc)) {
-        as.numeric(survdiff_fast(tc, ec, jc, control = 0L, side = 1L,
-                                 presorted = TRUE, weight = weight,
-                                 rho = rho, gamma = gamma, t_star = t_star))
+  if (do_logrank) {
+    num <- core$logrank[, 1]
+    var <- core$logrank[, 2]
+    z   <- ifelse(is.finite(var) & var > 0, num / sqrt(var), NA_real_)
+    out$logrank.z     <- z
+    out$logrank.chisq <- z * z
+    out$logrank.p     <- p_from_z(z, eff_dir = -1)
+  }
+  if (do_coxph) {
+    theta0 <- core$coxph[, 1]; U0 <- core$coxph[, 2]
+    I0     <- core$coxph[, 3]; J0 <- core$coxph[, 4]
+    delta  <- U0 / I0 - (J0 * U0 * U0) / (2 * I0 * I0 * I0)
+    theta  <- theta0 * exp(delta)
+    se     <- 1 / sqrt(I0)
+    coef   <- log(theta)
+    z_v    <- ifelse(is.finite(se) & se > 0, coef / se, NA_real_)
+    out$cox.coef  <- coef
+    out$cox.hr    <- theta
+    out$cox.se    <- se
+    out$cox.z     <- z_v
+    out$cox.p     <- p_from_z(z_v, eff_dir = -1)
+    out$cox.lower <- exp(coef - z_mult * se)
+    out$cox.upper <- exp(coef + z_mult * se)
+  }
+  if (do_rmst) {
+    r0 <- core$rmst[, 1]; v0 <- core$rmst[, 2]
+    r1 <- core$rmst[, 3]; v1 <- core$rmst[, 4]
+    est_diff <- r1 - r0
+    se_diff  <- sqrt(v1 + v0)
+    z_diff   <- ifelse(is.finite(se_diff) & se_diff > 0,
+                       est_diff / se_diff, NA_real_)
+    out$rmst.ctrl       <- r0
+    out$rmst.trt        <- r1
+    out$rmst.diff       <- est_diff
+    out$rmst.diff.lower <- est_diff - z_mult * se_diff
+    out$rmst.diff.upper <- est_diff + z_mult * se_diff
+    out$rmst.z          <- z_diff
+    out$rmst.p          <- p_from_z(z_diff, eff_dir = 1)
+  }
+  if (do_km) {
+    out$km.surv.ctrl <- core$km[, 1]
+    out$km.surv.trt  <- core$km[, 2]
+  }
+  if (do_maxcombo) {
+    nw  <- length(mc.rho)
+    lab <- sprintf("FH(%g,%g)", mc.rho, mc.gamma)
+    stat_vec <- rep(NA_real_, total)
+    p_vec    <- rep(NA_real_, total)
+    Umat_all <- core$mc_U
+    Vmat_all <- core$mc_V
+    for (r in seq_len(total)) {
+      U <- Umat_all[r, ]
+      if (anyNA(U)) next
+      V  <- matrix(Vmat_all[r, ], nrow = nw, ncol = nw)
+      dV <- diag(V)
+      if (any(!is.finite(dV)) || any(dV <= 0)) next
+      zc   <- U / sqrt(dV)
+      corr <- cov2cor(V)
+      if (side == 1L) {
+        m_obs <- min(zc)
+        lower <- rep(m_obs, nw); upper <- rep(Inf, nw)
       } else {
-        as.numeric(survdiff_fast(tc, ec, jc, control = 0L, side = 1L,
-                                 presorted = FALSE, strata = sc,
-                                 weight = weight, rho = rho, gamma = gamma,
-                                 t_star = t_star))
+        m_obs <- max(abs(zc))
+        lower <- rep(-m_obs, nw); upper <- rep(m_obs, nw)
       }
-      out$logrank.z[pos]     <<- z
-      out$logrank.chisq[pos] <<- z * z
-      out$logrank.p[pos]     <<- p_from_z(z, eff_dir = -1)
-    }
-    if ("coxph" %in% stat && n_ev > 0L && both) {
-      cx <- coxph_fast(tc, ec, jc, control = 0L,
-                       conf.int = conf.int, presorted = TRUE)
-      coef_v <- unname(cx[1L])
-      se_v   <- unname(cx[3L])
-      z_v    <- if (is.finite(se_v) && se_v > 0) coef_v / se_v else NA_real_
-      out$cox.coef[pos]  <<- coef_v
-      out$cox.hr[pos]    <<- unname(cx[2L])
-      out$cox.se[pos]    <<- se_v
-      out$cox.z[pos]     <<- z_v
-      out$cox.p[pos]     <<- p_from_z(z_v, eff_dir = -1)
-      out$cox.lower[pos] <<- unname(cx[4L])
-      out$cox.upper[pos] <<- unname(cx[5L])
-    }
-    if ("rmst" %in% stat && both) {
-      rm <- rmst_fast(tc, ec, group = jc, control = 0L,
-                      tau = tau, conf.int = conf.int, presorted = TRUE)
-      z_d <- unname(rm["z.diff"])
-      out$rmst.ctrl[pos]       <<- unname(rm["rmst.ctrl"])
-      out$rmst.trt[pos]        <<- unname(rm["rmst.trt"])
-      out$rmst.diff[pos]       <<- unname(rm["diff"])
-      out$rmst.diff.lower[pos] <<- unname(rm["diff.lower"])
-      out$rmst.diff.upper[pos] <<- unname(rm["diff.upper"])
-      out$rmst.z[pos]          <<- z_d
-      out$rmst.p[pos]          <<- p_from_z(z_d, eff_dir = 1)
-    }
-    if ("km" %in% stat) {
-      if (n0 > 0L) {
-        is0 <- jc == 0L
-        kc  <- survfit_fast(tc[is0], ec[is0], t_eval = t.eval, presorted = TRUE)
-        out$km.surv.ctrl[pos] <<- unname(kc["surv"])
-      }
-      if (n1 > 0L) {
-        is1 <- jc == 1L
-        kt  <- survfit_fast(tc[is1], ec[is1], t_eval = t.eval, presorted = TRUE)
-        out$km.surv.trt[pos] <<- unname(kt["surv"])
-      }
-    }
-    if ("maxcombo" %in% stat && n_ev > 0L && both) {
-      mcf <- maxcombo_fast(tc, ec, jc, control = 0L, side = side,
-                           rho = mc.rho, gamma = mc.gamma, presorted = TRUE,
-                           abseps = abseps, maxpts = maxpts)
-      out$maxcombo.stat[pos] <<- unname(mcf["statistic"])
-      out$maxcombo.p[pos]    <<- unname(mcf["p.value"])
-    }
-    if ("ahsw" %in% stat && n_ev > 0L && both) {
-      ah <- ahsw_fast(tc, ec, group = jc, control = 0L, tau = tau,
-                      conf.int = conf.int, presorted = TRUE)
-      out$ahsw.ah.ctrl[pos]   <<- unname(ah["ah.ctrl"])
-      out$ahsw.ah.trt[pos]    <<- unname(ah["ah.trt"])
-      out$ahsw.rah[pos]       <<- unname(ah["rah"])
-      out$ahsw.rah.lower[pos] <<- unname(ah["rah.lower"])
-      out$ahsw.rah.upper[pos] <<- unname(ah["rah.upper"])
-      out$ahsw.p.rah[pos]     <<- unname(ah["p.rah"])
-      out$ahsw.dah[pos]       <<- unname(ah["dah"])
-      out$ahsw.dah.lower[pos] <<- unname(ah["dah.lower"])
-      out$ahsw.dah.upper[pos] <<- unname(ah["dah.upper"])
-      out$ahsw.p.dah[pos]     <<- unname(ah["p.dah"])
-    }
-  }
-
-  # ------------------------------------------------------------------ #
-  #  Main loop over simulations and looks
-  # ------------------------------------------------------------------ #
-  pos <- 0L
-  for (si in seq_len(nsim)) {
-    rows <- idx_by_sim[[si]]
-    acc  <- data$accrual_time[rows]
-    tt   <- data$tte[rows]
-    ev   <- as.integer(data$event[rows])
-    jj   <- j_all[rows]
-    sg   <- if (by.subgroup) lapply(sg_all, function(v) v[rows]) else NULL
-    st   <- if (use_strata) st_all[rows] else NULL
-
-    # Calendar times of events (for event-driven cutoffs, whole population)
-    cal_ev <- if (look.type == "event") (acc + tt)[ev == 1L] else NULL
-
-    for (l in seq_len(n.looks)) {
-      if (look.type == "event") {
-        cutoff    <- nth_event_time_core(cal_ev, as.integer(look.values[l]))
-        reached_l <- is.finite(cutoff)
+      if (nw == 1L) {
+        joint <- pnorm(upper) - pnorm(lower)
+      } else if (nw <= 3L) {
+        joint <- mvtnorm::pmvnorm(lower = lower, upper = upper, corr = corr,
+                                  algorithm = mvtnorm::TVPACK(abseps = abseps))[1L]
       } else {
-        cutoff    <- look.values[l]
-        reached_l <- TRUE
+        joint <- mvtnorm::pmvnorm(lower = lower, upper = upper, corr = corr,
+                                  algorithm = mvtnorm::GenzBretz(
+                                    maxpts = maxpts, abseps = abseps,
+                                    releps = 0))[1L]
       }
-
-      cut    <- analysis_cut_core(acc, tt, ev, jj, cutoff)
-      t_cut  <- cut$time
-      e_cut  <- cut$event
-      j_cut  <- cut$j
-      idx    <- cut$idx
-      cut_v  <- if (reached_l) cutoff else NA_real_
-
-      # Subgroup labels and stratum labels realigned to the sorted cut order
-      sg_cut <- if (by.subgroup) lapply(sg, function(v) v[idx]) else NULL
-      st_cut <- if (use_strata) st[idx] else NULL
-
-      for (pi in seq_len(n_pop)) {
-        pos <- pos + 1L
-        pd  <- pop_defs[[pi]]
-
-        out$sim[pos]        <- sim_vals[si]
-        out$look[pos]       <- l
-        out$look.value[pos] <- look.values[l]
-        out$cutoff[pos]     <- cut_v
-        out$reached[pos]    <- reached_l
-        if (by.subgroup) out$population[pos] <- pd$label
-
-        if (is.na(pd$col)) {
-          write_stats(pos, t_cut, e_cut, j_cut, st_cut)
-        } else {
-          keep <- sg_cut[[pd$col]] == pd$level
-          sc_k <- if (use_strata) st_cut[keep] else NULL
-          write_stats(pos, t_cut[keep], e_cut[keep], j_cut[keep], sc_k)
-        }
-      }
+      stat_vec[r] <- as.numeric(m_obs)
+      p_vec[r]    <- 1 - as.numeric(joint)
     }
+    out$maxcombo.stat <- stat_vec
+    out$maxcombo.p    <- p_vec
+  }
+  if (do_ahsw) {
+    a0 <- core$ahsw[, 1]; vQ0 <- core$ahsw[, 2]; vU0 <- core$ahsw[, 3]; n0 <- core$ahsw[, 4]
+    a1 <- core$ahsw[, 5]; vQ1 <- core$ahsw[, 6]; vU1 <- core$ahsw[, 7]; n1 <- core$ahsw[, 8]
+    ok <- is.finite(a0) & is.finite(a1) & a0 > 0 & a1 > 0 &
+          is.finite(vQ0) & is.finite(vQ1) & is.finite(vU0) & is.finite(vU1)
+    log_rah <- ifelse(ok, log(a1 / a0), NA_real_)
+    se_rah  <- ifelse(ok, sqrt(vQ1 / n1 + vQ0 / n0), NA_real_)
+    dah     <- ifelse(ok, a1 - a0, NA_real_)
+    se_dah  <- ifelse(ok, sqrt(vU1 / n1 + vU0 / n0), NA_real_)
+    out$ahsw.ah.ctrl   <- ifelse(ok, a0, NA_real_)
+    out$ahsw.ah.trt    <- ifelse(ok, a1, NA_real_)
+    out$ahsw.rah       <- ifelse(ok, exp(log_rah), NA_real_)
+    out$ahsw.rah.lower <- ifelse(ok, exp(log_rah - z_mult * se_rah), NA_real_)
+    out$ahsw.rah.upper <- ifelse(ok, exp(log_rah + z_mult * se_rah), NA_real_)
+    out$ahsw.p.rah     <- ifelse(ok & se_rah > 0,
+                                 2 * pnorm(-abs(log_rah) / se_rah), NA_real_)
+    out$ahsw.dah       <- dah
+    out$ahsw.dah.lower <- ifelse(ok, dah - z_mult * se_dah, NA_real_)
+    out$ahsw.dah.upper <- ifelse(ok, dah + z_mult * se_dah, NA_real_)
+    out$ahsw.p.dah     <- ifelse(ok & se_dah > 0,
+                                 2 * pnorm(-abs(dah) / se_dah), NA_real_)
   }
 
-  as.data.frame(out, stringsAsFactors = FALSE)
+  df <- as.data.frame(out, stringsAsFactors = FALSE)
+  df
 }

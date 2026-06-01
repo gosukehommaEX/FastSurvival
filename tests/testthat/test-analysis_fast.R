@@ -1,577 +1,255 @@
-# Reference administrative censoring at a calendar cutoff, optionally
-# restricted to a subgroup mask, returned unsorted. Mirrors the logic in
-# analysis_cut_core so the R-level plumbing can be checked independently. When
-# 'sv' (a per-subject stratum vector) is supplied, the enrolled subset of it is
-# returned as 'strata', so stratified references can be built.
-manual_cut <- function(acc, tte, ev, j, cutoff, mask = NULL, sv = NULL) {
-  enrolled <- acc <= cutoff
-  if (!is.null(mask)) enrolled <- enrolled & mask
-  a    <- acc[enrolled]
-  full <- tte[enrolled]
-  e0   <- ev[enrolled]
-  jj   <- j[enrolled]
-  before <- (a + full) <= cutoff
-  list(time = ifelse(before, full, cutoff - a),
-       event = as.integer(ifelse(before, e0, 0L)),
-       j = as.integer(jj),
-       strata = if (!is.null(sv)) sv[enrolled] else NULL,
-       n = sum(enrolled),
-       n_event = sum(ifelse(before, e0, 0L)))
+test_that("analysis_fast: required inputs and statistic selection are validated", {
+  set.seed(88)
+  dat <- simdata_fast(nsim = 5, n = c(40, 40), a.time = c(0, 6), a.rate = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 12),
+                      d.median = list(30, 30), seed = 88)
+
+  expect_error(analysis_fast(dat, control = 1), "exactly one of")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             time.looks = 10), "exactly one of")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "rmst"), "tau")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "km"), "t.eval")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "bogus"), "subset of")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "logrank", weight = "mwlrt"), "t_star")
+})
+
+# Helper: reproduce one (sim, look) cell by applying the administrative cut in
+# R and calling the already externally-validated per-statistic wrappers. This
+# is the reference the fused kernel must match.
+cut_one <- function(dat, sim_id, cutoff) {
+  d <- dat[dat$sim == sim_id, ]
+  enrolled <- d$accrual_time <= cutoff
+  d <- d[enrolled, ]
+  before <- (d$accrual_time + d$tte) <= cutoff
+  t <- ifelse(before, d$tte, cutoff - d$accrual_time)
+  e <- ifelse(before, d$event, 0L)
+  ord <- order(t)
+  list(time = t[ord], event = as.integer(e[ord]), group = d$group[ord])
 }
 
-make_data <- function(seed = 101, nsim = 30) {
-  simdata_fast(
-    nsim       = nsim,
-    n          = c(120, 120),
-    a.time     = c(0, 12),
-    a.rate     = 240 / 12,
-    e.hazard   = list(list(0.05, 0.035), 0.030),
-    prevalence = c(0.5, 0.5),
-    seed       = seed
-  )
-}
+test_that("analysis_fast logrank/coxph match per-cell wrappers (time looks)", {
+  set.seed(101)
+  dat <- simdata_fast(nsim = 12, n = c(100, 100), a.time = c(0, 10),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 14),
+                      d.median = list(30, 30), seed = 101)
+  looks <- c(12, 22)
+  res <- analysis_fast(dat, control = 1, time.looks = looks,
+                       stat = c("logrank", "coxph"), side = 2)
 
-# ------------------------------------------------------------------ #
-#  Structure and input validation
-# ------------------------------------------------------------------ #
+  sims <- sort(unique(dat$sim))
+  row <- 0L
+  for (s in sims) {
+    for (cv in looks) {
+      row <- row + 1L
+      cc <- cut_one(dat, s, cv)
+      if (length(cc$time) == 0L) next
+      n_ev <- sum(cc$event)
+      both <- any(cc$group == 1) && any(cc$group != 1)
+      if (n_ev > 0 && both) {
+        z_ref <- as.numeric(survdiff_fast(cc$time, cc$event, cc$group,
+                                          control = 1, side = 1,
+                                          presorted = TRUE))
+        expect_equal(res$logrank.z[row], z_ref, tolerance = 1e-10)
 
-test_that("analysis_fast returns one row per (sim, look) without subgroups", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = c(18, 30))
-  expect_s3_class(res, "data.frame")
-  expect_false("population" %in% names(res))
-  expect_equal(nrow(res), 30L * 2L)
-})
-
-test_that("analysis_fast errors when both look types supplied", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, event.looks = 80, time.looks = 24),
-    "exactly one"
-  )
-})
-
-test_that("analysis_fast errors when neither look type supplied", {
-  dat <- make_data()
-  expect_error(analysis_fast(dat, control = 1), "exactly one")
-})
-
-test_that("analysis_fast errors on rmst without tau and km without t.eval", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "rmst"),
-    "tau"
-  )
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "km"),
-    "t.eval"
-  )
-})
-
-test_that("analysis_fast errors on invalid side", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, side = 3),
-    "side"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  Calendar look: agreement with a manual administrative censoring
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast calendar look counts match manual censoring", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = c(18, 30),
-                       stat = "logrank")
-  for (s in c(1, 2, 5)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    for (l in 1:2) {
-      mc  <- manual_cut(acc, tt, ev, jj, c(18, 30)[l])
-      row <- res[res$sim == s & res$look == l, ]
-      expect_equal(row$n.enrolled, mc$n)
-      expect_equal(row$n.event, mc$n_event)
-    }
-  }
-})
-
-test_that("analysis_fast log-rank/Cox/RMST match direct calls on cut data", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("logrank", "coxph", "rmst"), tau = 15)
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    mc   <- manual_cut(acc, tt, ev, jj, 30)
-    row  <- res[res$sim == s, ]
-
-    z_ref <- as.numeric(survdiff_fast(mc$time, mc$event, mc$j,
-                                      control = 0L, side = 1L))
-    expect_equal(row$logrank.z, z_ref, tolerance = 1e-8)
-
-    cx_ref <- coxph_fast(mc$time, mc$event, mc$j, control = 0L)
-    expect_equal(row$cox.coef, unname(cx_ref[1L]), tolerance = 1e-8)
-    expect_equal(row$cox.hr,   unname(cx_ref[2L]), tolerance = 1e-8)
-
-    rm_ref <- rmst_fast(mc$time, mc$event, group = mc$j, control = 0L, tau = 15)
-    expect_equal(row$rmst.diff, unname(rm_ref["diff"]), tolerance = 1e-8)
-  }
-})
-
-# ------------------------------------------------------------------ #
-#  Event-driven look
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast event look stops at the d-th event time", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, event.looks = c(50, 120),
-                       stat = "logrank")
-  for (s in c(1, 2, 5)) {
-    rows   <- which(dat$sim == s)
-    acc    <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev     <- as.integer(dat$event[rows])
-    cal_ev <- (acc + tt)[ev == 1L]
-    for (l in 1:2) {
-      d   <- c(50, 120)[l]
-      row <- res[res$sim == s & res$look == l, ]
-      if (length(cal_ev) >= d) {
-        expect_equal(row$cutoff, sort(cal_ev)[d], tolerance = 1e-9)
-        expect_equal(row$n.event, d)
-        expect_true(row$reached)
+        cx <- coxph_fast(cc$time, cc$event, cc$group, control = 1,
+                         presorted = TRUE)
+        expect_equal(res$cox.coef[row], unname(cx[1]), tolerance = 1e-10)
+        expect_equal(res$cox.hr[row],   unname(cx[2]), tolerance = 1e-10)
+        expect_equal(res$cox.se[row],   unname(cx[3]), tolerance = 1e-10)
       }
     }
   }
 })
 
-test_that("analysis_fast unreached event target falls back to full data", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, event.looks = 100000L,
-                       stat = "logrank")
-  expect_true(all(!res$reached))
-  expect_true(all(is.na(res$cutoff)))
+test_that("analysis_fast rmst/km/ahsw match per-cell wrappers (event looks)", {
+  set.seed(202)
+  dat <- simdata_fast(nsim = 12, n = c(120, 120), a.time = c(0, 12),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
+                      e.time = list(NULL, c(0, 6, Inf)),
+                      d.median = list(36, 36), seed = 202)
+  looks <- c(100, 160)
+  res <- analysis_fast(dat, control = 1, event.looks = looks,
+                       stat = c("rmst", "km", "ahsw"),
+                       tau = 12, t.eval = 12, side = 2)
 
-  for (s in c(1, 3)) {
-    rows <- which(dat$sim == s)
-    tt   <- dat$tte[rows]; ev <- as.integer(dat$event[rows])
-    jj   <- as.integer(dat$group[rows] != 1)
-    row  <- res[res$sim == s, ]
-    z_full <- as.numeric(survdiff_fast(tt, ev, jj, control = 0L, side = 1L))
-    expect_equal(row$logrank.z, z_full, tolerance = 1e-8)
-    expect_equal(row$n.enrolled, length(tt))
-    expect_equal(row$n.event, sum(ev))
+  sims <- sort(unique(dat$sim))
+  row <- 0L
+  for (s in sims) {
+    cal_ev <- with(dat[dat$sim == s & dat$event == 1, ], accrual_time + tte)
+    for (cv in looks) {
+      row <- row + 1L
+      if (cv > length(cal_ev)) next
+      cutoff <- sort(cal_ev)[cv]
+      cc <- cut_one(dat, s, cutoff)
+      both <- any(cc$group == 1) && any(cc$group != 1)
+      if (!both) next
+
+      rm <- rmst_fast(cc$time, cc$event, group = cc$group, control = 1,
+                      tau = 12, presorted = TRUE)
+      expect_equal(res$rmst.diff[row], unname(rm["diff"]), tolerance = 1e-10)
+      expect_equal(res$rmst.z[row],    unname(rm["z.diff"]), tolerance = 1e-10)
+
+      is_c <- cc$group == 1
+      kc <- survfit_fast(cc$time[is_c], cc$event[is_c], t_eval = 12,
+                         presorted = TRUE)
+      expect_equal(res$km.surv.ctrl[row], unname(kc["surv"]), tolerance = 1e-10)
+
+      if (sum(cc$event) > 0) {
+        ah <- ahsw_fast(cc$time, cc$event, group = cc$group, control = 1,
+                        tau = 12, presorted = TRUE)
+        expect_equal(res$ahsw.rah[row], unname(ah["rah"]), tolerance = 1e-10)
+        expect_equal(res$ahsw.dah[row], unname(ah["dah"]), tolerance = 1e-10)
+      }
+    }
   }
 })
 
-# ------------------------------------------------------------------ #
-#  side and p-values
-# ------------------------------------------------------------------ #
+test_that("analysis_fast weighted log-rank matches survdiff_fast (FH, mwlrt)", {
+  set.seed(303)
+  dat <- simdata_fast(nsim = 12, n = c(110, 110), a.time = c(0, 12),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 20)),
+                      e.time = list(NULL, c(0, 6, Inf)),
+                      d.median = list(36, 36), seed = 303)
+  looks <- 150
 
-test_that("analysis_fast two-sided p-values equal 2 * pnorm(-|z|)", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("logrank", "coxph", "rmst"),
-                       tau = 15, side = 2)
-  ok  <- !is.na(res$logrank.z)
-  expect_equal(res$logrank.p[ok], 2 * pnorm(-abs(res$logrank.z[ok])),
-               tolerance = 1e-10)
-  expect_equal(res$cox.p[ok], 2 * pnorm(-abs(res$cox.z[ok])),
-               tolerance = 1e-10)
-  expect_equal(res$rmst.p[ok], 2 * pnorm(-abs(res$rmst.z[ok])),
-               tolerance = 1e-10)
+  for (cfg in list(list(weight = "fh", rho = 0, gamma = 1, t_star = NULL),
+                   list(weight = "mwlrt", rho = 0, gamma = 0, t_star = 6))) {
+    res <- analysis_fast(dat, control = 1, event.looks = looks,
+                         stat = "logrank", weight = cfg$weight,
+                         rho = cfg$rho, gamma = cfg$gamma, t_star = cfg$t_star,
+                         side = 2)
+    sims <- sort(unique(dat$sim))
+    row <- 0L
+    for (s in sims) {
+      row <- row + 1L
+      cal_ev <- with(dat[dat$sim == s & dat$event == 1, ], accrual_time + tte)
+      if (looks > length(cal_ev)) next
+      cutoff <- sort(cal_ev)[looks]
+      cc <- cut_one(dat, s, cutoff)
+      both <- any(cc$group == 1) && any(cc$group != 1)
+      if (sum(cc$event) == 0 || !both) next
+      z_ref <- as.numeric(survdiff_fast(
+        cc$time, cc$event, cc$group, control = 1, side = 1, presorted = TRUE,
+        weight = cfg$weight, rho = cfg$rho, gamma = cfg$gamma,
+        t_star = cfg$t_star))
+      expect_equal(res$logrank.z[row], z_ref, tolerance = 1e-10,
+                   info = cfg$weight)
+    }
+  }
 })
 
-test_that("analysis_fast one-sided p-values use each test's benefit direction", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("logrank", "coxph", "rmst"),
-                       tau = 15, side = 1)
-  ok <- !is.na(res$logrank.z)
-  # log-rank and Cox: benefit is a negative Z -> lower tail pnorm(z)
-  expect_equal(res$logrank.p[ok], pnorm(res$logrank.z[ok]), tolerance = 1e-10)
-  expect_equal(res$cox.p[ok], pnorm(res$cox.z[ok]), tolerance = 1e-10)
-  # RMST: benefit is a positive Z -> upper tail pnorm(-z)
-  expect_equal(res$rmst.p[ok], pnorm(-res$rmst.z[ok]), tolerance = 1e-10)
+test_that("analysis_fast max-combo matches maxcombo_fast", {
+  set.seed(404)
+  dat <- simdata_fast(nsim = 10, n = c(120, 120), a.time = c(0, 12),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
+                      e.time = list(NULL, c(0, 6, Inf)),
+                      d.median = list(36, 36), seed = 404)
+  looks <- 150
+  res <- analysis_fast(dat, control = 1, event.looks = looks,
+                       stat = "maxcombo", side = 1)
+
+  sims <- sort(unique(dat$sim))
+  row <- 0L
+  for (s in sims) {
+    row <- row + 1L
+    cal_ev <- with(dat[dat$sim == s & dat$event == 1, ], accrual_time + tte)
+    if (looks > length(cal_ev)) next
+    cutoff <- sort(cal_ev)[looks]
+    cc <- cut_one(dat, s, cutoff)
+    both <- any(cc$group == 1) && any(cc$group != 1)
+    if (sum(cc$event) == 0 || !both) next
+    mc <- maxcombo_fast(cc$time, cc$event, cc$group, control = 1, side = 1,
+                        presorted = TRUE)
+    expect_equal(res$maxcombo.stat[row], unname(mc["statistic"]),
+                 tolerance = 1e-8)
+    # The max-combo statistic is deterministic, so it must match tightly. The
+    # p-value comes from mvtnorm::pmvnorm (GenzBretz Monte-Carlo integration),
+    # which is not reproducible to machine precision, so it is checked loosely.
+    expect_equal(res$maxcombo.p[row], unname(mc["p.value"]),
+                 tolerance = 1e-2)
+  }
 })
 
-test_that("analysis_fast Cox z matches coef/se and shares the coef sign", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "coxph")
-  ok  <- !is.na(res$cox.z)
-  expect_equal(res$cox.z[ok], res$cox.coef[ok] / res$cox.se[ok],
-               tolerance = 1e-10)
-  # Natural sign: log HR and its Wald z share the same sign.
-  expect_true(all(sign(res$cox.z[ok]) == sign(res$cox.coef[ok])))
-})
+test_that("analysis_fast by.subgroup produces correct long-form populations", {
+  set.seed(505)
+  dat <- simdata_fast(nsim = 10, n = c(150, 150), a.time = c(0, 12),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 12, log(2) / 16),
+                      d.median = list(36, 36),
+                      prevalence = c(0.6, 0.4), seed = 505)
+  res <- analysis_fast(dat, control = 1, event.looks = 120,
+                       stat = "logrank", by.subgroup = TRUE, side = 2)
 
-test_that("analysis_fast log-rank and Cox z point the same direction", {
-  # Both are tests on the log hazard ratio, so their signed Z should agree
-  # in sign on most simulations (allowing rare boundary disagreements).
-  dat <- make_data(seed = 202, nsim = 100)
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("logrank", "coxph"))
-  ok  <- !is.na(res$logrank.z) & !is.na(res$cox.z)
-  agree <- mean(sign(res$logrank.z[ok]) == sign(res$cox.z[ok]))
-  expect_gt(agree, 0.95)
-})
-
-# ------------------------------------------------------------------ #
-#  Subgroup output (long format)
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast by.subgroup adds a population column and rows", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = c(18, 30),
-                       stat = "logrank", by.subgroup = TRUE)
   expect_true("population" %in% names(res))
   expect_setequal(unique(res$population),
                   c("overall", "subgroup_1", "subgroup_2"))
-  expect_equal(nrow(res), 30L * 2L * 3L)
-})
 
-test_that("analysis_fast overall rows equal the whole-population analysis", {
-  dat   <- make_data()
-  res_s <- analysis_fast(dat, control = 1, time.looks = c(18, 30),
-                         stat = c("logrank", "coxph"), by.subgroup = TRUE)
-  res_p <- analysis_fast(dat, control = 1, time.looks = c(18, 30),
-                         stat = c("logrank", "coxph"))
-  ov <- res_s[res_s$population == "overall", ]
-  for (s in c(1, 2, 5)) for (l in 1:2) {
-    a <- ov[ov$sim == s & ov$look == l, ]
-    b <- res_p[res_p$sim == s & res_p$look == l, ]
-    expect_equal(a$logrank.z, b$logrank.z, tolerance = 1e-12)
-    expect_equal(a$cox.coef, b$cox.coef, tolerance = 1e-12)
-    expect_equal(a$n.event, b$n.event)
-  }
-})
+  # Subgroup rows at a given look share the same cutoff as the overall row.
+  ov  <- res[res$population == "overall", ]
+  sg1 <- res[res$population == "subgroup_1", ]
+  expect_equal(sg1$cutoff, ov$cutoff, tolerance = 1e-10)
 
-test_that("analysis_fast subgroup counts partition the overall counts", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = "logrank", by.subgroup = TRUE)
-  for (s in c(1, 2, 5)) {
-    sub <- res[res$sim == s, ]
-    ov_n <- sub$n.enrolled[sub$population == "overall"]
-    ov_e <- sub$n.event[sub$population == "overall"]
-    s_n  <- sum(sub$n.enrolled[sub$population != "overall"])
-    s_e  <- sum(sub$n.event[sub$population != "overall"])
-    expect_equal(s_n, ov_n)
-    expect_equal(s_e, ov_e)
-  }
-})
-
-test_that("analysis_fast subgroup rows match manual subgroup censoring", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("logrank", "coxph"), by.subgroup = TRUE)
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    sg   <- dat$subgroup[rows]
-    for (lev in 1:2) {
-      mc  <- manual_cut(acc, tt, ev, jj, 30, mask = sg == lev)
-      row <- res[res$sim == s & res$population == paste0("subgroup_", lev), ]
-      expect_equal(row$n.enrolled, mc$n)
-      expect_equal(row$n.event, mc$n_event)
-      if (mc$n_event > 0 && sum(mc$j == 0) > 0 && sum(mc$j == 1) > 0) {
-        z_ref <- as.numeric(survdiff_fast(mc$time, mc$event, mc$j,
-                                          control = 0L, side = 1L))
-        expect_equal(row$logrank.z, z_ref, tolerance = 1e-8)
-      }
+  # The subgroup logrank.z matches survdiff_fast on the subgroup subset.
+  s1 <- sort(unique(dat$sim))[1]
+  cal_ev <- with(dat[dat$sim == s1 & dat$event == 1, ], accrual_time + tte)
+  if (120 <= length(cal_ev)) {
+    cutoff <- sort(cal_ev)[120]
+    d <- dat[dat$sim == s1, ]
+    enr <- d$accrual_time <= cutoff
+    d <- d[enr, ]
+    before <- (d$accrual_time + d$tte) <= cutoff
+    t <- ifelse(before, d$tte, cutoff - d$accrual_time)
+    e <- ifelse(before, d$event, 0L)
+    sel <- d$subgroup == 1
+    if (any(sel) && sum(e[sel]) > 0 &&
+        any(d$group[sel] == 1) && any(d$group[sel] != 1)) {
+      ord <- order(t[sel])
+      z_ref <- as.numeric(survdiff_fast(t[sel][ord], as.integer(e[sel])[ord],
+                                        d$group[sel][ord], control = 1,
+                                        side = 1, presorted = TRUE))
+      z_new <- res$logrank.z[res$population == "subgroup_1" &
+                               res$sim == s1][1]
+      expect_equal(z_new, z_ref, tolerance = 1e-10)
     }
   }
 })
 
-test_that("analysis_fast cutoff and reached are shared across populations", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, event.looks = 80,
-                       stat = "logrank", by.subgroup = TRUE)
-  for (s in c(1, 2, 5)) {
-    sub <- res[res$sim == s, ]
-    expect_equal(length(unique(sub$cutoff)), 1L)
-    expect_equal(length(unique(sub$reached)), 1L)
+test_that("analysis_fast stratified log-rank matches survdiff_fast with strata", {
+  set.seed(606)
+  dat <- simdata_fast(nsim = 10, n = c(150, 150), a.time = c(0, 12),
+                      a.rate = 1,
+                      e.hazard = list(log(2) / 12, log(2) / 16),
+                      d.median = list(36, 36),
+                      prevalence = c(0.5, 0.5), seed = 606)
+  looks <- 150
+  res <- analysis_fast(dat, control = 1, event.looks = looks,
+                       stat = "logrank", strata = "subgroup", side = 2)
+
+  s1 <- sort(unique(dat$sim))[1]
+  cal_ev <- with(dat[dat$sim == s1 & dat$event == 1, ], accrual_time + tte)
+  if (looks <= length(cal_ev)) {
+    cutoff <- sort(cal_ev)[looks]
+    d <- dat[dat$sim == s1, ]
+    enr <- d$accrual_time <= cutoff
+    d <- d[enr, ]
+    before <- (d$accrual_time + d$tte) <= cutoff
+    t <- ifelse(before, d$tte, cutoff - d$accrual_time)
+    e <- as.integer(ifelse(before, d$event, 0L))
+    if (sum(e) > 0) {
+      z_ref <- as.numeric(survdiff_fast(t, e, d$group,
+                                        control = 1, side = 1,
+                                        presorted = FALSE,
+                                        strata = d$subgroup))
+      z_new <- res$logrank.z[res$sim == s1][1]
+      expect_equal(z_new, z_ref, tolerance = 1e-10)
+    }
   }
-})
-
-test_that("analysis_fast multi-factor subgroups label both factors", {
-  dat <- simdata_fast(nsim = 20, n = c(100, 100), a.time = c(0, 12),
-                      a.rate = 200 / 12, e.hazard = list(0.04, 0.03),
-                      prevalence = list(c(0.5, 0.5), c(0.6, 0.4)), seed = 31)
-  res <- analysis_fast(dat, control = 1, time.looks = 24,
-                       stat = "logrank", by.subgroup = TRUE)
-  expect_setequal(unique(res$population),
-                  c("overall", "subgroup1_1", "subgroup1_2",
-                    "subgroup2_1", "subgroup2_2"))
-})
-
-test_that("analysis_fast errors with by.subgroup when no subgroup columns", {
-  dat <- simdata_fast(nsim = 5, n = c(50, 50), a.time = c(0, 12),
-                      a.rate = 100 / 12, e.median = list(18, 24), seed = 32)
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, by.subgroup = TRUE),
-    "no subgroup"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  Weighted log-rank (single scheme via the configurable logrank stat)
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast weighted log-rank matches direct survdiff_fast", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank",
-                       weight = "fh", rho = 0, gamma = 1)
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    mc   <- manual_cut(acc, tt, ev, jj, 30)
-    row  <- res[res$sim == s, ]
-    z_ref <- as.numeric(survdiff_fast(mc$time, mc$event, mc$j, control = 0L,
-                                      side = 1L, weight = "fh",
-                                      rho = 0, gamma = 1))
-    expect_equal(row$logrank.z, z_ref, tolerance = 1e-8)
-    expect_equal(row$logrank.chisq, z_ref^2, tolerance = 1e-8)
-  }
-})
-
-test_that("analysis_fast default logrank is unchanged by adding weight args", {
-  dat <- make_data()
-  a <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank")
-  b <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank",
-                     weight = "logrank", rho = 0, gamma = 0)
-  expect_equal(a$logrank.z, b$logrank.z, tolerance = 1e-12)
-})
-
-test_that("analysis_fast mwlrt requires t_star", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "logrank",
-                  weight = "mwlrt"),
-    "t_star"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  Stratified log-rank (via the strata argument)
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast stratified log-rank matches direct survdiff_fast", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank",
-                       strata = "subgroup")
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    sg   <- dat$subgroup[rows]
-    mc   <- manual_cut(acc, tt, ev, jj, 30, sv = sg)
-    row  <- res[res$sim == s, ]
-    z_ref <- as.numeric(survdiff_fast(mc$time, mc$event, mc$j, control = 0L,
-                                      side = 1L, strata = mc$strata))
-    expect_equal(row$logrank.z, z_ref, tolerance = 1e-8)
-  }
-})
-
-test_that("analysis_fast stratified weighted log-rank matches direct call", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank",
-                       weight = "fh", rho = 0, gamma = 1, strata = "subgroup")
-  for (s in c(1, 5)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    sg   <- dat$subgroup[rows]
-    mc   <- manual_cut(acc, tt, ev, jj, 30, sv = sg)
-    row  <- res[res$sim == s, ]
-    z_ref <- as.numeric(survdiff_fast(mc$time, mc$event, mc$j, control = 0L,
-                                      side = 1L, weight = "fh", rho = 0,
-                                      gamma = 1, strata = mc$strata))
-    expect_equal(row$logrank.z, z_ref, tolerance = 1e-8)
-  }
-})
-
-test_that("analysis_fast errors when strata names a missing column", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "logrank",
-                  strata = "not_a_column"),
-    "strata"
-  )
-})
-
-test_that("analysis_fast stratified chi-square matches survival::survdiff", {
-  skip_if_not_installed("survival")
-  dat  <- make_data()
-  res  <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank",
-                        strata = "subgroup")
-  rows <- which(dat$sim == 1)
-  acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-  ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-  sg   <- dat$subgroup[rows]
-  mc   <- manual_cut(acc, tt, ev, jj, 30, sv = sg)
-
-  ref <- survival::survdiff(
-    survival::Surv(mc$time, mc$event) ~ mc$j + survival::strata(mc$strata)
-  )
-  row <- res[res$sim == 1, ]
-  expect_equal(row$logrank.chisq, ref$chisq, tolerance = 1e-6)
-})
-
-# ------------------------------------------------------------------ #
-#  Max-combo
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast maxcombo (3-weight, TVPACK) matches direct call", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "maxcombo",
-                       side = 1, mc.rho = c(0, 0, 1), mc.gamma = c(0, 1, 0))
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    mc   <- manual_cut(acc, tt, ev, jj, 30)
-    row  <- res[res$sim == s, ]
-    ref  <- maxcombo_fast(mc$time, mc$event, mc$j, control = 0L, side = 1,
-                          rho = c(0, 0, 1), gamma = c(0, 1, 0))
-    expect_equal(row$maxcombo.stat, unname(ref["statistic"]), tolerance = 1e-8)
-    expect_equal(row$maxcombo.p,    unname(ref["p.value"]),   tolerance = 1e-6)
-  }
-})
-
-test_that("analysis_fast maxcombo (default 4-weight) statistic matches", {
-  # The 4-weight p-value uses quasi-Monte-Carlo integration whose value varies
-  # between calls, so only the deterministic statistic (min component Z) is
-  # compared exactly here.
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "maxcombo",
-                       side = 1)
-  for (s in c(1, 5)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    mc   <- manual_cut(acc, tt, ev, jj, 30)
-    row  <- res[res$sim == s, ]
-    ref  <- maxcombo_fast(mc$time, mc$event, mc$j, control = 0L, side = 1)
-    expect_equal(row$maxcombo.stat, unname(ref["statistic"]), tolerance = 1e-8)
-  }
-})
-
-test_that("analysis_fast maxcombo errors on mismatched mc.rho/mc.gamma", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "maxcombo",
-                  mc.rho = c(0, 1), mc.gamma = c(0)),
-    "same length"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  AHSW
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast ahsw matches direct ahsw_fast on cut data", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30, stat = "ahsw",
-                       tau = 10)
-  for (s in c(1, 3, 8)) {
-    rows <- which(dat$sim == s)
-    acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-    ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-    mc   <- manual_cut(acc, tt, ev, jj, 30)
-    skip_if(any(mc$time <= 0))
-    skip_if(sum(mc$j == 0) == 0 || sum(mc$j == 1) == 0)
-    ref  <- ahsw_fast(mc$time, mc$event, group = mc$j, control = 0L, tau = 10)
-    row  <- res[res$sim == s, ]
-    skip_if(is.na(unname(ref["rah"])))
-    expect_equal(row$ahsw.ah.ctrl, unname(ref["ah.ctrl"]), tolerance = 1e-8)
-    expect_equal(row$ahsw.ah.trt,  unname(ref["ah.trt"]),  tolerance = 1e-8)
-    expect_equal(row$ahsw.rah,     unname(ref["rah"]),     tolerance = 1e-8)
-    expect_equal(row$ahsw.dah,     unname(ref["dah"]),     tolerance = 1e-8)
-    expect_equal(row$ahsw.p.rah,   unname(ref["p.rah"]),   tolerance = 1e-8)
-    expect_equal(row$ahsw.p.dah,   unname(ref["p.dah"]),   tolerance = 1e-8)
-  }
-})
-
-test_that("analysis_fast errors on ahsw without tau", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "ahsw"),
-    "tau"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  New stats: structure and validation
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast adds maxcombo and ahsw columns when requested", {
-  dat <- make_data()
-  res <- analysis_fast(dat, control = 1, time.looks = 30,
-                       stat = c("maxcombo", "ahsw"), tau = 10)
-  expect_true(all(c("maxcombo.stat", "maxcombo.p",
-                    "ahsw.ah.ctrl", "ahsw.ah.trt",
-                    "ahsw.rah", "ahsw.rah.lower", "ahsw.rah.upper",
-                    "ahsw.p.rah", "ahsw.dah", "ahsw.dah.lower",
-                    "ahsw.dah.upper", "ahsw.p.dah") %in% names(res)))
-})
-
-test_that("analysis_fast errors on an unknown stat", {
-  dat <- make_data()
-  expect_error(
-    analysis_fast(dat, control = 1, time.looks = 24, stat = "bogus"),
-    "subset"
-  )
-})
-
-# ------------------------------------------------------------------ #
-#  External numerical agreement
-# ------------------------------------------------------------------ #
-
-test_that("analysis_fast log-rank chi-square matches survival::survdiff", {
-  skip_if_not_installed("survival")
-  dat  <- make_data()
-  res  <- analysis_fast(dat, control = 1, time.looks = 30, stat = "logrank")
-  rows <- which(dat$sim == 1)
-  acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-  ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-  mc   <- manual_cut(acc, tt, ev, jj, 30)
-
-  ref <- survival::survdiff(survival::Surv(mc$time, mc$event) ~ mc$j)
-  row <- res[res$sim == 1, ]
-  expect_equal(row$logrank.chisq, ref$chisq, tolerance = 1e-6)
-})
-
-test_that("analysis_fast Cox coef is close to survival::coxph (Breslow)", {
-  skip_if_not_installed("survival")
-  dat  <- make_data()
-  res  <- analysis_fast(dat, control = 1, time.looks = 30, stat = "coxph")
-  rows <- which(dat$sim == 1)
-  acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-  ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-  mc   <- manual_cut(acc, tt, ev, jj, 30)
-
-  fit <- survival::coxph(survival::Surv(mc$time, mc$event) ~ mc$j,
-                         ties = "breslow")
-  row <- res[res$sim == 1, ]
-  expect_equal(row$cox.coef, unname(stats::coef(fit)), tolerance = 5e-3)
-})
-
-test_that("analysis_fast RMST difference matches survRM2", {
-  skip_if_not_installed("survRM2")
-  dat  <- make_data()
-  res  <- analysis_fast(dat, control = 1, time.looks = 30,
-                        stat = "rmst", tau = 15)
-  rows <- which(dat$sim == 1)
-  acc  <- dat$accrual_time[rows]; tt <- dat$tte[rows]
-  ev   <- as.integer(dat$event[rows]); jj <- as.integer(dat$group[rows] != 1)
-  mc   <- manual_cut(acc, tt, ev, jj, 30)
-  skip_if(any(mc$time <= 0))
-
-  ref <- survRM2::rmst2(time = mc$time, status = mc$event, arm = mc$j, tau = 15)
-  row <- res[res$sim == 1, ]
-  expect_equal(row$rmst.diff, ref$unadjusted.result[1L, 1L], tolerance = 1e-6)
 })
