@@ -1,0 +1,12 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  FastSurvival: FastSurvival.html
+  group-sequential-design: group-sequential-design.html
+  speed-comparison: speed-comparison.html
+  validation: validation.html
+last_built: 2026-06-02T15:30Z
+urls:
+  reference: https://gosukehommaEX.github.io/FastSurvival/reference
+  article: https://gosukehommaEX.github.io/FastSurvival/articles

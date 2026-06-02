@@ -1,0 +1,44 @@
+# Core restricted mean survival time computation (C++ backend)
+
+Internal C++ function that computes the restricted mean survival time
+(RMST) and its Greenwood-type variance for a single group up to a
+horizon `tau`. A single left-to-right scan over the sorted data
+accumulates the Kaplan-Meier product and the area under the survival
+step function, storing one summary per distinct event time (the
+cumulative area to the left of that time and the Greenwood increment). A
+second short pass over the saved summaries forms the variance as a sum
+of squared right-side areas weighted by the Greenwood increments.
+Accepts the event vector as a numeric (double) vector to avoid an
+[`as.integer()`](https://rdrr.io/r/base/integer.html) copy in R. Not
+intended to be called directly by users; use
+[`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
+instead.
+
+## Usage
+
+``` r
+rmst_core(t_sorted, e_sorted, tau)
+```
+
+## Arguments
+
+- t_sorted:
+
+  A numeric vector of follow-up times sorted in ascending order.
+
+- e_sorted:
+
+  A numeric vector of event indicators (1 = event, 0 = censored),
+  aligned with `t_sorted`. Accepted as numeric to avoid an
+  integer-conversion copy on the R side.
+
+- tau:
+
+  A single numeric value specifying the restriction horizon.
+
+## Value
+
+A numeric vector of length 2: `c(rmst, var_rmst)`, where `rmst` is the
+restricted mean survival time and `var_rmst` is its variance, so that
+SE\[RMST\] = sqrt(var_rmst). Returns `c(tau, 0.0)` when no events occur
+up to `tau`.
