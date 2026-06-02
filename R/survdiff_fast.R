@@ -195,6 +195,9 @@
 #' procedures. \emph{Journal of the Royal Statistical Society. Series A
 #' (General)}, \emph{135}(2), 185-198.
 #'
+#' Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
+#' \emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
+#'
 #' @export
 survdiff_fast <- function(time, event, group, control, side,
                           presorted = FALSE, strata = NULL,

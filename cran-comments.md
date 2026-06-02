@@ -1,15 +1,11 @@
-## Resubmission
+## Update
 
-This is a resubmission. In response to the previous review by
-Benjamin Altmann, the following changes have been made:
-
-* DESCRIPTION: wrapped the software name `C++` in single quotes in the
-  Description field.
-* `coxph_fast.Rd`: replaced `\dontrun{}` with `\donttest{}` in the example
-  that uses `microbenchmark` with `times = 1000`, which cannot be executed
-  in under 5 seconds.
-* `survdiff_fast.Rd`: applied the same `\dontrun{}` to `\donttest{}`
-  replacement for consistency.
+This is an update from version 0.1.0 to 0.2.0. It adds several survival
+analysis functions (`rmst_fast()`, `milestone_fast()`, `maxcombo_fast()`,
+`ahsw_fast()`), extends `survdiff_fast()` with weighted and stratified
+log-rank tests, and adds a simulation and sequential-analysis layer
+(`simdata_fast()` subgroups, `analysis_fast()`, `simsummary_fast()`). See
+NEWS.md for the full list of changes.
 
 ## Test environments
 
@@ -26,4 +22,4 @@ Benjamin Altmann, the following changes have been made:
 
 ## Downstream dependencies
 
-There are no downstream dependencies (initial submission).
+There are no downstream dependencies.

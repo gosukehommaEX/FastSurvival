@@ -1,3 +1,33 @@
+# FastSurvival 0.2.0
+
+* New estimation and testing functions:
+  * `rmst_fast()`: restricted mean survival time for a single group or a
+    two-group comparison (difference and ratio contrasts), integrating the
+    Kaplan-Meier survival step function in a single C++ scan.
+  * `milestone_fast()`: two-group comparison of Kaplan-Meier survival at a
+    milestone timepoint, with Wald, log-log, and MOVER inference methods.
+  * `maxcombo_fast()`: max-combo test over a set of Fleming-Harrington
+    weighted log-rank statistics, with the joint p-value obtained from the
+    implied multivariate normal distribution.
+  * `ahsw_fast()`: average hazard with survival weight of Uno and Horiguchi,
+    reporting the ratio (RAH) and difference (DAH) contrasts.
+* `survdiff_fast()` gains weighted log-rank tests (Fleming-Harrington,
+  modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified and
+  stratified-weighted variants, all sharing the single-scan C++ backend.
+* New simulation layer:
+  * `simdata_fast()` extended with optional subgroups defined by a prevalence
+    specification, and rewritten so the entire generation pipeline runs in a
+    single C++ kernel that materializes the output data frame once.
+  * `analysis_fast()`: interim or sequential analysis of simulated data at one
+    or more looks, defined by target event counts or calendar times, computed
+    by a fused C++ kernel that reuses the analysis cores of the standalone
+    functions. Supports subgroup analyses.
+  * `simsummary_fast()`: operating-characteristic summary (rejection and
+    futility rates, stopping-look distribution, expected timing) from
+    `analysis_fast()` output and supplied group-sequential boundaries.
+* Each estimation and testing function has a corresponding `print()` method,
+  and the print methods share a unified display format.
+
 # FastSurvival 0.1.0
 
 * Initial release.

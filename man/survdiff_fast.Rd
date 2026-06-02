@@ -221,6 +221,9 @@ Reports}, \emph{50}(3), 163-170.
 Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant test
 procedures. \emph{Journal of the Royal Statistical Society. Series A
 (General)}, \emph{135}(2), 185-198.
+
+Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
+\emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
 }
 \seealso{
 \code{\link[survival]{survdiff}} for the standard implementation.

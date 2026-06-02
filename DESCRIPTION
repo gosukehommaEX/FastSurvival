@@ -1,7 +1,7 @@
 Package: FastSurvival
 Type: Package
-Title: Fast Kaplan-Meier, Log-Rank, and Hazard Ratio Estimation for Survival Analysis
-Version: 0.1.0
+Title: Fast Survival Analysis and Simulation for Clinical Trials
+Version: 0.2.0
 Authors@R: person(
     given  = "Gosuke",
     family = "Homma",
@@ -9,15 +9,22 @@ Authors@R: person(
     email  = "my.name.is.gosuke@gmail.com"
   )
 Description: Provides fast alternatives to standard survival analysis functions
-    in the 'survival' package. The package implements a single-time-point
-    Kaplan-Meier estimator (survfit_fast()), a log-rank test (survdiff_fast()),
-    a closed-form hazard ratio estimator based on the Pike-Halley Estimator
-    method (coxph_fast()), and a clinical trial data simulator (simdata_fast()).
-    All functions are designed for repeated evaluation inside large simulation
-    loops, such as adaptive sample-size re-estimation, probability-of-success
-    calculations, and regional consistency evaluation in multi-regional trials.
-    Core computations are implemented in 'C++' via 'Rcpp' for maximum performance.
-    Methodological background is described in Collett (2014, ISBN:9780429196294).
+    in the 'survival' package, together with tools for time-to-event trial
+    simulation and sequential analysis. The estimation and testing functions
+    cover a single-time-point Kaplan-Meier estimator (survfit_fast()), log-rank
+    tests including weighted and stratified variants (survdiff_fast()), a
+    closed-form hazard ratio estimator based on the Pike-Halley Estimator method
+    (coxph_fast()), restricted mean survival time (rmst_fast()), milestone
+    survival comparison (milestone_fast()), the max-combo test (maxcombo_fast()),
+    and the average hazard with survival weight (ahsw_fast()). The simulation
+    layer generates individual patient data (simdata_fast()), performs interim
+    or sequential analyses (analysis_fast()), and aggregates operating
+    characteristics (simsummary_fast()). All functions are designed for repeated
+    evaluation inside large simulation loops, such as adaptive sample-size
+    re-estimation, probability-of-success calculations, and regional consistency
+    evaluation in multi-regional trials. Core computations are implemented in
+    'C++' via 'Rcpp' for maximum performance. Methodological background is
+    described in Collett (2014, ISBN:9780429196294).
 License: MIT + file LICENSE
 URL: https://github.com/gosukehommaEX/FastSurvival
 BugReports: https://github.com/gosukehommaEX/FastSurvival/issues
@@ -36,11 +43,11 @@ LinkingTo:
 Suggests:
     survival,
     survRM2,
+    survAH,
+    simtrial,
+    gsDesign,
     microbenchmark,
     testthat (>= 3.0.0),
-    simtrial,
-    survAH,
-    gsDesign,
     knitr,
     rmarkdown
 Config/testthat/edition: 3
