@@ -6,6 +6,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/FastSurvival)](https://CRAN.R-project.org/package=FastSurvival)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
 [![CRAN downloads total](https://cranlogs.r-pkg.org/badges/grand-total/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
+[![pkgdown site](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://gosukehommaEX.github.io/FastSurvival/)
 <!-- badges: end -->
 
 FastSurvival provides fast alternatives to the standard survival analysis

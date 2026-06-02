@@ -135,14 +135,16 @@ maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)
-library(simtrial)
-df <- data.frame(
-  stratum   = "All",
-  treatment = ifelse(ovarian$rx == 2, "experimental", "control"),
-  tte       = ovarian$futime,
-  event     = ovarian$fustat
-)
-maxcombo(df, rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1), return_corr = TRUE)$p_value
+if (requireNamespace("simtrial", quietly = TRUE)) {
+  df <- data.frame(
+    stratum   = "All",
+    treatment = ifelse(ovarian$rx == 2, "experimental", "control"),
+    tte       = ovarian$futime,
+    event     = ovarian$fustat
+  )
+  simtrial::maxcombo(df, rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
+                     return_corr = TRUE)$p_value
+}
 }
 
 }

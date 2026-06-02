@@ -26,7 +26,8 @@ Description: Provides fast alternatives to standard survival analysis functions
     'C++' via 'Rcpp' for maximum performance. Methodological background is
     described in Collett (2014, ISBN:9780429196294).
 License: MIT + file LICENSE
-URL: https://github.com/gosukehommaEX/FastSurvival
+URL: https://github.com/gosukehommaEX/FastSurvival,
+    https://gosukehommaEX.github.io/FastSurvival/
 BugReports: https://github.com/gosukehommaEX/FastSurvival/issues
 Encoding: UTF-8
 Language: en-US

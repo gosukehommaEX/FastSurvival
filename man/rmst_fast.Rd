@@ -112,8 +112,9 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 
 \donttest{
 # Validation against survRM2
-library(survRM2)
-rmst2(time, event, group, tau = 10)$unadjusted.result
+if (requireNamespace("survRM2", quietly = TRUE)) {
+  survRM2::rmst2(time, event, group, tau = 10)$unadjusted.result
+}
 }
 
 }

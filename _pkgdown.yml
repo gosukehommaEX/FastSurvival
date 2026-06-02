@@ -1,0 +1,50 @@
+url: https://gosukehommaEX.github.io/FastSurvival/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+
+reference:
+- title: Estimation and testing
+  desc: >
+    Fast alternatives to the standard survival analysis functions, for use
+    inside simulation loops.
+  contents:
+  - survfit_fast
+  - survdiff_fast
+  - coxph_fast
+  - rmst_fast
+  - milestone_fast
+  - maxcombo_fast
+  - ahsw_fast
+
+- title: Simulation
+  desc: >
+    Generate trial data, perform sequential analyses, and summarize operating
+    characteristics.
+  contents:
+  - simdata_fast
+  - analysis_fast
+  - simsummary_fast
+
+- title: Print methods
+  desc: Display methods for the returned S3 objects.
+  contents:
+  - starts_with("print.")
+
+- title: Package
+  contents:
+  - FastSurvival-package
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - FastSurvival
+  - validation
+  - speed-comparison
+  - group-sequential-design

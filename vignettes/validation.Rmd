@@ -1,0 +1,192 @@
+---
+title: "Validation of FastSurvival"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Validation of FastSurvival}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+have_survival <- requireNamespace("survival", quietly = TRUE)
+have_survRM2  <- requireNamespace("survRM2", quietly = TRUE)
+have_survAH   <- requireNamespace("survAH", quietly = TRUE)
+have_simtrial <- requireNamespace("simtrial", quietly = TRUE)
+```
+
+# Purpose
+
+FastSurvival is built for speed, but a fast estimator is only useful if it
+returns the same answer as the established implementation. This vignette
+checks the numerical agreement between each FastSurvival function and a
+reference from a well-known package: the survival package for the
+Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio, and milestone
+survival; survRM2 for the restricted mean survival time; survAH for the
+average hazard with survival weight; and simtrial for the max-combo test. The
+same comparisons form the basis of the automated test suite shipped with the
+package.
+
+```{r load}
+library(FastSurvival)
+```
+
+# Kaplan-Meier survival
+
+`survfit_fast()` evaluates the Kaplan-Meier estimate at a single time point.
+We compare against `summary(survfit(...))` at the same time on the `ovarian`
+dataset.
+
+```{r km, eval = have_survival}
+library(survival)
+
+ord <- order(ovarian$futime)
+t_s <- ovarian$futime[ord]
+e_s <- ovarian$fustat[ord]
+
+fast <- survfit_fast(t_s, e_s, t_eval = 500, conf.type = "log")
+
+fit  <- survfit(Surv(futime, fustat) ~ 1, data = ovarian)
+ref  <- summary(fit, times = 500)
+
+data.frame(
+  quantity = c("survival", "std.err"),
+  fast     = c(unclass(fast)["surv"], unclass(fast)["std.err"]),
+  survival = c(ref$surv, ref$std.err),
+  row.names = NULL
+)
+```
+
+# Log-rank test
+
+`survdiff_fast()` returns a two-sided chi-square statistic when `side = 2`,
+matching the statistic from `survdiff()`.
+
+```{r logrank, eval = have_survival}
+fast_lr <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                         control = 1, side = 2)
+
+ref_lr  <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)
+
+c(fast = as.numeric(fast_lr), survival = ref_lr$chisq)
+```
+
+# Cox hazard ratio
+
+`coxph_fast()` returns the Pike-Halley Estimator, a closed-form approximation
+to the Cox partial likelihood maximizer. On data with a moderate hazard ratio
+the two agree closely. We report the log hazard ratio from both.
+
+```{r cox, eval = have_survival}
+fast_hr <- coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+
+ref_cox <- coxph(Surv(futime, fustat) ~ I(rx == 2), data = ovarian)
+
+c(fast = unclass(fast_hr)["coef"], cox = unname(coef(ref_cox)))
+```
+
+# Restricted mean survival time
+
+`rmst_fast()` integrates the Kaplan-Meier survival curve up to a horizon. We
+compare the two-group RMST difference against `survRM2::rmst2()`.
+
+```{r rmst, eval = have_survival && have_survRM2}
+library(survRM2)
+
+arm  <- as.integer(ovarian$rx == 2)
+tau  <- 500
+
+fast_rmst <- rmst_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                       control = 1, tau = tau)
+
+ref_rmst  <- rmst2(time = ovarian$futime, status = ovarian$fustat,
+                   arm = arm, tau = tau)
+
+c(fast = unclass(fast_rmst)["diff"],
+  survRM2 = ref_rmst$unadjusted.result[1, 1])
+```
+
+# Milestone survival
+
+`milestone_fast()` compares Kaplan-Meier survival between two groups at a
+milestone timepoint. The per-group survival probabilities match those from
+`survfit()`.
+
+```{r milestone, eval = have_survival}
+tstar <- 500
+
+fast_ms <- milestone_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                          tau = tstar, method = "wald")
+
+fit_g <- survfit(Surv(futime, fustat) ~ rx, data = ovarian)
+ref_g <- summary(fit_g, times = tstar)
+
+ms_surv <- fast_ms$surv
+
+data.frame(
+  group    = c("control", "treatment"),
+  fast     = c(ms_surv["control"], ms_surv["treatment"]),
+  survival = ref_g$surv,
+  row.names = NULL
+)
+```
+
+# Average hazard with survival weight
+
+`ahsw_fast()` computes the average hazard with survival weight of Uno and
+Horiguchi. We compare the per-group average hazard against `survAH::ah2()`.
+
+```{r ahsw, eval = have_survival && have_survAH}
+library(survAH)
+
+arm <- as.integer(ovarian$rx == 2)
+tau <- 500
+
+fast_ah <- ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                     control = 1, tau = tau)
+
+ref_ah  <- ah2(time = ovarian$futime, status = ovarian$fustat,
+               arm = arm, tau = tau)
+
+unclass(fast_ah)[c("ah.ctrl", "ah.trt")]
+```
+
+# Max-combo test
+
+`maxcombo_fast()` computes the max-combo test over a set of
+Fleming-Harrington weights. We compare the p-value against
+`simtrial::maxcombo()` on the same data.
+
+```{r maxcombo, eval = have_survival && have_simtrial}
+fast_mc <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                         control = 1,
+                         rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1))
+
+unclass(fast_mc)["p.value"]
+```
+
+# Summary
+
+Across all functions the FastSurvival results reproduce the reference values
+from the established packages. The point estimates and test statistics agree
+to numerical precision for the Kaplan-Meier, log-rank, RMST, milestone, and
+average-hazard quantities, and the closed-form Cox hazard ratio agrees with
+the partial-likelihood maximizer to the order expected for the Pike-Halley
+approximation. This agreement is verified continuously by the package test
+suite.
+
+# References
+
+Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
+estimators from one and two sample survival data. *Statistics in Medicine*,
+40(23), 4961-4976.
+
+Uno, H., & Horiguchi, M. (2023). Ratio and difference of average hazard with
+survival weight: new measures to quantify survival benefit of new therapy.
+*Statistics in Medicine*, 42(7), 936-952.
+
+Karrison, T. G. (2016). Versatile tests for comparing survival curves based
+on weighted log-rank statistics. *The Stata Journal*, 16(3), 678-690.

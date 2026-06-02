@@ -92,9 +92,11 @@ ahsw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 \donttest{
 # Validation against survAH
-library(survAH)
-arm <- as.numeric(ovarian$rx == 2)
-ah2(time = ovarian$futime, status = ovarian$fustat, arm = arm, tau = 600)
+if (requireNamespace("survAH", quietly = TRUE)) {
+  arm <- as.numeric(ovarian$rx == 2)
+  survAH::ah2(time = ovarian$futime, status = ovarian$fustat,
+              arm = arm, tau = 600)
+}
 }
 
 }

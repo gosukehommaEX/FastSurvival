@@ -66,6 +66,7 @@ Collett, D. (2014). \emph{Modelling Survival Data in Medical Research}
 Useful links:
 \itemize{
   \item \url{https://github.com/gosukehommaEX/FastSurvival}
+  \item \url{https://gosukehommaEX.github.io/FastSurvival/}
   \item Report bugs at \url{https://github.com/gosukehommaEX/FastSurvival/issues}
 }
 
