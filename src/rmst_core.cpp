@@ -4,6 +4,18 @@
 #include <vector>
 using namespace Rcpp;
 
+// Per-event-time summary for the RMST two-pass computation. Defined at file
+// scope so the pointer-based implementation can take a reusable buffer of it
+// from the caller and avoid reallocating per cell.
+struct RmstEvSummary {
+  double cum_area;
+  double g;
+};
+
+// Forward declaration of the pointer-based implementation (defined below).
+void rmst_core_impl(const double*, const double*, int, double,
+                    std::vector<RmstEvSummary>&, double*);
+
 //' Core restricted mean survival time computation (C++ backend)
 //'
 //' @description
@@ -38,18 +50,28 @@ NumericVector rmst_core(
     double tau
 ) {
   const int n = t_sorted.size();
-  if (n == 0) return NumericVector::create(R_NaReal, R_NaReal);
+  std::vector<RmstEvSummary> ev;
+  double out[2];
+  rmst_core_impl(t_sorted.begin(), e_sorted.begin(), n, tau, ev, out);
+  return NumericVector::create(out[0], out[1]);
+}
 
-  // Per-event-time summary stored as a struct for cache locality.
-  // cum_area: area under S from 0 to this event time (entering survival
-  // level). g: Greenwood increment d / (n_risk * (n_risk - d)).
-  // Reserve n: an upper bound on distinct event times. No prepass needed.
-  struct EvSummary {
-    double cum_area;
-    double g;
-  };
-  std::vector<EvSummary> ev;
-  ev.reserve(n);
+// Pointer-based implementation with external linkage. Writes rmst, var_rmst
+// into out[0..1]. The per-event-time summaries are stored in the
+// caller-supplied buffer ev, which is cleared on entry and reused across cells.
+// Algorithm identical to the exported wrapper above.
+void rmst_core_impl(
+    const double* t_sorted,
+    const double* e_sorted,
+    int n,
+    double tau,
+    std::vector<RmstEvSummary>& ev,
+    double* out
+) {
+  if (n == 0) { out[0] = R_NaReal; out[1] = R_NaReal; return; }
+
+  ev.clear();
+  if ((int) ev.capacity() < n) ev.reserve(n);
 
   double surv   = 1.0;        // KM survival over the interval entering this time
   double rmst   = 0.0;        // area under S accumulated so far
@@ -80,11 +102,11 @@ NumericVector rmst_core(
     if (d > 0) {
       const double dd = (double)d;
       if (n_risk > dd) {
-        ev.push_back(EvSummary{rmst, dd / (n_risk * (n_risk - dd))});
+        ev.push_back(RmstEvSummary{rmst, dd / (n_risk * (n_risk - dd))});
         surv *= 1.0 - dd / n_risk;
       } else {
         // n_risk == d: survival drops to zero; Greenwood increment is zero
-        ev.push_back(EvSummary{rmst, 0.0});
+        ev.push_back(RmstEvSummary{rmst, 0.0});
         surv = 0.0;
       }
     }
@@ -106,5 +128,5 @@ NumericVector rmst_core(
     var_rmst += a_right * a_right * ev[k].g;
   }
 
-  return NumericVector::create(rmst, var_rmst);
+  out[0] = rmst; out[1] = var_rmst;
 }

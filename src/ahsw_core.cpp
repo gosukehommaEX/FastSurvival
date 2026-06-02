@@ -1,7 +1,14 @@
 // [[Rcpp::plugins(cpp11)]]
 #include <Rcpp.h>
 #include <cmath>
+#include <vector>
 using namespace Rcpp;
+
+// Forward declaration of the pointer-based implementation (defined below).
+// dH, Rrun, Gfrac are reusable scratch buffers supplied by the caller.
+void ahsw_core_impl(const double*, const int*, int, double,
+                    std::vector<double>&, std::vector<double>&,
+                    std::vector<double>&, double*);
 
 //' Core average hazard with survival weight computation for one group (C++ backend)
 //'
@@ -53,14 +60,30 @@ NumericVector ahsw_core(
     double tau
 ) {
   const int n = time_sorted.size();
+  std::vector<double> dH, Rrun, Gfrac;
+  double out[6];
+  ahsw_core_impl(time_sorted.begin(), event_sorted.begin(), n, tau,
+                 dH, Rrun, Gfrac, out);
+  return NumericVector::create(out[0], out[1], out[2], out[3], out[4], out[5]);
+}
 
-  // First pass: running Kaplan-Meier survival, restricted mean survival time,
-  // and the variance kernels need F and R, which are only known at tau. So we
-  // store per-event-time quantities, then form the variance sums in a second
-  // pass once F and R are known.
-  std::vector<double> dH;      // Nelson-Aalen increment at each event time <= tau
-  std::vector<double> Rrun;    // running RMST up to the left of each event time
-  std::vector<double> Gfrac;   // at-risk fraction at each event time
+// Pointer-based implementation with external linkage. Writes
+// F_tau, RMST_tau, AH, v_Q, v_U, surv_tau into out[0..5]. The three per-event
+// scratch vectors are cleared on entry and reused across cells. Algorithm
+// identical to the exported wrapper above.
+void ahsw_core_impl(
+    const double* time_sorted,
+    const int* event_sorted,
+    int n,
+    double tau,
+    std::vector<double>& dH,      // Nelson-Aalen increment at each event <= tau
+    std::vector<double>& Rrun,    // running RMST to the left of each event time
+    std::vector<double>& Gfrac,   // at-risk fraction at each event time
+    double* out
+) {
+  dH.clear();
+  Rrun.clear();
+  Gfrac.clear();
 
   double surv      = 1.0;      // right-continuous KM survival
   double rmst      = 0.0;      // running RMST = integral_0^t S
@@ -127,5 +150,6 @@ NumericVector ahsw_core(
     v_U = NA_REAL;
   }
 
-  return NumericVector::create(F_tau, RMST_tau, AH, v_Q, v_U, surv_tau);
+  out[0] = F_tau; out[1] = RMST_tau; out[2] = AH;
+  out[3] = v_Q;   out[4] = v_U;      out[5] = surv_tau;
 }

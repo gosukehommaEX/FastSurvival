@@ -2,6 +2,10 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+// Forward declaration of the pointer-based implementation (defined below).
+void stratified_logrank_core_impl(const double*, const int*, const int*,
+                                  const int*, int, double*);
+
 //' Core stratified log-rank computation on stratum-blocked sorted vectors
 //'
 //' @description
@@ -38,7 +42,22 @@ NumericVector stratified_logrank_core(
     const IntegerVector& strata_sorted
 ) {
   const int n = time_sorted.size();
+  double out[3];
+  stratified_logrank_core_impl(time_sorted.begin(), event_sorted.begin(),
+                               j_sorted.begin(), strata_sorted.begin(), n, out);
+  return NumericVector::create(out[0], out[1], out[2]);
+}
 
+// Pointer-based implementation with external linkage. Writes O1, E1, V1 into
+// out[0..2]. Algorithm identical to the exported wrapper above.
+void stratified_logrank_core_impl(
+    const double* time_sorted,
+    const int* event_sorted,
+    const int* j_sorted,
+    const int* strata_sorted,
+    int n,
+    double* out
+) {
   double O1 = 0.0, E1 = 0.0, V1 = 0.0;
 
   // Walk the data stratum block by stratum block. Rows of the same stratum
@@ -99,5 +118,5 @@ NumericVector stratified_logrank_core(
     b = e;
   }
 
-  return NumericVector::create(O1, E1, V1);
+  out[0] = O1; out[1] = E1; out[2] = V1;
 }

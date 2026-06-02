@@ -2,41 +2,92 @@
 #include <Rcpp.h>
 #include <vector>
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <cmath>
 using namespace Rcpp;
 
-// Forward declarations of the existing statistic cores. These are ordinary
-// C++ functions with external linkage defined in the other source files of
-// this package; RcppExports.cpp already relies on the same cross-translation-
-// unit linkage, so resolving them here is guaranteed. Signatures must match
-// the definitions exactly (const-reference arguments).
-NumericVector logrank_core(const NumericVector&, const IntegerVector&,
-                           const IntegerVector&);
-NumericVector weighted_logrank_core(const NumericVector&, const IntegerVector&,
-                                    const IntegerVector&, int, double, double,
-                                    double);
-NumericVector stratified_logrank_core(const NumericVector&, const IntegerVector&,
-                                       const IntegerVector&, const IntegerVector&);
-NumericVector stratified_weighted_logrank_core(const NumericVector&,
-                                               const IntegerVector&,
-                                               const IntegerVector&,
-                                               const IntegerVector&, int, double,
-                                               double, double);
-NumericVector pihe_core(const NumericVector&, const IntegerVector&,
-                        const IntegerVector&);
-NumericVector rmst_core(const NumericVector&, const NumericVector&, double);
-NumericVector km_core(const NumericVector&, const NumericVector&, double);
-List combo_logrank_core(const NumericVector&, const IntegerVector&,
-                        const IntegerVector&, const NumericVector&,
-                        const NumericVector&);
-NumericVector ahsw_core(const NumericVector&, const IntegerVector&, double);
+// Forward declarations of the pointer-based statistic cores. Each is an
+// ordinary C++ function with external linkage defined in its own source file
+// (the exported Rcpp wrappers in those files now delegate to these). Resolving
+// them here uses the same cross-translation-unit linkage RcppExports.cpp
+// relies on. Signatures must match the definitions exactly.
+void logrank_core_impl(const double*, const int*, const int*, int, double*);
+void weighted_logrank_core_impl(const double*, const int*, const int*, int,
+                                int, double, double, double, double*);
+void stratified_logrank_core_impl(const double*, const int*, const int*,
+                                  const int*, int, double*);
+void stratified_weighted_logrank_core_impl(const double*, const int*,
+                                           const int*, const int*, int,
+                                           int, double, double, double,
+                                           double*);
+struct PiheEvSummary { double n1k; double n0k; double OTk; double Ok; };
+void pihe_core_impl(const double*, const int*, const int*, int,
+                    std::vector<PiheEvSummary>&, double*);
+struct RmstEvSummary { double cum_area; double g; };
+void rmst_core_impl(const double*, const double*, int, double,
+                    std::vector<RmstEvSummary>&, double*);
+void km_core_impl(const double*, const double*, int, double, double*);
+double combo_logrank_core_impl(const double*, const int*, const int*, int,
+                               const double*, const double*, int,
+                               double*, double*, std::vector<double>&);
+void ahsw_core_impl(const double*, const int*, int, double,
+                    std::vector<double>&, std::vector<double>&,
+                    std::vector<double>&, double*);
+
+// Stable LSD radix sort of indices [0, m) by a non-negative double key. The
+// observed time at an administrative cut is always non-negative, so the IEEE
+// 754 bit pattern of a non-negative double is monotone in the value and can be
+// sorted as a 64-bit unsigned integer. The sort is stable, so tied times keep
+// their input order, which matches the std::sort comparator the kernel used
+// before and the atomic tied-block handling in every statistic core. idx is
+// filled with the sort order; key, scratch, and cnt are reusable buffers.
+static void radix_sort_idx(const std::vector<double>& key, int m,
+                           std::vector<int>& idx, std::vector<int>& scratch,
+                           std::vector<uint64_t>& bits) {
+  if ((int) idx.size() < m) idx.resize(m);
+  if ((int) scratch.size() < m) scratch.resize(m);
+  if ((int) bits.size() < m) bits.resize(m);
+
+  for (int k = 0; k < m; ++k) {
+    double v = key[k];
+    uint64_t u;
+    std::memcpy(&u, &v, sizeof(u));   // non-negative double: bits are monotone
+    bits[k] = u;
+    idx[k] = k;
+  }
+
+  int* in  = idx.data();
+  int* out = scratch.data();
+  int cnt[256];
+
+  for (int shift = 0; shift < 64; shift += 8) {
+    std::memset(cnt, 0, sizeof(cnt));
+    for (int k = 0; k < m; ++k) {
+      ++cnt[(bits[in[k]] >> shift) & 0xFF];
+    }
+    int sum = 0;
+    for (int b = 0; b < 256; ++b) { int c = cnt[b]; cnt[b] = sum; sum += c; }
+    for (int k = 0; k < m; ++k) {
+      const int v = in[k];
+      out[cnt[(bits[v] >> shift) & 0xFF]++] = v;
+    }
+    int* t = in; in = out; out = t;
+  }
+
+  // After 8 passes (even count) the sorted order is back in idx.data(); guard
+  // anyway in case the buffers were swapped an odd number of times.
+  if (in != idx.data()) {
+    std::memcpy(idx.data(), in, sizeof(int) * (size_t) m);
+  }
+}
 
 // Fused analysis loop. Walks simulations, looks, and populations in C++,
-// applies the administrative cut inline, calls the requested statistic cores
-// on each cell, and returns the raw core outputs. All transformation of those
-// raw outputs into z-scores, confidence intervals, and p-values is done in the
-// R wrapper, where it mirrors the existing wrapper formulas. The max-combo
-// multivariate-normal p-value is also left to the R wrapper.
+// applies the administrative cut inline, and calls the pointer-based statistic
+// cores directly on reusable buffers, so no Rcpp object is allocated per
+// (sim, look, population) cell. Returns the raw core outputs; all conversion
+// into z-scores, confidence intervals, and p-values (and the max-combo
+// multivariate-normal p-value) is done in the R wrapper.
 //
 // The data must be sorted by simulation, with sim_ptr giving 0-based row
 // offsets so that simulation si occupies rows [sim_ptr[si], sim_ptr[si + 1]).
@@ -85,12 +136,49 @@ List analysis_loop_core(
     mc_Vout = NumericMatrix(ncells, nw * nw); std::fill(mc_Vout.begin(), mc_Vout.end(), NA_REAL);
   }
 
-  // Reusable per-simulation and per-cut buffers.
-  std::vector<double> cal_ev;
-  std::vector<int>    orig_cut;
-  std::vector<double> t_cut;
-  std::vector<int>    e_cut;
-  std::vector<int>    j_cut;
+  // Largest simulation block, used to size the reusable buffers once.
+  int max_block = 0;
+  for (int si = 0; si < nsim; ++si) {
+    const int sz = sim_ptr[si + 1] - sim_ptr[si];
+    if (sz > max_block) max_block = sz;
+  }
+
+  // ---- Reusable buffers, allocated once outside the loops ----------------
+  std::vector<double> cal_ev;            cal_ev.reserve(max_block);
+  std::vector<double> cal_ev_tmp;        cal_ev_tmp.reserve(max_block);
+  std::vector<int>    orig_cut(max_block);
+  std::vector<double> t_cut(max_block);
+  std::vector<int>    e_cut(max_block);
+  std::vector<int>    j_cut(max_block);
+  std::vector<int>    ord(max_block);
+  std::vector<int>    radix_scratch(max_block);
+  std::vector<uint64_t> radix_bits(max_block);
+
+  // Population subset (overall reuses ord directly; subgroup fills sel).
+  std::vector<int> sel(max_block);
+
+  // Pooled population vectors (time-sorted), pointer-fed to the cores.
+  std::vector<double> t_sel(max_block);
+  std::vector<int>    ei_sel(max_block);
+  std::vector<int>    j_sel(max_block);
+
+  // Group-split buffers reused by rmst / km / ahsw.
+  std::vector<double> t0d(max_block), t1d(max_block);
+  std::vector<int>    e0i(max_block), e1i(max_block);
+  std::vector<double> e0d(max_block), e1d(max_block);
+
+  // Stratified reorder buffers.
+  std::vector<int>    st_sel(max_block), so(max_block);
+  std::vector<double> ts(max_block);
+  std::vector<int>    es(max_block), js(max_block), ss(max_block);
+
+  // Core scratch reused across cells.
+  std::vector<PiheEvSummary> pihe_ev;
+  std::vector<RmstEvSummary> rmst_ev;
+  std::vector<double> ahsw_dH, ahsw_Rrun, ahsw_Gfrac;
+  std::vector<double> mc_w(nw > 0 ? nw : 1);
+  std::vector<double> mc_ubuf((size_t)(nw > 0 ? nw : 1));
+  std::vector<double> mc_vbuf((size_t)(nw > 0 ? nw : 1) * (nw > 0 ? nw : 1));
 
   int pos = 0;
   for (int si = 0; si < nsim; ++si) {
@@ -115,9 +203,11 @@ List analysis_loop_core(
           cut_cutoff = R_PosInf;
           reached    = false;
         } else {
-          std::vector<double> tmp(cal_ev);
-          std::nth_element(tmp.begin(), tmp.begin() + (target - 1), tmp.end());
-          cut_cutoff = tmp[target - 1];
+          cal_ev_tmp.assign(cal_ev.begin(), cal_ev.end());
+          std::nth_element(cal_ev_tmp.begin(),
+                           cal_ev_tmp.begin() + (target - 1),
+                           cal_ev_tmp.end());
+          cut_cutoff = cal_ev_tmp[target - 1];
           reached    = true;
         }
       } else {
@@ -126,55 +216,51 @@ List analysis_loop_core(
       }
 
       // Administrative cut for this (sim, look): enrolled subjects, censored
-      // at the cutoff, sorted by observed time. orig_cut holds the within-sim
-      // 0-based index so subgroup and stratum labels can be realigned.
-      orig_cut.clear(); t_cut.clear(); e_cut.clear(); j_cut.clear();
+      // at the cutoff. orig_cut holds the within-sim 0-based index so subgroup
+      // and stratum labels can be realigned.
+      int m = 0;
       for (int g = g0; g < g1; ++g) {
         const double a = accrual[g];
         if (a > cut_cutoff) continue;
         const double full   = tte[g];
         const bool   before = (a + full <= cut_cutoff);
-        const double t      = before ? full : (cut_cutoff - a);
-        const int    e      = before ? event[g] : 0;
-        orig_cut.push_back(g - g0);
-        t_cut.push_back(t);
-        e_cut.push_back(e);
-        j_cut.push_back(j[g]);
+        orig_cut[m] = g - g0;
+        t_cut[m]    = before ? full : (cut_cutoff - a);
+        e_cut[m]    = before ? event[g] : 0;
+        j_cut[m]    = j[g];
+        ++m;
       }
-      const int m = (int) t_cut.size();
 
-      // Sort the cut by observed time.
-      std::vector<int> ord(m);
-      for (int k = 0; k < m; ++k) ord[k] = k;
-      std::sort(ord.begin(), ord.end(),
-                [&t_cut](int p, int q) { return t_cut[p] < t_cut[q]; });
+      // Stable radix sort of the cut by observed time (non-negative keys).
+      radix_sort_idx(t_cut, m, ord, radix_scratch, radix_bits);
 
       const double cutoff_report = reached ? cut_cutoff : NA_REAL;
 
       for (int pi = 0; pi < n_pop; ++pi) {
-        // Select the rows of this population, preserving the time order.
         const int col = pop_col[pi];
         const int lev = pop_level[pi];
 
-        std::vector<int> sel;
-        sel.reserve(m);
-        for (int k = 0; k < m; ++k) {
-          const int kk = ord[k];
-          if (col < 0) {
-            sel.push_back(kk);
-          } else if (sub_mat(g0 + orig_cut[kk], col) == lev) {
-            sel.push_back(kk);
+        // Population selection in time order. Overall (col < 0) reuses ord;
+        // a subgroup filters ord into sel.
+        const int* order_ptr;
+        int sz;
+        if (col < 0) {
+          order_ptr = ord.data();
+          sz = m;
+        } else {
+          int s = 0;
+          for (int k = 0; k < m; ++k) {
+            const int kk = ord[k];
+            if (sub_mat(g0 + orig_cut[kk], col) == lev) sel[s++] = kk;
           }
+          order_ptr = sel.data();
+          sz = s;
         }
-        const int sz = (int) sel.size();
 
-        // Pooled population vectors (time-sorted).
-        NumericVector t_sel(sz);
-        IntegerVector ei_sel(sz);
-        IntegerVector j_sel(sz);
+        // Materialize the pooled time-sorted population vectors.
         int n0 = 0, n1 = 0, n_ev = 0;
         for (int k = 0; k < sz; ++k) {
-          const int kk = sel[k];
+          const int kk = order_ptr[k];
           t_sel[k]  = t_cut[kk];
           ei_sel[k] = e_cut[kk];
           j_sel[k]  = j_cut[kk];
@@ -193,40 +279,47 @@ List analysis_loop_core(
           double num = NA_REAL, var = NA_REAL;
           if (!use_strata) {
             if (weight_scheme < 0) {
-              NumericVector r = logrank_core(t_sel, ei_sel, j_sel);
+              double r[3];
+              logrank_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz, r);
               num = r[0] - r[1];
               var = r[2];
             } else {
-              NumericVector r = weighted_logrank_core(t_sel, ei_sel, j_sel,
-                                                      weight_scheme, rho, gamma,
-                                                      t_star);
+              double r[3];
+              weighted_logrank_core_impl(t_sel.data(), ei_sel.data(),
+                                         j_sel.data(), sz, weight_scheme,
+                                         rho, gamma, t_star, r);
               num = r[1];
               var = r[2];
             }
           } else {
-            // Reorder the population subset by (stratum, time).
-            IntegerVector st_sel(sz);
+            // Reorder the population subset by (stratum, time). order_ptr is
+            // already time-sorted; build per-row stratum labels, then sort the
+            // index buffer so[] by (stratum, time) with a stable comparator so
+            // ties keep time order. Reuse so/ts/es/js/ss as scratch.
             for (int k = 0; k < sz; ++k) {
-              st_sel[k] = strata[g0 + orig_cut[sel[k]]];
+              st_sel[k] = strata[g0 + orig_cut[order_ptr[k]]];
+              so[k] = k;
             }
-            std::vector<int> so(sz);
-            for (int k = 0; k < sz; ++k) so[k] = k;
-            std::sort(so.begin(), so.end(), [&](int p, int q) {
+            std::stable_sort(so.begin(), so.begin() + sz, [&](int p, int q) {
               if (st_sel[p] != st_sel[q]) return st_sel[p] < st_sel[q];
               return t_sel[p] < t_sel[q];
             });
-            NumericVector ts(sz); IntegerVector es(sz), js(sz), ss(sz);
             for (int k = 0; k < sz; ++k) {
-              ts[k] = t_sel[so[k]]; es[k] = ei_sel[so[k]];
-              js[k] = j_sel[so[k]]; ss[k] = st_sel[so[k]];
+              const int kk = so[k];
+              ts[k] = t_sel[kk]; es[k] = ei_sel[kk];
+              js[k] = j_sel[kk]; ss[k] = st_sel[kk];
             }
             if (weight_scheme < 0) {
-              NumericVector r = stratified_logrank_core(ts, es, js, ss);
+              double r[3];
+              stratified_logrank_core_impl(ts.data(), es.data(), js.data(),
+                                           ss.data(), sz, r);
               num = r[0] - r[1];
               var = r[2];
             } else {
-              NumericVector r = stratified_weighted_logrank_core(
-                ts, es, js, ss, weight_scheme, rho, gamma, t_star);
+              double r[3];
+              stratified_weighted_logrank_core_impl(
+                ts.data(), es.data(), js.data(), ss.data(), sz,
+                weight_scheme, rho, gamma, t_star, r);
               num = r[1];
               var = r[2];
             }
@@ -237,7 +330,9 @@ List analysis_loop_core(
 
         // ---- Cox (PiHE) ---------------------------------------------------
         if (do_coxph && n_ev > 0 && both) {
-          NumericVector r = pihe_core(t_sel, ei_sel, j_sel);
+          double r[4];
+          pihe_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
+                         pihe_ev, r);
           cox_mat(pos, 0) = r[0]; cox_mat(pos, 1) = r[1];
           cox_mat(pos, 2) = r[2]; cox_mat(pos, 3) = r[3];
         }
@@ -245,11 +340,7 @@ List analysis_loop_core(
         // Group splits reused by rmst / km / ahsw.
         const bool need_split = (do_rmst && both) || do_km ||
                                 (do_ahsw && n_ev > 0 && both);
-        NumericVector t0d, t1d, e0d, e1d;
-        IntegerVector e0i, e1i;
         if (need_split) {
-          t0d = NumericVector(n0); e0d = NumericVector(n0); e0i = IntegerVector(n0);
-          t1d = NumericVector(n1); e1d = NumericVector(n1); e1i = IntegerVector(n1);
           int a0 = 0, a1 = 0;
           for (int k = 0; k < sz; ++k) {
             if (j_sel[k] == 0) {
@@ -262,33 +353,39 @@ List analysis_loop_core(
 
         // ---- RMST ---------------------------------------------------------
         if (do_rmst && both) {
-          NumericVector r0 = rmst_core(t0d, e0d, tau);
-          NumericVector r1 = rmst_core(t1d, e1d, tau);
+          double r0[2], r1[2];
+          rmst_core_impl(t0d.data(), e0d.data(), n0, tau, rmst_ev, r0);
+          rmst_core_impl(t1d.data(), e1d.data(), n1, tau, rmst_ev, r1);
           rmst_mat(pos, 0) = r0[0]; rmst_mat(pos, 1) = r0[1];
           rmst_mat(pos, 2) = r1[0]; rmst_mat(pos, 3) = r1[1];
         }
 
         // ---- Kaplan-Meier at t_eval (per available group) -----------------
         if (do_km) {
-          if (n0 > 0) { NumericVector k0 = km_core(t0d, e0d, t_eval); km_mat(pos, 0) = k0[0]; }
-          if (n1 > 0) { NumericVector k1 = km_core(t1d, e1d, t_eval); km_mat(pos, 1) = k1[0]; }
+          if (n0 > 0) { double k0[2]; km_core_impl(t0d.data(), e0d.data(), n0, t_eval, k0); km_mat(pos, 0) = k0[0]; }
+          if (n1 > 0) { double k1[2]; km_core_impl(t1d.data(), e1d.data(), n1, t_eval, k1); km_mat(pos, 1) = k1[0]; }
         }
 
         // ---- max-combo (component numerators + covariance) ----------------
         if (do_maxcombo && n_ev > 0 && both) {
-          List r = combo_logrank_core(t_sel, ei_sel, j_sel, mc_rho, mc_gamma);
-          NumericVector U = r["U"];
-          NumericMatrix V = r["V"];
-          for (int a = 0; a < nw; ++a) mc_Uout(pos, a) = U[a];
+          std::fill(mc_ubuf.begin(), mc_ubuf.begin() + nw, 0.0);
+          std::fill(mc_vbuf.begin(), mc_vbuf.begin() + (size_t) nw * nw, 0.0);
+          combo_logrank_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
+                                  mc_rho.begin(), mc_gamma.begin(), nw,
+                                  mc_ubuf.data(), mc_vbuf.data(), mc_w);
+          for (int a = 0; a < nw; ++a) mc_Uout(pos, a) = mc_ubuf[a];
           for (int a = 0; a < nw; ++a)
             for (int b = 0; b < nw; ++b)
-              mc_Vout(pos, a * nw + b) = V(a, b);
+              mc_Vout(pos, a * nw + b) = mc_vbuf[(size_t) a * nw + b];
         }
 
         // ---- AHSW ---------------------------------------------------------
         if (do_ahsw && n_ev > 0 && both) {
-          NumericVector a0c = ahsw_core(t0d, e0i, tau);
-          NumericVector a1c = ahsw_core(t1d, e1i, tau);
+          double a0c[6], a1c[6];
+          ahsw_core_impl(t0d.data(), e0i.data(), n0, tau,
+                         ahsw_dH, ahsw_Rrun, ahsw_Gfrac, a0c);
+          ahsw_core_impl(t1d.data(), e1i.data(), n1, tau,
+                         ahsw_dH, ahsw_Rrun, ahsw_Gfrac, a1c);
           ahsw_mat(pos, 0) = a0c[2]; ahsw_mat(pos, 1) = a0c[3];
           ahsw_mat(pos, 2) = a0c[4]; ahsw_mat(pos, 3) = (double) n0;
           ahsw_mat(pos, 4) = a1c[2]; ahsw_mat(pos, 5) = a1c[3];

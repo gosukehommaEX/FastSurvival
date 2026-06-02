@@ -3,6 +3,9 @@
 #include <cmath>
 using namespace Rcpp;
 
+// Forward declaration of the pointer-based implementation (defined below).
+void km_core_impl(const double*, const double*, int, double, double*);
+
 //' Core Kaplan-Meier computation (C++ backend)
 //'
 //' @description
@@ -36,7 +39,21 @@ NumericVector km_core(
     double t_eval
 ) {
   const int n = t_sorted.size();
-  if (n == 0) return NumericVector::create(R_NaReal, 0.0);
+  double out[2];
+  km_core_impl(t_sorted.begin(), e_sorted.begin(), n, t_eval, out);
+  return NumericVector::create(out[0], out[1]);
+}
+
+// Pointer-based implementation with external linkage. Writes surv, gw_sum into
+// out[0..1]. Algorithm identical to the exported wrapper above.
+void km_core_impl(
+    const double* t_sorted,
+    const double* e_sorted,
+    int n,
+    double t_eval,
+    double* out
+) {
+  if (n == 0) { out[0] = R_NaReal; out[1] = 0.0; return; }
 
   // Binary search: last index m such that t_sorted[m-1] <= t_eval
   int lo = 0, hi = n;
@@ -46,7 +63,7 @@ NumericVector km_core(
   }
   const int m = lo;
 
-  if (m == 0) return NumericVector::create(1.0, 0.0);
+  if (m == 0) { out[0] = 1.0; out[1] = 0.0; return; }
 
   // Single scan: accumulate log(KM) and Greenwood sum at event positions only.
   // n_risk decreases from n down to (n - m + 1) along the scan; we maintain
@@ -66,7 +83,7 @@ NumericVector km_core(
     n_risk -= 1.0;
   }
 
-  if (!any_event) return NumericVector::create(1.0, 0.0);
+  if (!any_event) { out[0] = 1.0; out[1] = 0.0; return; }
 
-  return NumericVector::create(std::exp(log_surv), gw_sum);
+  out[0] = std::exp(log_surv); out[1] = gw_sum;
 }

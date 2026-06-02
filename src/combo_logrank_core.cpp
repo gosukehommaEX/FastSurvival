@@ -1,7 +1,15 @@
 // [[Rcpp::plugins(cpp11)]]
 #include <Rcpp.h>
 #include <cmath>
+#include <vector>
 using namespace Rcpp;
+
+// Forward declaration of the pointer-based implementation (defined below).
+// u_out has length nw, v_out has length nw*nw (row-major), w is a reusable
+// scratch buffer of length nw. Returns O1.
+double combo_logrank_core_impl(const double*, const int*, const int*, int,
+                               const double*, const double*, int,
+                               double*, double*, std::vector<double>&);
 
 //' Core max-combo weighted log-rank computation on pooled sorted vectors (C++ backend)
 //'
@@ -58,18 +66,49 @@ List combo_logrank_core(
   const int n = time_sorted.size();
   const int nw = rho_vec.size();
 
+  NumericVector u_acc(nw);
+  NumericMatrix v_acc(nw, nw);
+  std::vector<double> w(nw);
+
+  // v_acc is column-major (R matrix); the impl writes row-major into a flat
+  // buffer, but since V is symmetric the layouts coincide, so we can pass
+  // v_acc.begin() directly.
+  const double O1 = combo_logrank_core_impl(
+    time_sorted.begin(), event_sorted.begin(), j_sorted.begin(), n,
+    rho_vec.begin(), gamma_vec.begin(), nw,
+    u_acc.begin(), v_acc.begin(), w);
+
+  return List::create(
+    _["O1"] = O1,
+    _["U"]  = u_acc,
+    _["V"]  = v_acc
+  );
+}
+
+// Pointer-based implementation with external linkage. Writes the nw weighted
+// numerators into u_out[0..nw-1] and the nw*nw covariance matrix into
+// v_out (symmetric, so row-major and column-major coincide). w is a reusable
+// scratch buffer of length nw. Returns O1. The caller must zero u_out and
+// v_out before the call. Algorithm identical to the exported wrapper above.
+double combo_logrank_core_impl(
+    const double* time_sorted,
+    const int* event_sorted,
+    const int* j_sorted,
+    int n,
+    const double* rho_vec,
+    const double* gamma_vec,
+    int nw,
+    double* u_out,
+    double* v_out,
+    std::vector<double>& w
+) {
   // At-risk counts per group, initialized to the group totals
   int n1_init = 0, n0_init = 0;
   for (int k = 0; k < n; ++k) {
     if (j_sorted[k] == 1) ++n1_init; else ++n0_init;
   }
 
-  // Accumulators: O1 is scheme-independent, U is one per scheme,
-  // V is the scheme-by-scheme covariance matrix.
   double O1 = 0.0;
-  NumericVector u_acc(nw);
-  NumericMatrix v_acc(nw, nw);
-  std::vector<double> w(nw);
 
   int n1 = n1_init, n0 = n0_init;
   double s_minus = 1.0;   // left-continuous pooled KM just prior to t
@@ -110,7 +149,7 @@ List combo_logrank_core(
       for (int a = 0; a < nw; ++a) {
         w[a] = std::pow(s_minus, rho_vec[a]) *
                std::pow(1.0 - s_minus, gamma_vec[a]);
-        u_acc[a] += w[a] * oe;
+        u_out[a] += w[a] * oe;
       }
 
       // Symmetric covariance increments w_a w_b v1
@@ -118,8 +157,8 @@ List combo_logrank_core(
         const double wa_v = w[a] * v1;
         for (int b = a; b < nw; ++b) {
           const double inc = wa_v * w[b];
-          v_acc(a, b) += inc;
-          if (b != a) v_acc(b, a) += inc;
+          v_out[a * nw + b] += inc;
+          if (b != a) v_out[b * nw + a] += inc;
         }
       }
 
@@ -138,9 +177,5 @@ List combo_logrank_core(
     i   = jj;
   }
 
-  return List::create(
-    _["O1"] = O1,
-    _["U"]  = u_acc,
-    _["V"]  = v_acc
-  );
+  return O1;
 }

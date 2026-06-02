@@ -3,6 +3,12 @@
 #include <cmath>
 using namespace Rcpp;
 
+// Forward declaration of the pointer-based implementation (defined below).
+void stratified_weighted_logrank_core_impl(const double*, const int*,
+                                           const int*, const int*, int,
+                                           int, double, double, double,
+                                           double*);
+
 //' Core stratified weighted log-rank computation (C++ backend)
 //'
 //' @description
@@ -58,7 +64,27 @@ NumericVector stratified_weighted_logrank_core(
     double t_star
 ) {
   const int n = time_sorted.size();
+  double out[3];
+  stratified_weighted_logrank_core_impl(
+    time_sorted.begin(), event_sorted.begin(), j_sorted.begin(),
+    strata_sorted.begin(), n, scheme, rho, gamma, t_star, out);
+  return NumericVector::create(out[0], out[1], out[2]);
+}
 
+// Pointer-based implementation with external linkage. Writes O1, U, V into
+// out[0..2]. Algorithm identical to the exported wrapper above.
+void stratified_weighted_logrank_core_impl(
+    const double* time_sorted,
+    const int* event_sorted,
+    const int* j_sorted,
+    const int* strata_sorted,
+    int n,
+    int scheme,
+    double rho,
+    double gamma,
+    double t_star,
+    double* out
+) {
   double O1_tot = 0.0, U_tot = 0.0, V_tot = 0.0;
 
   // Walk the data stratum block by stratum block.
@@ -170,5 +196,5 @@ NumericVector stratified_weighted_logrank_core(
     b = e;
   }
 
-  return NumericVector::create(O1_tot, U_tot, V_tot);
+  out[0] = O1_tot; out[1] = U_tot; out[2] = V_tot;
 }

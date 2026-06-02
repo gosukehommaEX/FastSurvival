@@ -3,6 +3,10 @@
 #include <cmath>
 using namespace Rcpp;
 
+// Forward declaration of the pointer-based implementation (defined below).
+void weighted_logrank_core_impl(const double*, const int*, const int*, int,
+                                int, double, double, double, double*);
+
 //' Core weighted log-rank computation on pooled sorted vectors (C++ backend)
 //'
 //' @description
@@ -61,7 +65,26 @@ NumericVector weighted_logrank_core(
     double t_star
 ) {
   const int n = time_sorted.size();
+  double out[3];
+  weighted_logrank_core_impl(time_sorted.begin(), event_sorted.begin(),
+                             j_sorted.begin(), n, scheme, rho, gamma, t_star,
+                             out);
+  return NumericVector::create(out[0], out[1], out[2]);
+}
 
+// Pointer-based implementation with external linkage. Writes O1, U, V into
+// out[0..2]. Algorithm identical to the exported wrapper above.
+void weighted_logrank_core_impl(
+    const double* time_sorted,
+    const int* event_sorted,
+    const int* j_sorted,
+    int n,
+    int scheme,
+    double rho,
+    double gamma,
+    double t_star,
+    double* out
+) {
   // At-risk counts per group, initialized to the group totals
   int n1_init = 0, n0_init = 0;
   for (int k = 0; k < n; ++k) {
@@ -172,5 +195,5 @@ NumericVector weighted_logrank_core(
     i   = jj;
   }
 
-  return NumericVector::create(O1, U, V);
+  out[0] = O1; out[1] = U; out[2] = V;
 }
