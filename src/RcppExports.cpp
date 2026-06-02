@@ -23,33 +23,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// analysis_cut_core
-List analysis_cut_core(const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, double cutoff);
-RcppExport SEXP _FastSurvival_analysis_cut_core(SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP cutoffSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type accrual(accrualSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type tte(tteSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type event(eventSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type j(jSEXP);
-    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
-    rcpp_result_gen = Rcpp::wrap(analysis_cut_core(accrual, tte, event, j, cutoff));
-    return rcpp_result_gen;
-END_RCPP
-}
-// nth_event_time_core
-double nth_event_time_core(const NumericVector& cal_event, int target);
-RcppExport SEXP _FastSurvival_nth_event_time_core(SEXP cal_eventSEXP, SEXP targetSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericVector& >::type cal_event(cal_eventSEXP);
-    Rcpp::traits::input_parameter< int >::type target(targetSEXP);
-    rcpp_result_gen = Rcpp::wrap(nth_event_time_core(cal_event, target));
-    return rcpp_result_gen;
-END_RCPP
-}
 // analysis_loop_core
 List analysis_loop_core(const IntegerVector& sim_ptr, const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, int look_type, const NumericVector& look_values, const IntegerVector& pop_col, const IntegerVector& pop_level, const IntegerMatrix& sub_mat, const IntegerVector& strata, bool use_strata, bool do_logrank, bool do_coxph, bool do_rmst, bool do_km, bool do_maxcombo, bool do_ahsw, int weight_scheme, double rho, double gamma, double t_star, const NumericVector& mc_rho, const NumericVector& mc_gamma, double tau, double t_eval);
 RcppExport SEXP _FastSurvival_analysis_loop_core(SEXP sim_ptrSEXP, SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP look_typeSEXP, SEXP look_valuesSEXP, SEXP pop_colSEXP, SEXP pop_levelSEXP, SEXP sub_matSEXP, SEXP strataSEXP, SEXP use_strataSEXP, SEXP do_logrankSEXP, SEXP do_coxphSEXP, SEXP do_rmstSEXP, SEXP do_kmSEXP, SEXP do_maxcomboSEXP, SEXP do_ahswSEXP, SEXP weight_schemeSEXP, SEXP rhoSEXP, SEXP gammaSEXP, SEXP t_starSEXP, SEXP mc_rhoSEXP, SEXP mc_gammaSEXP, SEXP tauSEXP, SEXP t_evalSEXP) {
@@ -168,60 +141,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rpiece_unif_cpp
-NumericVector rpiece_unif_cpp(int n, const NumericVector& a_time, const NumericVector& cum_p);
-RcppExport SEXP _FastSurvival_rpiece_unif_cpp(SEXP nSEXP, SEXP a_timeSEXP, SEXP cum_pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type a_time(a_timeSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_p(cum_pSEXP);
-    rcpp_result_gen = Rcpp::wrap(rpiece_unif_cpp(n, a_time, cum_p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rpiece_exp_cpp
-NumericVector rpiece_exp_cpp(int n, const NumericVector& hazard, const NumericVector& fin_time, const NumericVector& cum_haz);
-RcppExport SEXP _FastSurvival_rpiece_exp_cpp(SEXP nSEXP, SEXP hazardSEXP, SEXP fin_timeSEXP, SEXP cum_hazSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type hazard(hazardSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type fin_time(fin_timeSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_haz(cum_hazSEXP);
-    rcpp_result_gen = Rcpp::wrap(rpiece_exp_cpp(n, hazard, fin_time, cum_haz));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcat_cpp
-IntegerVector rcat_cpp(int n, const NumericVector& cum_p);
-RcppExport SEXP _FastSurvival_rcat_cpp(SEXP nSEXP, SEXP cum_pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_p(cum_pSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcat_cpp(n, cum_p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// interleave_groups
-DataFrame interleave_groups(const DataFrame& df_ctrl, const DataFrame& df_trt, int nsim, int n_ctrl, int n_trt);
-RcppExport SEXP _FastSurvival_interleave_groups(SEXP df_ctrlSEXP, SEXP df_trtSEXP, SEXP nsimSEXP, SEXP n_ctrlSEXP, SEXP n_trtSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const DataFrame& >::type df_ctrl(df_ctrlSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type df_trt(df_trtSEXP);
-    Rcpp::traits::input_parameter< int >::type nsim(nsimSEXP);
-    Rcpp::traits::input_parameter< int >::type n_ctrl(n_ctrlSEXP);
-    Rcpp::traits::input_parameter< int >::type n_trt(n_trtSEXP);
-    rcpp_result_gen = Rcpp::wrap(interleave_groups(df_ctrl, df_trt, nsim, n_ctrl, n_trt));
-    return rcpp_result_gen;
-END_RCPP
-}
 // simdata_core_full
 DataFrame simdata_core_full(int nsim, const IntegerVector& n_grp, const NumericVector& a_time, const NumericVector& cum_p_a, int n_cell, const List& e_haz_c, const List& e_fin_c, const List& e_cum_c, const List& e_haz_t, const List& e_fin_t, const List& e_cum_t, bool has_dropout, const List& d_haz_c, const List& d_fin_c, const List& d_cum_c, const List& d_haz_t, const List& d_fin_t, const List& d_cum_t, const NumericVector& cum_prev_c, const NumericVector& cum_prev_t, const IntegerMatrix& level_table_c, const IntegerMatrix& level_table_t, const CharacterVector& sub_names, bool fixed_alloc, const IntegerVector& fixed_counts_c, const IntegerVector& fixed_counts_t);
 RcppExport SEXP _FastSurvival_simdata_core_full(SEXP nsimSEXP, SEXP n_grpSEXP, SEXP a_timeSEXP, SEXP cum_p_aSEXP, SEXP n_cellSEXP, SEXP e_haz_cSEXP, SEXP e_fin_cSEXP, SEXP e_cum_cSEXP, SEXP e_haz_tSEXP, SEXP e_fin_tSEXP, SEXP e_cum_tSEXP, SEXP has_dropoutSEXP, SEXP d_haz_cSEXP, SEXP d_fin_cSEXP, SEXP d_cum_cSEXP, SEXP d_haz_tSEXP, SEXP d_fin_tSEXP, SEXP d_cum_tSEXP, SEXP cum_prev_cSEXP, SEXP cum_prev_tSEXP, SEXP level_table_cSEXP, SEXP level_table_tSEXP, SEXP sub_namesSEXP, SEXP fixed_allocSEXP, SEXP fixed_counts_cSEXP, SEXP fixed_counts_tSEXP) {
@@ -310,8 +229,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_ahsw_core", (DL_FUNC) &_FastSurvival_ahsw_core, 3},
-    {"_FastSurvival_analysis_cut_core", (DL_FUNC) &_FastSurvival_analysis_cut_core, 5},
-    {"_FastSurvival_nth_event_time_core", (DL_FUNC) &_FastSurvival_nth_event_time_core, 2},
     {"_FastSurvival_analysis_loop_core", (DL_FUNC) &_FastSurvival_analysis_loop_core, 26},
     {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
@@ -319,10 +236,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_milestone_core", (DL_FUNC) &_FastSurvival_milestone_core, 5},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
-    {"_FastSurvival_rpiece_unif_cpp", (DL_FUNC) &_FastSurvival_rpiece_unif_cpp, 3},
-    {"_FastSurvival_rpiece_exp_cpp", (DL_FUNC) &_FastSurvival_rpiece_exp_cpp, 4},
-    {"_FastSurvival_rcat_cpp", (DL_FUNC) &_FastSurvival_rcat_cpp, 2},
-    {"_FastSurvival_interleave_groups", (DL_FUNC) &_FastSurvival_interleave_groups, 5},
     {"_FastSurvival_simdata_core_full", (DL_FUNC) &_FastSurvival_simdata_core_full, 26},
     {"_FastSurvival_stratified_logrank_core", (DL_FUNC) &_FastSurvival_stratified_logrank_core, 4},
     {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},

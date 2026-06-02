@@ -48,14 +48,6 @@ ahsw_core <- function(time_sorted, event_sorted, tau) {
     .Call(`_FastSurvival_ahsw_core`, time_sorted, event_sorted, tau)
 }
 
-analysis_cut_core <- function(accrual, tte, event, j, cutoff) {
-    .Call(`_FastSurvival_analysis_cut_core`, accrual, tte, event, j, cutoff)
-}
-
-nth_event_time_core <- function(cal_event, target) {
-    .Call(`_FastSurvival_nth_event_time_core`, cal_event, target)
-}
-
 analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval) {
     .Call(`_FastSurvival_analysis_loop_core`, sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval)
 }
@@ -229,22 +221,6 @@ pihe_core <- function(time_sorted, event_sorted, j_sorted) {
 #' @keywords internal
 rmst_core <- function(t_sorted, e_sorted, tau) {
     .Call(`_FastSurvival_rmst_core`, t_sorted, e_sorted, tau)
-}
-
-rpiece_unif_cpp <- function(n, a_time, cum_p) {
-    .Call(`_FastSurvival_rpiece_unif_cpp`, n, a_time, cum_p)
-}
-
-rpiece_exp_cpp <- function(n, hazard, fin_time, cum_haz) {
-    .Call(`_FastSurvival_rpiece_exp_cpp`, n, hazard, fin_time, cum_haz)
-}
-
-rcat_cpp <- function(n, cum_p) {
-    .Call(`_FastSurvival_rcat_cpp`, n, cum_p)
-}
-
-interleave_groups <- function(df_ctrl, df_trt, nsim, n_ctrl, n_trt) {
-    .Call(`_FastSurvival_interleave_groups`, df_ctrl, df_trt, nsim, n_ctrl, n_trt)
 }
 
 simdata_core_full <- function(nsim, n_grp, a_time, cum_p_a, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t) {
