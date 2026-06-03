@@ -36,7 +36,7 @@ double combo_logrank_core_impl(const double*, const int*, const int*, int,
 //' prior to each event time, initialized at 1, and the weight is
 //' \code{S_minus^rho (1 - S_minus)^gamma}. The convention is the same as the
 //' single-scheme weighted core: the numerator is negative when the treatment
-//' group is favoured.
+//' group is favored.
 //'
 //' @param time_sorted A numeric vector of pooled follow-up times sorted in
 //'   ascending order.

@@ -77,7 +77,7 @@ analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_
 #' prior to each event time, initialized at 1, and the weight is
 #' \code{S_minus^rho (1 - S_minus)^gamma}. The convention is the same as the
 #' single-scheme weighted core: the numerator is negative when the treatment
-#' group is favoured.
+#' group is favored.
 #'
 #' @param time_sorted A numeric vector of pooled follow-up times sorted in
 #'   ascending order.
@@ -236,7 +236,7 @@ simdata_core_full <- function(nsim, n_grp, a_time, cum_p_a, n_cell, e_haz_c, e_f
 #' same single-pass two-group scan as \code{logrank_core}, and the per-stratum
 #' O1, E1, and V1 are accumulated into the returned totals. Tied event times
 #' are processed atomically within each stratum. A stratum that contains only
-#' one group contributes zero to all three totals, matching the behaviour of
+#' one group contributes zero to all three totals, matching the behavior of
 #' \code{\link[survival]{survdiff}} with a \code{strata()} term. Not intended
 #' to be called directly by users; use \code{survdiff_fast()} with the
 #' \code{strata} argument instead.

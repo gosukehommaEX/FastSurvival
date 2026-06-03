@@ -15,7 +15,7 @@ void stratified_logrank_core_impl(const double*, const int*, const int*,
 //' same single-pass two-group scan as \code{logrank_core}, and the per-stratum
 //' O1, E1, and V1 are accumulated into the returned totals. Tied event times
 //' are processed atomically within each stratum. A stratum that contains only
-//' one group contributes zero to all three totals, matching the behaviour of
+//' one group contributes zero to all three totals, matching the behavior of
 //' \code{\link[survival]{survdiff}} with a \code{strata()} term. Not intended
 //' to be called directly by users; use \code{survdiff_fast()} with the
 //' \code{strata} argument instead.

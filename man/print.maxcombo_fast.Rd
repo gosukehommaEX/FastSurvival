@@ -22,7 +22,7 @@ Invisibly returns \code{x}.
 Formats and prints a \code{maxcombo_fast} object. It shows the total sample
 size, a table of the Fleming-Harrington component Z-scores, and the
 max-combo statistic with its p-value. For a one-sided test the statistic is
-the most negative component, so a negative value favours the treatment
+the most negative component, so a negative value favors the treatment
 group, matching the sign convention of \code{\link{survdiff_fast}}. For a
 two-sided test the statistic is the largest component in absolute value.
 }

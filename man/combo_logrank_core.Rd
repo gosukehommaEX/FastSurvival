@@ -51,6 +51,6 @@ Here \code{S_minus} is the left-continuous pooled Kaplan-Meier estimate just
 prior to each event time, initialized at 1, and the weight is
 \code{S_minus^rho (1 - S_minus)^gamma}. The convention is the same as the
 single-scheme weighted core: the numerator is negative when the treatment
-group is favoured.
+group is favored.
 }
 \keyword{internal}

@@ -21,11 +21,11 @@
 #' single-scheme weighted variances and the off-diagonal entries give the
 #' correlation matrix R of the component Z-scores. The sign convention matches
 #' \code{\link{survdiff_fast}}: a component Z is negative when the treatment
-#' group is favoured.
+#' group is favored.
 #'
 #' The max-combo statistic and its p-value depend on \code{side}. When
 #' \code{side = 1}, the statistic is the most negative component, min_k Z_k, so
-#' that a negative value favours the treatment group in the same way as
+#' that a negative value favors the treatment group in the same way as
 #' \code{\link{survdiff_fast}} with \code{side = 1}. The one-sided p-value is
 #' 1 - P(G_1 >= m, ..., G_K >= m) for G distributed as multivariate normal with
 #' mean zero and correlation R, where m = min_k Z_k. When \code{side = 2}, the
@@ -77,7 +77,7 @@
 #'
 #' @return An object of class \code{"maxcombo_fast"}, a named numeric vector of
 #'   length two with elements \code{statistic} (the max-combo statistic;
-#'   min_k Z_k when \code{side = 1}, so a negative value favours treatment, and
+#'   min_k Z_k when \code{side = 1}, so a negative value favors treatment, and
 #'   max_k abs(Z_k) when \code{side = 2}) and \code{p.value}. The component
 #'   Z-scores are stored in the attribute \code{z}, their correlation matrix in
 #'   \code{corr}, the Fleming-Harrington parameters in \code{rho} and
@@ -200,7 +200,7 @@ maxcombo_fast <- function(time, event, group, control, side = 1,
   if (side == 1L) {
     # One-sided: treatment benefit makes a component Z negative, so the
     # strongest evidence is the most negative component. To match the sign
-    # convention of survdiff_fast (a negative statistic favours treatment,
+    # convention of survdiff_fast (a negative statistic favors treatment,
     # HR < 1), the reported statistic is min(Z). The p-value uses the
     # lower-tail form of simtrial::pvalue_maxcombo, lower = min(Z) with
     # upper = +Inf.

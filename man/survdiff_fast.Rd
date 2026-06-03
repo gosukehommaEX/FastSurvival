@@ -44,7 +44,7 @@ Details for the required order in the stratified case.}
 
 \item{strata}{An optional vector of stratum labels aligned with \code{time}.
 If \code{NULL} (default), the ordinary log-rank test is computed and the
-behaviour is identical to earlier versions of this function. If supplied,
+behavior is identical to earlier versions of this function. If supplied,
 the stratified log-rank test is computed, matching
 \code{\link[survival]{survdiff}} with a \code{strata()} term. Any type that
 supports equality comparison is accepted. May be combined with a non-default
@@ -52,7 +52,7 @@ supports equality comparison is accepted. May be combined with a non-default
 
 \item{weight}{A character string naming the weight scheme. \code{"logrank"}
 (default) is the ordinary unweighted log-rank test and reproduces the
-behaviour of earlier versions of this function exactly. \code{"fh"} is the
+behavior of earlier versions of this function exactly. \code{"fh"} is the
 Fleming-Harrington G(rho, gamma) test with weight
 \code{S(t-)^rho (1 - S(t-))^gamma}. \code{"mwlrt"} is the modestly-weighted
 log-rank test of Magirr and Burman with weight

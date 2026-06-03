@@ -7,6 +7,14 @@ log-rank tests, and adds a simulation and sequential-analysis layer
 (`simdata_fast()` subgroups, `analysis_fast()`, `simsummary_fast()`). See
 NEWS.md for the full list of changes.
 
+## Notes for the reviewer
+
+Following the feedback on the 0.1.0 submission, software names in the title
+and description are wrapped in single quotes ('C++', 'Rcpp', 'survival'), and
+no example uses \dontrun{}. Examples that exceed the 5-second limit or rely on
+Suggests packages are wrapped in \donttest{} and guarded with
+requireNamespace(), so they do not fail when those packages are absent.
+
 ## Test environments
 
 * Local: Windows 11 x64 (build 26200), R 4.6.0
