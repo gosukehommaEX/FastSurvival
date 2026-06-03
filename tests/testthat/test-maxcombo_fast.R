@@ -134,6 +134,30 @@ test_that("two-sided statistic and p-value match the pure-R reference", {
   expect_equal(as.numeric(fit["p.value"]), ref$p.value, tolerance = 1e-3)
 })
 
+test_that("two-sided with two weights matches the pure-R reference", {
+  skip_if_not_installed("survival")
+  ov  <- survival::ovarian
+  jj  <- as.integer(ov$rx != 1)
+  rho <- c(0, 0); gamma <- c(0, 1)
+  ref <- ref_combo(ov$futime, ov$fustat, jj, rho, gamma, side = 2)
+  fit <- maxcombo_fast(ov$futime, ov$fustat, ov$rx, 1, side = 2,
+                       rho = rho, gamma = gamma)
+  expect_equal(as.numeric(fit["statistic"]), ref$statistic, tolerance = 1e-8)
+  expect_equal(as.numeric(fit["p.value"]), ref$p.value, tolerance = 1e-3)
+})
+
+test_that("two-sided with three weights matches the pure-R reference", {
+  skip_if_not_installed("survival")
+  ov  <- survival::ovarian
+  jj  <- as.integer(ov$rx != 1)
+  rho <- c(0, 0, 1); gamma <- c(0, 1, 0)
+  ref <- ref_combo(ov$futime, ov$fustat, jj, rho, gamma, side = 2)
+  fit <- maxcombo_fast(ov$futime, ov$fustat, ov$rx, 1, side = 2,
+                       rho = rho, gamma = gamma)
+  expect_equal(as.numeric(fit["statistic"]), ref$statistic, tolerance = 1e-8)
+  expect_equal(as.numeric(fit["p.value"]), ref$p.value, tolerance = 1e-3)
+})
+
 test_that("a single FH weight reduces to the one-sided weighted Z p-value", {
   skip_if_not_installed("survival")
   ov  <- survival::ovarian
