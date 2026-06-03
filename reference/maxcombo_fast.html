@@ -179,8 +179,10 @@ mean zero and correlation R, where m = min_k Z_k. When <code>side = 2</code>, th
 statistic is max_k abs(Z_k) and the p-value is
 1 - P(-m &lt;= G_1 &lt;= m, ..., -m &lt;= G_K &lt;= m).</p>
 <p>The joint normal probability is evaluated by dimension. With a single weight
-the univariate normal is used. With two or three weights the deterministic
-<code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">TVPACK</a></code> algorithm is used. With four or more weights the
+the univariate normal is used. With two or three weights and a one-sided
+test, where the integration region is a half-space, the deterministic
+<code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">TVPACK</a></code> algorithm is used. For the two-sided test, whose
+region is a bounded rectangle, and for four or more weights, the
 quasi-Monte-Carlo <code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">GenzBretz</a></code> algorithm is used, whose
 precision is governed by <code>abseps</code> and <code>maxpts</code>. In a simulation
 study the Monte Carlo error of the estimated rejection rate is driven by the

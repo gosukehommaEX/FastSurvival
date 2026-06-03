@@ -8,9 +8,10 @@ vignette checks the numerical agreement between each FastSurvival
 function and a reference from a well-known package: the survival package
 for the Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio,
 and milestone survival; survRM2 for the restricted mean survival time;
-survAH for the average hazard with survival weight; and simtrial for the
-max-combo test. The same comparisons form the basis of the automated
-test suite shipped with the package.
+and survAH for the average hazard with survival weight. The weighted
+log-rank and max-combo tests are checked against the nph package. The
+same comparisons form the basis of the automated test suite shipped with
+the package.
 
 ``` r
 
@@ -66,6 +67,41 @@ c(fast = as.numeric(fast_lr), survival = ref_lr$chisq)
 #>     fast survival 
 #>  1.06274  1.06274
 ```
+
+## Weighted log-rank test
+
+[`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
+also computes Fleming-Harrington G(rho, gamma) weighted log-rank tests
+through the `weight = "fh"` argument. The
+[nph](https://cran.r-project.org/package=nph) package provides
+[`logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) with
+the same family, so we compare the chi-square statistic across several
+weight choices on the `ovarian` data.
+
+``` r
+
+fh_grid <- data.frame(rho = c(0, 1, 0, 1), gamma = c(1, 0, 0, 1))
+
+do.call(rbind, lapply(seq_len(nrow(fh_grid)), function(i) {
+  r <- fh_grid$rho[i]
+  g <- fh_grid$gamma[i]
+  fast <- as.numeric(survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                                   control = 1, side = 2,
+                                   weight = "fh", rho = r, gamma = g))
+  nph_chisq <- nph::logrank.test(ovarian$futime, ovarian$fustat, ovarian$rx,
+                                 rho = r, gamma = g)$test$Chisq
+  data.frame(rho = r, gamma = g, fast = fast, nph = nph_chisq)
+}))
+#>   rho gamma         fast          nph
+#> 1   0     1 0.0001020735 0.0001020735
+#> 2   1     0 1.6848546117 1.6848546117
+#> 3   0     0 1.0627398613 1.0627398613
+#> 4   1     1 0.0033228087 0.0033228087
+```
+
+The two implementations agree to numerical precision across the weight
+family, including the ordinary log-rank test recovered at
+`rho = 0, gamma = 0`.
 
 ## Cox hazard ratio
 
@@ -161,29 +197,67 @@ fast_ah <- ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 ref_ah  <- ah2(time = ovarian$futime, status = ovarian$fustat,
                arm = arm, tau = tau)
 
-unclass(fast_ah)[c("ah.ctrl", "ah.trt")]
-#>     ah.ctrl      ah.trt 
-#> 0.001235076 0.000723445
+data.frame(
+  quantity = c("AH (control)", "AH (treatment)"),
+  fast     = unclass(fast_ah)[c("ah.ctrl", "ah.trt")],
+  survAH   = c(ref_ah$ah["AH (arm0)", "Est."],
+               ref_ah$ah["AH (arm1)", "Est."]),
+  row.names = NULL
+)
+#>         quantity        fast      survAH
+#> 1   AH (control) 0.001235076 0.001235076
+#> 2 AH (treatment) 0.000723445 0.000723445
 ```
+
+The average hazard is the ratio of the cumulative event probability to
+the restricted mean survival time, so for the `ovarian` data, where
+follow-up is measured in days, the values are on the order of 1e-03 per
+day in both groups.
 
 ## Max-combo test
 
 [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
-computes the max-combo test over a set of Fleming-Harrington weights. We
-compare the p-value against
-[`simtrial::maxcombo()`](https://merck.github.io/simtrial/reference/maxcombo.html)
-on the same data.
+computes the max-combo test, the most extreme of a set of
+Fleming-Harrington weighted log-rank statistics. The `nph` package
+provides
+[`logrank.maxtest()`](https://rdrr.io/pkg/nph/man/logrank.maxtest.html),
+whose default weight set is FH(0, 0), FH(0, 1), and FH(1, 0). We request
+the same three weights from
+[`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
+and compare the component Z-scores. The individual Z-scores are kept in
+the `z` attribute, signed so that a negative value indicates benefit for
+the treatment group under the package convention. Because `nph` orients
+the contrast in the opposite direction, the signs are mirrored, so we
+compare absolute values.
 
 ``` r
 
-fast_mc <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
-                         control = 1,
-                         rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1))
+rho   <- c(0, 0, 1)
+gamma <- c(0, 1, 0)
 
-unclass(fast_mc)["p.value"]
-#>   p.value 
-#> 0.1512256
+fast_mc <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                         control = 1, side = 2, rho = rho, gamma = gamma)
+
+nph_mc <- nph::logrank.maxtest(ovarian$futime, ovarian$fustat, ovarian$rx)
+
+data.frame(
+  weight = c("FH(0,0)", "FH(0,1)", "FH(1,0)"),
+  fast   = abs(attr(fast_mc, "z")),
+  nph    = abs(nph_mc$tests$z),
+  row.names = NULL
+)
+#>    weight       fast        nph
+#> 1 FH(0,0) 1.03089275 1.03089275
+#> 2 FH(0,1) 0.01010314 0.01010314
+#> 3 FH(1,0) 1.29801950 1.29801950
 ```
+
+The component statistics agree in absolute value. The final max-combo
+statistic is the largest of these, which for the two-sided test is
+`max(abs(Z))` and is therefore always non-negative. The p-values from
+the two packages are close but not identical, since they use different
+numerical methods for the joint distribution (a multivariate normal
+integral here, a Bonferroni-style combination in `nph`).
 
 ## Summary
 

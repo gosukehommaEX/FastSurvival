@@ -84,7 +84,10 @@ size, and event rate, so the ratios matter more than the raw values.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span>
+<span><span class="co"># Comparison packages used in the benchmarks below</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survRM2</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">nph</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -136,6 +139,28 @@ call. We build a single phase-3-sized dataset for the benchmarks.</p>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="rmst_fast-vs-survrm2rmst2">rmst_fast vs survRM2::rmst2<a class="anchor" aria-label="anchor" href="#rmst_fast-vs-survrm2rmst2"></a>
+</h2>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">arm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">gp</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
+<span>  fast <span class="op">=</span> <span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, <span class="va">g_s</span>, control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="fl">20</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  base <span class="op">=</span> <span class="fu">survRM2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">rmst2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">tt</span>, status <span class="op">=</span> <span class="va">ev</span>, arm <span class="op">=</span> <span class="va">arm</span>, tau <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  times <span class="op">=</span> <span class="fl">1000</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="survdiff_fastweight-fh-vs-nphlogrank-test">survdiff_fast(weight = “fh”) vs nph::logrank.test<a class="anchor" aria-label="anchor" href="#survdiff_fastweight-fh-vs-nphlogrank-test"></a>
+</h2>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
+<span>  fast <span class="op">=</span> <span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, <span class="va">g_s</span>, control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                       weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="fl">0</span>, gamma <span class="op">=</span> <span class="fl">1</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  base <span class="op">=</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test</a></span><span class="op">(</span><span class="va">tt</span>, <span class="va">ev</span>, <span class="va">gp</span>, rho <span class="op">=</span> <span class="fl">0</span>, gamma <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  times <span class="op">=</span> <span class="fl">1000</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="representative-results">Representative results<a class="anchor" aria-label="anchor" href="#representative-results"></a>
 </h2>
 <p>The table below summarizes representative median timings on a typical
@@ -164,13 +189,23 @@ point</td>
 <tr class="even">
 <td><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code></td>
-<td>~40x</td>
+<td>~30x</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> (point estimate + Wald CI)</td>
 <td>~30x</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code></td>
+<td><code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code></td>
+<td>~50x</td>
+</tr>
+<tr class="odd">
+<td><code>survdiff_fast(weight = "fh")</code></td>
+<td><code><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">nph::logrank.test()</a></code></td>
+<td>a few hundred x</td>
 </tr>
 </tbody>
 </table>

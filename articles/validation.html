@@ -77,9 +77,10 @@ vignette checks the numerical agreement between each FastSurvival
 function and a reference from a well-known package: the survival package
 for the Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio,
 and milestone survival; survRM2 for the restricted mean survival time;
-survAH for the average hazard with survival weight; and simtrial for the
-max-combo test. The same comparisons form the basis of the automated
-test suite shipped with the package.</p>
+and survAH for the average hazard with survival weight. The weighted
+log-rank and max-combo tests are checked against the nph package. The
+same comparisons form the basis of the automated test suite shipped with
+the package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -128,13 +129,44 @@ when <code>side = 2</code>, matching the statistic from
 <span><span class="co">#&gt;  1.06274  1.06274</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="weighted-log-rank-test">Weighted log-rank test<a class="anchor" aria-label="anchor" href="#weighted-log-rank-test"></a>
+</h2>
+<p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> also computes Fleming-Harrington G(rho,
+gamma) weighted log-rank tests through the <code>weight = "fh"</code>
+argument. The <a href="https://cran.r-project.org/package=nph" class="external-link">nph</a>
+package provides <code><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test()</a></code> with the same family, so we
+compare the chi-square statistic across several weight choices on the
+<code>ovarian</code> data.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fh_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fh_grid</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">fh_grid</span><span class="op">$</span><span class="va">rho</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
+<span>  <span class="va">g</span> <span class="op">&lt;-</span> <span class="va">fh_grid</span><span class="op">$</span><span class="va">gamma</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
+<span>  <span class="va">fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
+<span>                                   control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                                   weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">nph_chisq</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
+<span>                                 rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">Chisq</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span>, fast <span class="op">=</span> <span class="va">fast</span>, nph <span class="op">=</span> <span class="va">nph_chisq</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   rho gamma         fast          nph</span></span>
+<span><span class="co">#&gt; 1   0     1 0.0001020735 0.0001020735</span></span>
+<span><span class="co">#&gt; 2   1     0 1.6848546117 1.6848546117</span></span>
+<span><span class="co">#&gt; 3   0     0 1.0627398613 1.0627398613</span></span>
+<span><span class="co">#&gt; 4   1     1 0.0033228087 0.0033228087</span></span></code></pre></div>
+<p>The two implementations agree to numerical precision across the
+weight family, including the ordinary log-rank test recovered at
+<code>rho = 0, gamma = 0</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="cox-hazard-ratio">Cox hazard ratio<a class="anchor" aria-label="anchor" href="#cox-hazard-ratio"></a>
 </h2>
 <p><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> returns the Pike-Halley Estimator, a
 closed-form approximation to the Cox partial likelihood maximizer. On
 data with a moderate hazard ratio the two agree closely. We report the
 log hazard ratio from both.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fast_hr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ref_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
@@ -149,7 +181,7 @@ log hazard ratio from both.</p>
 <p><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> integrates the Kaplan-Meier survival curve
 up to a horizon. We compare the two-group RMST difference against
 <code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survRM2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">arm</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
@@ -172,7 +204,7 @@ up to a horizon. We compare the two-group RMST difference against
 <p><code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> compares Kaplan-Meier survival between
 two groups at a milestone timepoint. The per-group survival
 probabilities match those from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tstar</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span></span>
 <span><span class="va">fast_ms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/milestone_fast.html">milestone_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
@@ -199,7 +231,7 @@ probabilities match those from <code><a href="https://rdrr.io/pkg/survival/man/s
 <p><code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> computes the average hazard with survival
 weight of Uno and Horiguchi. We compare the per-group average hazard
 against <code><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">survAH::ah2()</a></code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survAH</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">arm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
@@ -211,24 +243,60 @@ against <code><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-
 <span><span class="va">ref_ah</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">ah2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, status <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span>
 <span>               arm <span class="op">=</span> <span class="va">arm</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_ah</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ah.ctrl"</span>, <span class="st">"ah.trt"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;     ah.ctrl      ah.trt </span></span>
-<span><span class="co">#&gt; 0.001235076 0.000723445</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AH (control)"</span>, <span class="st">"AH (treatment)"</span><span class="op">)</span>,</span>
+<span>  fast     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_ah</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ah.ctrl"</span>, <span class="st">"ah.trt"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  survAH   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ref_ah</span><span class="op">$</span><span class="va">ah</span><span class="op">[</span><span class="st">"AH (arm0)"</span>, <span class="st">"Est."</span><span class="op">]</span>,</span>
+<span>               <span class="va">ref_ah</span><span class="op">$</span><span class="va">ah</span><span class="op">[</span><span class="st">"AH (arm1)"</span>, <span class="st">"Est."</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;         quantity        fast      survAH</span></span>
+<span><span class="co">#&gt; 1   AH (control) 0.001235076 0.001235076</span></span>
+<span><span class="co">#&gt; 2 AH (treatment) 0.000723445 0.000723445</span></span></code></pre></div>
+<p>The average hazard is the ratio of the cumulative event probability
+to the restricted mean survival time, so for the <code>ovarian</code>
+data, where follow-up is measured in days, the values are on the order
+of 1e-03 per day in both groups.</p>
 </div>
 <div class="section level2">
 <h2 id="max-combo-test">Max-combo test<a class="anchor" aria-label="anchor" href="#max-combo-test"></a>
 </h2>
-<p><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> computes the max-combo test over a set
-of Fleming-Harrington weights. We compare the p-value against
-<code><a href="https://merck.github.io/simtrial/reference/maxcombo.html" class="external-link">simtrial::maxcombo()</a></code> on the same data.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fast_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/maxcombo_fast.html">maxcombo_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                         control <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                         rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<p><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> computes the max-combo test, the most
+extreme of a set of Fleming-Harrington weighted log-rank statistics. The
+<code>nph</code> package provides <code><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">logrank.maxtest()</a></code>, whose
+default weight set is FH(0, 0), FH(0, 1), and FH(1, 0). We request the
+same three weights from <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> and compare the
+component Z-scores. The individual Z-scores are kept in the
+<code>z</code> attribute, signed so that a negative value indicates
+benefit for the treatment group under the package convention. Because
+<code>nph</code> orients the contrast in the opposite direction, the
+signs are mirrored, so we compare absolute values.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rho</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_mc</span><span class="op">)</span><span class="op">[</span><span class="st">"p.value"</span><span class="op">]</span></span>
-<span><span class="co">#&gt;   p.value </span></span>
-<span><span class="co">#&gt; 0.1512256</span></span></code></pre></div>
+<span><span class="va">fast_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/maxcombo_fast.html">maxcombo_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
+<span>                         control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span>, rho <span class="op">=</span> <span class="va">rho</span>, gamma <span class="op">=</span> <span class="va">gamma</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nph_mc</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">logrank.maxtest</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FH(0,0)"</span>, <span class="st">"FH(0,1)"</span>, <span class="st">"FH(1,0)"</span><span class="op">)</span>,</span>
+<span>  fast   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fast_mc</span>, <span class="st">"z"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  nph    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">nph_mc</span><span class="op">$</span><span class="va">tests</span><span class="op">$</span><span class="va">z</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;    weight       fast        nph</span></span>
+<span><span class="co">#&gt; 1 FH(0,0) 1.03089275 1.03089275</span></span>
+<span><span class="co">#&gt; 2 FH(0,1) 0.01010314 0.01010314</span></span>
+<span><span class="co">#&gt; 3 FH(1,0) 1.29801950 1.29801950</span></span></code></pre></div>
+<p>The component statistics agree in absolute value. The final max-combo
+statistic is the largest of these, which for the two-sided test is
+<code>max(abs(Z))</code> and is therefore always non-negative. The
+p-values from the two packages are close but not identical, since they
+use different numerical methods for the joint distribution (a
+multivariate normal integral here, a Bonferroni-style combination in
+<code>nph</code>).</p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>

@@ -18,6 +18,9 @@ size, and event rate, so the ratios matter more than the raw values.
 library(FastSurvival)
 library(survival)
 library(microbenchmark)
+# Comparison packages used in the benchmarks below
+library(survRM2)
+library(nph)
 ```
 
 ## Setup
@@ -74,6 +77,30 @@ microbenchmark(
 )
 ```
 
+## rmst_fast vs survRM2::rmst2
+
+``` r
+
+arm <- as.integer(gp == 2)
+microbenchmark(
+  fast = rmst_fast(t_s, e_s, g_s, control = 1, tau = 20, presorted = TRUE),
+  base = survRM2::rmst2(time = tt, status = ev, arm = arm, tau = 20),
+  times = 1000
+)
+```
+
+## survdiff_fast(weight = “fh”) vs nph::logrank.test
+
+``` r
+
+microbenchmark(
+  fast = survdiff_fast(t_s, e_s, g_s, control = 1, side = 2,
+                       weight = "fh", rho = 0, gamma = 1, presorted = TRUE),
+  base = nph::logrank.test(tt, ev, gp, rho = 0, gamma = 1),
+  times = 1000
+)
+```
+
 ## Representative results
 
 The table below summarizes representative median timings on a typical
@@ -84,8 +111,10 @@ the speedup is stable.
 | Function | Replaces | Approximate speed gain |
 |----|----|----|
 | [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md) | [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) + [`summary()`](https://rdrr.io/r/base/summary.html) at one time point | ~50x |
-| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~40x |
+| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~30x |
 | [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~30x |
+| [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~50x |
+| `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | a few hundred x |
 
 ## Why it is faster
 

@@ -124,10 +124,12 @@ max_k abs(Z_k) and the p-value is 1 - P(-m \<= G_1 \<= m, ..., -m \<=
 G_K \<= m).
 
 The joint normal probability is evaluated by dimension. With a single
-weight the univariate normal is used. With two or three weights the
+weight the univariate normal is used. With two or three weights and a
+one-sided test, where the integration region is a half-space, the
 deterministic
 [`TVPACK`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm is
-used. With four or more weights the quasi-Monte-Carlo
+used. For the two-sided test, whose region is a bounded rectangle, and
+for four or more weights, the quasi-Monte-Carlo
 [`GenzBretz`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm
 is used, whose precision is governed by `abseps` and `maxpts`. In a
 simulation study the Monte Carlo error of the estimated rejection rate
