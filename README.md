@@ -1,4 +1,4 @@
-# FastSurvival
+# FastSurvival <img src="man/figures/logo.png" align="right" height="139" alt="FastSurvival logo" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gosukehommaEX/FastSurvival/actions/workflows/R-CMD-check.yaml)
