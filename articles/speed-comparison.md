@@ -110,11 +110,11 @@ the speedup is stable.
 
 | Function | Replaces | Approximate speed gain |
 |----|----|----|
-| [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md) | [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) + [`summary()`](https://rdrr.io/r/base/summary.html) at one time point | ~50x |
-| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~30x |
-| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~30x |
-| [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~50x |
-| `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | a few hundred x |
+| [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md) | [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) + [`summary()`](https://rdrr.io/r/base/summary.html) at one time point | ~70x |
+| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~50x |
+| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~50x |
+| [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~60x |
+| `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | ~500x |
 
 ## Why it is faster
 

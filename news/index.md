@@ -14,6 +14,11 @@
     max-combo test over a set of Fleming-Harrington weighted log-rank
     statistics, with the joint p-value obtained from the implied
     multivariate normal distribution.
+  - [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md):
+    robust modestly-weighted log-rank test of Magirr and Ohrn, the
+    maximum of the standard log-rank and a modestly-weighted log-rank
+    statistic, with the joint p-value obtained from the implied
+    bivariate normal distribution.
   - [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md):
     average hazard with survival weight of Uno and Horiguchi, reporting
     the ratio (RAH) and difference (DAH) contrasts.

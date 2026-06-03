@@ -19,6 +19,8 @@ inside simulation loops.
   : Compare Milestone Survival Probabilities Between Two Groups
 - [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
   : Fast Max-Combo Weighted Log-Rank Test for Two-Group Survival Data
+- [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
+  : Robust Modestly-Weighted Log-Rank Test for Two-Group Survival Data
 - [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
   : Fast Average Hazard with Survival Weight (Two-Group Comparison)
 
@@ -48,6 +50,8 @@ Display methods for the returned S3 objects.
   : Print Method for milestone_fast Objects
 - [`print(`*`<rmst_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.rmst_fast.md)
   : Print Method for rmst_fast Objects
+- [`print(`*`<rmw_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.rmw_fast.md)
+  : Print Method for rmw_fast Objects
 - [`print(`*`<simsummary_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
   : Print Method for Sequential Analysis Summaries
 - [`print(`*`<survdiff_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.survdiff_fast.md)

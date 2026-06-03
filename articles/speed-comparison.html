@@ -184,28 +184,28 @@ machine, but the order of magnitude of the speedup is stable.</p>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> + <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> at one time
 point</td>
-<td>~50x</td>
+<td>~70x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code></td>
-<td>~30x</td>
+<td>~50x</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> (point estimate + Wald CI)</td>
-<td>~30x</td>
+<td>~50x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code></td>
-<td>~50x</td>
+<td>~60x</td>
 </tr>
 <tr class="odd">
 <td><code>survdiff_fast(weight = "fh")</code></td>
 <td><code><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">nph::logrank.test()</a></code></td>
-<td>a few hundred x</td>
+<td>~500x</td>
 </tr>
 </tbody>
 </table>

@@ -9,9 +9,10 @@ function and a reference from a well-known package: the survival package
 for the Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio,
 and milestone survival; survRM2 for the restricted mean survival time;
 and survAH for the average hazard with survival weight. The weighted
-log-rank and max-combo tests are checked against the nph package. The
-same comparisons form the basis of the automated test suite shipped with
-the package.
+log-rank and max-combo tests are checked against the nph package, and
+the robust modestly-weighted test against the nphRCT package. The same
+comparisons form the basis of the automated test suite shipped with the
+package.
 
 ``` r
 
@@ -259,6 +260,62 @@ the two packages are close but not identical, since they use different
 numerical methods for the joint distribution (a multivariate normal
 integral here, a Bonferroni-style combination in `nph`).
 
+## Robust modestly-weighted log-rank test
+
+[`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
+computes the robust modestly-weighted (rMW) test of Magirr and Ohrn, the
+maximum of the standard log-rank statistic and a single
+modestly-weighted log-rank statistic. Each component is a weighted
+log-rank test, so we check the two component Z-scores against
+[nphRCT](https://cran.r-project.org/package=nphRCT), the implementation
+used by the method’s authors. The modestly-weighted component uses the
+survival-threshold parameterization, so `s_star = 1` recovers the
+standard log-rank test and `s_star = 0.5` gives the modestly-weighted
+component. As with the max-combo test the package orients a negative Z
+toward treatment benefit while `nphRCT` uses the opposite sign, so we
+compare absolute values.
+
+``` r
+
+ov_df <- data.frame(
+  time  = ovarian$futime,
+  event = ovarian$fustat,
+  arm   = factor(ifelse(ovarian$rx == 1, "control", "experimental"),
+                 levels = c("control", "experimental"))
+)
+
+fit_rmw <- rmw_fast(ov_df$time, ov_df$event, ov_df$arm,
+                    control = "control", side = 1, s_star = 0.5)
+
+z_lr_nph <- nphRCT::wlrt(Surv(time, event) ~ arm, data = ov_df,
+                         method = "mw", s_star = 1)$z
+z_mw_nph <- nphRCT::wlrt(Surv(time, event) ~ arm, data = ov_df,
+                         method = "mw", s_star = 0.5)$z
+
+data.frame(
+  component = c("log-rank (s_star = 1)", "modestly-weighted (s_star = 0.5)"),
+  fast      = abs(attr(fit_rmw, "z")),
+  nphRCT    = abs(c(z_lr_nph, z_mw_nph)),
+  row.names = NULL
+)
+#>                          component      fast    nphRCT
+#> 1            log-rank (s_star = 1) 1.0308927 1.0308927
+#> 2 modestly-weighted (s_star = 0.5) 0.7582546 0.7582546
+```
+
+The component statistics agree in absolute value. The null correlation
+of the two components, reported in the `corr` attribute, matches the
+covariance computed by the authors’ `find_cor` routine to numerical
+precision (0.98 on the `ovarian` data). The combined statistic and
+one-sided p-value then follow from the bivariate normal distribution of
+the two components, evaluated with
+[`mvtnorm::pmvnorm`](https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html). On
+the POPLAR overall-survival data analyzed in the original article,
+[`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
+reproduces the published one-sided p-values of 0.0028 for the log-rank
+test, 0.0009 for the modestly-weighted test, and 0.0012 for the rMW
+test, with a component correlation of 0.97.
+
 ## Summary
 
 Across all functions the FastSurvival results reproduce the reference
@@ -282,3 +339,6 @@ therapy. *Statistics in Medicine*, 42(7), 936-952.
 Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. *The Stata Journal*, 16(3),
 678-690.
+
+Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
+*Pharmaceutical Statistics*, 25(1), e70066.

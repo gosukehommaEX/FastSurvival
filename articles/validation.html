@@ -78,9 +78,10 @@ function and a reference from a well-known package: the survival package
 for the Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio,
 and milestone survival; survRM2 for the restricted mean survival time;
 and survAH for the average hazard with survival weight. The weighted
-log-rank and max-combo tests are checked against the nph package. The
-same comparisons form the basis of the automated test suite shipped with
-the package.</p>
+log-rank and max-combo tests are checked against the nph package, and
+the robust modestly-weighted test against the nphRCT package. The same
+comparisons form the basis of the automated test suite shipped with the
+package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -299,6 +300,58 @@ multivariate normal integral here, a Bonferroni-style combination in
 <code>nph</code>).</p>
 </div>
 <div class="section level2">
+<h2 id="robust-modestly-weighted-log-rank-test">Robust modestly-weighted log-rank test<a class="anchor" aria-label="anchor" href="#robust-modestly-weighted-log-rank-test"></a>
+</h2>
+<p><code><a href="../reference/rmw_fast.html">rmw_fast()</a></code> computes the robust modestly-weighted (rMW)
+test of Magirr and Ohrn, the maximum of the standard log-rank statistic
+and a single modestly-weighted log-rank statistic. Each component is a
+weighted log-rank test, so we check the two component Z-scores against
+<a href="https://cran.r-project.org/package=nphRCT" class="external-link">nphRCT</a>, the
+implementation used by the method’s authors. The modestly-weighted
+component uses the survival-threshold parameterization, so
+<code>s_star = 1</code> recovers the standard log-rank test and
+<code>s_star = 0.5</code> gives the modestly-weighted component. As with
+the max-combo test the package orients a negative Z toward treatment
+benefit while <code>nphRCT</code> uses the opposite sign, so we compare
+absolute values.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ov_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  time  <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>,</span>
+<span>  event <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span>
+<span>  arm   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">1</span>, <span class="st">"control"</span>, <span class="st">"experimental"</span><span class="op">)</span>,</span>
+<span>                 levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"experimental"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_rmw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmw_fast.html">rmw_fast</a></span><span class="op">(</span><span class="va">ov_df</span><span class="op">$</span><span class="va">time</span>, <span class="va">ov_df</span><span class="op">$</span><span class="va">event</span>, <span class="va">ov_df</span><span class="op">$</span><span class="va">arm</span>,</span>
+<span>                    control <span class="op">=</span> <span class="st">"control"</span>, side <span class="op">=</span> <span class="fl">1</span>, s_star <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">z_lr_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">ov_df</span>,</span>
+<span>                         method <span class="op">=</span> <span class="st">"mw"</span>, s_star <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">z</span></span>
+<span><span class="va">z_mw_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">ov_df</span>,</span>
+<span>                         method <span class="op">=</span> <span class="st">"mw"</span>, s_star <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">$</span><span class="va">z</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  component <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"log-rank (s_star = 1)"</span>, <span class="st">"modestly-weighted (s_star = 0.5)"</span><span class="op">)</span>,</span>
+<span>  fast      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit_rmw</span>, <span class="st">"z"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  nphRCT    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">z_lr_nph</span>, <span class="va">z_mw_nph</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;                          component      fast    nphRCT</span></span>
+<span><span class="co">#&gt; 1            log-rank (s_star = 1) 1.0308927 1.0308927</span></span>
+<span><span class="co">#&gt; 2 modestly-weighted (s_star = 0.5) 0.7582546 0.7582546</span></span></code></pre></div>
+<p>The component statistics agree in absolute value. The null
+correlation of the two components, reported in the <code>corr</code>
+attribute, matches the covariance computed by the authors’
+<code>find_cor</code> routine to numerical precision (0.98 on the
+<code>ovarian</code> data). The combined statistic and one-sided p-value
+then follow from the bivariate normal distribution of the two
+components, evaluated with <code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>. On the POPLAR
+overall-survival data analyzed in the original article,
+<code><a href="../reference/rmw_fast.html">rmw_fast()</a></code> reproduces the published one-sided p-values of
+0.0028 for the log-rank test, 0.0009 for the modestly-weighted test, and
+0.0012 for the rMW test, with a component correlation of 0.97.</p>
+</div>
+<div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
 <p>Across all functions the FastSurvival results reproduce the reference
@@ -321,6 +374,8 @@ of new therapy. <em>Statistics in Medicine</em>, 42(7), 936-952.</p>
 <p>Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. <em>The Stata Journal</em>,
 16(3), 678-690.</p>
+<p>Magirr, D., &amp; Ohrn, F. (2026). Robust modestly weighted log-rank
+tests. <em>Pharmaceutical Statistics</em>, 25(1), e70066.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
