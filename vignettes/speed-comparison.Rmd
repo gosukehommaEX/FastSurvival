@@ -118,11 +118,11 @@ is stable.
 
 | Function | Replaces | Approximate speed gain |
 |----------|----------|------------------------|
-| `survfit_fast()` | `survfit()` + `summary()` at one time point | ~50x |
-| `survdiff_fast()` | `survdiff()` | ~30x |
-| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~30x |
-| `rmst_fast()` | `survRM2::rmst2()` | ~50x |
-| `survdiff_fast(weight = "fh")` | `nph::logrank.test()` | a few hundred x |
+| `survfit_fast()` | `survfit()` + `summary()` at one time point | ~70x |
+| `survdiff_fast()` | `survdiff()` | ~50x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~50x |
+| `rmst_fast()` | `survRM2::rmst2()` | ~60x |
+| `survdiff_fast(weight = "fh")` | `nph::logrank.test()` | ~500x |
 
 # Why it is faster
 

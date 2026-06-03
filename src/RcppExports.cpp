@@ -141,6 +141,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rmw_core
+NumericVector rmw_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, const IntegerVector& j_sorted, double s_star);
+RcppExport SEXP _FastSurvival_rmw_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP j_sortedSEXP, SEXP s_starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type time_sorted(time_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type event_sorted(event_sortedSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type j_sorted(j_sortedSEXP);
+    Rcpp::traits::input_parameter< double >::type s_star(s_starSEXP);
+    rcpp_result_gen = Rcpp::wrap(rmw_core(time_sorted, event_sorted, j_sorted, s_star));
+    return rcpp_result_gen;
+END_RCPP
+}
 // simdata_core_full
 DataFrame simdata_core_full(int nsim, const IntegerVector& n_grp, const NumericVector& a_time, const NumericVector& cum_p_a, int n_cell, const List& e_haz_c, const List& e_fin_c, const List& e_cum_c, const List& e_haz_t, const List& e_fin_t, const List& e_cum_t, bool has_dropout, const List& d_haz_c, const List& d_fin_c, const List& d_cum_c, const List& d_haz_t, const List& d_fin_t, const List& d_cum_t, const NumericVector& cum_prev_c, const NumericVector& cum_prev_t, const IntegerMatrix& level_table_c, const IntegerMatrix& level_table_t, const CharacterVector& sub_names, bool fixed_alloc, const IntegerVector& fixed_counts_c, const IntegerVector& fixed_counts_t);
 RcppExport SEXP _FastSurvival_simdata_core_full(SEXP nsimSEXP, SEXP n_grpSEXP, SEXP a_timeSEXP, SEXP cum_p_aSEXP, SEXP n_cellSEXP, SEXP e_haz_cSEXP, SEXP e_fin_cSEXP, SEXP e_cum_cSEXP, SEXP e_haz_tSEXP, SEXP e_fin_tSEXP, SEXP e_cum_tSEXP, SEXP has_dropoutSEXP, SEXP d_haz_cSEXP, SEXP d_fin_cSEXP, SEXP d_cum_cSEXP, SEXP d_haz_tSEXP, SEXP d_fin_tSEXP, SEXP d_cum_tSEXP, SEXP cum_prev_cSEXP, SEXP cum_prev_tSEXP, SEXP level_table_cSEXP, SEXP level_table_tSEXP, SEXP sub_namesSEXP, SEXP fixed_allocSEXP, SEXP fixed_counts_cSEXP, SEXP fixed_counts_tSEXP) {
@@ -236,6 +250,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_milestone_core", (DL_FUNC) &_FastSurvival_milestone_core, 5},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
+    {"_FastSurvival_rmw_core", (DL_FUNC) &_FastSurvival_rmw_core, 4},
     {"_FastSurvival_simdata_core_full", (DL_FUNC) &_FastSurvival_simdata_core_full, 26},
     {"_FastSurvival_stratified_logrank_core", (DL_FUNC) &_FastSurvival_stratified_logrank_core, 4},
     {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},

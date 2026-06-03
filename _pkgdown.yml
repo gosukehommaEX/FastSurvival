@@ -20,6 +20,7 @@ reference:
   - rmst_fast
   - milestone_fast
   - maxcombo_fast
+  - rmw_fast
   - ahsw_fast
 
 - title: Simulation

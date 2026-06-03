@@ -36,6 +36,7 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | `rmst_fast()` | Restricted mean survival time for a single group or a two-group comparison (difference and ratio). |
 | `milestone_fast()` | Two-group comparison of Kaplan-Meier survival at a milestone timepoint (Wald, log-log, and MOVER methods). |
 | `maxcombo_fast()` | Max-combo test, the maximum over a set of Fleming-Harrington weighted log-rank statistics, for non-proportional hazards. |
+| `rmw_fast()` | Robust modestly-weighted test (Magirr and Ohrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
 | `ahsw_fast()` | Average hazard with survival weight of Uno and Horiguchi, with ratio and difference contrasts. |
 
 ### Simulation
@@ -174,6 +175,20 @@ Taking the most extreme of several complementary weights makes the test
 robust to the shape of the hazard difference, with the multiplicity
 accounted for through the joint distribution.
 
+**rmw_fast** computes the robust modestly-weighted (rMW) test of Magirr and
+Ohrn (2026), the maximum of the standard log-rank statistic and a single
+modestly-weighted log-rank statistic. The modestly-weighted component uses
+the survival-threshold parameterization, with the weight capped at the
+reciprocal of `s_star` (so `s_star = 0.5` caps the weight at 2 and `s_star = 1`
+recovers the log-rank test). The C++ backend computes both component
+numerators, both variances, and their null covariance in a single scan, and
+the combined statistic and p-value follow from the implied bivariate normal
+distribution. Because the standard log-rank statistic is one of the two
+components and the components are strongly correlated under the null, the
+multiplicity adjustment is small, so the test loses little power relative to
+the log-rank test in worst-case scenarios while gaining power under delayed
+effects.
+
 **ahsw_fast** computes the average hazard with survival weight of Uno and
 Horiguchi for two groups. The average hazard on the window up to a horizon
 is the ratio of the cumulative event probability to the restricted mean
@@ -277,6 +292,9 @@ hazard ratio estimators based on the logrank test. *Statistics in Medicine*,
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, 38(20), 3782-3790.
+
+Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
+*Pharmaceutical Statistics*, 25(1), e70066.
 
 Karrison, T. G. (2016). Versatile tests for comparing survival curves based
 on weighted log-rank statistics. *The Stata Journal*, 16(3), 678-690.
