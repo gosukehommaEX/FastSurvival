@@ -7,7 +7,7 @@ using the same single-pass two-group scan as `logrank_core`, and the
 per-stratum O1, E1, and V1 are accumulated into the returned totals.
 Tied event times are processed atomically within each stratum. A stratum
 that contains only one group contributes zero to all three totals,
-matching the behaviour of
+matching the behavior of
 [`survdiff`](https://rdrr.io/pkg/survival/man/survdiff.html) with a
 [`strata()`](https://rdrr.io/pkg/survival/man/strata.html) term. Not
 intended to be called directly by users; use

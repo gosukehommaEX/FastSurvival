@@ -5,7 +5,7 @@ simulated trials, with piecewise-uniform accrual, piecewise-exponential
 survival and dropout, and optional subgroups defined by a prevalence
 specification. The entire generation pipeline (accrual, survival,
 dropout, derived columns, and two-group interleaving) runs in a single
-C++ kernel that materialises the output data frame once, avoiding
+C++ kernel that materializes the output data frame once, avoiding
 intermediate R-level vector operations and copies. The random-number
 stream is consumed in the same order as a per-group reference
 implementation, so results are reproducible from `seed`.

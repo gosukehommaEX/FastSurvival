@@ -150,7 +150,7 @@ weights are supplied. Defaults to 25000.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"maxcombo_fast"</code>, a named numeric vector of
   length two with elements <code>statistic</code> (the max-combo statistic;
-  min_k Z_k when <code>side = 1</code>, so a negative value favours treatment, and
+  min_k Z_k when <code>side = 1</code>, so a negative value favors treatment, and
   max_k abs(Z_k) when <code>side = 2</code>) and <code>p.value</code>. The component
   Z-scores are stored in the attribute <code>z</code>, their correlation matrix in
   <code>corr</code>, the Fleming-Harrington parameters in <code>rho</code> and
@@ -169,10 +169,10 @@ increment shared by all schemes, so the diagonal of V reproduces the
 single-scheme weighted variances and the off-diagonal entries give the
 correlation matrix R of the component Z-scores. The sign convention matches
 <code><a href="survdiff_fast.html">survdiff_fast</a></code>: a component Z is negative when the treatment
-group is favoured.</p>
+group is favored.</p>
 <p>The max-combo statistic and its p-value depend on <code>side</code>. When
 <code>side = 1</code>, the statistic is the most negative component, min_k Z_k, so
-that a negative value favours the treatment group in the same way as
+that a negative value favors the treatment group in the same way as
 <code><a href="survdiff_fast.html">survdiff_fast</a></code> with <code>side = 1</code>. The one-sided p-value is
 1 - P(G_1 &gt;= m, ..., G_K &gt;= m) for G distributed as multivariate normal with
 mean zero and correlation R, where m = min_k Z_k. When <code>side = 2</code>, the

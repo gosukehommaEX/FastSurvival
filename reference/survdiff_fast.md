@@ -70,7 +70,7 @@ survdiff_fast(
 - strata:
 
   An optional vector of stratum labels aligned with `time`. If `NULL`
-  (default), the ordinary log-rank test is computed and the behaviour is
+  (default), the ordinary log-rank test is computed and the behavior is
   identical to earlier versions of this function. If supplied, the
   stratified log-rank test is computed, matching
   [`survdiff`](https://rdrr.io/pkg/survival/man/survdiff.html) with a
@@ -82,7 +82,7 @@ survdiff_fast(
 - weight:
 
   A character string naming the weight scheme. `"logrank"` (default) is
-  the ordinary unweighted log-rank test and reproduces the behaviour of
+  the ordinary unweighted log-rank test and reproduces the behavior of
   earlier versions of this function exactly. `"fh"` is the
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
@@ -319,8 +319,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>           expr     min      lq       mean   median       uq      max neval
-#>  survdiff_fast  42.800  51.286   60.68765   62.692   67.181  167.212  1000
-#>       survdiff 955.484 992.458 1032.97579 1005.883 1023.481 5921.037  1000
+#>           expr     min      lq      mean  median       uq      max neval
+#>  survdiff_fast  28.732  33.435  40.39107  41.652  45.3475  212.506  1000
+#>       survdiff 616.575 661.643 702.19130 678.022 694.0960 5861.322  1000
 # }
 ```

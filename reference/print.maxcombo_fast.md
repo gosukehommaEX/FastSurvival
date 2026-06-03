@@ -3,8 +3,8 @@
 Formats and prints a `maxcombo_fast` object. It shows the total sample
 size, a table of the Fleming-Harrington component Z-scores, and the
 max-combo statistic with its p-value. For a one-sided test the statistic
-is the most negative component, so a negative value favours the
-treatment group, matching the sign convention of
+is the most negative component, so a negative value favors the treatment
+group, matching the sign convention of
 [`survdiff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md).
 For a two-sided test the statistic is the largest component in absolute
 value.

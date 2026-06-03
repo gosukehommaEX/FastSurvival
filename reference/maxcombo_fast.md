@@ -91,7 +91,7 @@ maxcombo_fast(
 
 An object of class `"maxcombo_fast"`, a named numeric vector of length
 two with elements `statistic` (the max-combo statistic; min_k Z_k when
-`side = 1`, so a negative value favours treatment, and max_k abs(Z_k)
+`side = 1`, so a negative value favors treatment, and max_k abs(Z_k)
 when `side = 2`) and `p.value`. The component Z-scores are stored in the
 attribute `z`, their correlation matrix in `corr`, the
 Fleming-Harrington parameters in `rho` and `gamma`, the requested
@@ -111,11 +111,11 @@ single-scheme weighted variances and the off-diagonal entries give the
 correlation matrix R of the component Z-scores. The sign convention
 matches
 [`survdiff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md):
-a component Z is negative when the treatment group is favoured.
+a component Z is negative when the treatment group is favored.
 
 The max-combo statistic and its p-value depend on `side`. When
 `side = 1`, the statistic is the most negative component, min_k Z_k, so
-that a negative value favours the treatment group in the same way as
+that a negative value favors the treatment group in the same way as
 [`survdiff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
 with `side = 1`. The one-sided p-value is 1 - P(G_1 \>= m, ..., G_K \>=
 m) for G distributed as multivariate normal with mean zero and

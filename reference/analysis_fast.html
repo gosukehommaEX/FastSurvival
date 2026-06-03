@@ -287,7 +287,7 @@ overall analysis and for every subgroup analysis at that look.</p>
 <code>"maxcombo"</code>, and <code>"ahsw"</code>.</p>
 <p>The <code>"logrank"</code> statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
-behaviour of earlier versions of this function exactly. A non-default
+behavior of earlier versions of this function exactly. A non-default
 <code>weight</code> selects a weighted log-rank test (Fleming-Harrington,
 modestly-weighted, Gehan-Breslow, or Tarone-Ware) for non-proportional
 hazards, and a non-<code>NULL</code> <code>strata</code> selects the stratified test,
@@ -306,7 +306,7 @@ ordinary one within that subset.</p>
 <p>The <code>"maxcombo"</code> statistic is the max-combo test of <code>mc.rho</code> and
 <code>mc.gamma</code> Fleming-Harrington weights. Its <code>maxcombo.stat</code> is the
 most extreme component (<code>min</code> of the component Z-scores when
-<code>side = 1</code>, so that a negative value favours treatment, and the maximum
+<code>side = 1</code>, so that a negative value favors treatment, and the maximum
 absolute component when <code>side = 2</code>), and <code>maxcombo.p</code> is the joint
 multivariate-normal p-value, which already follows <code>side</code>.</p>
 <p>The <code>"ahsw"</code> statistic is the average hazard with survival weight of Uno

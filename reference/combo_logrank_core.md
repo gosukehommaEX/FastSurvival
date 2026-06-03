@@ -63,4 +63,4 @@ the left-continuous pooled Kaplan-Meier estimate just prior to each
 event time, initialized at 1, and the weight is
 `S_minus^rho (1 - S_minus)^gamma`. The convention is the same as the
 single-scheme weighted core: the numerator is negative when the
-treatment group is favoured.
+treatment group is favored.

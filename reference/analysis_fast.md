@@ -228,7 +228,7 @@ The statistics are selected with `stat`, which may name one or more of
 
 The `"logrank"` statistic is configurable. By default it is the ordinary
 unweighted, unstratified two-group log-rank test and reproduces the
-behaviour of earlier versions of this function exactly. A non-default
+behavior of earlier versions of this function exactly. A non-default
 `weight` selects a weighted log-rank test (Fleming-Harrington,
 modestly-weighted, Gehan-Breslow, or Tarone-Ware) for non-proportional
 hazards, and a non-`NULL` `strata` selects the stratified test, summing
@@ -248,7 +248,7 @@ to the ordinary one within that subset.
 The `"maxcombo"` statistic is the max-combo test of `mc.rho` and
 `mc.gamma` Fleming-Harrington weights. Its `maxcombo.stat` is the most
 extreme component (`min` of the component Z-scores when `side = 1`, so
-that a negative value favours treatment, and the maximum absolute
+that a negative value favors treatment, and the maximum absolute
 component when `side = 2`), and `maxcombo.p` is the joint
 multivariate-normal p-value, which already follows `side`.
 

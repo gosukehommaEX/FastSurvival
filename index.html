@@ -61,6 +61,7 @@
 <!-- badges: start -->
 
 <p>FastSurvival provides fast alternatives to the standard survival analysis functions in the <a href="https://cran.r-project.org/package=survival" class="external-link">survival</a> package, together with a simulation layer for designing and evaluating time-to-event trials. Every function is designed for repeated evaluation inside large simulation loops — adaptive sample-size re-estimation, probability-of-success calculations, regional consistency evaluation in multi-regional trials — where the standard iterative or object-building overhead of <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>, <code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code>, and <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> becomes a computational bottleneck. Core computations are implemented in C++ via <a href="https://cran.r-project.org/package=Rcpp" class="external-link">Rcpp</a> for maximum performance.</p>
+<p>The full documentation site, including function references and articles, is available at <a href="https://gosukehommaEX.github.io/FastSurvival/" class="uri">https://gosukehommaEX.github.io/FastSurvival/</a>.</p>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
@@ -249,10 +250,11 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. Summarize operating characteristics against efficacy boundaries</span></span>
-<span><span class="co">#    (boundaries from a group-sequential design, e.g. gsDesign)</span></span>
+<span><span class="co">#    (nominal levels from a group-sequential design, e.g. gsDesign)</span></span>
 <span><span class="va">oc</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
-<span>  efficacy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>logrank.p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0006</span>, <span class="fl">0.0238</span><span class="op">)</span><span class="op">)</span></span>
+<span>  p.col <span class="op">=</span> <span class="st">"logrank.p"</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0006</span>, <span class="fl">0.0238</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">oc</span></span></code></pre></div>
 <p>The estimation functions can also be used directly inside a loop. Each returned object is internally a numeric vector, so after stripping the class with <code><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass()</a></code> the per-simulation results can be combined with <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> into an ordinary numeric matrix:</p>

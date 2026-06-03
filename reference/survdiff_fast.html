@@ -130,7 +130,7 @@ Details for the required order in the stratified case.</p></dd>
 <dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
 <dd><p>An optional vector of stratum labels aligned with <code>time</code>.
 If <code>NULL</code> (default), the ordinary log-rank test is computed and the
-behaviour is identical to earlier versions of this function. If supplied,
+behavior is identical to earlier versions of this function. If supplied,
 the stratified log-rank test is computed, matching
 <code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></code> with a <code><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata()</a></code> term. Any type that
 supports equality comparison is accepted. May be combined with a non-default
@@ -140,7 +140,7 @@ supports equality comparison is accepted. May be combined with a non-default
 <dt id="arg-weight">weight<a class="anchor" aria-label="anchor" href="#arg-weight"></a></dt>
 <dd><p>A character string naming the weight scheme. <code>"logrank"</code>
 (default) is the ordinary unweighted log-rank test and reproduces the
-behaviour of earlier versions of this function exactly. <code>"fh"</code> is the
+behavior of earlier versions of this function exactly. <code>"fh"</code> is the
 Fleming-Harrington G(rho, gamma) test with weight
 <code>S(t-)^rho (1 - S(t-))^gamma</code>. <code>"mwlrt"</code> is the modestly-weighted
 log-rank test of Magirr and Burman with weight
@@ -365,9 +365,9 @@ procedures. <em>Journal of the Royal Statistical Society. Series A
 <span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq       mean   median       uq      max neval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  42.800  51.286   60.68765   62.692   67.181  167.212  1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 955.484 992.458 1032.97579 1005.883 1023.481 5921.037  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq      mean  median       uq      max neval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  28.732  33.435  40.39107  41.652  45.3475  212.506  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 616.575 661.643 702.19130 678.022 694.0960 5861.322  1000</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

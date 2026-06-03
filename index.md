@@ -15,6 +15,9 @@ overhead of
 computational bottleneck. Core computations are implemented in C++ via
 [Rcpp](https://cran.r-project.org/package=Rcpp) for maximum performance.
 
+The full documentation site, including function references and articles,
+is available at <https://gosukehommaEX.github.io/FastSurvival/>.
+
 ## Functions
 
 ### Estimation and testing
@@ -252,10 +255,11 @@ res <- analysis_fast(
 )
 
 # 3. Summarize operating characteristics against efficacy boundaries
-#    (boundaries from a group-sequential design, e.g. gsDesign)
+#    (nominal levels from a group-sequential design, e.g. gsDesign)
 oc <- simsummary_fast(
   res,
-  efficacy = list(logrank.p = c(0.0006, 0.0238))
+  p.col = "logrank.p",
+  alpha = c(0.0006, 0.0238)
 )
 oc
 ```
