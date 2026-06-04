@@ -20,6 +20,8 @@ analysis_fast(
   gamma = 0,
   t_star = NULL,
   strata = NULL,
+  ms.method = c("wald", "loglog", "mover"),
+  s_star = 0.5,
   mc.rho = c(0, 0, 1, 1),
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
@@ -42,11 +44,14 @@ Mutually exclusive with \code{event.looks}.}
 
 \item{stat}{A character vector naming the statistics to compute. Any subset
 of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-\code{"maxcombo"}, and \code{"ahsw"}. Defaults to \code{"logrank"}.}
+\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
+\code{"ahr"}. Defaults to \code{"logrank"}.}
 
 \item{tau}{A single positive numeric value, the restriction horizon for
-\code{"rmst"} and the truncation time for \code{"ahsw"}. Required only when
-\code{"rmst"} or \code{"ahsw"} is requested.}
+\code{"rmst"}, the truncation time for \code{"ahsw"} and \code{"ahr"}, and
+the milestone timepoint for \code{"milestone"}. Required only when
+\code{"rmst"}, \code{"ahsw"}, \code{"milestone"}, or \code{"ahr"} is
+requested.}
 
 \item{t.eval}{A single positive numeric value, the landmark time for
 \code{"km"}. Required only when \code{"km"} is requested.}
@@ -98,6 +103,15 @@ test. When several columns are named their interaction defines the strata.
 Stratification applies only to the \code{"logrank"} statistic; the other
 statistics ignore it.}
 
+\item{ms.method}{A character string naming the inference method for the
+\code{"milestone"} statistic, one of \code{"wald"} (default),
+\code{"loglog"}, or \code{"mover"}. See \code{\link{milestone_fast}}.}
+
+\item{s_star}{A single numeric value in (0, 1], the survival-probability
+threshold of the modestly-weighted component of the \code{"rmw"} statistic.
+The weight is capped at \code{1 / s_star}. Defaults to 0.5. See
+\code{\link{rmw_fast}}.}
+
 \item{mc.rho}{A numeric vector of Fleming-Harrington first parameters for the
 \code{"maxcombo"} statistic, one per component weight. Defaults to
 \code{c(0, 0, 1, 1)}.}
@@ -141,7 +155,13 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{ahsw.ah.trt}, \code{ahsw.rah}, \code{ahsw.rah.lower},
   \code{ahsw.rah.upper}, \code{ahsw.p.rah}, \code{ahsw.dah},
   \code{ahsw.dah.lower}, \code{ahsw.dah.upper}, and \code{ahsw.p.dah} for
-  \code{"ahsw"}. The Z columns \code{logrank.z}, \code{cox.z}, and
+  \code{"ahsw"}; \code{milestone.surv.ctrl}, \code{milestone.surv.trt},
+  \code{milestone.diff}, \code{milestone.diff.lower},
+  \code{milestone.diff.upper}, \code{milestone.z}, and \code{milestone.p}
+  for \code{"milestone"}; \code{rmw.stat} and \code{rmw.p} for \code{"rmw"};
+  and \code{ahr.ahr}, \code{ahr.theta.ctrl}, \code{ahr.theta.trt},
+  \code{ahr.z}, and \code{ahr.p} for \code{"ahr"}. The Z columns
+  \code{logrank.z}, \code{cox.z}, and
   \code{rmst.z} carry the natural sign of each test, and the p-value columns
   follow \code{side} except for the AHSW p-values, which are two-sided.
 }
@@ -154,7 +174,9 @@ At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing \code{\link{survdiff_fast}},
 \code{\link{coxph_fast}}, \code{\link{rmst_fast}}, \code{\link{survfit_fast}},
-\code{\link{maxcombo_fast}}, and \code{\link{ahsw_fast}}. Optionally the same
+\code{\link{maxcombo_fast}}, \code{\link{ahsw_fast}},
+\code{\link{milestone_fast}}, \code{\link{rmw_fast}}, and
+\code{\link{ahr_fast}}. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 \code{presorted = TRUE}, so each look avoids a redundant sort.
@@ -186,7 +208,8 @@ Exactly one of \code{event.looks} and \code{time.looks} must be supplied.
 
 The statistics are selected with \code{stat}, which may name one or more of
 \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-\code{"maxcombo"}, and \code{"ahsw"}.
+\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
+\code{"ahr"}.
 
 The \code{"logrank"} statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
@@ -220,6 +243,31 @@ average hazards, the ratio (RAH) and difference (DAH) contrasts with their
 confidence intervals, and two-sided p-values for both contrasts. The AHSW
 p-values are always two-sided and do not depend on \code{side}, matching
 \code{\link{ahsw_fast}}.
+
+The \code{"milestone"} statistic compares the Kaplan-Meier survival
+probabilities of the two groups at the milestone timepoint \code{tau}. It
+reports the per-group survival, the difference (treatment minus control) with
+its confidence interval, the test statistic, and the p-value. The inference
+method is selected with \code{ms.method} (\code{"wald"}, \code{"loglog"}, or
+\code{"mover"}), matching \code{\link{milestone_fast}}; the benefit direction
+is a positive difference (higher treatment survival), so a positive Z favors
+treatment.
+
+The \code{"rmw"} statistic is the robust modestly-weighted log-rank test of
+Magirr and Ohrn, the maximum of the standard log-rank component and a single
+modestly-weighted component with survival-threshold \code{s_star}. Its
+\code{rmw.stat} is the most extreme standardized component (the minimum when
+\code{side = 1}, so a negative value favors treatment, and the maximum
+absolute component when \code{side = 2}), and \code{rmw.p} is the joint
+bivariate-normal p-value, which already follows \code{side}, matching
+\code{\link{rmw_fast}}.
+
+The \code{"ahr"} statistic is the Kalbfleisch-Prentice average hazard ratio
+over the window from 0 to \code{tau}. It reports the average hazard ratio
+(treatment relative to control), the two group shares of the total hazard,
+the test statistic on the group-share scale, and the p-value. The benefit
+direction is an average hazard ratio below 1 (a negative Z), as in
+\code{\link{ahr_fast}}.
 
 When \code{by.subgroup = TRUE}, the output is given in long form with a
 \code{population} column. Each \code{(sim, look)} produces one row for the
@@ -266,10 +314,17 @@ res4 <- analysis_fast(df, control = 1, time.looks = 24,
                       stat = c("maxcombo", "ahsw"), tau = 18)
 head(res4)
 
+# Milestone survival, robust modestly-weighted, and average hazard ratio
+res5 <- analysis_fast(df, control = 1, time.looks = 24,
+                      stat = c("milestone", "rmw", "ahr"), tau = 18,
+                      ms.method = "loglog", s_star = 0.5, side = 1)
+head(res5)
+
 }
 \seealso{
 \code{\link{simdata_fast}}, \code{\link{survdiff_fast}},
   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
-  \code{\link{ahsw_fast}}.
+  \code{\link{ahsw_fast}}, \code{\link{milestone_fast}},
+  \code{\link{rmw_fast}}, \code{\link{ahr_fast}}.
 }

@@ -12,8 +12,11 @@ for each simulated trial by reusing
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
 [`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
 [`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
 and
-[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 Optionally the same statistics are also reported within each subgroup.
 The censoring and time sorting are handled by a C++ backend, and the
 analysis cores are called with `presorted = TRUE`, so each look avoids a
@@ -38,6 +41,8 @@ analysis_fast(
   gamma = 0,
   t_star = NULL,
   strata = NULL,
+  ms.method = c("wald", "loglog", "mover"),
+  s_star = 0.5,
   mc.rho = c(0, 0, 1, 1),
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
@@ -72,14 +77,15 @@ analysis_fast(
 - stat:
 
   A character vector naming the statistics to compute. Any subset of
-  `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, and `"ahsw"`.
-  Defaults to `"logrank"`.
+  `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
+  `"milestone"`, `"rmw"`, and `"ahr"`. Defaults to `"logrank"`.
 
 - tau:
 
-  A single positive numeric value, the restriction horizon for `"rmst"`
-  and the truncation time for `"ahsw"`. Required only when `"rmst"` or
-  `"ahsw"` is requested.
+  A single positive numeric value, the restriction horizon for `"rmst"`,
+  the truncation time for `"ahsw"` and `"ahr"`, and the milestone
+  timepoint for `"milestone"`. Required only when `"rmst"`, `"ahsw"`,
+  `"milestone"`, or `"ahr"` is requested.
 
 - t.eval:
 
@@ -149,6 +155,19 @@ analysis_fast(
   applies only to the `"logrank"` statistic; the other statistics ignore
   it.
 
+- ms.method:
+
+  A character string naming the inference method for the `"milestone"`
+  statistic, one of `"wald"` (default), `"loglog"`, or `"mover"`. See
+  [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+
+- s_star:
+
+  A single numeric value in (0, 1\], the survival-probability threshold
+  of the modestly-weighted component of the `"rmw"` statistic. The
+  weight is capped at `1 / s_star`. Defaults to 0.5. See
+  [`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md).
+
 - mc.rho:
 
   A numeric vector of Fleming-Harrington first parameters for the
@@ -196,7 +215,11 @@ the requested statistics. A statistic that cannot be computed for a row
 and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`,
 `ahsw.rah`, `ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`,
 `ahsw.dah`, `ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for
-`"ahsw"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
+`"ahsw"`; `milestone.surv.ctrl`, `milestone.surv.trt`, `milestone.diff`,
+`milestone.diff.lower`, `milestone.diff.upper`, `milestone.z`, and
+`milestone.p` for `"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and
+`ahr.ahr`, `ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for
+`"ahr"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
 natural sign of each test, and the p-value columns follow `side` except
 for the AHSW p-values, which are two-sided.
 
@@ -227,7 +250,8 @@ analysis at that look.
 Exactly one of `event.looks` and `time.looks` must be supplied.
 
 The statistics are selected with `stat`, which may name one or more of
-`"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, and `"ahsw"`.
+`"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
+`"milestone"`, `"rmw"`, and `"ahr"`.
 
 The `"logrank"` statistic is configurable. By default it is the ordinary
 unweighted, unstratified two-group log-rank test and reproduces the
@@ -263,6 +287,33 @@ The AHSW p-values are always two-sided and do not depend on `side`,
 matching
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
 
+The `"milestone"` statistic compares the Kaplan-Meier survival
+probabilities of the two groups at the milestone timepoint `tau`. It
+reports the per-group survival, the difference (treatment minus control)
+with its confidence interval, the test statistic, and the p-value. The
+inference method is selected with `ms.method` (`"wald"`, `"loglog"`, or
+`"mover"`), matching
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md);
+the benefit direction is a positive difference (higher treatment
+survival), so a positive Z favors treatment.
+
+The `"rmw"` statistic is the robust modestly-weighted log-rank test of
+Magirr and Ohrn, the maximum of the standard log-rank component and a
+single modestly-weighted component with survival-threshold `s_star`. Its
+`rmw.stat` is the most extreme standardized component (the minimum when
+`side = 1`, so a negative value favors treatment, and the maximum
+absolute component when `side = 2`), and `rmw.p` is the joint
+bivariate-normal p-value, which already follows `side`, matching
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md).
+
+The `"ahr"` statistic is the Kalbfleisch-Prentice average hazard ratio
+over the window from 0 to `tau`. It reports the average hazard ratio
+(treatment relative to control), the two group shares of the total
+hazard, the test statistic on the group-share scale, and the p-value.
+The benefit direction is an average hazard ratio below 1 (a negative Z),
+as in
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
+
 When `by.subgroup = TRUE`, the output is given in long form with a
 `population` column. Each `(sim, look)` produces one row for the whole
 trial (`population = "overall"`) plus one row per subgroup level of each
@@ -285,7 +336,10 @@ and one row per `(sim, look)`, matching the whole-population analysis.
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
 [`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
 [`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
-[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 
 ## Examples
 
@@ -388,4 +442,12 @@ head(res4)
 #> 4 1.289882e-05
 #> 5 1.246293e-04
 #> 6 2.220316e-01
+
+# Milestone survival, robust modestly-weighted, and average hazard ratio
+res5 <- analysis_fast(df, control = 1, time.looks = 24,
+                      stat = c("milestone", "rmw", "ahr"), tau = 18,
+                      ms.method = "loglog", s_star = 0.5, side = 1)
+#> Error in analysis_fast(df, control = 1, time.looks = 24, stat = c("milestone",     "rmw", "ahr"), tau = 18, ms.method = "loglog", s_star = 0.5,     side = 1): unused arguments (ms.method = "loglog", s_star = 0.5)
+head(res5)
+#> Error: object 'res5' not found
 ```

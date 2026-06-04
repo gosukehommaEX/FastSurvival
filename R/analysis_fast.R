@@ -9,7 +9,9 @@
 #' calendar cutoff, and the requested statistics are computed for each
 #' simulated trial by reusing \code{\link{survdiff_fast}},
 #' \code{\link{coxph_fast}}, \code{\link{rmst_fast}}, \code{\link{survfit_fast}},
-#' \code{\link{maxcombo_fast}}, and \code{\link{ahsw_fast}}. Optionally the same
+#' \code{\link{maxcombo_fast}}, \code{\link{ahsw_fast}},
+#' \code{\link{milestone_fast}}, \code{\link{rmw_fast}}, and
+#' \code{\link{ahr_fast}}. Optionally the same
 #' statistics are also reported within each subgroup. The censoring and time
 #' sorting are handled by a C++ backend, and the analysis cores are called with
 #' \code{presorted = TRUE}, so each look avoids a redundant sort.
@@ -41,7 +43,8 @@
 #'
 #' The statistics are selected with \code{stat}, which may name one or more of
 #' \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-#' \code{"maxcombo"}, and \code{"ahsw"}.
+#' \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
+#' \code{"ahr"}.
 #'
 #' The \code{"logrank"} statistic is configurable. By default it is the
 #' ordinary unweighted, unstratified two-group log-rank test and reproduces the
@@ -76,6 +79,31 @@
 #' p-values are always two-sided and do not depend on \code{side}, matching
 #' \code{\link{ahsw_fast}}.
 #'
+#' The \code{"milestone"} statistic compares the Kaplan-Meier survival
+#' probabilities of the two groups at the milestone timepoint \code{tau}. It
+#' reports the per-group survival, the difference (treatment minus control) with
+#' its confidence interval, the test statistic, and the p-value. The inference
+#' method is selected with \code{ms.method} (\code{"wald"}, \code{"loglog"}, or
+#' \code{"mover"}), matching \code{\link{milestone_fast}}; the benefit direction
+#' is a positive difference (higher treatment survival), so a positive Z favors
+#' treatment.
+#'
+#' The \code{"rmw"} statistic is the robust modestly-weighted log-rank test of
+#' Magirr and Ohrn, the maximum of the standard log-rank component and a single
+#' modestly-weighted component with survival-threshold \code{s_star}. Its
+#' \code{rmw.stat} is the most extreme standardized component (the minimum when
+#' \code{side = 1}, so a negative value favors treatment, and the maximum
+#' absolute component when \code{side = 2}), and \code{rmw.p} is the joint
+#' bivariate-normal p-value, which already follows \code{side}, matching
+#' \code{\link{rmw_fast}}.
+#'
+#' The \code{"ahr"} statistic is the Kalbfleisch-Prentice average hazard ratio
+#' over the window from 0 to \code{tau}. It reports the average hazard ratio
+#' (treatment relative to control), the two group shares of the total hazard,
+#' the test statistic on the group-share scale, and the p-value. The benefit
+#' direction is an average hazard ratio below 1 (a negative Z), as in
+#' \code{\link{ahr_fast}}.
+#'
 #' When \code{by.subgroup = TRUE}, the output is given in long form with a
 #' \code{population} column. Each \code{(sim, look)} produces one row for the
 #' whole trial (\code{population = "overall"}) plus one row per subgroup level
@@ -102,10 +130,13 @@
 #'   Mutually exclusive with \code{event.looks}.
 #' @param stat A character vector naming the statistics to compute. Any subset
 #'   of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-#'   \code{"maxcombo"}, and \code{"ahsw"}. Defaults to \code{"logrank"}.
+#'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
+#'   \code{"ahr"}. Defaults to \code{"logrank"}.
 #' @param tau A single positive numeric value, the restriction horizon for
-#'   \code{"rmst"} and the truncation time for \code{"ahsw"}. Required only when
-#'   \code{"rmst"} or \code{"ahsw"} is requested.
+#'   \code{"rmst"}, the truncation time for \code{"ahsw"} and \code{"ahr"}, and
+#'   the milestone timepoint for \code{"milestone"}. Required only when
+#'   \code{"rmst"}, \code{"ahsw"}, \code{"milestone"}, or \code{"ahr"} is
+#'   requested.
 #' @param t.eval A single positive numeric value, the landmark time for
 #'   \code{"km"}. Required only when \code{"km"} is requested.
 #' @param conf.int A single numeric value in (0, 1), the confidence level for
@@ -147,6 +178,13 @@
 #'   test. When several columns are named their interaction defines the strata.
 #'   Stratification applies only to the \code{"logrank"} statistic; the other
 #'   statistics ignore it.
+#' @param ms.method A character string naming the inference method for the
+#'   \code{"milestone"} statistic, one of \code{"wald"} (default),
+#'   \code{"loglog"}, or \code{"mover"}. See \code{\link{milestone_fast}}.
+#' @param s_star A single numeric value in (0, 1], the survival-probability
+#'   threshold of the modestly-weighted component of the \code{"rmw"} statistic.
+#'   The weight is capped at \code{1 / s_star}. Defaults to 0.5. See
+#'   \code{\link{rmw_fast}}.
 #' @param mc.rho A numeric vector of Fleming-Harrington first parameters for the
 #'   \code{"maxcombo"} statistic, one per component weight. Defaults to
 #'   \code{c(0, 0, 1, 1)}.
@@ -186,7 +224,13 @@
 #'   \code{ahsw.ah.trt}, \code{ahsw.rah}, \code{ahsw.rah.lower},
 #'   \code{ahsw.rah.upper}, \code{ahsw.p.rah}, \code{ahsw.dah},
 #'   \code{ahsw.dah.lower}, \code{ahsw.dah.upper}, and \code{ahsw.p.dah} for
-#'   \code{"ahsw"}. The Z columns \code{logrank.z}, \code{cox.z}, and
+#'   \code{"ahsw"}; \code{milestone.surv.ctrl}, \code{milestone.surv.trt},
+#'   \code{milestone.diff}, \code{milestone.diff.lower},
+#'   \code{milestone.diff.upper}, \code{milestone.z}, and \code{milestone.p}
+#'   for \code{"milestone"}; \code{rmw.stat} and \code{rmw.p} for \code{"rmw"};
+#'   and \code{ahr.ahr}, \code{ahr.theta.ctrl}, \code{ahr.theta.trt},
+#'   \code{ahr.z}, and \code{ahr.p} for \code{"ahr"}. The Z columns
+#'   \code{logrank.z}, \code{cox.z}, and
 #'   \code{rmst.z} carry the natural sign of each test, and the p-value columns
 #'   follow \code{side} except for the AHSW p-values, which are two-sided.
 #'
@@ -220,10 +264,17 @@
 #'                       stat = c("maxcombo", "ahsw"), tau = 18)
 #' head(res4)
 #'
+#' # Milestone survival, robust modestly-weighted, and average hazard ratio
+#' res5 <- analysis_fast(df, control = 1, time.looks = 24,
+#'                       stat = c("milestone", "rmw", "ahr"), tau = 18,
+#'                       ms.method = "loglog", s_star = 0.5, side = 1)
+#' head(res5)
+#'
 #' @seealso \code{\link{simdata_fast}}, \code{\link{survdiff_fast}},
 #'   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
 #'   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
-#'   \code{\link{ahsw_fast}}.
+#'   \code{\link{ahsw_fast}}, \code{\link{milestone_fast}},
+#'   \code{\link{rmw_fast}}, \code{\link{ahr_fast}}.
 #'
 #' @importFrom stats pnorm qnorm cov2cor
 #' @export
@@ -238,10 +289,13 @@ analysis_fast <- function(data, control,
                                       "tarone-ware"),
                            rho = 0, gamma = 0, t_star = NULL,
                            strata = NULL,
+                           ms.method = c("wald", "loglog", "mover"),
+                           s_star = 0.5,
                            mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
                            abseps = 1e-5, maxpts = 25000) {
 
   weight <- match.arg(weight)
+  ms.method <- match.arg(ms.method)
 
   # ---- Input validation --------------------------------------------------
   req_cols <- c("sim", "group", "accrual_time", "tte", "event")
@@ -260,7 +314,8 @@ analysis_fast <- function(data, control,
     stop("'looks' must be positive and finite")
   }
 
-  allowed_stat <- c("logrank", "coxph", "rmst", "km", "maxcombo", "ahsw")
+  allowed_stat <- c("logrank", "coxph", "rmst", "km", "maxcombo", "ahsw",
+                    "milestone", "rmw", "ahr")
   if (!all(stat %in% allowed_stat)) {
     stop("'stat' must be a subset of: ", paste(allowed_stat, collapse = ", "))
   }
@@ -271,10 +326,11 @@ analysis_fast <- function(data, control,
     stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
   }
   side <- as.integer(side)
-  if (("rmst" %in% stat || "ahsw" %in% stat) &&
+  if (("rmst" %in% stat || "ahsw" %in% stat || "milestone" %in% stat ||
+       "ahr" %in% stat) &&
       (is.null(tau) || length(tau) != 1L || !is.finite(tau) || tau <= 0)) {
-    stop("'tau' must be a single positive value when 'rmst' or 'ahsw' is ",
-         "requested")
+    stop("'tau' must be a single positive value when 'rmst', 'ahsw', ",
+         "'milestone', or 'ahr' is requested")
   }
   if ("km" %in% stat &&
       (is.null(t.eval) || length(t.eval) != 1L || !is.finite(t.eval) ||
@@ -288,6 +344,11 @@ analysis_fast <- function(data, control,
   }
   if ("maxcombo" %in% stat && length(mc.rho) != length(mc.gamma)) {
     stop("'mc.rho' and 'mc.gamma' must have the same length")
+  }
+  if ("rmw" %in% stat &&
+      (length(s_star) != 1L || !is.finite(s_star) || s_star <= 0 ||
+       s_star > 1)) {
+    stop("'s_star' must be a single value in (0, 1] when 'rmw' is requested")
   }
 
   # ---- Subgroup columns and population definitions -----------------------
@@ -380,6 +441,9 @@ analysis_fast <- function(data, control,
   do_km       <- "km"       %in% stat
   do_maxcombo <- "maxcombo" %in% stat
   do_ahsw     <- "ahsw"     %in% stat
+  do_milestone <- "milestone" %in% stat
+  do_rmw       <- "rmw"       %in% stat
+  do_ahr       <- "ahr"       %in% stat
 
   weight_scheme <- switch(weight,
     logrank       = -1L,
@@ -390,6 +454,7 @@ analysis_fast <- function(data, control,
   t_star_v <- if (weight == "mwlrt") t_star else 0
   tau_v    <- if (is.null(tau)) 0 else tau
   teval_v  <- if (is.null(t.eval)) 0 else t.eval
+  s_star_v <- if (is.null(s_star)) 0.5 else as.numeric(s_star)
 
   # ---- Call the fused kernel ---------------------------------------------
   core <- analysis_loop_core(
@@ -398,9 +463,10 @@ analysis_fast <- function(data, control,
     pop_col, pop_level, sub_mat,
     if (use_strata) strata_int else integer(0), use_strata,
     do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw,
+    do_milestone, do_rmw, do_ahr,
     weight_scheme, rho, gamma, t_star_v,
     as.numeric(mc.rho), as.numeric(mc.gamma),
-    tau_v, teval_v
+    tau_v, teval_v, s_star_v
   )
 
   total <- nsim * length(looks) * n_pop
@@ -540,6 +606,112 @@ analysis_fast <- function(data, control,
     out$ahsw.dah.upper <- ifelse(ok, dah + z_mult * se_dah, NA_real_)
     out$ahsw.p.dah     <- ifelse(ok & se_dah > 0,
                                  2 * pnorm(-abs(dah) / se_dah), NA_real_)
+  }
+
+  if (do_milestone) {
+    s0 <- core$milestone[, 1]; v0 <- core$milestone[, 2]
+    s1 <- core$milestone[, 3]; v1 <- core$milestone[, 4]
+    se0 <- sqrt(v0); se1 <- sqrt(v1)
+    diff_est <- s1 - s0
+
+    # One-sample confidence limits per group under the chosen transform,
+    # vectorized over rows (mirrors milestone_fast's one_sample_ci).
+    one_ci <- function(surv, se) {
+      lo <- rep(NA_real_, length(surv)); up <- lo
+      if (ms.method == "wald") {
+        lo <- surv - z_mult * se
+        up <- surv + z_mult * se
+      } else {
+        ok_s <- is.finite(surv) & is.finite(se) & surv > 0 & surv < 1
+        if (ms.method == "mover") {
+          g_se <- se / surv
+          lo[ok_s] <- (surv * exp(-z_mult * g_se))[ok_s]
+          up[ok_s] <- (surv * exp(z_mult * g_se))[ok_s]
+        } else {
+          g_se <- se / (surv * abs(log(surv)))
+          lo[ok_s] <- (surv^exp(z_mult * g_se))[ok_s]
+          up[ok_s] <- (surv^exp(-z_mult * g_se))[ok_s]
+        }
+      }
+      list(lo = lo, up = up)
+    }
+    ci0 <- one_ci(s0, se0); ci1 <- one_ci(s1, se1)
+
+    if (ms.method == "wald") {
+      se_d  <- sqrt(v0 + v1)
+      lower <- diff_est - z_mult * se_d
+      upper <- diff_est + z_mult * se_d
+      stat  <- ifelse(is.finite(se_d) & se_d > 0, diff_est / se_d, NA_real_)
+    } else {
+      sigma_l <- (ci1$lo - s1)^2 + (ci0$up - s0)^2
+      sigma_u <- (ci1$up - s1)^2 + (ci0$lo - s0)^2
+      lower   <- diff_est - sqrt(sigma_l)
+      upper   <- diff_est + sqrt(sigma_u)
+      if (ms.method == "loglog") {
+        ok_m <- is.finite(s0) & is.finite(s1) & s0 > 0 & s0 < 1 &
+                s1 > 0 & s1 < 1
+        g0  <- log(-log(s0)); g1 <- log(-log(s1))
+        vg0 <- v0 / (s0 * log(s0))^2
+        vg1 <- v1 / (s1 * log(s1))^2
+        stat <- ifelse(ok_m, (g1 - g0) / sqrt(vg0 + vg1), NA_real_)
+      } else {
+        bind <- ifelse(diff_est >= 0, sigma_l, sigma_u)
+        stat <- ifelse(is.finite(bind) & bind > 0,
+                       z_mult * diff_est / sqrt(bind), NA_real_)
+      }
+    }
+
+    out$milestone.surv.ctrl  <- s0
+    out$milestone.surv.trt   <- s1
+    out$milestone.diff       <- diff_est
+    out$milestone.diff.lower <- lower
+    out$milestone.diff.upper <- upper
+    out$milestone.z          <- stat
+    out$milestone.p          <- p_from_z(stat, eff_dir = 1)
+  }
+
+  if (do_rmw) {
+    U_lr <- core$rmw[, 1]; V_lr <- core$rmw[, 2]
+    U_mw <- core$rmw[, 3]; V_mw <- core$rmw[, 4]; Cuv <- core$rmw[, 5]
+    stat_vec <- rep(NA_real_, total)
+    p_vec    <- rep(NA_real_, total)
+    for (r in seq_len(total)) {
+      vl <- V_lr[r]; vm <- V_mw[r]
+      if (!is.finite(vl) || vl <= 0 || !is.finite(vm) || vm <= 0) next
+      z_lr <- U_lr[r] / sqrt(vl)
+      z_mw <- U_mw[r] / sqrt(vm)
+      rho_r   <- Cuv[r] / sqrt(vl * vm)
+      rho_use <- max(min(rho_r, 1 - 1e-10), -1 + 1e-10)
+      corr    <- matrix(c(1, rho_use, rho_use, 1), 2L, 2L)
+      if (side == 1L) {
+        m_obs <- min(z_lr, z_mw)
+        lower <- c(m_obs, m_obs); upper <- c(Inf, Inf)
+      } else {
+        m_obs <- max(abs(z_lr), abs(z_mw))
+        lower <- c(-m_obs, -m_obs); upper <- c(m_obs, m_obs)
+      }
+      tvpack_ok <- all(lower == -Inf) || all(upper == Inf)
+      alg <- if (tvpack_ok) mvtnorm::TVPACK() else mvtnorm::Miwa()
+      inside <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+                                            corr = corr, algorithm = alg))
+      stat_vec[r] <- as.numeric(m_obs)
+      p_vec[r]    <- min(max(1 - inside, 0), 1)
+    }
+    out$rmw.stat <- stat_vec
+    out$rmw.p    <- p_vec
+  }
+
+  if (do_ahr) {
+    th1   <- core$ahr[, 1]; th2  <- core$ahr[, 2]
+    ahr_e <- core$ahr[, 3]; vth2 <- core$ahr[, 5]
+    ok <- is.finite(ahr_e) & ahr_e > 0 & is.finite(vth2) & vth2 > 0
+    se_th <- ifelse(ok, sqrt(vth2), NA_real_)
+    z_ahr <- ifelse(ok, (th2 - 0.5) / se_th, NA_real_)
+    out$ahr.ahr        <- ifelse(ok, ahr_e, NA_real_)
+    out$ahr.theta.ctrl <- ifelse(ok, th1, NA_real_)
+    out$ahr.theta.trt  <- ifelse(ok, th2, NA_real_)
+    out$ahr.z          <- z_ahr
+    out$ahr.p          <- p_from_z(z_ahr, eff_dir = -1)
   }
 
   df <- as.data.frame(out, stringsAsFactors = FALSE)

@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include <vector>
+#include <algorithm>
 
 using namespace Rcpp;
 
@@ -213,6 +214,39 @@ static AHRResult ahr_core_impl(const std::vector<double>& time1,
 
   res.valid = 1;
   return res;
+}
+
+// Pointer-based two-group entry with external linkage. Builds the evaluation
+// grid (0, the pooled event times on or before tau, and tau) internally from
+// the two groups' sorted observations and writes
+//   theta1, theta2, ahr, var_theta1, var_theta2, GL, valid
+// into out[0..6]. The two groups' observations must each be sorted in ascending
+// time order. Provided so a fused simulation loop can call the average hazard
+// ratio core directly on reusable group-split buffers, matching the grid that
+// the exported wrapper builds in R.
+void ahr_core_two_impl(const double* t0, const int* d0, int n0,
+                       const double* t1, const int* d1, int n1,
+                       double tau, double* out) {
+  std::vector<double> grid;
+  grid.reserve((size_t) (n0 + n1 + 2));
+  grid.push_back(0.0);
+  for (int i = 0; i < n0; ++i) if (d0[i] == 1 && t0[i] <= tau) grid.push_back(t0[i]);
+  for (int i = 0; i < n1; ++i) if (d1[i] == 1 && t1[i] <= tau) grid.push_back(t1[i]);
+  grid.push_back(tau);
+  std::sort(grid.begin(), grid.end());
+  grid.erase(std::unique(grid.begin(), grid.end()), grid.end());
+
+  std::vector<double> tt0(t0, t0 + n0), tt1(t1, t1 + n1);
+  std::vector<int>    dd0(d0, d0 + n0), dd1(d1, d1 + n1);
+
+  AHRResult r = ahr_core_impl(tt0, dd0, tt1, dd1, grid);
+  out[0] = r.theta1;
+  out[1] = r.theta2;
+  out[2] = r.ahr;
+  out[3] = r.var_theta1;
+  out[4] = r.var_theta2;
+  out[5] = r.GL;
+  out[6] = (double) r.valid;
 }
 
 //' Two-group average hazard ratio core (internal)

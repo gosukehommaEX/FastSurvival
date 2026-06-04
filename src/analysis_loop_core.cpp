@@ -34,6 +34,11 @@ double combo_logrank_core_impl(const double*, const int*, const int*, int,
 void ahsw_core_impl(const double*, const int*, int, double,
                     std::vector<double>&, std::vector<double>&,
                     std::vector<double>&, double*);
+void milestone_core_impl(const double*, const int*, const int*, int, double,
+                         double*);
+void rmw_core_impl(const double*, const int*, const int*, int, double, double*);
+void ahr_core_two_impl(const double*, const int*, int, const double*,
+                       const int*, int, double, double*);
 
 // Stable LSD radix sort of indices [0, m) by a non-negative double key. The
 // observed time at an administrative cut is always non-negative, so the IEEE
@@ -109,10 +114,11 @@ List analysis_loop_core(
     bool use_strata,
     bool do_logrank, bool do_coxph, bool do_rmst, bool do_km,
     bool do_maxcombo, bool do_ahsw,
+    bool do_milestone, bool do_rmw, bool do_ahr,
     int weight_scheme,              // -1 plain, 0 FH, 1 mwlrt, 2 gehan, 3 tarone-ware
     double rho, double gamma, double t_star,
     const NumericVector& mc_rho, const NumericVector& mc_gamma,
-    double tau, double t_eval
+    double tau, double t_eval, double s_star
 ) {
   const int nsim    = sim_ptr.size() - 1;
   const int n_looks = look_values.size();
@@ -127,11 +133,15 @@ List analysis_loop_core(
   IntegerVector nd_out(ncells);
 
   NumericMatrix lr_mat, cox_mat, rmst_mat, km_mat, ahsw_mat, mc_Uout, mc_Vout;
+  NumericMatrix ms_mat, rmw_mat, ahr_mat;
   if (do_logrank) { lr_mat   = NumericMatrix(ncells, 2); std::fill(lr_mat.begin(),   lr_mat.end(),   NA_REAL); }
   if (do_coxph)   { cox_mat  = NumericMatrix(ncells, 4); std::fill(cox_mat.begin(),  cox_mat.end(),  NA_REAL); }
   if (do_rmst)    { rmst_mat = NumericMatrix(ncells, 4); std::fill(rmst_mat.begin(), rmst_mat.end(), NA_REAL); }
   if (do_km)      { km_mat   = NumericMatrix(ncells, 2); std::fill(km_mat.begin(),   km_mat.end(),   NA_REAL); }
   if (do_ahsw)    { ahsw_mat = NumericMatrix(ncells, 8); std::fill(ahsw_mat.begin(), ahsw_mat.end(), NA_REAL); }
+  if (do_milestone) { ms_mat  = NumericMatrix(ncells, 4); std::fill(ms_mat.begin(),  ms_mat.end(),  NA_REAL); }
+  if (do_rmw)       { rmw_mat = NumericMatrix(ncells, 5); std::fill(rmw_mat.begin(), rmw_mat.end(), NA_REAL); }
+  if (do_ahr)       { ahr_mat = NumericMatrix(ncells, 5); std::fill(ahr_mat.begin(), ahr_mat.end(), NA_REAL); }
   if (do_maxcombo) {
     mc_Uout = NumericMatrix(ncells, nw);      std::fill(mc_Uout.begin(), mc_Uout.end(), NA_REAL);
     mc_Vout = NumericMatrix(ncells, nw * nw); std::fill(mc_Vout.begin(), mc_Vout.end(), NA_REAL);
@@ -347,7 +357,8 @@ List analysis_loop_core(
 
         // Group splits reused by rmst / km / ahsw.
         const bool need_split = (do_rmst && both) || do_km ||
-                                (do_ahsw && n_ev > 0 && both);
+                                (do_ahsw && n_ev > 0 && both) ||
+                                (do_ahr && n_ev > 0 && both);
         if (need_split) {
           int a0 = 0, a1 = 0;
           for (int k = 0; k < sz; ++k) {
@@ -400,6 +411,41 @@ List analysis_loop_core(
           ahsw_mat(pos, 6) = a1c[4]; ahsw_mat(pos, 7) = (double) n1;
         }
 
+        // ---- Milestone survival (per-group KM + Greenwood at tau) --------
+        if (do_milestone && both) {
+          double ms[10];
+          milestone_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
+                              tau, ms);
+          ms_mat(pos, 0) = ms[0];   // surv0 (control)
+          ms_mat(pos, 1) = ms[2];   // var0
+          ms_mat(pos, 2) = ms[1];   // surv1 (treatment)
+          ms_mat(pos, 3) = ms[3];   // var1
+        }
+
+        // ---- Robust modestly-weighted log-rank ---------------------------
+        if (do_rmw && n_ev > 0 && both) {
+          double rw[6];
+          rmw_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
+                        s_star, rw);
+          rmw_mat(pos, 0) = rw[1];  // U_lr
+          rmw_mat(pos, 1) = rw[2];  // V_lr
+          rmw_mat(pos, 2) = rw[3];  // U_mw
+          rmw_mat(pos, 3) = rw[4];  // V_mw
+          rmw_mat(pos, 4) = rw[5];  // C
+        }
+
+        // ---- Average hazard ratio (Kalbfleisch-Prentice) -----------------
+        if (do_ahr && n_ev > 0 && both) {
+          double ar[7];
+          ahr_core_two_impl(t0d.data(), e0i.data(), n0,
+                            t1d.data(), e1i.data(), n1, tau, ar);
+          ahr_mat(pos, 0) = ar[0];  // theta1 (control share)
+          ahr_mat(pos, 1) = ar[1];  // theta2 (treatment share)
+          ahr_mat(pos, 2) = ar[2];  // ahr
+          ahr_mat(pos, 3) = ar[3];  // var_theta1
+          ahr_mat(pos, 4) = ar[4];  // var_theta2
+        }
+
         ++pos;
       }
     }
@@ -417,6 +463,9 @@ List analysis_loop_core(
     _["km"]         = do_km       ? (SEXP) km_mat   : R_NilValue,
     _["ahsw"]       = do_ahsw     ? (SEXP) ahsw_mat : R_NilValue,
     _["mc_U"]       = do_maxcombo ? (SEXP) mc_Uout  : R_NilValue,
-    _["mc_V"]       = do_maxcombo ? (SEXP) mc_Vout  : R_NilValue
+    _["mc_V"]       = do_maxcombo ? (SEXP) mc_Vout  : R_NilValue,
+    _["milestone"]  = do_milestone ? (SEXP) ms_mat  : R_NilValue,
+    _["rmw"]        = do_rmw       ? (SEXP) rmw_mat : R_NilValue,
+    _["ahr"]        = do_ahr       ? (SEXP) ahr_mat : R_NilValue
   );
 }

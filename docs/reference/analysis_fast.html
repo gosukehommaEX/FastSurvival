@@ -7,7 +7,9 @@ At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing survdiff_fast,
 coxph_fast, rmst_fast, survfit_fast,
-maxcombo_fast, and ahsw_fast. Optionally the same
+maxcombo_fast, ahsw_fast,
+milestone_fast, rmw_fast, and
+ahr_fast. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:description" content='Performs interim or sequential analyses of simulated two-group
@@ -18,7 +20,9 @@ At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing survdiff_fast,
 coxph_fast, rmst_fast, survfit_fast,
-maxcombo_fast, and ahsw_fast. Optionally the same
+maxcombo_fast, ahsw_fast,
+milestone_fast, rmw_fast, and
+ahr_fast. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
@@ -70,7 +74,9 @@ At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing <code><a href="survdiff_fast.html">survdiff_fast</a></code>,
 <code><a href="coxph_fast.html">coxph_fast</a></code>, <code><a href="rmst_fast.html">rmst_fast</a></code>, <code><a href="survfit_fast.html">survfit_fast</a></code>,
-<code><a href="maxcombo_fast.html">maxcombo_fast</a></code>, and <code><a href="ahsw_fast.html">ahsw_fast</a></code>. Optionally the same
+<code><a href="maxcombo_fast.html">maxcombo_fast</a></code>, <code><a href="ahsw_fast.html">ahsw_fast</a></code>,
+<code><a href="milestone_fast.html">milestone_fast</a></code>, <code><a href="rmw_fast.html">rmw_fast</a></code>, and
+<code><a href="ahr_fast.html">ahr_fast</a></code>. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 <code>presorted = TRUE</code>, so each look avoids a redundant sort.</p>
@@ -94,6 +100,8 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <span>  gamma <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  t_star <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  strata <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ms.method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wald"</span>, <span class="st">"loglog"</span>, <span class="st">"mover"</span><span class="op">)</span>,</span>
+<span>  s_star <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  mc.rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  mc.gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  abseps <span class="op">=</span> <span class="fl">1e-05</span>,</span>
@@ -129,13 +137,16 @@ Mutually exclusive with <code>event.looks</code>.</p></dd>
 <dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
 <dd><p>A character vector naming the statistics to compute. Any subset
 of <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"</code>,
-<code>"maxcombo"</code>, and <code>"ahsw"</code>. Defaults to <code>"logrank"</code>.</p></dd>
+<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>, and
+<code>"ahr"</code>. Defaults to <code>"logrank"</code>.</p></dd>
 
 
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
 <dd><p>A single positive numeric value, the restriction horizon for
-<code>"rmst"</code> and the truncation time for <code>"ahsw"</code>. Required only when
-<code>"rmst"</code> or <code>"ahsw"</code> is requested.</p></dd>
+<code>"rmst"</code>, the truncation time for <code>"ahsw"</code> and <code>"ahr"</code>, and
+the milestone timepoint for <code>"milestone"</code>. Required only when
+<code>"rmst"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, or <code>"ahr"</code> is
+requested.</p></dd>
 
 
 <dt id="arg-t-eval">t.eval<a class="anchor" aria-label="anchor" href="#arg-t-eval"></a></dt>
@@ -206,6 +217,19 @@ Stratification applies only to the <code>"logrank"</code> statistic; the other
 statistics ignore it.</p></dd>
 
 
+<dt id="arg-ms-method">ms.method<a class="anchor" aria-label="anchor" href="#arg-ms-method"></a></dt>
+<dd><p>A character string naming the inference method for the
+<code>"milestone"</code> statistic, one of <code>"wald"</code> (default),
+<code>"loglog"</code>, or <code>"mover"</code>. See <code><a href="milestone_fast.html">milestone_fast</a></code>.</p></dd>
+
+
+<dt id="arg-s-star">s_star<a class="anchor" aria-label="anchor" href="#arg-s-star"></a></dt>
+<dd><p>A single numeric value in (0, 1], the survival-probability
+threshold of the modestly-weighted component of the <code>"rmw"</code> statistic.
+The weight is capped at <code>1 / s_star</code>. Defaults to 0.5. See
+<code><a href="rmw_fast.html">rmw_fast</a></code>.</p></dd>
+
+
 <dt id="arg-mc-rho">mc.rho<a class="anchor" aria-label="anchor" href="#arg-mc-rho"></a></dt>
 <dd><p>A numeric vector of Fleming-Harrington first parameters for the
 <code>"maxcombo"</code> statistic, one per component weight. Defaults to
@@ -258,7 +282,13 @@ to 25000.</p></dd>
   <code>ahsw.ah.trt</code>, <code>ahsw.rah</code>, <code>ahsw.rah.lower</code>,
   <code>ahsw.rah.upper</code>, <code>ahsw.p.rah</code>, <code>ahsw.dah</code>,
   <code>ahsw.dah.lower</code>, <code>ahsw.dah.upper</code>, and <code>ahsw.p.dah</code> for
-  <code>"ahsw"</code>. The Z columns <code>logrank.z</code>, <code>cox.z</code>, and
+  <code>"ahsw"</code>; <code>milestone.surv.ctrl</code>, <code>milestone.surv.trt</code>,
+  <code>milestone.diff</code>, <code>milestone.diff.lower</code>,
+  <code>milestone.diff.upper</code>, <code>milestone.z</code>, and <code>milestone.p</code>
+  for <code>"milestone"</code>; <code>rmw.stat</code> and <code>rmw.p</code> for <code>"rmw"</code>;
+  and <code>ahr.ahr</code>, <code>ahr.theta.ctrl</code>, <code>ahr.theta.trt</code>,
+  <code>ahr.z</code>, and <code>ahr.p</code> for <code>"ahr"</code>. The Z columns
+  <code>logrank.z</code>, <code>cox.z</code>, and
   <code>rmst.z</code> carry the natural sign of each test, and the p-value columns
   follow <code>side</code> except for the AHSW p-values, which are two-sided.</p>
     </div>
@@ -286,7 +316,8 @@ overall analysis and for every subgroup analysis at that look.</p>
 <p>Exactly one of <code>event.looks</code> and <code>time.looks</code> must be supplied.</p>
 <p>The statistics are selected with <code>stat</code>, which may name one or more of
 <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"</code>,
-<code>"maxcombo"</code>, and <code>"ahsw"</code>.</p>
+<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>, and
+<code>"ahr"</code>.</p>
 <p>The <code>"logrank"</code> statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
 behavior of earlier versions of this function exactly. A non-default
@@ -317,6 +348,28 @@ average hazards, the ratio (RAH) and difference (DAH) contrasts with their
 confidence intervals, and two-sided p-values for both contrasts. The AHSW
 p-values are always two-sided and do not depend on <code>side</code>, matching
 <code><a href="ahsw_fast.html">ahsw_fast</a></code>.</p>
+<p>The <code>"milestone"</code> statistic compares the Kaplan-Meier survival
+probabilities of the two groups at the milestone timepoint <code>tau</code>. It
+reports the per-group survival, the difference (treatment minus control) with
+its confidence interval, the test statistic, and the p-value. The inference
+method is selected with <code>ms.method</code> (<code>"wald"</code>, <code>"loglog"</code>, or
+<code>"mover"</code>), matching <code><a href="milestone_fast.html">milestone_fast</a></code>; the benefit direction
+is a positive difference (higher treatment survival), so a positive Z favors
+treatment.</p>
+<p>The <code>"rmw"</code> statistic is the robust modestly-weighted log-rank test of
+Magirr and Ohrn, the maximum of the standard log-rank component and a single
+modestly-weighted component with survival-threshold <code>s_star</code>. Its
+<code>rmw.stat</code> is the most extreme standardized component (the minimum when
+<code>side = 1</code>, so a negative value favors treatment, and the maximum
+absolute component when <code>side = 2</code>), and <code>rmw.p</code> is the joint
+bivariate-normal p-value, which already follows <code>side</code>, matching
+<code><a href="rmw_fast.html">rmw_fast</a></code>.</p>
+<p>The <code>"ahr"</code> statistic is the Kalbfleisch-Prentice average hazard ratio
+over the window from 0 to <code>tau</code>. It reports the average hazard ratio
+(treatment relative to control), the two group shares of the total hazard,
+the test statistic on the group-share scale, and the p-value. The benefit
+direction is an average hazard ratio below 1 (a negative Z), as in
+<code><a href="ahr_fast.html">ahr_fast</a></code>.</p>
 <p>When <code>by.subgroup = TRUE</code>, the output is given in long form with a
 <code>population</code> column. Each <code>(sim, look)</code> produces one row for the
 whole trial (<code>population = "overall"</code>) plus one row per subgroup level
@@ -337,7 +390,8 @@ the whole-population analysis.</p>
     <div class="dont-index"><p><code><a href="simdata_fast.html">simdata_fast</a></code>, <code><a href="survdiff_fast.html">survdiff_fast</a></code>,
   <code><a href="coxph_fast.html">coxph_fast</a></code>, <code><a href="rmst_fast.html">rmst_fast</a></code>,
   <code><a href="survfit_fast.html">survfit_fast</a></code>, <code><a href="maxcombo_fast.html">maxcombo_fast</a></code>,
-  <code><a href="ahsw_fast.html">ahsw_fast</a></code>.</p></div>
+  <code><a href="ahsw_fast.html">ahsw_fast</a></code>, <code><a href="milestone_fast.html">milestone_fast</a></code>,
+  <code><a href="rmw_fast.html">rmw_fast</a></code>, <code><a href="ahr_fast.html">ahr_fast</a></code>.</p></div>
     </div>
 
     <div class="section level2">
@@ -440,6 +494,14 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 1.289882e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.246293e-04</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 2.220316e-01</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Milestone survival, robust modestly-weighted, and average hazard ratio</span></span></span>
+<span class="r-in"><span><span class="va">res5</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
+<span class="r-in"><span>                      stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"milestone"</span>, <span class="st">"rmw"</span>, <span class="st">"ahr"</span><span class="op">)</span>, tau <span class="op">=</span> <span class="fl">18</span>,</span></span>
+<span class="r-in"><span>                      ms.method <span class="op">=</span> <span class="st">"loglog"</span>, s_star <span class="op">=</span> <span class="fl">0.5</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in analysis_fast(df, control = 1, time.looks = 24, stat = c("milestone",     "rmw", "ahr"), tau = 18, ms.method = "loglog", s_star = 0.5,     side = 1):</span> unused arguments (ms.method = "loglog", s_star = 0.5)</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res5</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'res5' not found</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
