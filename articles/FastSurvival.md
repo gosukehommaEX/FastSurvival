@@ -35,8 +35,12 @@ returns the restricted mean survival time.
 compares survival at a milestone timepoint.
 [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
 computes the max-combo test.
+[`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
+computes the robust modestly-weighted log-rank test.
 [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
 computes the average hazard with survival weight.
+[`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+computes the Kalbfleisch-Prentice average hazard ratio.
 
 The simulation functions support a full simulation study.
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)

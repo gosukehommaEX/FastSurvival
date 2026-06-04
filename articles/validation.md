@@ -215,6 +215,61 @@ the restricted mean survival time, so for the `ovarian` data, where
 follow-up is measured in days, the values are on the order of 1e-03 per
 day in both groups.
 
+## Average hazard ratio
+
+[`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+computes the Kalbfleisch-Prentice average hazard ratio between two
+groups over a restricted interval. The reference implementation is
+`ahrKM()` from the AHR package, but that package has been archived on
+CRAN, so here we check the point estimates against a direct
+survival-based computation: each group’s Kaplan-Meier curve from
+[`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html), integrated
+to form the group shares of the total hazard.
+
+``` r
+
+tau <- 500
+
+fast_ahr <- ahr_fast(ovarian$futime, ovarian$fustat, ovarian$rx, tau = tau)
+
+g  <- ovarian$rx
+ev <- c(ovarian$futime[g == 1 & ovarian$fustat == 1],
+        ovarian$futime[g == 2 & ovarian$fustat == 1])
+grid <- sort(unique(c(0, ev[ev <= tau], tau)))
+
+km_on_grid <- function(gi) {
+  sf <- survfit(Surv(futime, fustat) ~ 1, data = ovarian[g == gi, ])
+  approxfun(sf$time, sf$surv, method = "constant",
+            yleft = 1, rule = 2, f = 0)(grid)
+}
+
+S1  <- km_on_grid(1)
+S2  <- km_on_grid(2)
+m   <- length(grid)
+dS1 <- S1 - c(1, S1[-m])
+GL  <- S1[m] * S2[m]
+ref_theta1 <- -sum(S2 * dS1) / (1 - GL)
+
+data.frame(
+  quantity  = c("theta (group 1)", "theta (group 2)", "AHR"),
+  fast      = c(fast_ahr$theta[[1]], fast_ahr$theta[[2]], fast_ahr$ahr),
+  reference = c(ref_theta1, 1 - ref_theta1, (1 - ref_theta1) / ref_theta1),
+  row.names = NULL
+)
+#>          quantity      fast reference
+#> 1 theta (group 1) 0.6965377 0.6965377
+#> 2 theta (group 2) 0.3034623 0.3034623
+#> 3             AHR 0.4356725 0.4356725
+```
+
+The point estimates match the survival-based reference to numerical
+precision. The average hazard ratio was additionally cross-checked
+against the archived AHR package, the reference implementation used by
+Dormuth et al. (2024): the two group shares, the average hazard ratio,
+the variances, and both test statistics agree to within the order of
+1e-15. That external comparison is reproducible with the
+`tools/verify_ahr_fast.R` script shipped in the package sources.
+
 ## Max-combo test
 
 [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
@@ -321,10 +376,11 @@ test, with a component correlation of 0.97.
 Across all functions the FastSurvival results reproduce the reference
 values from the established packages. The point estimates and test
 statistics agree to numerical precision for the Kaplan-Meier, log-rank,
-RMST, milestone, and average-hazard quantities, and the closed-form Cox
-hazard ratio agrees with the partial-likelihood maximizer to the order
-expected for the Pike-Halley approximation. This agreement is verified
-continuously by the package test suite.
+RMST, milestone, and average-hazard quantities, the average hazard ratio
+matches a survival-based reference, and the closed-form Cox hazard ratio
+agrees with the partial-likelihood maximizer to the order expected for
+the Pike-Halley approximation. This agreement is verified continuously
+by the package test suite.
 
 ## References
 
@@ -335,6 +391,13 @@ Medicine*, 40(23), 4961-4976.
 Uno, H., & Horiguchi, M. (2023). Ratio and difference of average hazard
 with survival weight: new measures to quantify survival benefit of new
 therapy. *Statistics in Medicine*, 42(7), 936-952.
+
+Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
+hazard ratio. *Biometrika*, 68(1), 105-112.
+
+Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
+calculation under nonproportional hazards using average hazard ratios.
+*Biometrical Journal*, 66(6), e202300271.
 
 Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. *The Stata Journal*, 16(3),

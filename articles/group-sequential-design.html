@@ -159,16 +159,16 @@ and the interim looks are at one third and two thirds of it.</p>
 <span><span class="co">#&gt;   Mode: Z-scale boundaries, direction = lower</span></span>
 <span><span class="co">#&gt;     efficacy [logrank.z]: -3.710, -2.511, -1.993</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy</span></span>
-<span><span class="co">#&gt;        1        100        517.5325       100.00      8.8672             0.0000</span></span>
-<span><span class="co">#&gt;        2        200        699.8730       200.00     13.0276             0.0065</span></span>
-<span><span class="co">#&gt;        3        300        700.0000       300.00     17.4987             0.0150</span></span>
-<span><span class="co">#&gt;  overall         NA        700.0000       299.35     17.4706             0.0215</span></span>
-<span><span class="co">#&gt;  prob.stop.futility prob.stop.any cum.reject</span></span>
-<span><span class="co">#&gt;                   0        0.0000     0.0000</span></span>
-<span><span class="co">#&gt;                   0        0.0065     0.0065</span></span>
-<span><span class="co">#&gt;                   0        0.0150     0.0215</span></span>
-<span><span class="co">#&gt;                   0        0.0215     0.0215</span></span></code></pre></div>
+<span><span class="co">#&gt;     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span></span>
+<span><span class="co">#&gt;        1        100        517.5325       100.00              0        417.5325</span></span>
+<span><span class="co">#&gt;        2        200        699.8730       200.00              0        499.8730</span></span>
+<span><span class="co">#&gt;        3        300        700.0000       300.00              0        400.0000</span></span>
+<span><span class="co">#&gt;  overall         NA        700.0000       299.35              0        400.6500</span></span>
+<span><span class="co">#&gt;  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span></span>
+<span><span class="co">#&gt;       8.8672             0.0000                  0        0.0000     0.0000</span></span>
+<span><span class="co">#&gt;      13.0276             0.0065                  0        0.0065     0.0065</span></span>
+<span><span class="co">#&gt;      17.4987             0.0150                  0        0.0150     0.0215</span></span>
+<span><span class="co">#&gt;      17.4706             0.0215                  0        0.0215     0.0215</span></span></code></pre></div>
 <p>The cumulative rejection probability at the final look estimates the
 type I error. It should be close to the nominal 0.025.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -214,16 +214,16 @@ same design and the same boundaries now estimate the power.</p>
 <span><span class="co">#&gt;   Mode: Z-scale boundaries, direction = lower</span></span>
 <span><span class="co">#&gt;     efficacy [logrank.z]: -3.710, -2.511, -1.993</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy</span></span>
-<span><span class="co">#&gt;        1        100        559.6415       100.00      9.5889             0.0240</span></span>
-<span><span class="co">#&gt;        2        200        700.0000       200.00     14.2143             0.4765</span></span>
-<span><span class="co">#&gt;        3        300        700.0000       300.00     19.5279             0.3640</span></span>
-<span><span class="co">#&gt;  overall         NA        696.8610       247.55     16.7443             0.8645</span></span>
-<span><span class="co">#&gt;  prob.stop.futility prob.stop.any cum.reject</span></span>
-<span><span class="co">#&gt;                   0        0.0240     0.0240</span></span>
-<span><span class="co">#&gt;                   0        0.4765     0.5005</span></span>
-<span><span class="co">#&gt;                   0        0.3640     0.8645</span></span>
-<span><span class="co">#&gt;                   0        0.8645     0.8645</span></span></code></pre></div>
+<span><span class="co">#&gt;     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span></span>
+<span><span class="co">#&gt;        1        100        559.6415       100.00              0        459.6415</span></span>
+<span><span class="co">#&gt;        2        200        700.0000       200.00              0        500.0000</span></span>
+<span><span class="co">#&gt;        3        300        700.0000       300.00              0        400.0000</span></span>
+<span><span class="co">#&gt;  overall         NA        696.8610       247.55              0        449.3110</span></span>
+<span><span class="co">#&gt;  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span></span>
+<span><span class="co">#&gt;       9.5889             0.0240                  0        0.0240     0.0240</span></span>
+<span><span class="co">#&gt;      14.2143             0.4765                  0        0.4765     0.5005</span></span>
+<span><span class="co">#&gt;      19.5279             0.3640                  0        0.3640     0.8645</span></span>
+<span><span class="co">#&gt;      16.7443             0.8645                  0        0.8645     0.8645</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparing-the-boundary-crossing-probabilities">Comparing the boundary-crossing probabilities<a class="anchor" aria-label="anchor" href="#comparing-the-boundary-crossing-probabilities"></a>

@@ -23,6 +23,8 @@ inside simulation loops.
   : Robust Modestly-Weighted Log-Rank Test for Two-Group Survival Data
 - [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
   : Fast Average Hazard with Survival Weight (Two-Group Comparison)
+- [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  : Fast Kalbfleisch-Prentice average hazard ratio for two groups
 
 ## Simulation
 
@@ -40,6 +42,8 @@ operating characteristics.
 
 Display methods for the returned S3 objects.
 
+- [`print(`*`<ahr_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.ahr_fast.md)
+  : Print an ahr_fast object
 - [`print(`*`<ahsw_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.ahsw_fast.md)
   : Print Method for ahsw_fast Objects
 - [`print(`*`<coxph_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.coxph_fast.md)

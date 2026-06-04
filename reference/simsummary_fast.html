@@ -149,7 +149,10 @@ look. Entries may be <code>NA</code> to omit the test at a look. Required with
   index, or <code>"overall"</code> on the summary row), optionally <code>look.value</code>,
   <code>n.enrolled.mean</code> and <code>n.event.mean</code> (the mean enrolled and event
   counts at that look, or at the stopping look on the summary row),
-  <code>cutoff.mean</code> (the mean calendar time, likewise), <code>prob.stop.efficacy</code>,
+  <code>n.dropout.mean</code> and <code>n.pipeline.mean</code> (the mean dropout count and
+  pipeline count <code>n.enrolled - n.event - n.dropout</code>, when those columns
+  are present in <code>data</code>), <code>cutoff.mean</code> (the mean calendar time,
+  likewise), <code>prob.stop.efficacy</code>,
   <code>prob.stop.futility</code>, <code>prob.stop.any</code>, and <code>cum.reject</code>. On the
   <code>overall</code> row <code>prob.stop.efficacy</code> is the total rejection rate,
   <code>prob.stop.futility</code> the total futility rate, <code>prob.stop.any</code> their
@@ -240,16 +243,16 @@ rows per population.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     efficacy [logrank.z]:    NA, -2.96, -1.97</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     futility [cox.coef]: 0.1823,     NA,     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06        60.00     11.5364               0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00       105.00     16.5033               0.13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00       150.00     22.8457               0.44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.88       143.25     21.8951               0.57</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  prob.stop.futility prob.stop.any cum.reject</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.01          0.01       0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.00          0.13       0.13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.00          0.44       0.57</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0.01          0.58       0.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06        60.00              0          226.06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00       105.00              0          195.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00       150.00              0          150.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.88       143.25              0          156.63</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      11.5364               0.00               0.01          0.01       0.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      16.5033               0.13               0.00          0.13       0.13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      22.8457               0.44               0.00          0.44       0.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      21.8951               0.57               0.01          0.58       0.57</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># p-value boundaries instead</span></span></span>
@@ -260,16 +263,16 @@ rows per population.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Mode: p-value boundaries</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     alpha [logrank.p]: 0.0006, 0.0151, 0.0245</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06       60.000     11.5364              0.055</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00      105.000     16.5033              0.325</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00      150.000     22.8457              0.210</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.38      130.425     20.1649              0.590</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  prob.stop.futility prob.stop.any cum.reject</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0         0.055      0.055</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0         0.325      0.380</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0         0.210      0.590</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   0         0.590      0.590</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06       60.000              0         226.060</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00      105.000              0         195.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00      150.000              0         150.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.38      130.425              0         168.955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      11.5364              0.055                  0         0.055      0.055</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      16.5033              0.325                  0         0.325      0.380</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      22.8457              0.210                  0         0.210      0.590</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      20.1649              0.590                  0         0.590      0.590</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

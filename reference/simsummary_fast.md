@@ -88,15 +88,17 @@ population and look plus an `overall` summary row appended after each
 population's looks. The columns are `population`, `look` (the look
 index, or `"overall"` on the summary row), optionally `look.value`,
 `n.enrolled.mean` and `n.event.mean` (the mean enrolled and event counts
-at that look, or at the stopping look on the summary row), `cutoff.mean`
-(the mean calendar time, likewise), `prob.stop.efficacy`,
-`prob.stop.futility`, `prob.stop.any`, and `cum.reject`. On the
-`overall` row `prob.stop.efficacy` is the total rejection rate,
-`prob.stop.futility` the total futility rate, `prob.stop.any` their sum,
-and `cum.reject` again the total rejection rate; its timing columns are
-the expected counts and calendar time at the stopping look. The number
-of simulations is stored in the attribute `nsim` and the boundary
-settings in the attribute `boundary`.
+at that look, or at the stopping look on the summary row),
+`n.dropout.mean` and `n.pipeline.mean` (the mean dropout count and
+pipeline count `n.enrolled - n.event - n.dropout`, when those columns
+are present in `data`), `cutoff.mean` (the mean calendar time,
+likewise), `prob.stop.efficacy`, `prob.stop.futility`, `prob.stop.any`,
+and `cum.reject`. On the `overall` row `prob.stop.efficacy` is the total
+rejection rate, `prob.stop.futility` the total futility rate,
+`prob.stop.any` their sum, and `cum.reject` again the total rejection
+rate; its timing columns are the expected counts and calendar time at
+the stopping look. The number of simulations is stored in the attribute
+`nsim` and the boundary settings in the attribute `boundary`.
 
 ## Details
 
@@ -188,16 +190,16 @@ simsummary_fast(res,
 #>     efficacy [logrank.z]:    NA, -2.96, -1.97
 #>     futility [cox.coef]: 0.1823,     NA,     NA
 #> 
-#>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy
-#>        1         60          286.06        60.00     11.5364               0.00
-#>        2        105          300.00       105.00     16.5033               0.13
-#>        3        150          300.00       150.00     22.8457               0.44
-#>  overall         NA          299.88       143.25     21.8951               0.57
-#>  prob.stop.futility prob.stop.any cum.reject
-#>                0.01          0.01       0.00
-#>                0.00          0.13       0.13
-#>                0.00          0.44       0.57
-#>                0.01          0.58       0.57
+#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
+#>        1         60          286.06        60.00              0          226.06
+#>        2        105          300.00       105.00              0          195.00
+#>        3        150          300.00       150.00              0          150.00
+#>  overall         NA          299.88       143.25              0          156.63
+#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
+#>      11.5364               0.00               0.01          0.01       0.00
+#>      16.5033               0.13               0.00          0.13       0.13
+#>      22.8457               0.44               0.00          0.44       0.57
+#>      21.8951               0.57               0.01          0.58       0.57
 #> 
 
 # p-value boundaries instead
@@ -208,15 +210,15 @@ simsummary_fast(res, p.col = "logrank.p",
 #>   Mode: p-value boundaries
 #>     alpha [logrank.p]: 0.0006, 0.0151, 0.0245
 #> 
-#>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy
-#>        1         60          286.06       60.000     11.5364              0.055
-#>        2        105          300.00      105.000     16.5033              0.325
-#>        3        150          300.00      150.000     22.8457              0.210
-#>  overall         NA          299.38      130.425     20.1649              0.590
-#>  prob.stop.futility prob.stop.any cum.reject
-#>                   0         0.055      0.055
-#>                   0         0.325      0.380
-#>                   0         0.210      0.590
-#>                   0         0.590      0.590
+#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
+#>        1         60          286.06       60.000              0         226.060
+#>        2        105          300.00      105.000              0         195.000
+#>        3        150          300.00      150.000              0         150.000
+#>  overall         NA          299.38      130.425              0         168.955
+#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
+#>      11.5364              0.055                  0         0.055      0.055
+#>      16.5033              0.325                  0         0.325      0.380
+#>      22.8457              0.210                  0         0.210      0.590
+#>      20.1649              0.590                  0         0.590      0.590
 #> 
 ```

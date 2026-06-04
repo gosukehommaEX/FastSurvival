@@ -101,6 +101,27 @@ microbenchmark(
 )
 ```
 
+## ahr_fast vs AHR::ahrKM
+
+The Kalbfleisch-Prentice average hazard ratio is benchmarked against
+`ahrKM()` from the AHR package, the reference implementation used by
+Dormuth et al. (2024). Because AHR has been archived on CRAN, this
+benchmark is shown as a static block rather than a live chunk, so the
+vignette carries no undeclared dependency. Install AHR with
+`remotes::install_github("cran/AHR")` and run the block to reproduce it.
+
+``` r
+
+library(AHR)
+
+dat <- data.frame(tt = tt, ev = ev, gp = gp)
+microbenchmark(
+  fast = ahr_fast(t_s, e_s, g_s, tau = 20, presorted = TRUE),
+  base = AHR::ahrKM(20, Surv(tt, ev) ~ gp, dat),
+  times = 1000
+)
+```
+
 ## Representative results
 
 The table below summarizes representative median timings on a typical
@@ -115,6 +136,7 @@ the speedup is stable.
 | [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~50x |
 | [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~60x |
 | `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | ~500x |
+| [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md) | `AHR::ahrKM()` | ~130x |
 
 ## Why it is faster
 
@@ -132,6 +154,13 @@ simulation loop these savings accumulate across every iteration.
 
 Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. *Manuscript under review.*
+
+Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
+hazard ratio. *Biometrika*, 68(1), 105-112.
+
+Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
+calculation under nonproportional hazards using average hazard ratios.
+*Biometrical Journal*, 66(6), e202300271.
 
 Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
 ed.). Chapman and Hall/CRC.

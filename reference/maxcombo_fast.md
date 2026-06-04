@@ -172,7 +172,7 @@ fit["statistic"]
 #> -1.298019 
 fit["p.value"]
 #>   p.value 
-#> 0.1511426 
+#> 0.1513071 
 
 # Two-sided test
 maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1, side = 2)
@@ -186,7 +186,7 @@ maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1, side = 2)
 #> FH(1,0) -1.2980
 #> FH(1,1) -0.0576
 #> 
-#>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3023
+#>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024
 
 # Custom weight set: proportional plus late-difference only
 maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1,
@@ -229,6 +229,6 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
   simtrial::maxcombo(df, rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
                      return_corr = TRUE)$p_value
 }
-#> [1] 0.1512125
+#> [1] 0.1511967
 # }
 ```

@@ -11,6 +11,8 @@
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/index.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/news/index.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/FastSurvival-package.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/ahr_core.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_core.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.html</loc></url>
@@ -22,6 +24,7 @@
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/pihe_core.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.ahr_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.ahsw_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.coxph_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.maxcombo_fast.html</loc></url>

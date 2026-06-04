@@ -241,7 +241,10 @@ to 25000.</p></dd>
   (<code>"event"</code> or <code>"time"</code>), <code>look.value</code> (the requested event
   count or calendar time), optionally <code>population</code>, <code>cutoff</code> (the
   calendar time used, <code>NA</code> when an event target was not reached),
-  <code>reached</code>, <code>n.enrolled</code>, and <code>n.event</code>, followed by the
+  <code>reached</code>, <code>n.enrolled</code>, <code>n.event</code>, <code>n.dropout</code> (the
+  number of enrolled subjects whose dropout occurred on or before the cutoff)
+  and <code>n.pipeline</code> (<code>n.enrolled - n.event - n.dropout</code>, the
+  subjects still in follow-up at the cutoff), followed by the
   columns of the requested statistics. A statistic that cannot be computed
   for a row (no events, or an empty group) is <code>NA</code>. The statistic
   columns are <code>logrank.z</code>, <code>logrank.chisq</code>, and <code>logrank.p</code>
@@ -352,84 +355,91 @@ the whole-population analysis.</p>
 <span class="r-in"><span><span class="co"># Whole-population analysis at two event-based looks</span></span></span>
 <span class="r-in"><span><span class="va">res1</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fl">140</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value   cutoff reached n.enrolled n.event logrank.z</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         80 11.76464    TRUE        291      80 -1.171526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1    2        140 16.08387    TRUE        300     140 -1.555453</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2    1         80 11.40147    TRUE        285      80 -2.780165</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   2    2        140 16.62229    TRUE        300     140 -4.862092</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   3    1         80 11.48259    TRUE        286      80 -3.631606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   3    2        140 16.06186    TRUE        300     140 -5.043861</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.chisq    logrank.p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1.372472 2.413876e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2.419433 1.198383e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      7.729316 5.433132e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     23.639938 1.161516e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     13.188562 2.816629e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     25.440534 4.562306e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         80 11.76464    TRUE        291      80         0        211</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1    2        140 16.08387    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2    1         80 11.40147    TRUE        285      80         0        205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   2    2        140 16.62229    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   3    1         80 11.48259    TRUE        286      80         0        206</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   3    2        140 16.06186    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -1.171526      1.372472 2.413876e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -1.555453      2.419433 1.198383e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -2.780165      7.729316 5.433132e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.862092     23.639938 1.161516e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.631606     13.188562 2.816629e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -5.043861     25.440534 4.562306e-07</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Stratified log-rank on the subgroup factor</span></span></span>
 <span class="r-in"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
 <span class="r-in"><span>                      stat <span class="op">=</span> <span class="st">"logrank"</span>, strata <span class="op">=</span> <span class="st">"subgroup"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event logrank.z logrank.chisq</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208 -3.059687      9.361684</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192 -5.125810     26.273925</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194 -5.532218     30.605431</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206 -4.736340     22.432915</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194 -3.741408     13.998135</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203 -1.584396      2.510311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      logrank.p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.215684e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 2.962617e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 3.162074e-08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 2.176126e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.829920e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1.131036e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208         0         92</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192         0        108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206         0         94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.059687      9.361684 2.215684e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -5.125810     26.273925 2.962617e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -5.532218     30.605431 3.162074e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.736340     22.432915 2.176126e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.741408     13.998135 1.829920e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.584396      2.510311 1.131036e-01</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fleming-Harrington G(0, 1) weighted log-rank for delayed effects</span></span></span>
 <span class="r-in"><span><span class="va">res3</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
 <span class="r-in"><span>                      stat <span class="op">=</span> <span class="st">"logrank"</span>, weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="fl">0</span>, gamma <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res3</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event logrank.z logrank.chisq</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208 -3.156345      9.962516</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192 -4.348303     18.907740</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194 -4.895489     23.965814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206 -4.627069     21.409771</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194 -3.584443     12.848231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203 -1.224151      1.498546</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      logrank.p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.597596e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1.371949e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 9.806151e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 3.708763e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 3.377984e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 2.208952e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208         0         92</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192         0        108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206         0         94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.156345      9.962516 1.597596e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -4.348303     18.907740 1.371949e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -4.895489     23.965814 9.806151e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.627069     21.409771 3.708763e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.584443     12.848231 3.377984e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.224151      1.498546 2.208952e-01</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Max-combo and AHSW together</span></span></span>
 <span class="r-in"><span><span class="va">res4</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
 <span class="r-in"><span>                      stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maxcombo"</span>, <span class="st">"ahsw"</span><span class="op">)</span>, tau <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res4</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event maxcombo.stat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208      3.192382</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192      5.332615</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194      5.574249</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206      4.927248</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194      3.840689</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203      1.467686</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     maxcombo.p ahsw.ah.ctrl ahsw.ah.trt  ahsw.rah ahsw.rah.lower ahsw.rah.upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 3.151767e-03   0.07881581  0.05237260 0.6644936      0.5034745      0.8770091</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 9.680876e-08   0.08345052  0.04012456 0.4808185      0.3581851      0.6454384</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 2.486058e-08   0.09089574  0.03990436 0.4390125      0.3278702      0.5878301</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1.424037e-06   0.09257119  0.04918586 0.5313301      0.4019580      0.7023413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2.042602e-04   0.08147862  0.04592903 0.5636943      0.4213291      0.7541639</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 2.403671e-01   0.07356423  0.06111041 0.8307082      0.6176444      1.1172711</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ahsw.p.rah    ahsw.dah ahsw.dah.lower ahsw.dah.upper   ahsw.p.dah</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 3.890394e-03 -0.02644321    -0.04446913   -0.008417282 4.038005e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1.091478e-06 -0.04332597    -0.06151709   -0.025134854 3.040474e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 3.250633e-08 -0.05099138    -0.06965300   -0.032329748 8.534762e-08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 8.920363e-06 -0.04338533    -0.06288035   -0.023890304 1.289882e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.135479e-04 -0.03554959    -0.05370932   -0.017389860 1.246293e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 2.199664e-01 -0.01245382    -0.03244248    0.007534848 2.220316e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208         0         92</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192         0        108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206         0         94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   maxcombo.stat   maxcombo.p ahsw.ah.ctrl ahsw.ah.trt  ahsw.rah ahsw.rah.lower</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      3.192382 3.050321e-03   0.07881581  0.05237260 0.6644936      0.5034745</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      5.332615 9.694169e-08   0.08345052  0.04012456 0.4808185      0.3581851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      5.574249 2.489953e-08   0.09089574  0.03990436 0.4390125      0.3278702</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4.927248 2.213839e-06   0.09257119  0.04918586 0.5313301      0.4019580</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      3.840689 2.192330e-04   0.08147862  0.04592903 0.5636943      0.4213291</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      1.467686 2.403875e-01   0.07356423  0.06111041 0.8307082      0.6176444</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ahsw.rah.upper   ahsw.p.rah    ahsw.dah ahsw.dah.lower ahsw.dah.upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      0.8770091 3.890394e-03 -0.02644321    -0.04446913   -0.008417282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      0.6454384 1.091478e-06 -0.04332597    -0.06151709   -0.025134854</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      0.5878301 3.250633e-08 -0.05099138    -0.06965300   -0.032329748</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      0.7023413 8.920363e-06 -0.04338533    -0.06288035   -0.023890304</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      0.7541639 1.135479e-04 -0.03554959    -0.05370932   -0.017389860</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      1.1172711 2.199664e-01 -0.01245382    -0.03244248    0.007534848</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ahsw.p.dah</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 4.038005e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 3.040474e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 8.534762e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1.289882e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.246293e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 2.220316e-01</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
