@@ -12,8 +12,11 @@ for each simulated trial by reusing
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
 [`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
 [`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
 and
-[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 Optionally the same statistics are also reported within each subgroup.
 The censoring and time sorting are handled by a C++ backend, and the
 analysis cores are called with `presorted = TRUE`, so each look avoids a
@@ -38,6 +41,8 @@ analysis_fast(
   gamma = 0,
   t_star = NULL,
   strata = NULL,
+  ms.method = c("wald", "loglog", "mover"),
+  s_star = 0.5,
   mc.rho = c(0, 0, 1, 1),
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
@@ -72,14 +77,15 @@ analysis_fast(
 - stat:
 
   A character vector naming the statistics to compute. Any subset of
-  `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, and `"ahsw"`.
-  Defaults to `"logrank"`.
+  `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
+  `"milestone"`, `"rmw"`, and `"ahr"`. Defaults to `"logrank"`.
 
 - tau:
 
-  A single positive numeric value, the restriction horizon for `"rmst"`
-  and the truncation time for `"ahsw"`. Required only when `"rmst"` or
-  `"ahsw"` is requested.
+  A single positive numeric value, the restriction horizon for `"rmst"`,
+  the truncation time for `"ahsw"` and `"ahr"`, and the milestone
+  timepoint for `"milestone"`. Required only when `"rmst"`, `"ahsw"`,
+  `"milestone"`, or `"ahr"` is requested.
 
 - t.eval:
 
@@ -149,6 +155,19 @@ analysis_fast(
   applies only to the `"logrank"` statistic; the other statistics ignore
   it.
 
+- ms.method:
+
+  A character string naming the inference method for the `"milestone"`
+  statistic, one of `"wald"` (default), `"loglog"`, or `"mover"`. See
+  [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+
+- s_star:
+
+  A single numeric value in (0, 1\], the survival-probability threshold
+  of the modestly-weighted component of the `"rmw"` statistic. The
+  weight is capped at `1 / s_star`. Defaults to 0.5. See
+  [`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md).
+
 - mc.rho:
 
   A numeric vector of Fleming-Harrington first parameters for the
@@ -196,7 +215,11 @@ the requested statistics. A statistic that cannot be computed for a row
 and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`,
 `ahsw.rah`, `ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`,
 `ahsw.dah`, `ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for
-`"ahsw"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
+`"ahsw"`; `milestone.surv.ctrl`, `milestone.surv.trt`, `milestone.diff`,
+`milestone.diff.lower`, `milestone.diff.upper`, `milestone.z`, and
+`milestone.p` for `"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and
+`ahr.ahr`, `ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for
+`"ahr"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
 natural sign of each test, and the p-value columns follow `side` except
 for the AHSW p-values, which are two-sided.
 
@@ -227,7 +250,8 @@ analysis at that look.
 Exactly one of `event.looks` and `time.looks` must be supplied.
 
 The statistics are selected with `stat`, which may name one or more of
-`"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, and `"ahsw"`.
+`"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
+`"milestone"`, `"rmw"`, and `"ahr"`.
 
 The `"logrank"` statistic is configurable. By default it is the ordinary
 unweighted, unstratified two-group log-rank test and reproduces the
@@ -263,6 +287,33 @@ The AHSW p-values are always two-sided and do not depend on `side`,
 matching
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
 
+The `"milestone"` statistic compares the Kaplan-Meier survival
+probabilities of the two groups at the milestone timepoint `tau`. It
+reports the per-group survival, the difference (treatment minus control)
+with its confidence interval, the test statistic, and the p-value. The
+inference method is selected with `ms.method` (`"wald"`, `"loglog"`, or
+`"mover"`), matching
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md);
+the benefit direction is a positive difference (higher treatment
+survival), so a positive Z favors treatment.
+
+The `"rmw"` statistic is the robust modestly-weighted log-rank test of
+Magirr and Ohrn, the maximum of the standard log-rank component and a
+single modestly-weighted component with survival-threshold `s_star`. Its
+`rmw.stat` is the most extreme standardized component (the minimum when
+`side = 1`, so a negative value favors treatment, and the maximum
+absolute component when `side = 2`), and `rmw.p` is the joint
+bivariate-normal p-value, which already follows `side`, matching
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md).
+
+The `"ahr"` statistic is the Kalbfleisch-Prentice average hazard ratio
+over the window from 0 to `tau`. It reports the average hazard ratio
+(treatment relative to control), the two group shares of the total
+hazard, the test statistic on the group-share scale, and the p-value.
+The benefit direction is an average hazard ratio below 1 (a negative Z),
+as in
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
+
 When `by.subgroup = TRUE`, the output is given in long form with a
 `population` column. Each `(sim, look)` produces one row for the whole
 trial (`population = "overall"`) plus one row per subgroup level of each
@@ -285,7 +336,10 @@ and one row per `(sim, look)`, matching the whole-population analysis.
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
 [`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
 [`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
-[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+[`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+[`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 
 ## Examples
 
@@ -388,4 +442,38 @@ head(res4)
 #> 4 1.289882e-05
 #> 5 1.246293e-04
 #> 6 2.220316e-01
+
+# Milestone survival, robust modestly-weighted, and average hazard ratio
+res5 <- analysis_fast(df, control = 1, time.looks = 24,
+                      stat = c("milestone", "rmw", "ahr"), tau = 18,
+                      ms.method = "loglog", s_star = 0.5, side = 1)
+head(res5)
+#>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         24     24    TRUE        300     208         0         92
+#> 2   2    1         24     24    TRUE        300     192         0        108
+#> 3   3    1         24     24    TRUE        300     194         0        106
+#> 4   4    1         24     24    TRUE        300     206         0         94
+#> 5   5    1         24     24    TRUE        300     194         0        106
+#> 6   6    1         24     24    TRUE        300     203         0         97
+#>   milestone.surv.ctrl milestone.surv.trt milestone.diff milestone.diff.lower
+#> 1           0.2235911          0.3877849     0.16419389           0.04833989
+#> 2           0.2298256          0.4769207     0.24709510           0.12940737
+#> 3           0.1925399          0.4894197     0.29687982           0.18292621
+#> 4           0.1795688          0.4098869     0.23031806           0.11556461
+#> 5           0.2192132          0.4413683     0.22215515           0.10341390
+#> 6           0.2885018          0.3493613     0.06085952          -0.05387747
+#>   milestone.diff.upper milestone.z milestone.p  rmw.stat        rmw.p   ahr.ahr
+#> 1            0.2734819   -2.778169   0.9972667 -3.221206 8.381633e-04 0.6875365
+#> 2            0.3557723   -4.084347   0.9999779 -5.332615 7.139961e-08 0.4548326
+#> 3            0.4002439   -5.017927   0.9999997 -5.574249 1.855481e-08 0.4408430
+#> 4            0.3362999   -3.913444   0.9999545 -4.764203 1.359804e-06 0.5446814
+#> 5            0.3323191   -3.652509   0.9998702 -3.812917 9.333850e-05 0.5873300
+#> 6            0.1734329   -1.037737   0.8503039 -1.467686 8.350360e-02 0.8184949
+#>   ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p
+#> 1      0.5925798     0.4074202 -2.584198 4.880285e-03
+#> 2      0.6873643     0.3126357 -5.546342 1.458539e-08
+#> 3      0.6940381     0.3059619 -5.854461 2.392791e-09
+#> 4      0.6473827     0.3526173 -4.280992 9.303115e-06
+#> 5      0.6299887     0.3700113 -3.657652 1.272682e-04
+#> 6      0.5499053     0.4500947 -1.364031 8.627888e-02
 ```
