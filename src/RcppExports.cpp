@@ -10,6 +10,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// ahr_core
+NumericVector ahr_core(NumericVector time1, IntegerVector status1, NumericVector time2, IntegerVector status2, NumericVector grid);
+RcppExport SEXP _FastSurvival_ahr_core(SEXP time1SEXP, SEXP status1SEXP, SEXP time2SEXP, SEXP status2SEXP, SEXP gridSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type time1(time1SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type status1(status1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time2(time2SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type status2(status2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type grid(gridSEXP);
+    rcpp_result_gen = Rcpp::wrap(ahr_core(time1, status1, time2, status2, grid));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ahsw_core
 NumericVector ahsw_core(const NumericVector& time_sorted, const IntegerVector& event_sorted, double tau);
 RcppExport SEXP _FastSurvival_ahsw_core(SEXP time_sortedSEXP, SEXP event_sortedSEXP, SEXP tauSEXP) {
@@ -242,6 +257,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FastSurvival_ahr_core", (DL_FUNC) &_FastSurvival_ahr_core, 5},
     {"_FastSurvival_ahsw_core", (DL_FUNC) &_FastSurvival_ahsw_core, 3},
     {"_FastSurvival_analysis_loop_core", (DL_FUNC) &_FastSurvival_analysis_loop_core, 26},
     {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},

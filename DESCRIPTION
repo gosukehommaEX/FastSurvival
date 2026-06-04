@@ -16,8 +16,9 @@ Description: Provides fast alternatives to standard survival analysis functions
     closed-form hazard ratio estimator based on the Pike-Halley Estimator method
     (coxph_fast()), restricted mean survival time (rmst_fast()), milestone
     survival comparison (milestone_fast()), the max-combo test (maxcombo_fast()),
-    the robust modestly-weighted log-rank test (rmw_fast()), and the average
-    hazard with survival weight (ahsw_fast()). The simulation
+    the robust modestly-weighted log-rank test (rmw_fast()), the average
+    hazard with survival weight (ahsw_fast()), and the Kalbfleisch-Prentice
+    average hazard ratio (ahr_fast()). The simulation
     layer generates individual patient data (simdata_fast()), performs interim
     or sequential analyses (analysis_fast()), and aggregates operating
     characteristics (simsummary_fast()). All functions are designed for repeated

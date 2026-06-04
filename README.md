@@ -38,6 +38,7 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | `maxcombo_fast()` | Max-combo test, the maximum over a set of Fleming-Harrington weighted log-rank statistics, for non-proportional hazards. |
 | `rmw_fast()` | Robust modestly-weighted test (Magirr and Ohrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
 | `ahsw_fast()` | Average hazard with survival weight of Uno and Horiguchi, with ratio and difference contrasts. |
+| `ahr_fast()` | Kalbfleisch-Prentice average hazard ratio between two groups over a restricted interval, for non-proportional hazards. |
 
 ### Simulation
 
@@ -197,6 +198,19 @@ per-group average hazard, the ratio of average hazards (RAH) on the log
 scale, and the difference of average hazards (DAH) on the identity scale,
 each with a confidence interval and a two-sided test.
 
+**ahr_fast** computes the average hazard ratio of Kalbfleisch and Prentice
+(1981) between two groups over a restricted interval, the estimator used by
+Dormuth et al. (2024) for sample-size calculation under non-proportional
+hazards. Writing the two survival functions as S0 and S1, each group's share
+of the total hazard is obtained by integrating one survival curve against the
+increments of the other; the average hazard ratio is the ratio of the two
+shares, and equals the true hazard ratio under proportional hazards. A C++
+backend builds both Kaplan-Meier curves and their Greenwood variances on the
+pooled event grid, then evaluates the shares, their direct variances, and the
+double-integral covariance terms in linear scans. The primary test is on the
+group-share scale, as in the source method, with an equivalent test and a
+confidence interval reported on the log scale.
+
 **simdata_fast** generates individual patient data for one- or two-group
 time-to-event trials. Accrual times follow a piecewise-uniform distribution,
 and survival and dropout times follow either a simple or piecewise
@@ -320,6 +334,13 @@ estimators from one and two sample survival data. *Statistics in Medicine*,
 Uno, H., & Horiguchi, M. (2023). Ratio and difference of average hazard with
 survival weight: new measures to quantify survival benefit of new therapy.
 *Statistics in Medicine*, 42(7), 936-952.
+
+Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
+hazard ratio. *Biometrika*, 68(1), 105-112.
+
+Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
+calculation under nonproportional hazards using average hazard ratios.
+*Biometrical Journal*, 66(6), e202300271.
 
 Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd ed.).
 Chapman and Hall/CRC.

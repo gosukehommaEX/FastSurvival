@@ -38,8 +38,10 @@ Kaplan-Meier estimate at a single time point. `survdiff_fast()` computes the
 log-rank test and its weighted and stratified variants. `coxph_fast()`
 returns a closed-form hazard ratio. `rmst_fast()` returns the restricted mean
 survival time. `milestone_fast()` compares survival at a milestone timepoint.
-`maxcombo_fast()` computes the max-combo test. `ahsw_fast()` computes the
-average hazard with survival weight.
+`maxcombo_fast()` computes the max-combo test. `rmw_fast()` computes the
+robust modestly-weighted log-rank test. `ahsw_fast()` computes the
+average hazard with survival weight. `ahr_fast()` computes the
+Kalbfleisch-Prentice average hazard ratio.
 
 The simulation functions support a full simulation study. `simdata_fast()`
 generates individual patient data for one- or two-group trials.

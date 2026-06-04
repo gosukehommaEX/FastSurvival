@@ -182,20 +182,23 @@ rows. When `by.subgroup = TRUE`, it has
 `sim`, `look` (1-based look index), `look.type` (`"event"` or `"time"`),
 `look.value` (the requested event count or calendar time), optionally
 `population`, `cutoff` (the calendar time used, `NA` when an event
-target was not reached), `reached`, `n.enrolled`, and `n.event`,
-followed by the columns of the requested statistics. A statistic that
-cannot be computed for a row (no events, or an empty group) is `NA`. The
-statistic columns are `logrank.z`, `logrank.chisq`, and `logrank.p` for
-`"logrank"`; `cox.coef`, `cox.hr`, `cox.se`, `cox.z`, `cox.p`,
-`cox.lower`, and `cox.upper` for `"coxph"`; `rmst.ctrl`, `rmst.trt`,
-`rmst.diff`, `rmst.diff.lower`, `rmst.diff.upper`, `rmst.z`, and
-`rmst.p` for `"rmst"`; `km.surv.ctrl` and `km.surv.trt` for `"km"`;
-`maxcombo.stat` and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`,
-`ahsw.ah.trt`, `ahsw.rah`, `ahsw.rah.lower`, `ahsw.rah.upper`,
-`ahsw.p.rah`, `ahsw.dah`, `ahsw.dah.lower`, `ahsw.dah.upper`, and
-`ahsw.p.dah` for `"ahsw"`. The Z columns `logrank.z`, `cox.z`, and
-`rmst.z` carry the natural sign of each test, and the p-value columns
-follow `side` except for the AHSW p-values, which are two-sided.
+target was not reached), `reached`, `n.enrolled`, `n.event`, `n.dropout`
+(the number of enrolled subjects whose dropout occurred on or before the
+cutoff) and `n.pipeline` (`n.enrolled - n.event - n.dropout`, the
+subjects still in follow-up at the cutoff), followed by the columns of
+the requested statistics. A statistic that cannot be computed for a row
+(no events, or an empty group) is `NA`. The statistic columns are
+`logrank.z`, `logrank.chisq`, and `logrank.p` for `"logrank"`;
+`cox.coef`, `cox.hr`, `cox.se`, `cox.z`, `cox.p`, `cox.lower`, and
+`cox.upper` for `"coxph"`; `rmst.ctrl`, `rmst.trt`, `rmst.diff`,
+`rmst.diff.lower`, `rmst.diff.upper`, `rmst.z`, and `rmst.p` for
+`"rmst"`; `km.surv.ctrl` and `km.surv.trt` for `"km"`; `maxcombo.stat`
+and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`,
+`ahsw.rah`, `ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`,
+`ahsw.dah`, `ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for
+`"ahsw"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
+natural sign of each test, and the p-value columns follow `side` except
+for the AHSW p-values, which are two-sided.
 
 ## Details
 
@@ -300,82 +303,89 @@ df <- simdata_fast(
 # Whole-population analysis at two event-based looks
 res1 <- analysis_fast(df, control = 1, event.looks = c(80, 140))
 head(res1)
-#>   sim look look.value   cutoff reached n.enrolled n.event logrank.z
-#> 1   1    1         80 11.76464    TRUE        291      80 -1.171526
-#> 2   1    2        140 16.08387    TRUE        300     140 -1.555453
-#> 3   2    1         80 11.40147    TRUE        285      80 -2.780165
-#> 4   2    2        140 16.62229    TRUE        300     140 -4.862092
-#> 5   3    1         80 11.48259    TRUE        286      80 -3.631606
-#> 6   3    2        140 16.06186    TRUE        300     140 -5.043861
-#>   logrank.chisq    logrank.p
-#> 1      1.372472 2.413876e-01
-#> 2      2.419433 1.198383e-01
-#> 3      7.729316 5.433132e-03
-#> 4     23.639938 1.161516e-06
-#> 5     13.188562 2.816629e-04
-#> 6     25.440534 4.562306e-07
+#>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         80 11.76464    TRUE        291      80         0        211
+#> 2   1    2        140 16.08387    TRUE        300     140         0        160
+#> 3   2    1         80 11.40147    TRUE        285      80         0        205
+#> 4   2    2        140 16.62229    TRUE        300     140         0        160
+#> 5   3    1         80 11.48259    TRUE        286      80         0        206
+#> 6   3    2        140 16.06186    TRUE        300     140         0        160
+#>   logrank.z logrank.chisq    logrank.p
+#> 1 -1.171526      1.372472 2.413876e-01
+#> 2 -1.555453      2.419433 1.198383e-01
+#> 3 -2.780165      7.729316 5.433132e-03
+#> 4 -4.862092     23.639938 1.161516e-06
+#> 5 -3.631606     13.188562 2.816629e-04
+#> 6 -5.043861     25.440534 4.562306e-07
 
 # Stratified log-rank on the subgroup factor
 res2 <- analysis_fast(df, control = 1, time.looks = 24,
                       stat = "logrank", strata = "subgroup")
 head(res2)
-#>   sim look look.value cutoff reached n.enrolled n.event logrank.z logrank.chisq
-#> 1   1    1         24     24    TRUE        300     208 -3.059687      9.361684
-#> 2   2    1         24     24    TRUE        300     192 -5.125810     26.273925
-#> 3   3    1         24     24    TRUE        300     194 -5.532218     30.605431
-#> 4   4    1         24     24    TRUE        300     206 -4.736340     22.432915
-#> 5   5    1         24     24    TRUE        300     194 -3.741408     13.998135
-#> 6   6    1         24     24    TRUE        300     203 -1.584396      2.510311
-#>      logrank.p
-#> 1 2.215684e-03
-#> 2 2.962617e-07
-#> 3 3.162074e-08
-#> 4 2.176126e-06
-#> 5 1.829920e-04
-#> 6 1.131036e-01
+#>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         24     24    TRUE        300     208         0         92
+#> 2   2    1         24     24    TRUE        300     192         0        108
+#> 3   3    1         24     24    TRUE        300     194         0        106
+#> 4   4    1         24     24    TRUE        300     206         0         94
+#> 5   5    1         24     24    TRUE        300     194         0        106
+#> 6   6    1         24     24    TRUE        300     203         0         97
+#>   logrank.z logrank.chisq    logrank.p
+#> 1 -3.059687      9.361684 2.215684e-03
+#> 2 -5.125810     26.273925 2.962617e-07
+#> 3 -5.532218     30.605431 3.162074e-08
+#> 4 -4.736340     22.432915 2.176126e-06
+#> 5 -3.741408     13.998135 1.829920e-04
+#> 6 -1.584396      2.510311 1.131036e-01
 
 # Fleming-Harrington G(0, 1) weighted log-rank for delayed effects
 res3 <- analysis_fast(df, control = 1, time.looks = 24,
                       stat = "logrank", weight = "fh", rho = 0, gamma = 1)
 head(res3)
-#>   sim look look.value cutoff reached n.enrolled n.event logrank.z logrank.chisq
-#> 1   1    1         24     24    TRUE        300     208 -3.156345      9.962516
-#> 2   2    1         24     24    TRUE        300     192 -4.348303     18.907740
-#> 3   3    1         24     24    TRUE        300     194 -4.895489     23.965814
-#> 4   4    1         24     24    TRUE        300     206 -4.627069     21.409771
-#> 5   5    1         24     24    TRUE        300     194 -3.584443     12.848231
-#> 6   6    1         24     24    TRUE        300     203 -1.224151      1.498546
-#>      logrank.p
-#> 1 1.597596e-03
-#> 2 1.371949e-05
-#> 3 9.806151e-07
-#> 4 3.708763e-06
-#> 5 3.377984e-04
-#> 6 2.208952e-01
+#>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         24     24    TRUE        300     208         0         92
+#> 2   2    1         24     24    TRUE        300     192         0        108
+#> 3   3    1         24     24    TRUE        300     194         0        106
+#> 4   4    1         24     24    TRUE        300     206         0         94
+#> 5   5    1         24     24    TRUE        300     194         0        106
+#> 6   6    1         24     24    TRUE        300     203         0         97
+#>   logrank.z logrank.chisq    logrank.p
+#> 1 -3.156345      9.962516 1.597596e-03
+#> 2 -4.348303     18.907740 1.371949e-05
+#> 3 -4.895489     23.965814 9.806151e-07
+#> 4 -4.627069     21.409771 3.708763e-06
+#> 5 -3.584443     12.848231 3.377984e-04
+#> 6 -1.224151      1.498546 2.208952e-01
 
 # Max-combo and AHSW together
 res4 <- analysis_fast(df, control = 1, time.looks = 24,
                       stat = c("maxcombo", "ahsw"), tau = 18)
 head(res4)
-#>   sim look look.value cutoff reached n.enrolled n.event maxcombo.stat
-#> 1   1    1         24     24    TRUE        300     208      3.192382
-#> 2   2    1         24     24    TRUE        300     192      5.332615
-#> 3   3    1         24     24    TRUE        300     194      5.574249
-#> 4   4    1         24     24    TRUE        300     206      4.927248
-#> 5   5    1         24     24    TRUE        300     194      3.840689
-#> 6   6    1         24     24    TRUE        300     203      1.467686
-#>     maxcombo.p ahsw.ah.ctrl ahsw.ah.trt  ahsw.rah ahsw.rah.lower ahsw.rah.upper
-#> 1 3.151767e-03   0.07881581  0.05237260 0.6644936      0.5034745      0.8770091
-#> 2 9.680876e-08   0.08345052  0.04012456 0.4808185      0.3581851      0.6454384
-#> 3 2.486058e-08   0.09089574  0.03990436 0.4390125      0.3278702      0.5878301
-#> 4 1.424037e-06   0.09257119  0.04918586 0.5313301      0.4019580      0.7023413
-#> 5 2.042602e-04   0.08147862  0.04592903 0.5636943      0.4213291      0.7541639
-#> 6 2.403671e-01   0.07356423  0.06111041 0.8307082      0.6176444      1.1172711
-#>     ahsw.p.rah    ahsw.dah ahsw.dah.lower ahsw.dah.upper   ahsw.p.dah
-#> 1 3.890394e-03 -0.02644321    -0.04446913   -0.008417282 4.038005e-03
-#> 2 1.091478e-06 -0.04332597    -0.06151709   -0.025134854 3.040474e-06
-#> 3 3.250633e-08 -0.05099138    -0.06965300   -0.032329748 8.534762e-08
-#> 4 8.920363e-06 -0.04338533    -0.06288035   -0.023890304 1.289882e-05
-#> 5 1.135479e-04 -0.03554959    -0.05370932   -0.017389860 1.246293e-04
-#> 6 2.199664e-01 -0.01245382    -0.03244248    0.007534848 2.220316e-01
+#>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         24     24    TRUE        300     208         0         92
+#> 2   2    1         24     24    TRUE        300     192         0        108
+#> 3   3    1         24     24    TRUE        300     194         0        106
+#> 4   4    1         24     24    TRUE        300     206         0         94
+#> 5   5    1         24     24    TRUE        300     194         0        106
+#> 6   6    1         24     24    TRUE        300     203         0         97
+#>   maxcombo.stat   maxcombo.p ahsw.ah.ctrl ahsw.ah.trt  ahsw.rah ahsw.rah.lower
+#> 1      3.192382 3.050321e-03   0.07881581  0.05237260 0.6644936      0.5034745
+#> 2      5.332615 9.694169e-08   0.08345052  0.04012456 0.4808185      0.3581851
+#> 3      5.574249 2.489953e-08   0.09089574  0.03990436 0.4390125      0.3278702
+#> 4      4.927248 2.213839e-06   0.09257119  0.04918586 0.5313301      0.4019580
+#> 5      3.840689 2.192330e-04   0.08147862  0.04592903 0.5636943      0.4213291
+#> 6      1.467686 2.403875e-01   0.07356423  0.06111041 0.8307082      0.6176444
+#>   ahsw.rah.upper   ahsw.p.rah    ahsw.dah ahsw.dah.lower ahsw.dah.upper
+#> 1      0.8770091 3.890394e-03 -0.02644321    -0.04446913   -0.008417282
+#> 2      0.6454384 1.091478e-06 -0.04332597    -0.06151709   -0.025134854
+#> 3      0.5878301 3.250633e-08 -0.05099138    -0.06965300   -0.032329748
+#> 4      0.7023413 8.920363e-06 -0.04338533    -0.06288035   -0.023890304
+#> 5      0.7541639 1.135479e-04 -0.03554959    -0.05370932   -0.017389860
+#> 6      1.1172711 2.199664e-01 -0.01245382    -0.03244248    0.007534848
+#>     ahsw.p.dah
+#> 1 4.038005e-03
+#> 2 3.040474e-06
+#> 3 8.534762e-08
+#> 4 1.289882e-05
+#> 5 1.246293e-04
+#> 6 2.220316e-01
 ```

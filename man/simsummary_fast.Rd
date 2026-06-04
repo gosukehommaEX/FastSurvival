@@ -57,7 +57,10 @@ An object of class \code{"simsummary_fast"}: a data frame with one row
   index, or \code{"overall"} on the summary row), optionally \code{look.value},
   \code{n.enrolled.mean} and \code{n.event.mean} (the mean enrolled and event
   counts at that look, or at the stopping look on the summary row),
-  \code{cutoff.mean} (the mean calendar time, likewise), \code{prob.stop.efficacy},
+  \code{n.dropout.mean} and \code{n.pipeline.mean} (the mean dropout count and
+  pipeline count \code{n.enrolled - n.event - n.dropout}, when those columns
+  are present in \code{data}), \code{cutoff.mean} (the mean calendar time,
+  likewise), \code{prob.stop.efficacy},
   \code{prob.stop.futility}, \code{prob.stop.any}, and \code{cum.reject}. On the
   \code{overall} row \code{prob.stop.efficacy} is the total rejection rate,
   \code{prob.stop.futility} the total futility rate, \code{prob.stop.any} their

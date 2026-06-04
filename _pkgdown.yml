@@ -22,6 +22,7 @@ reference:
   - maxcombo_fast
   - rmw_fast
   - ahsw_fast
+  - ahr_fast
 
 - title: Simulation
   desc: >

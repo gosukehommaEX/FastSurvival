@@ -15,6 +15,11 @@
     normal distribution.
   * `ahsw_fast()`: average hazard with survival weight of Uno and Horiguchi,
     reporting the ratio (RAH) and difference (DAH) contrasts.
+  * `ahr_fast()`: Kalbfleisch-Prentice average hazard ratio between two groups
+    over a restricted interval, the estimator used by Dormuth et al. (2024)
+    for sample-size calculation under non-proportional hazards, with a test on
+    the group-share scale and an equivalent test and confidence interval on
+    the log scale.
 * `survdiff_fast()` gains weighted log-rank tests (Fleming-Harrington,
   modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified and
   stratified-weighted variants, all sharing the single-scan C++ backend.

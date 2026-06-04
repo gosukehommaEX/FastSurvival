@@ -124,7 +124,10 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   (\code{"event"} or \code{"time"}), \code{look.value} (the requested event
   count or calendar time), optionally \code{population}, \code{cutoff} (the
   calendar time used, \code{NA} when an event target was not reached),
-  \code{reached}, \code{n.enrolled}, and \code{n.event}, followed by the
+  \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
+  number of enrolled subjects whose dropout occurred on or before the cutoff)
+  and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
+  subjects still in follow-up at the cutoff), followed by the
   columns of the requested statistics. A statistic that cannot be computed
   for a row (no events, or an empty group) is \code{NA}. The statistic
   columns are \code{logrank.z}, \code{logrank.chisq}, and \code{logrank.p}

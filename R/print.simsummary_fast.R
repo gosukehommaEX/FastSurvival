@@ -9,7 +9,8 @@
 #' @details
 #' The probability columns are printed as proportions rounded to \code{digits}
 #' significant digits, and the timing columns (mean enrolled, mean events, mean
-#' calendar time) are rounded for readability. When the object holds more than one
+#' dropouts, mean pipeline, mean calendar time) are rounded for readability. When
+#' the object holds more than one
 #' population, each population is printed as its own block with a heading. The
 #' underlying object is an ordinary data frame, so the unrounded values remain
 #' available by subsetting it directly.

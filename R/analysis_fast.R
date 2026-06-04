@@ -169,7 +169,10 @@
 #'   (\code{"event"} or \code{"time"}), \code{look.value} (the requested event
 #'   count or calendar time), optionally \code{population}, \code{cutoff} (the
 #'   calendar time used, \code{NA} when an event target was not reached),
-#'   \code{reached}, \code{n.enrolled}, and \code{n.event}, followed by the
+#'   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
+#'   number of enrolled subjects whose dropout occurred on or before the cutoff)
+#'   and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
+#'   subjects still in follow-up at the cutoff), followed by the
 #'   columns of the requested statistics. A statistic that cannot be computed
 #'   for a row (no events, or an empty group) is \code{NA}. The statistic
 #'   columns are \code{logrank.z}, \code{logrank.chisq}, and \code{logrank.p}
@@ -431,6 +434,8 @@ analysis_fast <- function(data, control,
   out$reached    <- as.logical(core$reached)
   out$n.enrolled <- core$n_enrolled
   out$n.event    <- core$n_event
+  out$n.dropout  <- core$n_dropout
+  out$n.pipeline <- out$n.enrolled - out$n.event - out$n.dropout
 
   if (do_logrank) {
     num <- core$logrank[, 1]

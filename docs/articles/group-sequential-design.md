@@ -95,16 +95,16 @@ sum_null
 #>   Mode: Z-scale boundaries, direction = lower
 #>     efficacy [logrank.z]: -3.710, -2.511, -1.993
 #> 
-#>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy
-#>        1        100        517.5325       100.00      8.8672             0.0000
-#>        2        200        699.8730       200.00     13.0276             0.0065
-#>        3        300        700.0000       300.00     17.4987             0.0150
-#>  overall         NA        700.0000       299.35     17.4706             0.0215
-#>  prob.stop.futility prob.stop.any cum.reject
-#>                   0        0.0000     0.0000
-#>                   0        0.0065     0.0065
-#>                   0        0.0150     0.0215
-#>                   0        0.0215     0.0215
+#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
+#>        1        100        517.5325       100.00              0        417.5325
+#>        2        200        699.8730       200.00              0        499.8730
+#>        3        300        700.0000       300.00              0        400.0000
+#>  overall         NA        700.0000       299.35              0        400.6500
+#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
+#>       8.8672             0.0000                  0        0.0000     0.0000
+#>      13.0276             0.0065                  0        0.0065     0.0065
+#>      17.4987             0.0150                  0        0.0150     0.0215
+#>      17.4706             0.0215                  0        0.0215     0.0215
 ```
 
 The cumulative rejection probability at the final look estimates the
@@ -154,16 +154,16 @@ sum_alt
 #>   Mode: Z-scale boundaries, direction = lower
 #>     efficacy [logrank.z]: -3.710, -2.511, -1.993
 #> 
-#>     look look.value n.enrolled.mean n.event.mean cutoff.mean prob.stop.efficacy
-#>        1        100        559.6415       100.00      9.5889             0.0240
-#>        2        200        700.0000       200.00     14.2143             0.4765
-#>        3        300        700.0000       300.00     19.5279             0.3640
-#>  overall         NA        696.8610       247.55     16.7443             0.8645
-#>  prob.stop.futility prob.stop.any cum.reject
-#>                   0        0.0240     0.0240
-#>                   0        0.4765     0.5005
-#>                   0        0.3640     0.8645
-#>                   0        0.8645     0.8645
+#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
+#>        1        100        559.6415       100.00              0        459.6415
+#>        2        200        700.0000       200.00              0        500.0000
+#>        3        300        700.0000       300.00              0        400.0000
+#>  overall         NA        696.8610       247.55              0        449.3110
+#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
+#>       9.5889             0.0240                  0        0.0240     0.0240
+#>      14.2143             0.4765                  0        0.4765     0.5005
+#>      19.5279             0.3640                  0        0.3640     0.8645
+#>      16.7443             0.8645                  0        0.8645     0.8645
 ```
 
 ## Comparing the boundary-crossing probabilities

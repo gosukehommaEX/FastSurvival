@@ -124,6 +124,7 @@ List analysis_loop_core(
   IntegerVector reached_out(ncells);
   IntegerVector nen_out(ncells);
   IntegerVector nev_out(ncells);
+  IntegerVector nd_out(ncells);
 
   NumericMatrix lr_mat, cox_mat, rmst_mat, km_mat, ahsw_mat, mc_Uout, mc_Vout;
   if (do_logrank) { lr_mat   = NumericMatrix(ncells, 2); std::fill(lr_mat.begin(),   lr_mat.end(),   NA_REAL); }
@@ -150,6 +151,7 @@ List analysis_loop_core(
   std::vector<double> t_cut(max_block);
   std::vector<int>    e_cut(max_block);
   std::vector<int>    j_cut(max_block);
+  std::vector<int>    drop_cut(max_block);
   std::vector<int>    ord(max_block);
   std::vector<int>    radix_scratch(max_block);
   std::vector<uint64_t> radix_bits(max_block);
@@ -228,6 +230,10 @@ List analysis_loop_core(
         t_cut[m]    = before ? full : (cut_cutoff - a);
         e_cut[m]    = before ? event[g] : 0;
         j_cut[m]    = j[g];
+        // A dropout is an enrolled subject whose natural censoring (event == 0)
+        // occurred on or before the cutoff; subjects not yet resolved at the
+        // cutoff are administrative (pipeline), not dropouts.
+        drop_cut[m] = (before && event[g] == 0) ? 1 : 0;
         ++m;
       }
 
@@ -258,7 +264,7 @@ List analysis_loop_core(
         }
 
         // Materialize the pooled time-sorted population vectors.
-        int n0 = 0, n1 = 0, n_ev = 0;
+        int n0 = 0, n1 = 0, n_ev = 0, n_drop = 0;
         for (int k = 0; k < sz; ++k) {
           const int kk = order_ptr[k];
           t_sel[k]  = t_cut[kk];
@@ -266,6 +272,7 @@ List analysis_loop_core(
           j_sel[k]  = j_cut[kk];
           if (j_cut[kk] == 1) ++n1; else ++n0;
           if (e_cut[kk] == 1) ++n_ev;
+          if (drop_cut[kk] == 1) ++n_drop;
         }
         const bool both = (n0 > 0 && n1 > 0);
 
@@ -273,6 +280,7 @@ List analysis_loop_core(
         reached_out[pos] = reached ? 1 : 0;
         nen_out[pos]     = sz;
         nev_out[pos]     = n_ev;
+        nd_out[pos]      = n_drop;
 
         // ---- log-rank (plain / weighted, optionally stratified) ----------
         if (do_logrank && n_ev > 0 && both) {
@@ -402,6 +410,7 @@ List analysis_loop_core(
     _["reached"]    = reached_out,
     _["n_enrolled"] = nen_out,
     _["n_event"]    = nev_out,
+    _["n_dropout"]  = nd_out,
     _["logrank"]    = do_logrank  ? (SEXP) lr_mat   : R_NilValue,
     _["coxph"]      = do_coxph    ? (SEXP) cox_mat  : R_NilValue,
     _["rmst"]       = do_rmst     ? (SEXP) rmst_mat : R_NilValue,

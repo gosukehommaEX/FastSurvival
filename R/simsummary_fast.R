@@ -99,7 +99,10 @@
 #'   index, or \code{"overall"} on the summary row), optionally \code{look.value},
 #'   \code{n.enrolled.mean} and \code{n.event.mean} (the mean enrolled and event
 #'   counts at that look, or at the stopping look on the summary row),
-#'   \code{cutoff.mean} (the mean calendar time, likewise), \code{prob.stop.efficacy},
+#'   \code{n.dropout.mean} and \code{n.pipeline.mean} (the mean dropout count and
+#'   pipeline count \code{n.enrolled - n.event - n.dropout}, when those columns
+#'   are present in \code{data}), \code{cutoff.mean} (the mean calendar time,
+#'   likewise), \code{prob.stop.efficacy},
 #'   \code{prob.stop.futility}, \code{prob.stop.any}, and \code{cum.reject}. On the
 #'   \code{overall} row \code{prob.stop.efficacy} is the total rejection rate,
 #'   \code{prob.stop.futility} the total futility rate, \code{prob.stop.any} their
@@ -193,6 +196,8 @@ simsummary_fast <- function(data,
 
   has_enrol   <- "n.enrolled" %in% names(data)
   has_event   <- "n.event" %in% names(data)
+  has_dropout <- "n.dropout" %in% names(data)
+  has_pipeline <- "n.pipeline" %in% names(data)
   has_cutoff  <- "cutoff" %in% names(data)
   has_lookval <- "look.value" %in% names(data)
   has_pop     <- "population" %in% names(data)
@@ -224,6 +229,8 @@ simsummary_fast <- function(data,
 
     enrol_mat <- fill_mat("n.enrolled")
     ev_mat    <- fill_mat("n.event")
+    drop_mat  <- fill_mat("n.dropout")
+    pipe_mat  <- fill_mat("n.pipeline")
     cut_mat   <- fill_mat("cutoff")
 
     eff_mat <- matrix(NA_real_, nsim, n_look)
@@ -286,6 +293,8 @@ simsummary_fast <- function(data,
     rows_idx       <- seq_len(nsim)
     enrol_at_stop  <- enrol_mat[cbind(rows_idx, stop_idx)]
     events_at_stop <- ev_mat[cbind(rows_idx, stop_idx)]
+    drop_at_stop   <- drop_mat[cbind(rows_idx, stop_idx)]
+    pipe_at_stop   <- pipe_mat[cbind(rows_idx, stop_idx)]
     cutoff_at_stop <- cut_mat[cbind(rows_idx, stop_idx)]
 
     mean_fin <- function(x) {
@@ -296,12 +305,16 @@ simsummary_fast <- function(data,
     fut_stop_k <- numeric(n_look)
     enrol_k    <- numeric(n_look)
     event_k    <- numeric(n_look)
+    drop_k     <- numeric(n_look)
+    pipe_k     <- numeric(n_look)
     cutoff_k   <- numeric(n_look)
     for (k in seq_len(n_look)) {
       eff_stop_k[k] <- mean(reason == "efficacy" & stop_idx == k)
       fut_stop_k[k] <- mean(reason == "futility" & stop_idx == k)
       enrol_k[k]    <- mean_fin(enrol_mat[, k])
       event_k[k]    <- mean_fin(ev_mat[, k])
+      drop_k[k]     <- mean_fin(drop_mat[, k])
+      pipe_k[k]     <- mean_fin(pipe_mat[, k])
       cutoff_k[k]   <- mean_fin(cut_mat[, k])
     }
 
@@ -314,9 +327,11 @@ simsummary_fast <- function(data,
       lv <- tapply(df$look.value, df$look, function(x) x[1L])
       look_rows$look.value <- as.numeric(lv[as.character(looks)])
     }
-    if (has_enrol)  look_rows$n.enrolled.mean <- enrol_k
-    if (has_event)  look_rows$n.event.mean    <- event_k
-    if (has_cutoff) look_rows$cutoff.mean     <- cutoff_k
+    if (has_enrol)    look_rows$n.enrolled.mean <- enrol_k
+    if (has_event)    look_rows$n.event.mean    <- event_k
+    if (has_dropout)  look_rows$n.dropout.mean  <- drop_k
+    if (has_pipeline) look_rows$n.pipeline.mean <- pipe_k
+    if (has_cutoff)   look_rows$cutoff.mean     <- cutoff_k
     look_rows$prob.stop.efficacy <- eff_stop_k
     look_rows$prob.stop.futility <- fut_stop_k
     look_rows$prob.stop.any      <- eff_stop_k + fut_stop_k
@@ -328,9 +343,11 @@ simsummary_fast <- function(data,
       stringsAsFactors = FALSE
     )
     if (has_lookval) overall_row$look.value <- NA_real_
-    if (has_enrol)  overall_row$n.enrolled.mean <- mean_fin(enrol_at_stop)
-    if (has_event)  overall_row$n.event.mean    <- mean_fin(events_at_stop)
-    if (has_cutoff) overall_row$cutoff.mean     <- mean_fin(cutoff_at_stop)
+    if (has_enrol)    overall_row$n.enrolled.mean <- mean_fin(enrol_at_stop)
+    if (has_event)    overall_row$n.event.mean    <- mean_fin(events_at_stop)
+    if (has_dropout)  overall_row$n.dropout.mean  <- mean_fin(drop_at_stop)
+    if (has_pipeline) overall_row$n.pipeline.mean <- mean_fin(pipe_at_stop)
+    if (has_cutoff)   overall_row$cutoff.mean     <- mean_fin(cutoff_at_stop)
     overall_row$prob.stop.efficacy <- mean(reject)
     overall_row$prob.stop.futility <- mean(reason == "futility")
     overall_row$prob.stop.any      <- mean(reason != "continue")
