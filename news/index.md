@@ -35,8 +35,12 @@
 - New simulation layer:
   - [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
     extended with optional subgroups defined by a prevalence
-    specification, and rewritten so the entire generation pipeline runs
-    in a single C++ kernel that materializes the output data frame once.
+    specification and a flexible accrual specification: `a.rate` gives
+    absolute accrual rates (with the end of an open final interval
+    solved from the total when a trailing rate is supplied) and `a.prop`
+    gives accrual proportions, with deterministic per-interval accrual
+    counts. The entire generation pipeline runs in a single C++ kernel
+    that materializes the output data frame once.
   - [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md):
     interim or sequential analysis of simulated data at one or more
     looks, defined by target event counts or calendar times, computed by
@@ -46,7 +50,9 @@
     operating-characteristic summary (rejection and futility rates,
     stopping-look distribution, expected timing) from
     [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-    output and supplied group-sequential boundaries.
+    output and supplied group-sequential boundaries, with a
+    [`print()`](https://rdrr.io/r/base/print.html) method that lays the
+    results out as a group-sequential design report.
 - Each estimation and testing function has a corresponding
   [`print()`](https://rdrr.io/r/base/print.html) method, and the print
   methods share a unified display format.

@@ -58,11 +58,11 @@
 <code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> gains weighted log-rank tests (Fleming-Harrington, modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified and stratified-weighted variants, all sharing the single-scan C++ backend.</li>
 <li>New simulation layer:
 <ul><li>
-<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> extended with optional subgroups defined by a prevalence specification, and rewritten so the entire generation pipeline runs in a single C++ kernel that materializes the output data frame once.</li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> extended with optional subgroups defined by a prevalence specification and a flexible accrual specification: <code>a.rate</code> gives absolute accrual rates (with the end of an open final interval solved from the total when a trailing rate is supplied) and <code>a.prop</code> gives accrual proportions, with deterministic per-interval accrual counts. The entire generation pipeline runs in a single C++ kernel that materializes the output data frame once.</li>
 <li>
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>: interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times, computed by a fused C++ kernel that reuses the analysis cores of the standalone functions. Supports subgroup analyses.</li>
 <li>
-<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>: operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> output and supplied group-sequential boundaries.</li>
+<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>: operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> output and supplied group-sequential boundaries, with a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that lays the results out as a group-sequential design report.</li>
 </ul></li>
 <li>Each estimation and testing function has a corresponding <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method, and the print methods share a unified display format.</li>
 </ul></div>

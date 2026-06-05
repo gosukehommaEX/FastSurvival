@@ -93,21 +93,31 @@ sum_null <- simsummary_fast(
   direction = "lower"
 )
 sum_null
-#> Sequential analysis summary (simsummary_fast)
+#> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 2000
-#>   Mode: Z-scale boundaries, direction = lower
-#>     efficacy [logrank.z]: -3.710, -2.511, -1.993
+#>   Boundaries: efficacy on 'logrank.z' (direction = lower)
 #> 
-#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
-#>        1        100        517.5325       100.00              0        417.5325
-#>        2        200        699.8730       200.00              0        499.8730
-#>        3        300        700.0000       300.00              0        400.0000
-#>  overall         NA        700.0000       299.35              0        400.6500
-#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
-#>       8.8672             0.0000                  0        0.0000     0.0000
-#>      13.0276             0.0065                  0        0.0065     0.0065
-#>      17.4987             0.0150                  0        0.0150     0.0215
-#>      17.4706             0.0215                  0        0.0215     0.0215
+#> Stopping Boundaries: Look by Look
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
+#>     1        0.33      100.0      517.5    -3.7103           0.0000
+#>     2        0.67      200.0      699.9    -2.5114           0.0065
+#>     3        1.00      300.0      700.0    -1.9930           0.0215
+#> 
+#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.33      517.5      100.0          0.0    417.5          8.87
+#>     2        0.67      699.9      200.0          0.0    499.9         13.03
+#>     3        1.00      700.0      300.0          0.0    400.0         17.50
+#>  Cross. Eff.
+#>       0.0000
+#>       0.0065
+#>       0.0150
+#> 
+#> Overall
+#>   Rejection rate (efficacy):    0.0215
+#>   Expected events at stop:      299.4
+#>   Expected sample size at stop: 700.0
+#>   Expected analysis time at stop:17.47
 ```
 
 The cumulative rejection probability at the final look estimates the
@@ -154,21 +164,31 @@ sum_alt <- simsummary_fast(
   direction = "lower"
 )
 sum_alt
-#> Sequential analysis summary (simsummary_fast)
+#> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 2000
-#>   Mode: Z-scale boundaries, direction = lower
-#>     efficacy [logrank.z]: -3.710, -2.511, -1.993
+#>   Boundaries: efficacy on 'logrank.z' (direction = lower)
 #> 
-#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
-#>        1        100        559.6415       100.00              0        459.6415
-#>        2        200        700.0000       200.00              0        500.0000
-#>        3        300        700.0000       300.00              0        400.0000
-#>  overall         NA        696.8610       247.55              0        449.3110
-#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
-#>       9.5889             0.0240                  0        0.0240     0.0240
-#>      14.2143             0.4765                  0        0.4765     0.5005
-#>      19.5279             0.3640                  0        0.3640     0.8645
-#>      16.7443             0.8645                  0        0.8645     0.8645
+#> Stopping Boundaries: Look by Look
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
+#>     1        0.33      100.0      559.6    -3.7103           0.0240
+#>     2        0.67      200.0      700.0    -2.5114           0.5005
+#>     3        1.00      300.0      700.0    -1.9930           0.8645
+#> 
+#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.33      559.6      100.0          0.0    459.6          9.59
+#>     2        0.67      700.0      200.0          0.0    500.0         14.21
+#>     3        1.00      700.0      300.0          0.0    400.0         19.53
+#>  Cross. Eff.
+#>       0.0240
+#>       0.4765
+#>       0.3640
+#> 
+#> Overall
+#>   Rejection rate (efficacy):    0.8645
+#>   Expected events at stop:      247.6
+#>   Expected sample size at stop: 696.9
+#>   Expected analysis time at stop:16.74
 ```
 
 ## Comparing the boundary-crossing probabilities
