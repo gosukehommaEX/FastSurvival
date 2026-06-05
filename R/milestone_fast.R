@@ -37,12 +37,12 @@
 #'   estimate with its confidence interval, the test statistic, and the p-value.
 #'
 #' @references
-#' Tang Y (2021). Some new confidence intervals for Kaplan-Meier based
-#' estimators from one and two sample survival data. Statistics in Medicine,
-#' 40(23), 4961-4976.
+#' Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
+#' estimators from one and two sample survival data. \emph{Statistics in
+#' Medicine}, \emph{40}(23), 4961-4976.
 #'
-#' Tang Y (2022). Complex survival trial design by the product integration
-#' method. Statistics in Medicine, 41(4), 798-814.
+#' Tang, Y. (2022). Complex survival trial design by the product integration
+#' method. \emph{Statistics in Medicine}, \emph{41}(4), 798-814.
 #'
 #' @examples
 #' set.seed(1)

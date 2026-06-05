@@ -174,11 +174,14 @@ to <code>summary(coxph(...))</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+    <p>Cox, D. R. (1972). Regression models and life-tables. <em>Journal of the
+Royal Statistical Society. Series B (Methodological)</em>, <em>34</em>(2),
+187-220.</p>
+<p>Berry, G., Kitchin, R. M., &amp; Mock, P. A. (1991). A comparison of two simple
+hazard ratio estimators based on the logrank test. <em>Statistics in
+Medicine</em>, <em>10</em>(5), 749-755.</p>
+<p>Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. Manuscript under review.</p>
-<p>Berry, G., Kitchin, R. M., &amp; Mock, P. A. (1991). A comparison of two
-simple hazard ratio estimators based on the logrank test.
-<em>Statistics in Medicine</em>, <em>10</em>(5), 749-755.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -233,9 +236,9 @@ simple hazard ratio estimators based on the logrank test.
 <span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min      lq      mean  median      uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   27.4   72.45  166.4576  100.75  145.90 22044.0  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1293.8 2219.60 3842.6404 3015.25 3917.45 52722.6  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min      lq      mean  median     uq     max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   23.7   54.50   89.6166   78.10  106.7  3108.8  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1096.8 1794.65 2482.8438 2428.05 2810.1 16677.0  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

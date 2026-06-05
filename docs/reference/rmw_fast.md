@@ -108,7 +108,7 @@ already generated in time order.
 
 ## References
 
-Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
+Magirr, D., & Öhrn, F. (2026). Robust modestly weighted log-rank tests.
 *Pharmaceutical Statistics*, *25*(1), e70066.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.

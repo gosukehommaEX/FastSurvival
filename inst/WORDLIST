@@ -1,7 +1,9 @@
+AHR
 AHSW
 Aalen
 BMC
 Biometrical
+Biometrics
 Biometrika
 Biopharmaceutical
 Bonferroni
@@ -12,6 +14,7 @@ CRC
 Claggett
 Collett
 DAH
+DeMets
 Dormuth
 FH
 GL
@@ -22,6 +25,7 @@ Kalbfleisch
 Kaplan
 Karrison
 Kitchin
+Lan
 Magirr
 Modelling
 Ohrn
@@ -29,7 +33,6 @@ Parmar
 Pauly
 Peto
 PiHE
-Prentice
 RMST
 Rauch
 Rcpp
@@ -40,8 +43,10 @@ Tarone
 Tian
 Uno
 ahr
+ahrKM
 ahsw
 al
+benchmarked
 coxph
 dH
 dqrng
@@ -71,7 +76,6 @@ rmw
 rpact
 simdata
 simsummary
-simtrial
 struct
 surv
 survAH
@@ -82,3 +86,4 @@ th
 unpooled
 unrounded
 unstratified
+Öhrn

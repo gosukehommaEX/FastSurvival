@@ -113,7 +113,8 @@ rmw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 }
 \references{
-Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
+Magirr, D., & \enc{Öhrn}{Ohrn}, F. (2026). Robust modestly weighted log-rank
+tests.
 \emph{Pharmaceutical Statistics}, \emph{25}(1), e70066.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.

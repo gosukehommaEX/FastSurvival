@@ -15,7 +15,7 @@
     statistics, with the joint p-value obtained from the implied
     multivariate normal distribution.
   - [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md):
-    robust modestly-weighted log-rank test of Magirr and Ohrn, the
+    robust modestly-weighted log-rank test of Magirr and Öhrn, the
     maximum of the standard log-rank and a modestly-weighted log-rank
     statistic, with the joint p-value obtained from the implied
     bivariate normal distribution.

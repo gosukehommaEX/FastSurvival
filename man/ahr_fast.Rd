@@ -89,12 +89,12 @@ group <- rep(c(0, 1), each = n)
 ahr_fast(obs, status, group, control = 0, tau = 8)
 }
 \references{
-J. D. Kalbfleisch and R. L. Prentice. Estimation of the average
-  hazard ratio. Biometrika, 68(1):105-112, 1981.
+Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
+hazard ratio. \emph{Biometrika}, \emph{68}(1), 105-112.
 
-  I. Dormuth, M. Pauly, G. Rauch, and C. Herrmann. Sample size calculation
-  under nonproportional hazards using average hazard ratios. Biometrical
-  Journal, 66(6):e202300271, 2024.
+Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
+calculation under nonproportional hazards using average hazard ratios.
+\emph{Biometrical Journal}, \emph{66}(6), e202300271.
 }
 \seealso{
 \code{\link{ahsw_fast}}, \code{\link{coxph_fast}}

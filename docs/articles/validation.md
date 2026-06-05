@@ -310,7 +310,7 @@ integral here, a Bonferroni-style combination in `nph`).
 ## Robust modestly-weighted log-rank test
 
 [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
-computes the robust modestly-weighted (rMW) test of Magirr and Ohrn, the
+computes the robust modestly-weighted (rMW) test of Magirr and Öhrn, the
 maximum of the standard log-rank statistic and a single
 modestly-weighted log-rank statistic. Each component is a weighted
 log-rank test, so we check the two component Z-scores against
@@ -375,6 +375,32 @@ by the package test suite.
 
 ## References
 
+Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
+incomplete observations. *Journal of the American Statistical
+Association*, 53(282), 457-481.
+
+Mantel, N. (1966). Evaluation of survival data and two new rank order
+statistics arising in its consideration. *Cancer Chemotherapy Reports*,
+50(3), 163-170.
+
+Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
+Survival Analysis*. New York: John Wiley & Sons.
+
+Cox, D. R. (1972). Regression models and life-tables. *Journal of the
+Royal Statistical Society. Series B (Methodological)*, 34(2), 187-220.
+
+Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+estimator. *Manuscript under review.*
+
+Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
+an alternative to the hazard ratio for the design and analysis of
+randomized trials with a time-to-event outcome. *BMC Medical Research
+Methodology*, 13, 152.
+
+Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
+ratio in quantifying the between-group difference in survival analysis.
+*Journal of Clinical Oncology*, 32(22), 2380-2385.
+
 Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
 estimators from one and two sample survival data. *Statistics in
 Medicine*, 40(23), 4961-4976.
@@ -394,5 +420,13 @@ Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. *The Stata Journal*, 16(3),
 678-690.
 
-Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
+Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
+analysis methods for time to event endpoints under nonproportional
+hazards: a comparative analysis. *Statistics in Biopharmaceutical
+Research*, 12(2), 187-198.
+
+Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
+*Statistics in Medicine*, 38(20), 3782-3790.
+
+Magirr, D., & Öhrn, F. (2026). Robust modestly weighted log-rank tests.
 *Pharmaceutical Statistics*, 25(1), e70066.

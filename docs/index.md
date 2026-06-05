@@ -30,7 +30,7 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | Restricted mean survival time for a single group or a two-group comparison (difference and ratio). |
 | [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md) | Two-group comparison of Kaplan-Meier survival at a milestone timepoint (Wald, log-log, and MOVER methods). |
 | [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md) | Max-combo test, the maximum over a set of Fleming-Harrington weighted log-rank statistics, for non-proportional hazards. |
-| [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md) | Robust modestly-weighted test (Magirr and Ohrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
+| [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md) | Robust modestly-weighted test (Magirr and Öhrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
 | [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md) | Average hazard with survival weight of Uno and Horiguchi, with ratio and difference contrasts. |
 | [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md) | Kalbfleisch-Prentice average hazard ratio between two groups over a restricted interval, for non-proportional hazards. |
 
@@ -179,7 +179,7 @@ makes the test robust to the shape of the hazard difference, with the
 multiplicity accounted for through the joint distribution.
 
 **rmw_fast** computes the robust modestly-weighted (rMW) test of Magirr
-and Ohrn (2026), the maximum of the standard log-rank statistic and a
+and Öhrn (2026), the maximum of the standard log-rank statistic and a
 single modestly-weighted log-rank statistic. The modestly-weighted
 component uses the survival-threshold parameterization, with the weight
 capped at the reciprocal of `s_star` (so `s_star = 0.5` caps the weight
@@ -312,27 +312,35 @@ colMeans(hr_mat)
 
 ## References
 
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. *Manuscript under review.*
+Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
+incomplete observations. *Journal of the American Statistical
+Association*, 53(282), 457-481.
+
+Mantel, N. (1966). Evaluation of survival data and two new rank order
+statistics arising in its consideration. *Cancer Chemotherapy Reports*,
+50(3), 163-170.
+
+Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
+arbitrarily single-censored samples. *Biometrika*, 52, 203-223.
+
+Tarone, R. E., & Ware, J. (1977). On distribution-free tests for
+equality of survival distributions. *Biometrika*, 64, 156-160.
+
+Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
+Survival Analysis*. New York: John Wiley & Sons.
+
+Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
+*Statistics in Medicine*, 38(20), 3782-3790.
+
+Cox, D. R. (1972). Regression models and life-tables. *Journal of the
+Royal Statistical Society. Series B (Methodological)*, 34(2), 187-220.
 
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. *Statistics in
 Medicine*, 10(5), 749-755.
 
-Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
-*Statistics in Medicine*, 38(20), 3782-3790.
-
-Magirr, D., & Ohrn, F. (2026). Robust modestly weighted log-rank tests.
-*Pharmaceutical Statistics*, 25(1), e70066.
-
-Karrison, T. G. (2016). Versatile tests for comparing survival curves
-based on weighted log-rank statistics. *The Stata Journal*, 16(3),
-678-690.
-
-Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
-analysis methods for time to event endpoints under nonproportional
-hazards: a comparative analysis. *Statistics in Biopharmaceutical
-Research*, 12(2), 187-198.
+Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+estimator. *Manuscript under review.*
 
 Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of
@@ -346,6 +354,21 @@ ratio in quantifying the between-group difference in survival analysis.
 Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
 estimators from one and two sample survival data. *Statistics in
 Medicine*, 40(23), 4961-4976.
+
+Tang, Y. (2022). Complex survival trial design by the product
+integration method. *Statistics in Medicine*, 41(4), 798-814.
+
+Karrison, T. G. (2016). Versatile tests for comparing survival curves
+based on weighted log-rank statistics. *The Stata Journal*, 16(3),
+678-690.
+
+Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
+analysis methods for time to event endpoints under nonproportional
+hazards: a comparative analysis. *Statistics in Biopharmaceutical
+Research*, 12(2), 187-198.
+
+Magirr, D., & Öhrn, F. (2026). Robust modestly weighted log-rank tests.
+*Pharmaceutical Statistics*, 25(1), e70066.
 
 Uno, H., & Horiguchi, M. (2023). Ratio and difference of average hazard
 with survival weight: new measures to quantify survival benefit of new

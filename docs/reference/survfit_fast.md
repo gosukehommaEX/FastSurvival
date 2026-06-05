@@ -114,9 +114,9 @@ formats the result similarly to
 
 ## References
 
-Kaplan, E. L., & Meier, P. (1958). Nonparametric Estimation from
-Incomplete Observations. Journal of the American Statistical
-Association, 53(282), 457–481.
+Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
+incomplete observations. *Journal of the American Statistical
+Association*, *53*(282), 457-481.
 
 ## See also
 

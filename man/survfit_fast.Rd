@@ -120,9 +120,9 @@ summary(fit, times = 10)
 
 }
 \references{
-Kaplan, E. L., & Meier, P. (1958). Nonparametric Estimation from Incomplete
-Observations. Journal of the American Statistical Association, 53(282),
-457–481.
+Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from incomplete
+observations. \emph{Journal of the American Statistical Association},
+\emph{53}(282), 457-481.
 }
 \seealso{
 \code{\link[survival]{survfit}} for the standard Kaplan-Meier estimator.

@@ -133,12 +133,16 @@ microbenchmark(
 
 }
 \references{
+Cox, D. R. (1972). Regression models and life-tables. \emph{Journal of the
+Royal Statistical Society. Series B (Methodological)}, \emph{34}(2),
+187-220.
+
+Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two simple
+hazard ratio estimators based on the logrank test. \emph{Statistics in
+Medicine}, \emph{10}(5), 749-755.
+
 Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. Manuscript under review.
-
-Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
-simple hazard ratio estimators based on the logrank test.
-\emph{Statistics in Medicine}, \emph{10}(5), 749-755.
 }
 \seealso{
 \code{\link[survival]{coxph}} for the standard iterative Cox estimator.
