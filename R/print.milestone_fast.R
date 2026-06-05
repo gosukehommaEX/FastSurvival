@@ -22,7 +22,7 @@
 #' time <- c(rexp(50, 0.1), rexp(50, 0.07))
 #' status <- rep(1, 100)
 #' group <- rep(c(0, 1), each = 50)
-#' print(milestone_fast(time, status, group, tau = 10, method = "loglog"))
+#' print(milestone_fast(time, status, group, control = 0, tau = 10, method = "loglog"))
 #'
 #' @seealso \code{\link{milestone_fast}}
 #'

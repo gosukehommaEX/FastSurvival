@@ -123,7 +123,7 @@ library(AHR)
 
 dat <- data.frame(tt = tt, ev = ev, gp = gp)
 microbenchmark(
-  fast = ahr_fast(t_s, e_s, g_s, tau = 20, presorted = TRUE),
+  fast = ahr_fast(t_s, e_s, g_s, control = 1, tau = 20, presorted = TRUE),
   base = AHR::ahrKM(20, Surv(tt, ev) ~ gp, dat),
   times = 1000
 )

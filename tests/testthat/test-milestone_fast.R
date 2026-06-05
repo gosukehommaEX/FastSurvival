@@ -14,7 +14,7 @@ test_that("per-group milestone survival and CI match survfit (all transforms)", 
   type_map <- c(wald = "plain", mover = "log", loglog = "log-log")
 
   for (m in names(type_map)) {
-    res <- milestone_fast(obs, status, group, tau = tau, method = m)
+    res <- milestone_fast(obs, status, group, control = 0L, tau = tau, method = m)
 
     for (g in c(0L, 1L)) {
       idx <- group == g
@@ -43,7 +43,7 @@ test_that("wald difference interval and statistic are computed correctly", {
   group <- rep(c(0L, 1L), each = n_each)
   tau <- 6
 
-  res <- milestone_fast(obs, status, group, tau = tau, method = "wald")
+  res <- milestone_fast(obs, status, group, control = 0L, tau = tau, method = "wald")
 
   z <- qnorm(0.975)
   v0 <- res$std.err["control"]^2
@@ -68,7 +68,7 @@ test_that("MOVER difference interval matches the one-sample recovery formula", {
   tau <- 7
 
   for (m in c("loglog", "mover")) {
-    res <- milestone_fast(obs, status, group, tau = tau, method = m)
+    res <- milestone_fast(obs, status, group, control = 0L, tau = tau, method = m)
 
     s0 <- res$surv["control"]; s1 <- res$surv["treatment"]
     l0 <- res$surv.lower["control"]; u0 <- res$surv.upper["control"]
@@ -93,7 +93,7 @@ test_that("loglog test statistic equals the variance-stabilised contrast", {
   group <- rep(c(0L, 1L), each = n_each)
   tau <- 9
 
-  res <- milestone_fast(obs, status, group, tau = tau, method = "loglog")
+  res <- milestone_fast(obs, status, group, control = 0L, tau = tau, method = "loglog")
 
   s0 <- res$surv["control"]; s1 <- res$surv["treatment"]
   v0 <- res$std.err["control"]^2; v1 <- res$std.err["treatment"]^2
@@ -115,10 +115,10 @@ test_that("presorted input gives identical results", {
   group <- rep(c(0L, 1L), each = n_each)
   tau <- 8
 
-  res_unsorted <- milestone_fast(obs, status, group, tau = tau, method = "loglog")
+  res_unsorted <- milestone_fast(obs, status, group, control = 0L, tau = tau, method = "loglog")
 
   ord <- order(obs)
-  res_sorted <- milestone_fast(obs[ord], status[ord], group[ord],
+  res_sorted <- milestone_fast(obs[ord], status[ord], group[ord], control = 0L,
                                tau = tau, method = "loglog", presorted = TRUE)
 
   expect_equal(res_unsorted$surv, res_sorted$surv, tolerance = 1e-12)
@@ -134,9 +134,9 @@ test_that("side argument controls the p-value direction", {
   group <- rep(c(0L, 1L), each = n_each)
   tau <- 7
 
-  two <- milestone_fast(obs, status, group, tau = tau, side = "two.sided")
-  up <- milestone_fast(obs, status, group, tau = tau, side = "upper")
-  lo <- milestone_fast(obs, status, group, tau = tau, side = "lower")
+  two <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "two.sided")
+  up <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "upper")
+  lo <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "lower")
 
   expect_equal(up$p.value + lo$p.value, 1, tolerance = 1e-10)
   expect_equal(two$p.value, 2 * min(up$p.value, lo$p.value), tolerance = 1e-10)
@@ -147,16 +147,18 @@ test_that("input validation catches malformed arguments", {
   status <- c(1L, 0L, 1L, 1L)
   group <- c(0L, 0L, 1L, 1L)
 
-  expect_error(milestone_fast(obs, status[-1], group, tau = 2),
+  expect_error(milestone_fast(obs, status[-1], group, control = 0L, tau = 2),
                "same length")
-  expect_error(milestone_fast(obs, c(1L, 2L, 1L, 1L), group, tau = 2),
+  expect_error(milestone_fast(obs, c(1L, 2L, 1L, 1L), group, control = 0L, tau = 2),
                "0 .censored. and 1")
-  expect_error(milestone_fast(obs, status, group, tau = -1),
+  expect_error(milestone_fast(obs, status, group, control = 0L, tau = -1),
                "positive")
   expect_error(milestone_fast(obs, status, rep(0L, 4), tau = 2),
                "two distinct")
-  expect_error(milestone_fast(obs, status, group, tau = 2, conf.level = 1.2),
+  expect_error(milestone_fast(obs, status, group, control = 0L, tau = 2, conf.level = 1.2),
                "in .0, 1.")
+  expect_error(milestone_fast(obs, status, group, control = 9, tau = 2),
+               "must be one of")
 })
 
 test_that("print returns the object invisibly and produces output", {
@@ -166,7 +168,7 @@ test_that("print returns the object invisibly and produces output", {
   status <- rep(1L, 2 * n_each)
   group <- rep(c(0L, 1L), each = n_each)
 
-  res <- milestone_fast(obs, status, group, tau = 8)
+  res <- milestone_fast(obs, status, group, control = 0L, tau = 8)
   expect_s3_class(res, "milestone_fast")
   expect_output(print(res), "Milestone survival")
   expect_invisible(print(res))

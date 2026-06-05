@@ -7,13 +7,13 @@ test_that("ahr_fast returns a well-formed object", {
   obs <- pmin(obs, cens)
   group <- rep(c(0, 1), each = n)
 
-  fit <- ahr_fast(obs, status, group, tau = 8)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = 8)
 
   expect_s3_class(fit, "ahr_fast")
   expect_true(all(c("ahr", "log.ahr", "se.loghr", "z", "p.value", "z.loghr",
                     "p.value.loghr", "se.theta", "lower", "upper", "theta",
                     "var.theta1", "var.theta2", "tau", "n", "groups") %in%
-                  names(fit)))
+                    names(fit)))
   # theta1 + theta2 == 1 by construction
   expect_equal(sum(fit$theta), 1, tolerance = 1e-12)
   expect_true(is.finite(fit$ahr) && fit$ahr > 0)
@@ -112,7 +112,7 @@ test_that("point estimate matches the independent reference", {
   group <- rep(c(0, 1), each = ne)
   tau <- 8
 
-  fit <- ahr_fast(obs, status, group, tau = tau)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = tau)
   ref <- ref_ahr(obs, status, group, tau)
 
   expect_equal(unname(fit$theta[1]), ref$theta1, tolerance = 1e-6)
@@ -131,7 +131,7 @@ test_that("direct variance matches the literal reference", {
   group <- rep(c(0, 1), each = ne)
   tau <- 8
 
-  fit <- ahr_fast(obs, status, group, tau = tau)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = tau)
   ref <- ref_ahr(obs, status, group, tau)
 
   expect_equal(fit$var.theta1, ref$var.theta1, tolerance = 1e-6)
@@ -147,7 +147,7 @@ test_that("inference quantities are internally consistent", {
   obs <- pmin(obs, cens)
   group <- rep(c(0, 1), each = n)
 
-  fit <- ahr_fast(obs, status, group, tau = 7)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = 7)
 
   # primary test on the theta (comparison-share) scale, using var.theta2
   expect_equal(fit$se.theta, sqrt(fit$var.theta2), tolerance = 1e-12)
@@ -164,7 +164,7 @@ test_that("inference quantities are internally consistent", {
   expect_equal(fit$upper, exp(fit$log.ahr + zq * fit$se.loghr), tolerance = 1e-10)
 
   # null.ahr at the point estimate gives Z = 0 and p = 1 on both scales
-  fit0 <- ahr_fast(obs, status, group, tau = 7, null.ahr = fit$ahr)
+  fit0 <- ahr_fast(obs, status, group, control = 0, tau = 7, null.ahr = fit$ahr)
   expect_equal(fit0$z, 0, tolerance = 1e-10)
   expect_equal(fit0$p.value, 1, tolerance = 1e-10)
   expect_equal(fit0$z.loghr, 0, tolerance = 1e-10)
@@ -182,7 +182,7 @@ test_that("estimate recovers the true hazard ratio under proportional hazards", 
   status <- as.integer(c(o1, o2) <= cens)
   group <- rep(c(0, 1), each = ne)
 
-  fit <- ahr_fast(obs, status, group, tau = 6)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = 6)
   expect_equal(fit$ahr, psi, tolerance = 0.12)
 })
 
@@ -196,8 +196,8 @@ test_that("swapping group labels inverts the average hazard ratio", {
   status <- as.integer(c(o1, o2) <= cens)
   group <- rep(c(0, 1), each = ne)
 
-  fit <- ahr_fast(obs, status, group, tau = 7)
-  fit_sw <- ahr_fast(obs, status, 1 - group, tau = 7)
+  fit <- ahr_fast(obs, status, group, control = 0, tau = 7)
+  fit_sw <- ahr_fast(obs, status, 1 - group, control = 0, tau = 7)
 
   # the swapped call must still match the literal reference exactly
   ref_sw <- ref_ahr(obs, status, 1 - group, tau = 7)
@@ -218,8 +218,8 @@ test_that("presorted gives identical results", {
   group <- rep(c(0, 1), each = n)
 
   ord <- order(obs)
-  fit_default <- ahr_fast(obs, status, group, tau = 6)
-  fit_presort <- ahr_fast(obs[ord], status[ord], group[ord], tau = 6,
+  fit_default <- ahr_fast(obs, status, group, control = 0, tau = 6)
+  fit_presort <- ahr_fast(obs[ord], status[ord], group[ord], control = 0, tau = 6,
                           presorted = TRUE)
 
   expect_equal(fit_default$ahr, fit_presort$ahr, tolerance = 1e-12)
@@ -235,7 +235,7 @@ test_that("factor group and default tau work", {
   obs <- pmin(obs, cens)
   group <- factor(rep(c("A", "B"), each = n))
 
-  fit <- ahr_fast(obs, status, group)
+  fit <- ahr_fast(obs, status, group, control = "A")
   expect_s3_class(fit, "ahr_fast")
   expect_equal(fit$tau, min(max(obs[group == "A"]), max(obs[group == "B"])),
                tolerance = 1e-12)
@@ -265,4 +265,6 @@ test_that("input validation catches bad arguments", {
   na_obs <- obs
   na_obs[1] <- NA
   expect_error(ahr_fast(na_obs, status, group))
+  # control not one of the two group values
+  expect_error(ahr_fast(obs, status, group, control = 9), "must be one of")
 })

@@ -15,8 +15,10 @@
 #' @param status An integer vector of event indicators, 1 for an event and 0
 #'   for a censored observation.
 #' @param group A vector with exactly two distinct values identifying the
-#'   group. The smaller value (or the first factor level) is treated as the
-#'   control group and the other as the treatment group.
+#'   group.
+#' @param control The value of \code{group} that denotes the control group. The
+#'   other value is the treatment group and the difference is reported as
+#'   treatment minus control.
 #' @param tau The milestone timepoint at which the survival probabilities are
 #'   compared. A single positive number.
 #' @param method The inference method for the difference in milestone survival,
@@ -47,10 +49,10 @@
 #' time <- c(rexp(50, 0.1), rexp(50, 0.07))
 #' status <- rep(1, 100)
 #' group <- rep(c(0, 1), each = 50)
-#' milestone_fast(time, status, group, tau = 10, method = "loglog")
+#' milestone_fast(time, status, group, control = 0, tau = 10, method = "loglog")
 #'
 #' @export
-milestone_fast <- function(time, status, group, tau,
+milestone_fast <- function(time, status, group, control, tau,
                            method = c("wald", "loglog", "mover"),
                            side = c("two.sided", "upper", "lower"),
                            conf.level = 0.95, presorted = FALSE) {
@@ -81,7 +83,12 @@ milestone_fast <- function(time, status, group, tau,
   if (length(lev) != 2L) {
     stop("'group' must have exactly two distinct values.")
   }
-  grp01 <- ifelse(as.character(group) == as.character(lev[1]), 0L, 1L)
+  if (missing(control) || length(control) != 1L ||
+      !(as.character(control) %in% as.character(lev))) {
+    stop("'control' must be one of the two values in 'group'.")
+  }
+  trt <- lev[as.character(lev) != as.character(control)]
+  grp01 <- as.integer(as.character(group) != as.character(control))
 
   core <- milestone_core(as.numeric(time), status, grp01,
                          as.numeric(tau), as.logical(presorted))
@@ -175,8 +182,8 @@ milestone_fast <- function(time, status, group, tau,
       method = method,
       side = side,
       conf.level = conf.level,
-      group.labels = c(control = as.character(lev[1]),
-                       treatment = as.character(lev[2]))
+      group.labels = c(control = as.character(control),
+                       treatment = as.character(trt))
     ),
     class = "milestone_fast"
   )

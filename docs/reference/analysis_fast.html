@@ -499,9 +499,35 @@ the whole-population analysis.</p>
 <span class="r-in"><span><span class="va">res5</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
 <span class="r-in"><span>                      stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"milestone"</span>, <span class="st">"rmw"</span>, <span class="st">"ahr"</span><span class="op">)</span>, tau <span class="op">=</span> <span class="fl">18</span>,</span></span>
 <span class="r-in"><span>                      ms.method <span class="op">=</span> <span class="st">"loglog"</span>, s_star <span class="op">=</span> <span class="fl">0.5</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in analysis_fast(df, control = 1, time.looks = 24, stat = c("milestone",     "rmw", "ahr"), tau = 18, ms.method = "loglog", s_star = 0.5,     side = 1):</span> unused arguments (ms.method = "loglog", s_star = 0.5)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res5</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'res5' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208         0         92</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         24     24    TRUE        300     192         0        108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206         0         94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   milestone.surv.ctrl milestone.surv.trt milestone.diff milestone.diff.lower</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           0.2235911          0.3877849     0.16419389           0.04833989</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           0.2298256          0.4769207     0.24709510           0.12940737</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           0.1925399          0.4894197     0.29687982           0.18292621</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           0.1795688          0.4098869     0.23031806           0.11556461</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           0.2192132          0.4413683     0.22215515           0.10341390</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6           0.2885018          0.3493613     0.06085952          -0.05387747</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   milestone.diff.upper milestone.z milestone.p  rmw.stat        rmw.p   ahr.ahr</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.2734819   -2.778169   0.9972667 -3.221206 8.381633e-04 0.6875365</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.3557723   -4.084347   0.9999779 -5.332615 7.139961e-08 0.4548326</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4002439   -5.017927   0.9999997 -5.574249 1.855481e-08 0.4408430</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.3362999   -3.913444   0.9999545 -4.764203 1.359804e-06 0.5446814</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.3323191   -3.652509   0.9998702 -3.812917 9.333850e-05 0.5873300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.1734329   -1.037737   0.8503039 -1.467686 8.350360e-02 0.8184949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      0.5925798     0.4074202 -2.584198 4.880285e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      0.6873643     0.3126357 -5.546342 1.458539e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      0.6940381     0.3059619 -5.854461 2.392791e-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      0.6473827     0.3526173 -4.280992 9.303115e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      0.6299887     0.3700113 -3.657652 1.272682e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      0.5499053     0.4500947 -1.364031 8.627888e-02</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

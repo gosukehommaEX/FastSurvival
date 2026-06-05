@@ -27,8 +27,9 @@
 #' @param time vector of right-censored event times
 #' @param status 0/1 (or logical) event indicators, 1 for an event
 #' @param group vector with exactly two distinct values identifying the groups.
-#'   The smaller value (or first factor level) is the reference group and the
-#'   average hazard ratio is reported for the other group relative to it.
+#' @param control the value of \code{group} that denotes the reference (control)
+#'   group. The average hazard ratio is reported for the other group relative to
+#'   it.
 #' @param tau upper limit of the interval over which the average hazard ratio is
 #'   computed. If \code{NULL} (default) the largest time observed in both groups
 #'   is used.
@@ -65,8 +66,8 @@
 #' obs <- pmin(c(time1, time2), cens)
 #' status <- as.integer(c(time1, time2) <= cens)
 #' group <- rep(c(0, 1), each = n)
-#' ahr_fast(obs, status, group, tau = 8)
-ahr_fast <- function(time, status, group, tau = NULL, null.ahr = 1,
+#' ahr_fast(obs, status, group, control = 0, tau = 8)
+ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
                      conf.level = 0.95, presorted = FALSE) {
 
   # Input validation
@@ -90,8 +91,12 @@ ahr_fast <- function(time, status, group, tau = NULL, null.ahr = 1,
 
   lev <- sort(unique(group))
   if (length(lev) != 2) stop("'group' must have exactly two distinct values.")
-  ref <- lev[1]
-  cmp <- lev[2]
+  if (missing(control) || length(control) != 1 ||
+      !(as.character(control) %in% as.character(lev))) {
+    stop("'control' must be one of the two values in 'group'.")
+  }
+  ref <- lev[as.character(lev) == as.character(control)]
+  cmp <- lev[as.character(lev) != as.character(control)]
 
   sel1 <- group == ref
   sel2 <- group == cmp

@@ -64,6 +64,7 @@ use inside simulation loops.</p>
 <span>  <span class="va">time</span>,</span>
 <span>  <span class="va">status</span>,</span>
 <span>  <span class="va">group</span>,</span>
+<span>  <span class="va">control</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  null.ahr <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
@@ -84,9 +85,13 @@ use inside simulation loops.</p>
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
-<dd><p>vector with exactly two distinct values identifying the groups.
-The smaller value (or first factor level) is the reference group and the
-average hazard ratio is reported for the other group relative to it.</p></dd>
+<dd><p>vector with exactly two distinct values identifying the groups.</p></dd>
+
+
+<dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
+<dd><p>the value of <code>group</code> that denotes the reference (control)
+group. The average hazard ratio is reported for the other group relative to
+it.</p></dd>
 
 
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
@@ -164,7 +169,7 @@ Uno-Horiguchi average hazard with survival weight.</p>
 <span class="r-in"><span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">time1</span>, <span class="va">time2</span><span class="op">)</span>, <span class="va">cens</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">status</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">time1</span>, <span class="va">time2</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="va">cens</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">ahr_fast</span><span class="op">(</span><span class="va">obs</span>, <span class="va">status</span>, <span class="va">group</span>, tau <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ahr_fast</span><span class="op">(</span><span class="va">obs</span>, <span class="va">status</span>, <span class="va">group</span>, control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Kalbfleisch-Prentice average hazard ratio</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Comparison group '1' vs reference '0' over [0, 8]</span>
