@@ -18,6 +18,7 @@ milestone_fast(
   time,
   status,
   group,
+  control,
   tau,
   method = c("wald", "loglog", "mover"),
   side = c("two.sided", "upper", "lower"),
@@ -39,9 +40,13 @@ milestone_fast(
 
 - group:
 
-  A vector with exactly two distinct values identifying the group. The
-  smaller value (or the first factor level) is treated as the control
-  group and the other as the treatment group.
+  A vector with exactly two distinct values identifying the group.
+
+- control:
+
+  The value of `group` that denotes the control group. The other value
+  is the treatment group and the difference is reported as treatment
+  minus control.
 
 - tau:
 
@@ -93,7 +98,7 @@ set.seed(1)
 time <- c(rexp(50, 0.1), rexp(50, 0.07))
 status <- rep(1, 100)
 group <- rep(c(0, 1), each = 50)
-milestone_fast(time, status, group, tau = 10, method = "loglog")
+milestone_fast(time, status, group, control = 0, tau = 10, method = "loglog")
 #> Milestone survival (two-group)
 #> 
 #>   tau = 10,  control = 0

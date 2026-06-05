@@ -14,6 +14,7 @@ ahr_fast(
   time,
   status,
   group,
+  control,
   tau = NULL,
   null.ahr = 1,
   conf.level = 0.95,
@@ -33,8 +34,11 @@ ahr_fast(
 
 - group:
 
-  vector with exactly two distinct values identifying the groups. The
-  smaller value (or first factor level) is the reference group and the
+  vector with exactly two distinct values identifying the groups.
+
+- control:
+
+  the value of `group` that denotes the reference (control) group. The
   average hazard ratio is reported for the other group relative to it.
 
 - tau:
@@ -113,7 +117,7 @@ cens <- rexp(2 * n, 0.05)
 obs <- pmin(c(time1, time2), cens)
 status <- as.integer(c(time1, time2) <= cens)
 group <- rep(c(0, 1), each = n)
-ahr_fast(obs, status, group, tau = 8)
+ahr_fast(obs, status, group, control = 0, tau = 8)
 #> 
 #> Kalbfleisch-Prentice average hazard ratio
 #> Comparison group '1' vs reference '0' over [0, 8]

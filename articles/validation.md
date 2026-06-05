@@ -160,7 +160,7 @@ timepoint. The per-group survival probabilities match those from
 tstar <- 500
 
 fast_ms <- milestone_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
-                          tau = tstar, method = "wald")
+                          control = 1, tau = tstar, method = "wald")
 
 fit_g <- survfit(Surv(futime, fustat) ~ rx, data = ovarian)
 ref_g <- summary(fit_g, times = tstar)
@@ -230,7 +230,8 @@ to form the group shares of the total hazard.
 
 tau <- 500
 
-fast_ahr <- ahr_fast(ovarian$futime, ovarian$fustat, ovarian$rx, tau = tau)
+fast_ahr <- ahr_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+                     control = 1, tau = tau)
 
 g  <- ovarian$rx
 ev <- c(ovarian$futime[g == 1 & ovarian$fustat == 1],
