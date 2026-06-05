@@ -271,7 +271,7 @@ test_that("print.simsummary_fast returns its input invisibly", {
   df <- data.frame(sim = 1:4, look = 1L, logrank.z = c(-2.5, -1.0, -3.0, 0.5),
                    n.event = c(50, 52, 48, 55), cutoff = rep(24, 4))
   res <- simsummary_fast(df, eff.col = "logrank.z", efficacy = -1.96)
-  expect_output(print(res), "Sequential analysis summary")
+  expect_output(print(res), "Group-Sequential Operating Characteristics")
   expect_invisible(print(res))
 })
 

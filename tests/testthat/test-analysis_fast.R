@@ -1,6 +1,6 @@
 test_that("analysis_fast: required inputs and statistic selection are validated", {
   set.seed(88)
-  dat <- simdata_fast(nsim = 5, n = c(40, 40), a.time = c(0, 6), a.rate = 1,
+  dat <- simdata_fast(nsim = 5, n = c(40, 40), a.time = c(0, 6), a.prop = 1,
                       e.hazard = list(log(2) / 10, log(2) / 12),
                       d.median = list(30, 30), seed = 88)
 
@@ -34,7 +34,7 @@ cut_one <- function(dat, sim_id, cutoff) {
 test_that("analysis_fast logrank/coxph match per-cell wrappers (time looks)", {
   set.seed(101)
   dat <- simdata_fast(nsim = 12, n = c(100, 100), a.time = c(0, 10),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 10, log(2) / 14),
                       d.median = list(30, 30), seed = 101)
   looks <- c(12, 22)
@@ -69,7 +69,7 @@ test_that("analysis_fast logrank/coxph match per-cell wrappers (time looks)", {
 test_that("analysis_fast rmst/km/ahsw match per-cell wrappers (event looks)", {
   set.seed(202)
   dat <- simdata_fast(nsim = 12, n = c(120, 120), a.time = c(0, 12),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
                       e.time = list(NULL, c(0, 6, Inf)),
                       d.median = list(36, 36), seed = 202)
@@ -113,7 +113,7 @@ test_that("analysis_fast rmst/km/ahsw match per-cell wrappers (event looks)", {
 test_that("analysis_fast weighted log-rank matches survdiff_fast (FH, mwlrt)", {
   set.seed(303)
   dat <- simdata_fast(nsim = 12, n = c(110, 110), a.time = c(0, 12),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 20)),
                       e.time = list(NULL, c(0, 6, Inf)),
                       d.median = list(36, 36), seed = 303)
@@ -148,7 +148,7 @@ test_that("analysis_fast weighted log-rank matches survdiff_fast (FH, mwlrt)", {
 test_that("analysis_fast max-combo matches maxcombo_fast", {
   set.seed(404)
   dat <- simdata_fast(nsim = 10, n = c(120, 120), a.time = c(0, 12),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
                       e.time = list(NULL, c(0, 6, Inf)),
                       d.median = list(36, 36), seed = 404)
@@ -181,7 +181,7 @@ test_that("analysis_fast max-combo matches maxcombo_fast", {
 test_that("analysis_fast by.subgroup produces correct long-form populations", {
   set.seed(505)
   dat <- simdata_fast(nsim = 10, n = c(150, 150), a.time = c(0, 12),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 12, log(2) / 16),
                       d.median = list(36, 36),
                       prevalence = c(0.6, 0.4), seed = 505)
@@ -225,7 +225,7 @@ test_that("analysis_fast by.subgroup produces correct long-form populations", {
 test_that("analysis_fast stratified log-rank matches survdiff_fast with strata", {
   set.seed(606)
   dat <- simdata_fast(nsim = 10, n = c(150, 150), a.time = c(0, 12),
-                      a.rate = 1,
+                      a.prop = 1,
                       e.hazard = list(log(2) / 12, log(2) / 16),
                       d.median = list(36, 36),
                       prevalence = c(0.5, 0.5), seed = 606)

@@ -1,8 +1,8 @@
 # Fast Simulation of Two-Group Time-to-Event Trial Data
 
 Simulates time-to-event trial data for one or two groups across many
-simulated trials, with piecewise-uniform accrual, piecewise-exponential
-survival and dropout, and optional subgroups defined by a prevalence
+simulated trials, with piecewise accrual, piecewise-exponential survival
+and dropout, and optional subgroups defined by a prevalence
 specification. The entire generation pipeline (accrual, survival,
 dropout, derived columns, and two-group interleaving) runs in a single
 C++ kernel that materializes the output data frame once, avoiding
@@ -18,7 +18,8 @@ simdata_fast(
   n,
   alloc = c(1, 1),
   a.time,
-  a.rate,
+  a.rate = NULL,
+  a.prop = NULL,
   e.hazard = NULL,
   e.median = NULL,
   e.time = NULL,
@@ -52,8 +53,21 @@ simdata_fast(
 
 - a.rate:
 
-  A numeric vector of accrual rates, one per accrual interval (length
-  `length(a.time) - 1`).
+  Absolute accrual rates (subjects per unit time), interpreted in one of
+  two ways. With length `length(a.time) - 1` the accrual period is fully
+  specified and the rates must accrue exactly `sum(n)` subjects (an
+  inconsistent total is an error). With length `length(a.time)` the
+  final rate applies to an open last interval whose end time is computed
+  so the total is `sum(n)`. Supply exactly one of `a.rate` and `a.prop`.
+
+- a.prop:
+
+  Accrual proportions, one per accrual interval (length
+  `length(a.time) - 1`), giving the fraction of subjects enrolled in
+  each interval. Values are normalized to sum to one and distribute the
+  fixed total `sum(n)`. Unlike `a.rate` this carries no rate, so the
+  accrual period must be fully specified by `a.time`. Supply exactly one
+  of `a.rate` and `a.prop`.
 
 - e.hazard:
 
@@ -108,6 +122,16 @@ For each subject the observed time-to-event is
 time occurs first. The calendar time of the observed event is
 `accrual_time + tte`.
 
+The total enrolled is fixed at `sum(n)`. With `a.rate` the rates are
+absolute (subjects per unit time): when the accrual period is fully
+specified the rates must accrue exactly `sum(n)`, and when one extra
+rate is given the end of the final interval is solved so the total is
+met. With `a.prop` the values are relative proportions that distribute
+`sum(n)` across the fully specified intervals. Each accrual interval
+receives a deterministic number of subjects (the rate or proportion
+times the group total, rounded to keep the per-group total exact),
+placed uniformly within the interval.
+
 Survival and dropout are exponential when a single hazard (or median) is
 supplied and piecewise-exponential when a vector is supplied together
 with the corresponding `e.time` or `d.time` breakpoints, whose last
@@ -147,10 +171,47 @@ head(df1)
 #> 5   1     1    2.6645346 27.617923          Inf 27.617923     1     30.282457
 #> 6   1     1   10.4718355  9.350214          Inf  9.350214     1     19.822049
 
+# Accrual rate with the final interval computed from the total: 20 per unit
+# time for the first 12 units, then 30 per unit time until 500 are enrolled
+df1b <- simdata_fast(
+  nsim     = 100,
+  n        = 500,
+  a.time   = c(0, 12),
+  a.rate   = c(20, 30),
+  e.median = 18,
+  seed     = 1
+)
+head(df1b)
+#>   sim group accrual_time surv_time dropout_time      tte event calendar_time
+#> 1   1     1    0.3819659  35.69947          Inf 35.69947     1      36.08143
+#> 2   1     1    4.3863151  19.97617          Inf 19.97617     1      24.36248
+#> 3   1     1    1.8796625  30.96883          Inf 30.96883     1      32.84849
+#> 4   1     1    4.1827192  45.91519          Inf 45.91519     1      50.09791
+#> 5   1     1    2.6645346  15.75625          Inf 15.75625     1      18.42079
+#> 6   1     1   10.4718355  29.59420          Inf 29.59420     1      40.06603
+
+# Accrual by proportion: 30% enrolled in [0, 6], 70% in [6, 12]
+df1c <- simdata_fast(
+  nsim     = 100,
+  n        = 50,
+  a.time   = c(0, 6, 12),
+  a.prop   = c(0.3, 0.7),
+  e.median = 18,
+  seed     = 1
+)
+head(df1c)
+#>   sim group accrual_time surv_time dropout_time       tte event calendar_time
+#> 1   1     1    0.1909830 71.464787          Inf 71.464787     1     71.655770
+#> 2   1     1    2.1931575 50.157102          Inf 50.157102     1     52.350260
+#> 3   1     1    0.9398312  1.363115          Inf  1.363115     1      2.302946
+#> 4   1     1    2.0913596  4.388424          Inf  4.388424     1      6.479784
+#> 5   1     1    1.3322673 27.617923          Inf 27.617923     1     28.950190
+#> 6   1     1    5.2359177  9.350214          Inf  9.350214     1     14.586131
+
 # Two-group simulation, simple exponential, with dropout
 df2 <- simdata_fast(
   nsim     = 100,
-  n        = c(100, 100),
+  n        = c(60, 60),
   a.time   = c(0, 6, 12),
   a.rate   = c(8, 12),
   e.median = list(18, 24),
@@ -159,12 +220,12 @@ df2 <- simdata_fast(
 )
 head(df2)
 #>   sim group accrual_time surv_time dropout_time       tte event calendar_time
-#> 1   1     1     7.593953  8.939408     56.08283  8.939408     1     16.533361
-#> 2   1     1     9.736826 43.286220     20.21021 20.210205     0     29.947031
-#> 3   1     1     4.305041  1.914168    247.43306  1.914168     1      6.219209
-#> 4   1     1     6.399371  4.508103     47.29373  4.508103     1     10.907474
-#> 5   1     1     4.046558 95.941472    329.53018 95.941472     1     99.988030
-#> 6   1     1     8.845894 23.915069     57.62597 23.915069     1     32.760963
+#> 1   1     1     3.356372 49.398104    338.23794 49.398104     1     52.754476
+#> 2   1     1     4.642096 15.082166     68.86648 15.082166     1     19.724261
+#> 3   1     1     1.722016 10.150280     34.10893 10.150280     1     11.872297
+#> 4   1     1     2.639623 19.258733     52.33605 19.258733     1     21.898356
+#> 5   1     1     1.618623  4.988974    111.28931  4.988974     1      6.607597
+#> 6   1     1     4.107536 60.757715     46.11484 46.114837     0     50.222374
 
 # One factor with three levels: single subgroup column
 df3 <- simdata_fast(

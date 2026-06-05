@@ -14,25 +14,30 @@ using namespace Rcpp;
 // dqrng consumption order identical to the R reference (which calls the
 // per-piece samplers in a fixed sequence).
 
-// Piecewise uniform accrual: one dqrunif draw per subject, reused for both
-// interval selection and within-interval position. Matches rpiece_unif_cpp.
-static void draw_accrual(double* out, int n,
-                         const std::vector<double>& a_time,
-                         const std::vector<double>& cum_p) {
-  const int n_int = (int) cum_p.size();
-  NumericVector u = dqrng::dqrunif(n);
-  for (int i = 0; i < n; ++i) {
-    const double ui = u[i];
-    int lo = 0, hi = n_int - 1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (cum_p[mid] < ui) lo = mid + 1; else hi = mid;
+// Piecewise deterministic accrual: each accrual interval receives a fixed
+// number of subjects (supplied by the caller as integer counts that sum to the
+// group size), repeated every simulation, with uniform entry positions inside
+// the interval. One dqrunif draw per subject is consumed for the within-interval
+// position only, in subject order, so the later survival and dropout draws see
+// the identical dqrng stream and are unaffected.
+static void draw_accrual_det(double* out, int nsim, int n,
+                             const std::vector<double>& a_time,
+                             const std::vector<int>& counts) {
+  const int n_int   = (int) counts.size();
+  const int total_n = nsim * n;
+  NumericVector u = dqrng::dqrunif(total_n);
+  for (int s = 0; s < nsim; ++s) {
+    const int base_s = s * n;
+    int j = 0;
+    for (int i = 0; i < n_int; ++i) {
+      const double lo    = a_time[i];
+      const double width = a_time[i + 1] - a_time[i];
+      const int    ci    = counts[i];
+      for (int r = 0; r < ci; ++r, ++j) {
+        const int gi = base_s + j;
+        out[gi] = lo + u[gi] * width;
+      }
     }
-    const int k = lo;
-    const double p_lo = (k == 0) ? 0.0 : cum_p[k - 1];
-    const double p_hi = cum_p[k];
-    const double frac = (ui - p_lo) / (p_hi - p_lo);
-    out[i] = a_time[k] + frac * (a_time[k + 1] - a_time[k]);
   }
 }
 
@@ -111,7 +116,7 @@ static std::vector<std::vector<double>> to_vv(const List& x) {
 // single spec.
 static void simulate_group_into(
     int base, int nsim, int n, int group_id,
-    const std::vector<double>& a_time, const std::vector<double>& cum_p_a,
+    const std::vector<double>& a_time, const std::vector<int>& acc_counts,
     int n_cell,
     const std::vector<std::vector<double>>& e_haz,
     const std::vector<std::vector<double>>& e_fin,
@@ -137,8 +142,8 @@ static void simulate_group_into(
       sim_col[base + s * n + k] = s + 1;
   for (int i = 0; i < total_n; ++i) grp_col[base + i] = group_id;
 
-  // Accrual times for the whole group block.
-  draw_accrual(acc_col + base, total_n, a_time, cum_p_a);
+  // Accrual times for the whole group block (deterministic per-interval counts).
+  draw_accrual_det(acc_col + base, nsim, n, a_time, acc_counts);
 
   if (n_cell == 1) {
     // No subgroups: survival then dropout over the whole block.
@@ -235,12 +240,17 @@ static void simulate_group_into(
 // into a temporary group-contiguous buffer, then copies into the interleaved
 // output. This reproduces the reference values bit for bit.
 //
+// Accrual is deterministic: acc_counts_c and acc_counts_t give the per-interval
+// subject counts for the control and treatment groups (each summing to its group
+// size); the treatment vector is empty for a one-group simulation.
+//
 // [[Rcpp::export]]
 DataFrame simdata_core_full(
     int nsim,
     const IntegerVector& n_grp,          // length 1 or 2
     const NumericVector& a_time,
-    const NumericVector& cum_p_a,
+    const IntegerVector& acc_counts_c,   // per-interval accrual counts, control
+    const IntegerVector& acc_counts_t,   // per-interval accrual counts, treatment
     int n_cell,                          // 1 if no subgroup
     const List& e_haz_c, const List& e_fin_c, const List& e_cum_c,
     const List& e_haz_t, const List& e_fin_t, const List& e_cum_t,
@@ -255,7 +265,8 @@ DataFrame simdata_core_full(
 ) {
   const int n_groups = n_grp.size();
   const std::vector<double> at(a_time.begin(), a_time.end());
-  const std::vector<double> cpa(cum_p_a.begin(), cum_p_a.end());
+  const std::vector<int> acc_c(acc_counts_c.begin(), acc_counts_c.end());
+  const std::vector<int> acc_t(acc_counts_t.begin(), acc_counts_t.end());
 
   const auto ehc = to_vv(e_haz_c); const auto efc = to_vv(e_fin_c); const auto ecc = to_vv(e_cum_c);
   const auto eht = to_vv(e_haz_t); const auto eft = to_vv(e_fin_t); const auto ect = to_vv(e_cum_t);
@@ -284,7 +295,7 @@ DataFrame simdata_core_full(
     }
 
     simulate_group_into(
-      0, nsim, n0, 1, at, cpa, n_cell,
+      0, nsim, n0, 1, at, acc_c, n_cell,
       ehc, efc, ecc, has_dropout, dhc, dfc, dcc,
       cpc, level_table_c, fixed_alloc, fcc,
       INTEGER(sim_col), INTEGER(grp_col),
@@ -325,14 +336,14 @@ DataFrame simdata_core_full(
   }
 
   simulate_group_into(
-    0, nsim, nc, 1, at, cpa, n_cell,
+    0, nsim, nc, 1, at, acc_c, n_cell,
     ehc, efc, ecc, has_dropout, dhc, dfc, dcc,
     cpc, level_table_c, fixed_alloc, fcc,
     INTEGER(simC), INTEGER(grpC), REAL(accC), REAL(srvC), REAL(droC),
     REAL(tteC), INTEGER(evtC), REAL(calC), subCptr);
 
   simulate_group_into(
-    0, nsim, nt, 2, at, cpa, n_cell,
+    0, nsim, nt, 2, at, acc_t, n_cell,
     eht, eft, ect, has_dropout, dht, dft, dct,
     cpt, level_table_t, fixed_alloc, fct,
     INTEGER(simT), INTEGER(grpT), REAL(accT), REAL(srvT), REAL(droT),

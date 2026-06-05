@@ -175,15 +175,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // simdata_core_full
-DataFrame simdata_core_full(int nsim, const IntegerVector& n_grp, const NumericVector& a_time, const NumericVector& cum_p_a, int n_cell, const List& e_haz_c, const List& e_fin_c, const List& e_cum_c, const List& e_haz_t, const List& e_fin_t, const List& e_cum_t, bool has_dropout, const List& d_haz_c, const List& d_fin_c, const List& d_cum_c, const List& d_haz_t, const List& d_fin_t, const List& d_cum_t, const NumericVector& cum_prev_c, const NumericVector& cum_prev_t, const IntegerMatrix& level_table_c, const IntegerMatrix& level_table_t, const CharacterVector& sub_names, bool fixed_alloc, const IntegerVector& fixed_counts_c, const IntegerVector& fixed_counts_t);
-RcppExport SEXP _FastSurvival_simdata_core_full(SEXP nsimSEXP, SEXP n_grpSEXP, SEXP a_timeSEXP, SEXP cum_p_aSEXP, SEXP n_cellSEXP, SEXP e_haz_cSEXP, SEXP e_fin_cSEXP, SEXP e_cum_cSEXP, SEXP e_haz_tSEXP, SEXP e_fin_tSEXP, SEXP e_cum_tSEXP, SEXP has_dropoutSEXP, SEXP d_haz_cSEXP, SEXP d_fin_cSEXP, SEXP d_cum_cSEXP, SEXP d_haz_tSEXP, SEXP d_fin_tSEXP, SEXP d_cum_tSEXP, SEXP cum_prev_cSEXP, SEXP cum_prev_tSEXP, SEXP level_table_cSEXP, SEXP level_table_tSEXP, SEXP sub_namesSEXP, SEXP fixed_allocSEXP, SEXP fixed_counts_cSEXP, SEXP fixed_counts_tSEXP) {
+DataFrame simdata_core_full(int nsim, const IntegerVector& n_grp, const NumericVector& a_time, const IntegerVector& acc_counts_c, const IntegerVector& acc_counts_t, int n_cell, const List& e_haz_c, const List& e_fin_c, const List& e_cum_c, const List& e_haz_t, const List& e_fin_t, const List& e_cum_t, bool has_dropout, const List& d_haz_c, const List& d_fin_c, const List& d_cum_c, const List& d_haz_t, const List& d_fin_t, const List& d_cum_t, const NumericVector& cum_prev_c, const NumericVector& cum_prev_t, const IntegerMatrix& level_table_c, const IntegerMatrix& level_table_t, const CharacterVector& sub_names, bool fixed_alloc, const IntegerVector& fixed_counts_c, const IntegerVector& fixed_counts_t);
+RcppExport SEXP _FastSurvival_simdata_core_full(SEXP nsimSEXP, SEXP n_grpSEXP, SEXP a_timeSEXP, SEXP acc_counts_cSEXP, SEXP acc_counts_tSEXP, SEXP n_cellSEXP, SEXP e_haz_cSEXP, SEXP e_fin_cSEXP, SEXP e_cum_cSEXP, SEXP e_haz_tSEXP, SEXP e_fin_tSEXP, SEXP e_cum_tSEXP, SEXP has_dropoutSEXP, SEXP d_haz_cSEXP, SEXP d_fin_cSEXP, SEXP d_cum_cSEXP, SEXP d_haz_tSEXP, SEXP d_fin_tSEXP, SEXP d_cum_tSEXP, SEXP cum_prev_cSEXP, SEXP cum_prev_tSEXP, SEXP level_table_cSEXP, SEXP level_table_tSEXP, SEXP sub_namesSEXP, SEXP fixed_allocSEXP, SEXP fixed_counts_cSEXP, SEXP fixed_counts_tSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type nsim(nsimSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type n_grp(n_grpSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type a_time(a_timeSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type cum_p_a(cum_p_aSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type acc_counts_c(acc_counts_cSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type acc_counts_t(acc_counts_tSEXP);
     Rcpp::traits::input_parameter< int >::type n_cell(n_cellSEXP);
     Rcpp::traits::input_parameter< const List& >::type e_haz_c(e_haz_cSEXP);
     Rcpp::traits::input_parameter< const List& >::type e_fin_c(e_fin_cSEXP);
@@ -206,7 +207,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type fixed_alloc(fixed_allocSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type fixed_counts_c(fixed_counts_cSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type fixed_counts_t(fixed_counts_tSEXP);
-    rcpp_result_gen = Rcpp::wrap(simdata_core_full(nsim, n_grp, a_time, cum_p_a, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t));
+    rcpp_result_gen = Rcpp::wrap(simdata_core_full(nsim, n_grp, a_time, acc_counts_c, acc_counts_t, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -271,7 +272,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
     {"_FastSurvival_rmw_core", (DL_FUNC) &_FastSurvival_rmw_core, 4},
-    {"_FastSurvival_simdata_core_full", (DL_FUNC) &_FastSurvival_simdata_core_full, 26},
+    {"_FastSurvival_simdata_core_full", (DL_FUNC) &_FastSurvival_simdata_core_full, 27},
     {"_FastSurvival_stratified_logrank_core", (DL_FUNC) &_FastSurvival_stratified_logrank_core, 4},
     {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},
     {"_FastSurvival_weighted_logrank_core", (DL_FUNC) &_FastSurvival_weighted_logrank_core, 7},

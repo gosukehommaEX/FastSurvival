@@ -237,43 +237,61 @@ rows per population.</p>
 <span class="r-in"><span>                fut.col <span class="op">=</span> <span class="st">"cox.coef"</span>,</span></span>
 <span class="r-in"><span>                futility <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.2</span><span class="op">)</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                direction <span class="op">=</span> <span class="st">"lower"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sequential analysis summary (simsummary_fast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Group-Sequential Operating Characteristics (simsummary_fast)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Simulations: 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mode: Z-scale boundaries, direction = lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     efficacy [logrank.z]:    NA, -2.96, -1.97</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     futility [cox.coef]: 0.1823,     NA,     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'cox.coef'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06        60.00              0          226.06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00       105.00              0          195.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00       150.00              0          150.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.88       143.25              0          156.63</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      11.5364               0.00               0.01          0.01       0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      16.5033               0.13               0.00          0.13       0.13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      22.8457               0.44               0.00          0.44       0.57</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      21.8951               0.57               0.01          0.58       0.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stopping Boundaries: Look by Look</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1        0.40       60.0      286.1         NA     0.1823           0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2        0.70      105.0      300.0    -2.9600         NA           0.1300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3        1.00      150.0      300.0    -1.9700         NA           0.5700</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1        0.40      286.1       60.0          0.0    226.1         11.54</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2        0.70      300.0      105.0          0.0    195.0         16.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3        1.00      300.0      150.0          0.0    150.0         22.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Cross. Eff. Cross. Fut.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0000      0.0100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.1300      0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.4400      0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):    0.5700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Futility-stop rate:           0.0100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:      143.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop: 299.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop:21.90</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># p-value boundaries instead</span></span></span>
 <span class="r-in"><span><span class="fu">simsummary_fast</span><span class="op">(</span><span class="va">res</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>,</span></span>
 <span class="r-in"><span>                alpha <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0006</span>, <span class="fl">0.0151</span>, <span class="fl">0.0245</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sequential analysis summary (simsummary_fast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Group-Sequential Operating Characteristics (simsummary_fast)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Simulations: 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mode: p-value boundaries</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     alpha [logrank.p]: 0.0006, 0.0151, 0.0245</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Boundaries: nominal p-value on 'logrank.p'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1         60          286.06       60.000              0         226.060</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2        105          300.00      105.000              0         195.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3        150          300.00      150.000              0         150.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  overall         NA          299.38      130.425              0         168.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      11.5364              0.055                  0         0.055      0.055</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      16.5033              0.325                  0         0.325      0.380</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      22.8457              0.210                  0         0.210      0.590</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      20.1649              0.590                  0         0.590      0.590</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stopping Boundaries: Look by Look</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1        0.40       60.0      286.1    0.0006           0.0550</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2        0.70      105.0      300.0    0.0151           0.3800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3        1.00      150.0      300.0    0.0245           0.5900</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1        0.40      286.1       60.0          0.0    226.1         11.54</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2        0.70      300.0      105.0          0.0    195.0         16.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3        1.00      300.0      150.0          0.0    150.0         22.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Cross. Eff.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0550</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.3250</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.2100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):    0.5900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:      130.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop: 299.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop:20.16</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

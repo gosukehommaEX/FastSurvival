@@ -2,20 +2,28 @@
 #'
 #' @description
 #' Simulates time-to-event trial data for one or two groups across many
-#' simulated trials, with piecewise-uniform accrual, piecewise-exponential
-#' survival and dropout, and optional subgroups defined by a prevalence
-#' specification. The entire generation pipeline (accrual, survival, dropout,
-#' derived columns, and two-group interleaving) runs in a single C++ kernel
-#' that materializes the output data frame once, avoiding intermediate R-level
-#' vector operations and copies. The random-number stream is consumed in the
-#' same order as a per-group reference implementation, so results are
-#' reproducible from \code{seed}.
+#' simulated trials, with piecewise accrual, piecewise-exponential survival and
+#' dropout, and optional subgroups defined by a prevalence specification. The
+#' entire generation pipeline (accrual, survival, dropout, derived columns, and
+#' two-group interleaving) runs in a single C++ kernel that materializes the
+#' output data frame once, avoiding intermediate R-level vector operations and
+#' copies. The random-number stream is consumed in the same order as a per-group
+#' reference implementation, so results are reproducible from \code{seed}.
 #'
 #' @details
 #' For each subject the observed time-to-event is
 #' \code{tte = pmin(surv_time, dropout_time)} and \code{event} is 1 when the
 #' survival time occurs first. The calendar time of the observed event is
 #' \code{accrual_time + tte}.
+#'
+#' The total enrolled is fixed at \code{sum(n)}. With \code{a.rate} the rates are
+#' absolute (subjects per unit time): when the accrual period is fully specified
+#' the rates must accrue exactly \code{sum(n)}, and when one extra rate is given
+#' the end of the final interval is solved so the total is met. With \code{a.prop}
+#' the values are relative proportions that distribute \code{sum(n)} across the
+#' fully specified intervals. Each accrual interval receives a deterministic
+#' number of subjects (the rate or proportion times the group total, rounded to
+#' keep the per-group total exact), placed uniformly within the interval.
 #'
 #' Survival and dropout are exponential when a single hazard (or median) is
 #' supplied and piecewise-exponential when a vector is supplied together with
@@ -36,8 +44,18 @@
 #'   length-two vector of per-group sample sizes.
 #' @param alloc A length-two allocation ratio, used when \code{n} is scalar.
 #' @param a.time A numeric vector of accrual-interval breakpoints.
-#' @param a.rate A numeric vector of accrual rates, one per accrual interval
-#'   (length \code{length(a.time) - 1}).
+#' @param a.rate Absolute accrual rates (subjects per unit time), interpreted in
+#'   one of two ways. With length \code{length(a.time) - 1} the accrual period is
+#'   fully specified and the rates must accrue exactly \code{sum(n)} subjects (an
+#'   inconsistent total is an error). With length \code{length(a.time)} the final
+#'   rate applies to an open last interval whose end time is computed so the
+#'   total is \code{sum(n)}. Supply exactly one of \code{a.rate} and \code{a.prop}.
+#' @param a.prop Accrual proportions, one per accrual interval (length
+#'   \code{length(a.time) - 1}), giving the fraction of subjects enrolled in each
+#'   interval. Values are normalized to sum to one and distribute the fixed total
+#'   \code{sum(n)}. Unlike \code{a.rate} this carries no rate, so the accrual
+#'   period must be fully specified by \code{a.time}. Supply exactly one of
+#'   \code{a.rate} and \code{a.prop}.
 #' @param e.hazard Survival hazard(s). A scalar or vector for one group, or a
 #'   two-element list for two groups; per-cell lists are used with subgroups.
 #' @param e.median Survival median(s); an alternative to \code{e.hazard}.
@@ -70,10 +88,33 @@
 #' )
 #' head(df1)
 #'
+#' # Accrual rate with the final interval computed from the total: 20 per unit
+#' # time for the first 12 units, then 30 per unit time until 500 are enrolled
+#' df1b <- simdata_fast(
+#'   nsim     = 100,
+#'   n        = 500,
+#'   a.time   = c(0, 12),
+#'   a.rate   = c(20, 30),
+#'   e.median = 18,
+#'   seed     = 1
+#' )
+#' head(df1b)
+#'
+#' # Accrual by proportion: 30% enrolled in [0, 6], 70% in [6, 12]
+#' df1c <- simdata_fast(
+#'   nsim     = 100,
+#'   n        = 50,
+#'   a.time   = c(0, 6, 12),
+#'   a.prop   = c(0.3, 0.7),
+#'   e.median = 18,
+#'   seed     = 1
+#' )
+#' head(df1c)
+#'
 #' # Two-group simulation, simple exponential, with dropout
 #' df2 <- simdata_fast(
 #'   nsim     = 100,
-#'   n        = c(100, 100),
+#'   n        = c(60, 60),
 #'   a.time   = c(0, 6, 12),
 #'   a.rate   = c(8, 12),
 #'   e.median = list(18, 24),
@@ -126,7 +167,8 @@ simdata_fast <- function(nsim       = 1000,
                          n,
                          alloc      = c(1, 1),
                          a.time,
-                         a.rate,
+                         a.rate     = NULL,
+                         a.prop     = NULL,
                          e.hazard   = NULL,
                          e.median   = NULL,
                          e.time     = NULL,
@@ -214,15 +256,60 @@ simdata_fast <- function(nsim       = 1000,
   }
   if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
 
-  if (length(a.rate) != length(a.time) - 1L) {
-    stop("'a.rate' must have length equal to length(a.time) - 1")
+  use_rate <- !is.null(a.rate)
+  use_prop <- !is.null(a.prop)
+  if (use_rate == use_prop) {
+    stop("Supply exactly one of 'a.rate' and 'a.prop'")
   }
-  if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
+  if (length(a.time) < 2L) stop("'a.time' must have at least two elements")
   if (any(diff(a.time) <= 0)) stop("'a.time' must be strictly increasing")
 
-  lengths_a <- diff(a.time)
-  weights_a <- a.rate * lengths_a
-  cum_p_a   <- cumsum(weights_a / sum(weights_a))
+  n_total    <- sum(n_grp)
+  n_int_time <- length(a.time) - 1L
+  acc_tol    <- 1e-8 * max(1, n_total)
+
+  if (use_rate) {
+    if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
+    if (length(a.rate) == n_int_time) {
+      implied <- sum(a.rate * diff(a.time))
+      if (abs(implied - n_total) > acc_tol) {
+        stop("'a.rate' implies ", round(implied, 4), " subjects over the ",
+             "accrual period but sum(n) is ", n_total, ".\n",
+             "Make them consistent, drop the final 'a.time' breakpoint to let ",
+             "it be computed from the rate, or use 'a.prop' for relative ",
+             "accrual.")
+      }
+      a.time_full <- a.time
+    } else if (length(a.rate) == n_int_time + 1L) {
+      bounded <- if (n_int_time >= 1L) {
+        sum(a.rate[seq_len(n_int_time)] * diff(a.time))
+      } else {
+        0
+      }
+      remaining <- n_total - bounded
+      if (remaining <= 0) {
+        stop("The specified accrual intervals already accrue ",
+             round(bounded, 4), " subjects, at least sum(n) = ", n_total,
+             "; the final interval cannot be extended.")
+      }
+      final_dur   <- remaining / a.rate[length(a.rate)]
+      a.time_full <- c(a.time, a.time[length(a.time)] + final_dur)
+    } else {
+      stop("'a.rate' must have length equal to length(a.time) - 1 (fully ",
+           "specified accrual) or length(a.time) (final interval end computed ",
+           "from sum(n))")
+    }
+    weights_a <- a.rate * diff(a.time_full)
+  } else {
+    if (any(a.prop <= 0)) stop("All 'a.prop' values must be positive")
+    if (length(a.prop) != n_int_time) {
+      stop("'a.prop' must have length equal to length(a.time) - 1")
+    }
+    a.time_full <- a.time
+    weights_a   <- as.numeric(a.prop)
+  }
+
+  a_int_prob <- weights_a / sum(weights_a)
 
   n_cell_ctrl <- if (use_subgroup) spec_ctrl$n_cell else 1L
   n_cell_trt  <- if (use_subgroup) spec_trt$n_cell  else 1L
@@ -306,9 +393,19 @@ simdata_fast <- function(nsim       = 1000,
 
   n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
 
+  # Deterministic per-interval accrual counts for each group. Each group's
+  # counts sum to its size exactly (largest-remainder rounding), and the kernel
+  # repeats them every simulation, placing subjects uniformly within intervals.
+  acc_counts_c <- accrual_cell_counts(n_grp_int[1L], a_int_prob)
+  acc_counts_t <- if (n_groups == 2L) {
+    accrual_cell_counts(n_grp_int[2L], a_int_prob)
+  } else {
+    integer(0)
+  }
+
   simdata_core_full(
     as.integer(nsim), n_grp_int,
-    as.numeric(a.time), as.numeric(cum_p_a),
+    as.numeric(a.time_full), acc_counts_c, acc_counts_t,
     as.integer(n_cell),
     e_c$haz, e_c$fin, e_c$cum,
     e_t$haz, e_t$fin, e_t$cum,
@@ -419,6 +516,25 @@ fixed_cell_counts <- function(n, p) {
   base <- floor(n * p)
   rem  <- n - sum(base)
   if (rem > 0L) base[seq_len(rem)] <- base[seq_len(rem)] + 1L
+  as.integer(base)
+}
+
+# ------------------------------------------------------------------ #
+#  Internal helper: largest-remainder accrual counts per interval
+# ------------------------------------------------------------------ #
+# Distributes n subjects across accrual intervals in proportion to p, with the
+# rounding remainder assigned to the intervals with the largest fractional
+# parts (Hamilton's method). This keeps the per-interval counts as close as
+# possible to n * p and is robust to floating-point error in p, so that e.g.
+# proportions of c(0.48, 0.52) with n = 500 give exactly c(240, 260).
+accrual_cell_counts <- function(n, p) {
+  target <- n * p
+  base   <- floor(target)
+  rem    <- n - sum(base)
+  if (rem > 0L) {
+    take <- order(target - base, decreasing = TRUE)[seq_len(rem)]
+    base[take] <- base[take] + 1L
+  }
   as.integer(base)
 }
 

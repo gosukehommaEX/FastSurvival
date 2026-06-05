@@ -1,7 +1,7 @@
 test_that("simdata_fast: structure and schema, no subgroups, two groups", {
   set.seed(1)
   dat <- simdata_fast(
-    nsim = 50, n = c(100, 120), a.time = c(0, 12), a.rate = 1,
+    nsim = 50, n = c(100, 120), a.time = c(0, 12), a.prop = 1,
     e.hazard = list(log(2) / 12, log(2) / 18),
     d.median = list(36, 36), seed = 1
   )
@@ -21,7 +21,7 @@ test_that("simdata_fast: rows are interleaved in (sim, group) order", {
   set.seed(2)
   nc <- 30; nt <- 40
   dat <- simdata_fast(
-    nsim = 10, n = c(nc, nt), a.time = c(0, 10), a.rate = 1,
+    nsim = 10, n = c(nc, nt), a.time = c(0, 10), a.prop = 1,
     e.hazard = list(log(2) / 10, log(2) / 14), seed = 2
   )
   # Within each simulation the first nc rows are control, the next nt treatment.
@@ -32,7 +32,7 @@ test_that("simdata_fast: rows are interleaved in (sim, group) order", {
 })
 
 test_that("simdata_fast: reproducible from seed, sensitive to seed", {
-  args <- list(nsim = 20, n = c(50, 50), a.time = c(0, 8), a.rate = 1,
+  args <- list(nsim = 20, n = c(50, 50), a.time = c(0, 8), a.prop = 1,
                e.hazard = list(log(2) / 10, log(2) / 12), d.median = list(30, 30))
   a <- do.call(simdata_fast, c(args, list(seed = 123)))
   b <- do.call(simdata_fast, c(args, list(seed = 123)))
@@ -46,7 +46,7 @@ test_that("simdata_fast: reproducible from seed, sensitive to seed", {
 test_that("simdata_fast: single-group mode", {
   set.seed(3)
   dat <- simdata_fast(
-    nsim = 30, n = 80, a.time = c(0, 12), a.rate = 1,
+    nsim = 30, n = 80, a.time = c(0, 12), a.prop = 1,
     e.hazard = log(2) / 12, seed = 3
   )
   expect_equal(nrow(dat), 30 * 80)
@@ -59,7 +59,7 @@ test_that("simdata_fast: exponential survival recovers the hazard", {
   set.seed(4)
   haz <- log(2) / 15
   dat <- simdata_fast(
-    nsim = 1, n = 50000, a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = 50000, a.time = c(0, 1), a.prop = 1,
     e.hazard = haz, seed = 4
   )
   # MLE of an exponential rate with full follow-up is 1 / mean(time).
@@ -69,7 +69,7 @@ test_that("simdata_fast: exponential survival recovers the hazard", {
 test_that("simdata_fast: piecewise survival changes hazard at breakpoints", {
   set.seed(5)
   dat <- simdata_fast(
-    nsim = 1, n = 80000, a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = 80000, a.time = c(0, 1), a.prop = 1,
     e.hazard = c(0.05, 0.30), e.time = c(0, 6, Inf), seed = 5
   )
   # Early hazard low, late hazard high: empirical hazard over [0,6) should be
@@ -84,7 +84,7 @@ test_that("simdata_fast: prevalence is recovered (single factor)", {
   set.seed(6)
   prev <- c(0.6, 0.4)
   dat <- simdata_fast(
-    nsim = 1, n = 60000, a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = 60000, a.time = c(0, 1), a.prop = 1,
     e.hazard = log(2) / 12, prevalence = prev, seed = 6
   )
   expect_true("subgroup" %in% names(dat))
@@ -96,7 +96,7 @@ test_that("simdata_fast: independent multi-factor prevalence", {
   set.seed(7)
   prev <- list(c(0.5, 0.5), c(0.7, 0.3))
   dat <- simdata_fast(
-    nsim = 1, n = 60000, a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = 60000, a.time = c(0, 1), a.prop = 1,
     e.hazard = log(2) / 12, prevalence = prev, seed = 7
   )
   expect_true(all(c("subgroup1", "subgroup2") %in% names(dat)))
@@ -110,7 +110,7 @@ test_that("simdata_fast: per-cell subgroup hazards are recovered", {
   set.seed(8)
   # One factor, two cells, with cell-specific survival hazards.
   dat <- simdata_fast(
-    nsim = 1, n = 80000, a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = 80000, a.time = c(0, 1), a.prop = 1,
     e.hazard = list(0.05, 0.20),       # per-cell hazards
     prevalence = c(0.5, 0.5), seed = 8
   )
@@ -123,7 +123,7 @@ test_that("simdata_fast: per-cell subgroup hazards are recovered", {
 test_that("simdata_fast: two-group subgroup simultaneous recovery", {
   set.seed(9)
   dat <- simdata_fast(
-    nsim = 1, n = c(40000, 40000), a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = c(40000, 40000), a.time = c(0, 1), a.prop = 1,
     e.hazard = list(log(2) / 12, log(2) / 20),
     prevalence = c(0.6, 0.4), seed = 9
   )
@@ -141,9 +141,9 @@ test_that("simdata_fast: two-group subgroup simultaneous recovery", {
 
 test_that("simdata_fast: dropout produces censoring", {
   set.seed(10)
-  no_drop <- simdata_fast(nsim = 1, n = 20000, a.time = c(0, 1), a.rate = 1,
+  no_drop <- simdata_fast(nsim = 1, n = 20000, a.time = c(0, 1), a.prop = 1,
                           e.hazard = log(2) / 12, seed = 10)
-  with_drop <- simdata_fast(nsim = 1, n = 20000, a.time = c(0, 1), a.rate = 1,
+  with_drop <- simdata_fast(nsim = 1, n = 20000, a.time = c(0, 1), a.prop = 1,
                             e.hazard = log(2) / 12, d.median = 12, seed = 10)
   expect_true(all(no_drop$event == 1L))
   expect_lt(mean(with_drop$event), 1)
@@ -154,7 +154,7 @@ test_that("simdata_fast: fixed.alloc gives deterministic subgroup counts", {
   set.seed(11)
   n_one <- 100
   dat <- simdata_fast(
-    nsim = 5, n = n_one, a.time = c(0, 1), a.rate = 1,
+    nsim = 5, n = n_one, a.time = c(0, 1), a.prop = 1,
     e.hazard = log(2) / 12, prevalence = c(0.6, 0.4),
     fixed.alloc = TRUE, seed = 11
   )
@@ -166,9 +166,9 @@ test_that("simdata_fast: fixed.alloc gives deterministic subgroup counts", {
 })
 
 test_that("simdata_fast: degenerate prevalence equals no-subgroup output", {
-  a <- simdata_fast(nsim = 10, n = c(50, 50), a.time = c(0, 8), a.rate = 1,
+  a <- simdata_fast(nsim = 10, n = c(50, 50), a.time = c(0, 8), a.prop = 1,
                     e.hazard = list(log(2) / 10, log(2) / 12), seed = 77)
-  b <- simdata_fast(nsim = 10, n = c(50, 50), a.time = c(0, 8), a.rate = 1,
+  b <- simdata_fast(nsim = 10, n = c(50, 50), a.time = c(0, 8), a.prop = 1,
                     e.hazard = list(log(2) / 10, log(2) / 12),
                     prevalence = c(1), seed = 77)
   expect_equal(a$surv_time, b$surv_time, tolerance = 0)
@@ -179,7 +179,7 @@ test_that("simdata_fast: two-group with per-cell control hazards (nested list)",
   set.seed(12)
   # Control has cell-specific hazards (three cells), treatment shares one.
   dat <- simdata_fast(
-    nsim = 1, n = c(60000, 60000), a.time = c(0, 1), a.rate = 1,
+    nsim = 1, n = c(60000, 60000), a.time = c(0, 1), a.prop = 1,
     e.hazard = list(list(0.10, 0.08, 0.06), 0.05),
     prevalence = c(0.4, 0.3, 0.3), seed = 12
   )
@@ -197,22 +197,95 @@ test_that("simdata_fast: two-group with per-cell control hazards (nested list)",
 
 test_that("simdata_fast: input validation", {
   expect_error(
-    simdata_fast(nsim = 5, n = c(1, 2, 3), a.time = c(0, 1), a.rate = 1,
+    simdata_fast(nsim = 5, n = c(1, 2, 3), a.time = c(0, 1), a.prop = 1,
                  e.hazard = log(2) / 12),
     "scalar .total N. or a vector of length 2")
   expect_error(
     simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.rate = 1),
     "One of 'e.hazard' or 'e.median'")
   expect_error(
-    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.rate = 1,
+    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.prop = 1,
                  e.hazard = log(2) / 12, e.median = 12),
     "exactly one of")
   expect_error(
-    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.rate = c(1, 2),
+    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.rate = 5,
                  e.hazard = log(2) / 12),
     "a.rate")
   expect_error(
-    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.rate = 1,
+    simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.prop = 1,
                  e.hazard = c(0.05, 0.2)),
     "e.time")
+})
+
+# ------------------------------------------------------------------ #
+#  Accrual specification: absolute rate, final-interval completion,
+#  proportions, and deterministic per-interval counts
+# ------------------------------------------------------------------ #
+
+test_that("simdata_fast: a.rate places deterministic per-interval counts", {
+  dat <- simdata_fast(
+    nsim = 7, n = 360, a.time = c(0, 12, 24), a.rate = c(10, 20),
+    e.median = 18, seed = 1)
+  per_sim <- split(dat$accrual_time, dat$sim)
+  cnt1 <- vapply(per_sim, function(a) sum(a < 12), integer(1))
+  expect_true(all(cnt1 == 120))
+  expect_true(all(vapply(per_sim, length, integer(1)) == 360))
+  expect_true(all(dat$accrual_time >= 0 & dat$accrual_time < 24))
+})
+
+test_that("simdata_fast: a.rate completes the final interval from the total", {
+  dat <- simdata_fast(
+    nsim = 5, n = 500, a.time = c(0, 12), a.rate = c(20, 30),
+    e.median = 18, seed = 1)
+  per_sim <- split(dat$accrual_time, dat$sim)
+  cnt1 <- vapply(per_sim, function(a) sum(a < 12), integer(1))
+  expect_true(all(cnt1 == 240))
+  end_time <- 12 + 260 / 30
+  expect_lt(max(dat$accrual_time), end_time + 1e-8)
+  expect_gt(max(dat$accrual_time), 12)
+})
+
+test_that("simdata_fast: a.prop distributes the total by proportion", {
+  dat <- simdata_fast(
+    nsim = 4, n = 100, a.time = c(0, 6, 12), a.prop = c(0.3, 0.7),
+    e.median = 18, seed = 1)
+  per_sim <- split(dat$accrual_time, dat$sim)
+  cnt1 <- vapply(per_sim, function(a) sum(a < 6), integer(1))
+  expect_true(all(cnt1 == 30))
+  expect_true(all(dat$accrual_time <= 12))
+})
+
+test_that("simdata_fast: accrual counts split across two groups", {
+  dat <- simdata_fast(
+    nsim = 3, n = c(180, 180), a.time = c(0, 12, 24), a.rate = c(10, 20),
+    e.median = list(18, 18), seed = 2)
+  per_sim <- split(dat$accrual_time, dat$sim)
+  cnt1 <- vapply(per_sim, function(a) sum(a < 12), integer(1))
+  expect_true(all(cnt1 == 120))
+})
+
+test_that("simdata_fast: accrual specification validation", {
+  # absolute rate inconsistent with the total
+  expect_error(
+    simdata_fast(nsim = 2, n = 500, a.time = c(0, 12, 24), a.rate = c(10, 20),
+                 e.median = 18),
+    "implies")
+  # a.rate with an invalid length
+  expect_error(
+    simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.rate = c(1, 2, 3),
+                 e.median = 18),
+    "a.rate")
+  # exactly one of a.rate / a.prop must be supplied
+  expect_error(
+    simdata_fast(nsim = 2, n = 50, a.time = c(0, 12), a.rate = 50 / 12,
+                 a.prop = 1, e.median = 18),
+    "exactly one of 'a.rate'")
+  expect_error(
+    simdata_fast(nsim = 2, n = 50, a.time = c(0, 12), e.median = 18),
+    "exactly one of 'a.rate'")
+  # a.prop length must match the number of intervals
+  expect_error(
+    simdata_fast(nsim = 2, n = 50, a.time = c(0, 6, 12), a.prop = 1,
+                 e.median = 18),
+    "a.prop")
 })

@@ -298,8 +298,8 @@ rmw_core <- function(time_sorted, event_sorted, j_sorted, s_star) {
     .Call(`_FastSurvival_rmw_core`, time_sorted, event_sorted, j_sorted, s_star)
 }
 
-simdata_core_full <- function(nsim, n_grp, a_time, cum_p_a, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t) {
-    .Call(`_FastSurvival_simdata_core_full`, nsim, n_grp, a_time, cum_p_a, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t)
+simdata_core_full <- function(nsim, n_grp, a_time, acc_counts_c, acc_counts_t, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t) {
+    .Call(`_FastSurvival_simdata_core_full`, nsim, n_grp, a_time, acc_counts_c, acc_counts_t, n_cell, e_haz_c, e_fin_c, e_cum_c, e_haz_t, e_fin_t, e_cum_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t)
 }
 
 #' Core stratified log-rank computation on stratum-blocked sorted vectors

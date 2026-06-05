@@ -25,15 +25,21 @@
   stratified-weighted variants, all sharing the single-scan C++ backend.
 * New simulation layer:
   * `simdata_fast()` extended with optional subgroups defined by a prevalence
-    specification, and rewritten so the entire generation pipeline runs in a
-    single C++ kernel that materializes the output data frame once.
+    specification and a flexible accrual specification: `a.rate` gives absolute
+    accrual rates (with the end of an open final interval solved from the total
+    when a trailing rate is supplied) and `a.prop` gives accrual proportions,
+    with deterministic per-interval accrual counts. The entire generation
+    pipeline runs in a single C++ kernel that materializes the output data
+    frame once.
   * `analysis_fast()`: interim or sequential analysis of simulated data at one
     or more looks, defined by target event counts or calendar times, computed
     by a fused C++ kernel that reuses the analysis cores of the standalone
     functions. Supports subgroup analyses.
   * `simsummary_fast()`: operating-characteristic summary (rejection and
     futility rates, stopping-look distribution, expected timing) from
-    `analysis_fast()` output and supplied group-sequential boundaries.
+    `analysis_fast()` output and supplied group-sequential boundaries, with a
+    `print()` method that lays the results out as a group-sequential design
+    report.
 * Each estimation and testing function has a corresponding `print()` method,
   and the print methods share a unified display format.
 

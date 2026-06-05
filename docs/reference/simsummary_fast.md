@@ -184,41 +184,59 @@ simsummary_fast(res,
                 fut.col = "cox.coef",
                 futility = c(log(1.2), NA, NA),
                 direction = "lower")
-#> Sequential analysis summary (simsummary_fast)
+#> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 200
-#>   Mode: Z-scale boundaries, direction = lower
-#>     efficacy [logrank.z]:    NA, -2.96, -1.97
-#>     futility [cox.coef]: 0.1823,     NA,     NA
+#>   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'cox.coef'
 #> 
-#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
-#>        1         60          286.06        60.00              0          226.06
-#>        2        105          300.00       105.00              0          195.00
-#>        3        150          300.00       150.00              0          150.00
-#>  overall         NA          299.88       143.25              0          156.63
-#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
-#>      11.5364               0.00               0.01          0.01       0.00
-#>      16.5033               0.13               0.00          0.13       0.13
-#>      22.8457               0.44               0.00          0.44       0.57
-#>      21.8951               0.57               0.01          0.58       0.57
+#> Stopping Boundaries: Look by Look
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.
+#>     1        0.40       60.0      286.1         NA     0.1823           0.0000
+#>     2        0.70      105.0      300.0    -2.9600         NA           0.1300
+#>     3        1.00      150.0      300.0    -1.9700         NA           0.5700
 #> 
+#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.40      286.1       60.0          0.0    226.1         11.54
+#>     2        0.70      300.0      105.0          0.0    195.0         16.50
+#>     3        1.00      300.0      150.0          0.0    150.0         22.85
+#>  Cross. Eff. Cross. Fut.
+#>       0.0000      0.0100
+#>       0.1300      0.0000
+#>       0.4400      0.0000
+#> 
+#> Overall
+#>   Rejection rate (efficacy):    0.5700
+#>   Futility-stop rate:           0.0100
+#>   Expected events at stop:      143.2
+#>   Expected sample size at stop: 299.9
+#>   Expected analysis time at stop:21.90
 
 # p-value boundaries instead
 simsummary_fast(res, p.col = "logrank.p",
                 alpha = c(0.0006, 0.0151, 0.0245))
-#> Sequential analysis summary (simsummary_fast)
+#> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 200
-#>   Mode: p-value boundaries
-#>     alpha [logrank.p]: 0.0006, 0.0151, 0.0245
+#>   Boundaries: nominal p-value on 'logrank.p'
 #> 
-#>     look look.value n.enrolled.mean n.event.mean n.dropout.mean n.pipeline.mean
-#>        1         60          286.06       60.000              0         226.060
-#>        2        105          300.00      105.000              0         195.000
-#>        3        150          300.00      150.000              0         150.000
-#>  overall         NA          299.38      130.425              0         168.955
-#>  cutoff.mean prob.stop.efficacy prob.stop.futility prob.stop.any cum.reject
-#>      11.5364              0.055                  0         0.055      0.055
-#>      16.5033              0.325                  0         0.325      0.380
-#>      22.8457              0.210                  0         0.210      0.590
-#>      20.1649              0.590                  0         0.590      0.590
+#> Stopping Boundaries: Look by Look
+#>  Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.
+#>     1        0.40       60.0      286.1    0.0006           0.0550
+#>     2        0.70      105.0      300.0    0.0151           0.3800
+#>     3        1.00      150.0      300.0    0.0245           0.5900
 #> 
+#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.40      286.1       60.0          0.0    226.1         11.54
+#>     2        0.70      300.0      105.0          0.0    195.0         16.50
+#>     3        1.00      300.0      150.0          0.0    150.0         22.85
+#>  Cross. Eff.
+#>       0.0550
+#>       0.3250
+#>       0.2100
+#> 
+#> Overall
+#>   Rejection rate (efficacy):    0.5900
+#>   Expected events at stop:      130.4
+#>   Expected sample size at stop: 299.4
+#>   Expected analysis time at stop:20.16
 ```
