@@ -152,15 +152,9 @@ simulation loop these savings accumulate across every iteration.
 
 ## References
 
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. *Manuscript under review.*
-
 Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
 hazard ratio. *Biometrika*, 68(1), 105-112.
 
 Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
 calculation under nonproportional hazards using average hazard ratios.
 *Biometrical Journal*, 66(6), e202300271.
-
-Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
-ed.). Chapman and Hall/CRC.

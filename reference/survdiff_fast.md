@@ -192,13 +192,18 @@ expected event counts for both the control and treatment groups.
 
 ## References
 
+Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
+arbitrarily single-censored samples. *Biometrika*, *52*, 203-223.
+
 Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. *Cancer Chemotherapy Reports*,
 *50*(3), 163-170.
 
-Peto, R., & Peto, J. (1972). Asymptotically efficient rank invariant
-test procedures. *Journal of the Royal Statistical Society. Series A
-(General)*, *135*(2), 185-198.
+Tarone, R. E., & Ware, J. (1977). On distribution-free tests for
+equality of survival distributions. *Biometrika*, *64*, 156-160.
+
+Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
+Survival Analysis*. New York: John Wiley & Sons.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, *38*(20), 3782-3790.
@@ -319,8 +324,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>           expr     min       lq      mean   median       uq      max neval cld
-#>  survdiff_fast  42.950   52.002   61.0708   63.914   66.805  292.235  1000  a 
-#>       survdiff 964.648 1001.682 1036.6007 1011.901 1025.686 5835.516  1000   b
+#>           expr     min       lq      mean  median       uq      max neval cld
+#>  survdiff_fast  19.910  22.9395  26.27897  26.369  28.2730  125.198  1000  a 
+#>       survdiff 417.156 432.4590 459.04980 440.792 450.8665 4189.647  1000   b
 # }
 ```

@@ -146,14 +146,14 @@ order.
 
 ## References
 
+Karrison, T. G. (2016). Versatile tests for comparing survival curves
+based on weighted log-rank statistics. *The Stata Journal*, *16*(3),
+678-690.
+
 Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
 analysis methods for time to event endpoints under nonproportional
 hazards: a comparative analysis. *Statistics in Biopharmaceutical
 Research*, *12*(2), 187-198.
-
-Karrison, T. G. (2016). Versatile tests for comparing survival curves
-based on weighted log-rank statistics. *The Stata Journal*, *16*(3),
-678-690.
 
 ## See also
 

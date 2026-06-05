@@ -232,10 +232,17 @@ res_delay <- analysis_fast(
 
 ## References
 
+O’Brien, P. C., & Fleming, T. R. (1979). A multiple testing procedure
+for clinical trials. *Biometrics*, 35(3), 549-556.
+
+Lan, K. K. G., & DeMets, D. L. (1983). Discrete sequential boundaries
+for clinical trials. *Biometrika*, 70(3), 659-663.
+
+Karrison, T. G. (2016). Versatile tests for comparing survival curves
+based on weighted log-rank statistics. *The Stata Journal*, 16(3),
+678-690.
+
 Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
 analysis methods for time to event endpoints under nonproportional
 hazards: a comparative analysis. *Statistics in Biopharmaceutical
 Research*, 12(2), 187-198.
-
-Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
-*Statistics in Medicine*, 38(20), 3782-3790.

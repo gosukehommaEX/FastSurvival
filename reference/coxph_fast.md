@@ -134,12 +134,15 @@ method formats the result similarly to `summary(coxph(...))`.
 
 ## References
 
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. Manuscript under review.
+Cox, D. R. (1972). Regression models and life-tables. *Journal of the
+Royal Statistical Society. Series B (Methodological)*, *34*(2), 187-220.
 
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. *Statistics in
 Medicine*, *10*(5), 749-755.
+
+Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
+estimator. Manuscript under review.
 
 ## See also
 
@@ -196,8 +199,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>        expr      min       lq      mean   median        uq      max neval cld
-#>  coxph_fast   44.764   54.211   71.0005   69.119   72.4055 4805.195  1000  a 
-#>       coxph 1515.063 1559.371 1656.2366 1580.826 1610.1300 6946.225  1000   b
+#>        expr     min       lq      mean  median       uq      max neval cld
+#>  coxph_fast  19.219  22.5285  28.68423  30.010  33.0995  128.964  1000  a 
+#>       coxph 673.992 701.8285 758.18952 713.526 736.0345 4901.996  1000   b
 # }
 ```
