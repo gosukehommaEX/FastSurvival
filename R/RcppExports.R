@@ -175,6 +175,10 @@ logrank_core <- function(time_sorted, event_sorted, j_sorted) {
     .Call(`_FastSurvival_logrank_core`, time_sorted, event_sorted, j_sorted)
 }
 
+medsurv_core <- function(time, event, grp, ngroup, bw) {
+    .Call(`_FastSurvival_medsurv_core`, time, event, grp, ngroup, bw)
+}
+
 milestone_core <- function(time, status, grp, tau, presorted) {
     .Call(`_FastSurvival_milestone_core`, time, status, grp, tau, presorted)
 }
@@ -430,5 +434,9 @@ stratified_weighted_logrank_core <- function(time_sorted, event_sorted, j_sorted
 #' @keywords internal
 weighted_logrank_core <- function(time_sorted, event_sorted, j_sorted, scheme, rho, gamma, t_star) {
     .Call(`_FastSurvival_weighted_logrank_core`, time_sorted, event_sorted, j_sorted, scheme, rho, gamma, t_star)
+}
+
+wkm_core <- function(time, event, grp, weight_type) {
+    .Call(`_FastSurvival_wkm_core`, time, event, grp, weight_type)
 }
 

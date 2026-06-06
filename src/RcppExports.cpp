@@ -119,6 +119,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// medsurv_core
+NumericMatrix medsurv_core(NumericVector time, IntegerVector event, IntegerVector grp, int ngroup, NumericVector bw);
+RcppExport SEXP _FastSurvival_medsurv_core(SEXP timeSEXP, SEXP eventSEXP, SEXP grpSEXP, SEXP ngroupSEXP, SEXP bwSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type event(eventSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type grp(grpSEXP);
+    Rcpp::traits::input_parameter< int >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type bw(bwSEXP);
+    rcpp_result_gen = Rcpp::wrap(medsurv_core(time, event, grp, ngroup, bw));
+    return rcpp_result_gen;
+END_RCPP
+}
 // milestone_core
 List milestone_core(NumericVector time, IntegerVector status, IntegerVector grp, double tau, bool presorted);
 RcppExport SEXP _FastSurvival_milestone_core(SEXP timeSEXP, SEXP statusSEXP, SEXP grpSEXP, SEXP tauSEXP, SEXP presortedSEXP) {
@@ -260,6 +275,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// wkm_core
+NumericVector wkm_core(NumericVector time, IntegerVector event, IntegerVector grp, int weight_type);
+RcppExport SEXP _FastSurvival_wkm_core(SEXP timeSEXP, SEXP eventSEXP, SEXP grpSEXP, SEXP weight_typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type event(eventSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type grp(grpSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_type(weight_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(wkm_core(time, event, grp, weight_type));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_ahr_core", (DL_FUNC) &_FastSurvival_ahr_core, 5},
@@ -268,6 +297,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},
+    {"_FastSurvival_medsurv_core", (DL_FUNC) &_FastSurvival_medsurv_core, 5},
     {"_FastSurvival_milestone_core", (DL_FUNC) &_FastSurvival_milestone_core, 5},
     {"_FastSurvival_pihe_core", (DL_FUNC) &_FastSurvival_pihe_core, 3},
     {"_FastSurvival_rmst_core", (DL_FUNC) &_FastSurvival_rmst_core, 3},
@@ -276,6 +306,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_stratified_logrank_core", (DL_FUNC) &_FastSurvival_stratified_logrank_core, 4},
     {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},
     {"_FastSurvival_weighted_logrank_core", (DL_FUNC) &_FastSurvival_weighted_logrank_core, 7},
+    {"_FastSurvival_wkm_core", (DL_FUNC) &_FastSurvival_wkm_core, 4},
     {NULL, NULL, 0}
 };
 
