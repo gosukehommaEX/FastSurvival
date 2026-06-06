@@ -279,20 +279,20 @@
 #' @importFrom stats pnorm qnorm cov2cor
 #' @export
 analysis_fast <- function(data, control,
-                           event.looks = NULL, time.looks = NULL,
-                           stat = "logrank",
-                           tau = NULL, t.eval = NULL,
-                           conf.int = 0.95,
-                           side = 2,
-                           by.subgroup = FALSE,
-                           weight = c("logrank", "fh", "mwlrt", "gehan",
-                                      "tarone-ware"),
-                           rho = 0, gamma = 0, t_star = NULL,
-                           strata = NULL,
-                           ms.method = c("wald", "loglog", "mover"),
-                           s_star = 0.5,
-                           mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
-                           abseps = 1e-5, maxpts = 25000) {
+                          event.looks = NULL, time.looks = NULL,
+                          stat = "logrank",
+                          tau = NULL, t.eval = NULL,
+                          conf.int = 0.95,
+                          side = 2,
+                          by.subgroup = FALSE,
+                          weight = c("logrank", "fh", "mwlrt", "gehan",
+                                     "tarone-ware"),
+                          rho = 0, gamma = 0, t_star = NULL,
+                          strata = NULL,
+                          ms.method = c("wald", "loglog", "mover"),
+                          s_star = 0.5,
+                          mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
+                          abseps = 1e-5, maxpts = 25000) {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
@@ -395,28 +395,37 @@ analysis_fast <- function(data, control,
   pop_label <- vapply(pop_defs, function(p) p$label, character(1))
 
   # ---- Order data by simulation; build sim row offsets -------------------
+  # simdata_fast() emits rows grouped by simulation, so the sim column is
+  # already non-decreasing; in that case skip order() and the per-column gather
+  # and pass the columns through unchanged (the kernel only needs rows
+  # contiguous by simulation). Unsorted external data falls back to ordering.
   sim_vec <- data$sim
-  ord     <- order(sim_vec)
-  sim_s   <- sim_vec[ord]
+  if (is.unsorted(sim_vec)) {
+    ord   <- order(sim_vec)
+    reidx <- function(x) x[ord]
+  } else {
+    reidx <- function(x) x
+  }
+  sim_s   <- reidx(sim_vec)
   sim_ids <- unique(sim_s)
   nsim    <- length(sim_ids)
   # 0-based offsets: rows of simulation k are [sim_ptr[k], sim_ptr[k + 1]).
   counts  <- tabulate(match(sim_s, sim_ids), nbins = nsim)
   sim_ptr <- as.integer(c(0L, cumsum(counts)))
 
-  accrual <- as.numeric(data$accrual_time)[ord]
-  tte     <- as.numeric(data$tte)[ord]
-  event   <- as.integer(data$event)[ord]
+  accrual <- reidx(as.numeric(data$accrual_time))
+  tte     <- reidx(as.numeric(data$tte))
+  event   <- reidx(as.integer(data$event))
 
   grp <- data$group
   if (is.factor(grp)) grp <- as.character(grp)
-  j_all <- as.integer(grp != control)[ord]
+  j_all <- reidx(as.integer(grp != control))
 
   # Subgroup matrix (N x n_subcols), integer labels aligned to ordered data.
   if (length(sub_cols) > 0L) {
     sub_mat <- matrix(0L, nrow = nrow(data), ncol = length(sub_cols))
     for (ci in seq_along(sub_cols)) {
-      sub_mat[, ci] <- as.integer(data[[sub_cols[ci]]])[ord]
+      sub_mat[, ci] <- reidx(as.integer(data[[sub_cols[ci]]]))
     }
   } else {
     sub_mat <- matrix(0L, nrow = nrow(data), ncol = 1L)
@@ -429,7 +438,7 @@ analysis_fast <- function(data, control,
     } else {
       do.call(paste, c(lapply(strata, function(cn) data[[cn]]), sep = "."))
     }
-    strata_int <- as.integer(factor(st_lab))[ord]
+    strata_int <- reidx(as.integer(factor(st_lab)))
   } else {
     strata_int <- integer(0)
   }
@@ -446,11 +455,11 @@ analysis_fast <- function(data, control,
   do_ahr       <- "ahr"       %in% stat
 
   weight_scheme <- switch(weight,
-    logrank       = -1L,
-    fh            = 0L,
-    mwlrt         = 1L,
-    gehan         = 2L,
-    `tarone-ware` = 3L)
+                          logrank       = -1L,
+                          fh            = 0L,
+                          mwlrt         = 1L,
+                          gehan         = 2L,
+                          `tarone-ware` = 3L)
   t_star_v <- if (weight == "mwlrt") t_star else 0
   tau_v    <- if (is.null(tau)) 0 else tau
   teval_v  <- if (is.null(t.eval)) 0 else t.eval
@@ -589,7 +598,7 @@ analysis_fast <- function(data, control,
     a0 <- core$ahsw[, 1]; vQ0 <- core$ahsw[, 2]; vU0 <- core$ahsw[, 3]; n0 <- core$ahsw[, 4]
     a1 <- core$ahsw[, 5]; vQ1 <- core$ahsw[, 6]; vU1 <- core$ahsw[, 7]; n1 <- core$ahsw[, 8]
     ok <- is.finite(a0) & is.finite(a1) & a0 > 0 & a1 > 0 &
-          is.finite(vQ0) & is.finite(vQ1) & is.finite(vU0) & is.finite(vU1)
+      is.finite(vQ0) & is.finite(vQ1) & is.finite(vU0) & is.finite(vU1)
     log_rah <- ifelse(ok, log(a1 / a0), NA_real_)
     se_rah  <- ifelse(ok, sqrt(vQ1 / n1 + vQ0 / n0), NA_real_)
     dah     <- ifelse(ok, a1 - a0, NA_real_)
@@ -649,7 +658,7 @@ analysis_fast <- function(data, control,
       upper   <- diff_est + sqrt(sigma_u)
       if (ms.method == "loglog") {
         ok_m <- is.finite(s0) & is.finite(s1) & s0 > 0 & s0 < 1 &
-                s1 > 0 & s1 < 1
+          s1 > 0 & s1 < 1
         g0  <- log(-log(s0)); g1 <- log(-log(s1))
         vg0 <- v0 / (s0 * log(s0))^2
         vg1 <- v1 / (s1 * log(s1))^2
@@ -714,6 +723,6 @@ analysis_fast <- function(data, control,
     out$ahr.p          <- p_from_z(z_ahr, eff_dir = -1)
   }
 
-  df <- as.data.frame(out, stringsAsFactors = FALSE)
+  df <- list2DF(out)
   df
 }
