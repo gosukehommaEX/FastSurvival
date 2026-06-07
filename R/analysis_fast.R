@@ -10,8 +10,9 @@
 #' simulated trial by reusing \code{\link{survdiff_fast}},
 #' \code{\link{coxph_fast}}, \code{\link{rmst_fast}}, \code{\link{survfit_fast}},
 #' \code{\link{maxcombo_fast}}, \code{\link{ahsw_fast}},
-#' \code{\link{milestone_fast}}, \code{\link{rmw_fast}}, and
-#' \code{\link{ahr_fast}}. Optionally the same
+#' \code{\link{milestone_fast}}, \code{\link{rmw_fast}},
+#' \code{\link{ahr_fast}}, \code{\link{medsurv_fast}},
+#' \code{\link{wkm_fast}}, and \code{\link{wmst_fast}}. Optionally the same
 #' statistics are also reported within each subgroup. The censoring and time
 #' sorting are handled by a C++ backend, and the analysis cores are called with
 #' \code{presorted = TRUE}, so each look avoids a redundant sort.
@@ -43,8 +44,8 @@
 #'
 #' The statistics are selected with \code{stat}, which may name one or more of
 #' \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-#' \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
-#' \code{"ahr"}.
+#' \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
+#' \code{"ahr"}, \code{"medsurv"}, \code{"wkm"}, and \code{"wmst"}.
 #'
 #' The \code{"logrank"} statistic is configurable. By default it is the
 #' ordinary unweighted, unstratified two-group log-rank test and reproduces the
@@ -104,6 +105,31 @@
 #' direction is an average hazard ratio below 1 (a negative Z), as in
 #' \code{\link{ahr_fast}}.
 #'
+#' The \code{"medsurv"} statistic compares the non-parametric Kaplan-Meier
+#' median survival times of the two groups. It reports the per-group medians,
+#' their difference (treatment minus control) with a plain-scale confidence
+#' interval, the Wald statistic, and the p-value. The variance method is
+#' selected with \code{medsurv.method} (\code{"km"} or \code{"nph"}), matching
+#' \code{\link{medsurv_fast}}; \code{medsurv.bw} optionally overrides the kernel
+#' bandwidth used by \code{medsurv.method = "km"}. The benefit direction is a
+#' positive difference (a longer median under treatment), so a positive Z favors
+#' treatment.
+#'
+#' The \code{"wkm"} statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
+#' It reports the weighted integrated survival difference (treatment minus
+#' control) with its confidence interval, the Wald statistic, and the p-value.
+#' The weight is selected with \code{wkm.weight} (\code{"PF"}, \code{"sqrtPF"},
+#' or \code{"constant"}), matching \code{\link{wkm_fast}}. The benefit direction
+#' is a positive weighted difference (a positive Z favors treatment).
+#'
+#' The \code{"wmst"} statistic compares the window mean survival time, the area
+#' under the Kaplan-Meier curve between \code{wmst.tau1} and \code{wmst.tau2}.
+#' It reports the per-group WMST values, their difference (treatment minus
+#' control) with its confidence interval, the Wald statistic, and the p-value,
+#' matching \code{\link{wmst_fast}}. With \code{wmst.tau1 = 0} the window mean
+#' survival time is the restricted mean survival time at \code{wmst.tau2}. The
+#' benefit direction is a positive difference (a positive Z favors treatment).
+#'
 #' When \code{by.subgroup = TRUE}, the output is given in long form with a
 #' \code{population} column. Each \code{(sim, look)} produces one row for the
 #' whole trial (\code{population = "overall"}) plus one row per subgroup level
@@ -130,8 +156,9 @@
 #'   Mutually exclusive with \code{event.looks}.
 #' @param stat A character vector naming the statistics to compute. Any subset
 #'   of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-#'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
-#'   \code{"ahr"}. Defaults to \code{"logrank"}.
+#'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
+#'   \code{"ahr"}, \code{"medsurv"}, \code{"wkm"}, and \code{"wmst"}. Defaults to
+#'   \code{"logrank"}.
 #' @param tau A single positive numeric value, the restriction horizon for
 #'   \code{"rmst"}, the truncation time for \code{"ahsw"} and \code{"ahr"}, and
 #'   the milestone timepoint for \code{"milestone"}. Required only when
@@ -198,6 +225,22 @@
 #'   evaluations for the quasi-Monte-Carlo integration used by the
 #'   \code{"maxcombo"} p-value when four or more weights are supplied. Defaults
 #'   to 25000.
+#' @param medsurv.method A character string naming the variance method for the
+#'   \code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
+#'   See \code{\link{medsurv_fast}}.
+#' @param medsurv.bw An optional single positive numeric value, the kernel
+#'   bandwidth for the median hazard used by \code{medsurv.method = "km"},
+#'   applied to both groups. \code{NULL} (default) uses a Silverman type default
+#'   computed per group from the cut data, matching \code{\link{medsurv_fast}}.
+#' @param wkm.weight A character string naming the weight for the \code{"wkm"}
+#'   statistic, one of \code{"PF"} (default, Pepe-Fleming combined censoring
+#'   weight), \code{"sqrtPF"}, or \code{"constant"}. See \code{\link{wkm_fast}}.
+#' @param wmst.tau1 A single non-negative numeric value, the lower window limit
+#'   for the \code{"wmst"} statistic. Defaults to 0.
+#' @param wmst.tau2 A single positive numeric value, the upper window limit for
+#'   the \code{"wmst"} statistic, which must exceed \code{wmst.tau1}. \code{NULL}
+#'   (default) falls back to \code{tau}. Required (through either argument) only
+#'   when \code{"wmst"} is requested.
 #'
 #' @return A data frame. When \code{by.subgroup = FALSE}, it has
 #'   \code{nsim * length(looks)} rows. When \code{by.subgroup = TRUE}, it has
@@ -229,7 +272,14 @@
 #'   \code{milestone.diff.upper}, \code{milestone.z}, and \code{milestone.p}
 #'   for \code{"milestone"}; \code{rmw.stat} and \code{rmw.p} for \code{"rmw"};
 #'   and \code{ahr.ahr}, \code{ahr.theta.ctrl}, \code{ahr.theta.trt},
-#'   \code{ahr.z}, and \code{ahr.p} for \code{"ahr"}. The Z columns
+#'   \code{ahr.z}, and \code{ahr.p} for \code{"ahr"};
+#'   \code{medsurv.ctrl}, \code{medsurv.trt}, \code{medsurv.diff},
+#'   \code{medsurv.diff.lower}, \code{medsurv.diff.upper}, \code{medsurv.z}, and
+#'   \code{medsurv.p} for \code{"medsurv"}; \code{wkm.wdiff}, \code{wkm.lower},
+#'   \code{wkm.upper}, \code{wkm.z}, and \code{wkm.p} for \code{"wkm"}; and
+#'   \code{wmst.ctrl}, \code{wmst.trt}, \code{wmst.diff},
+#'   \code{wmst.diff.lower}, \code{wmst.diff.upper}, \code{wmst.z}, and
+#'   \code{wmst.p} for \code{"wmst"}. The Z columns
 #'   \code{logrank.z}, \code{cox.z}, and
 #'   \code{rmst.z} carry the natural sign of each test, and the p-value columns
 #'   follow \code{side} except for the AHSW p-values, which are two-sided.
@@ -274,7 +324,9 @@
 #'   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
 #'   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
 #'   \code{\link{ahsw_fast}}, \code{\link{milestone_fast}},
-#'   \code{\link{rmw_fast}}, \code{\link{ahr_fast}}.
+#'   \code{\link{rmw_fast}}, \code{\link{ahr_fast}},
+#'   \code{\link{medsurv_fast}}, \code{\link{wkm_fast}},
+#'   \code{\link{wmst_fast}}.
 #'
 #' @importFrom stats pnorm qnorm cov2cor
 #' @export
@@ -292,10 +344,15 @@ analysis_fast <- function(data, control,
                           ms.method = c("wald", "loglog", "mover"),
                           s_star = 0.5,
                           mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
-                          abseps = 1e-5, maxpts = 25000) {
+                          abseps = 1e-5, maxpts = 25000,
+                          medsurv.method = c("km", "nph"), medsurv.bw = NULL,
+                          wkm.weight = c("PF", "sqrtPF", "constant"),
+                          wmst.tau1 = 0, wmst.tau2 = NULL) {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
+  medsurv.method <- match.arg(medsurv.method)
+  wkm.weight <- match.arg(wkm.weight)
 
   # ---- Input validation --------------------------------------------------
   req_cols <- c("sim", "group", "accrual_time", "tte", "event")
@@ -315,7 +372,7 @@ analysis_fast <- function(data, control,
   }
 
   allowed_stat <- c("logrank", "coxph", "rmst", "km", "maxcombo", "ahsw",
-                    "milestone", "rmw", "ahr")
+                    "milestone", "rmw", "ahr", "medsurv", "wkm", "wmst")
   if (!all(stat %in% allowed_stat)) {
     stop("'stat' must be a subset of: ", paste(allowed_stat, collapse = ", "))
   }
@@ -349,6 +406,22 @@ analysis_fast <- function(data, control,
       (length(s_star) != 1L || !is.finite(s_star) || s_star <= 0 ||
        s_star > 1)) {
     stop("'s_star' must be a single value in (0, 1] when 'rmw' is requested")
+  }
+  if (length(wmst.tau1) != 1L || !is.finite(wmst.tau1) || wmst.tau1 < 0) {
+    stop("'wmst.tau1' must be a single non-negative value")
+  }
+  wmst.tau2_use <- if (is.null(wmst.tau2)) tau else wmst.tau2
+  if ("wmst" %in% stat) {
+    if (is.null(wmst.tau2_use) || length(wmst.tau2_use) != 1L ||
+        !is.finite(wmst.tau2_use) || wmst.tau2_use <= wmst.tau1) {
+      stop("'wmst.tau2' (or 'tau') must be a single value greater than ",
+           "'wmst.tau1' when 'wmst' is requested")
+    }
+  }
+  if (!is.null(medsurv.bw) &&
+      (length(medsurv.bw) != 1L || !is.finite(medsurv.bw) ||
+       medsurv.bw <= 0)) {
+    stop("'medsurv.bw' must be a single positive value or NULL")
   }
 
   # ---- Subgroup columns and population definitions -----------------------
@@ -453,6 +526,9 @@ analysis_fast <- function(data, control,
   do_milestone <- "milestone" %in% stat
   do_rmw       <- "rmw"       %in% stat
   do_ahr       <- "ahr"       %in% stat
+  do_medsurv   <- "medsurv"   %in% stat
+  do_wkm       <- "wkm"       %in% stat
+  do_wmst      <- "wmst"      %in% stat
 
   weight_scheme <- switch(weight,
                           logrank       = -1L,
@@ -464,6 +540,10 @@ analysis_fast <- function(data, control,
   tau_v    <- if (is.null(tau)) 0 else tau
   teval_v  <- if (is.null(t.eval)) 0 else t.eval
   s_star_v <- if (is.null(s_star)) 0.5 else as.numeric(s_star)
+  wkm_weight_v <- switch(wkm.weight, PF = 0L, sqrtPF = 1L, constant = 2L)
+  medsurv_bw_v <- if (is.null(medsurv.bw)) -1 else as.numeric(medsurv.bw)
+  wmst_tau1_v  <- as.numeric(wmst.tau1)
+  wmst_tau2_v  <- if (is.null(wmst.tau2_use)) 0 else as.numeric(wmst.tau2_use)
 
   # ---- Call the fused kernel ---------------------------------------------
   core <- analysis_loop_core(
@@ -473,9 +553,11 @@ analysis_fast <- function(data, control,
     if (use_strata) strata_int else integer(0), use_strata,
     do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw,
     do_milestone, do_rmw, do_ahr,
+    do_medsurv, do_wkm, do_wmst,
     weight_scheme, rho, gamma, t_star_v,
     as.numeric(mc.rho), as.numeric(mc.gamma),
-    tau_v, teval_v, s_star_v
+    tau_v, teval_v, s_star_v,
+    wmst_tau1_v, wmst_tau2_v, wkm_weight_v, medsurv_bw_v
   )
 
   total <- nsim * length(looks) * n_pop
@@ -721,6 +803,65 @@ analysis_fast <- function(data, control,
     out$ahr.theta.trt  <- ifelse(ok, th2, NA_real_)
     out$ahr.z          <- z_ahr
     out$ahr.p          <- p_from_z(z_ahr, eff_dir = -1)
+  }
+
+  if (do_medsurv) {
+    med0 <- core$medsurv[, 1]; gw0 <- core$medsurv[, 2]; kh0 <- core$medsurv[, 3]
+    nv0  <- core$medsurv[, 4]; lh0 <- core$medsurv[, 5]
+    med1 <- core$medsurv[, 6]; gw1 <- core$medsurv[, 7]; kh1 <- core$medsurv[, 8]
+    nv1  <- core$medsurv[, 9]; lh1 <- core$medsurv[, 10]
+    if (medsurv.method == "nph") {
+      var0 <- ifelse(is.finite(lh0) & lh0 > 0, nv0 / (lh0 * lh0), NA_real_)
+      var1 <- ifelse(is.finite(lh1) & lh1 > 0, nv1 / (lh1 * lh1), NA_real_)
+    } else {
+      var0 <- ifelse(is.finite(kh0) & kh0 > 0, gw0 / (kh0 * kh0), NA_real_)
+      var1 <- ifelse(is.finite(kh1) & kh1 > 0, gw1 / (kh1 * kh1), NA_real_)
+    }
+    diff_v  <- med1 - med0
+    se_diff <- sqrt(var0 + var1)
+    z_med   <- ifelse(is.finite(se_diff) & se_diff > 0, diff_v / se_diff,
+                      NA_real_)
+    ci_ok   <- is.finite(diff_v) & is.finite(se_diff)
+    out$medsurv.ctrl       <- med0
+    out$medsurv.trt        <- med1
+    out$medsurv.diff       <- diff_v
+    out$medsurv.diff.lower <- ifelse(ci_ok, diff_v - z_mult * se_diff, NA_real_)
+    out$medsurv.diff.upper <- ifelse(ci_ok, diff_v + z_mult * se_diff, NA_real_)
+    out$medsurv.z          <- z_med
+    out$medsurv.p          <- p_from_z(z_med, eff_dir = 1)
+  }
+
+  if (do_wkm) {
+    num_raw  <- core$wkm[, 1]; variance <- core$wkm[, 2]
+    n1_wkm   <- core$wkm[, 3]; n2_wkm   <- core$wkm[, 4]
+    n_tot    <- n1_wkm + n2_wkm
+    scale_w  <- sqrt(n1_wkm * n2_wkm / n_tot)
+    ok       <- is.finite(variance) & variance > 0 &
+                is.finite(scale_w) & scale_w > 0
+    se_w     <- ifelse(ok, sqrt(variance) / scale_w, NA_real_)
+    z_wkm    <- ifelse(ok, num_raw / se_w, NA_real_)
+    ci_ok    <- is.finite(num_raw) & is.finite(se_w)
+    out$wkm.wdiff <- num_raw
+    out$wkm.lower <- ifelse(ci_ok, num_raw - z_mult * se_w, NA_real_)
+    out$wkm.upper <- ifelse(ci_ok, num_raw + z_mult * se_w, NA_real_)
+    out$wkm.z     <- z_wkm
+    out$wkm.p     <- p_from_z(z_wkm, eff_dir = 1)
+  }
+
+  if (do_wmst) {
+    w0 <- core$wmst[, 1]; vw0 <- core$wmst[, 2]
+    w1 <- core$wmst[, 3]; vw1 <- core$wmst[, 4]
+    diff_v  <- w1 - w0
+    se_diff <- sqrt(vw0 + vw1)
+    z_wmst  <- ifelse(is.finite(se_diff) & se_diff > 0, diff_v / se_diff,
+                      NA_real_)
+    out$wmst.ctrl       <- w0
+    out$wmst.trt        <- w1
+    out$wmst.diff       <- diff_v
+    out$wmst.diff.lower <- diff_v - z_mult * se_diff
+    out$wmst.diff.upper <- diff_v + z_mult * se_diff
+    out$wmst.z          <- z_wmst
+    out$wmst.p          <- p_from_z(z_wmst, eff_dir = 1)
   }
 
   df <- list2DF(out)

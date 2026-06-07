@@ -25,7 +25,12 @@ analysis_fast(
   mc.rho = c(0, 0, 1, 1),
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
-  maxpts = 25000
+  maxpts = 25000,
+  medsurv.method = c("km", "nph"),
+  medsurv.bw = NULL,
+  wkm.weight = c("PF", "sqrtPF", "constant"),
+  wmst.tau1 = 0,
+  wmst.tau2 = NULL
 )
 }
 \arguments{
@@ -44,8 +49,9 @@ Mutually exclusive with \code{event.looks}.}
 
 \item{stat}{A character vector naming the statistics to compute. Any subset
 of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
-\code{"ahr"}. Defaults to \code{"logrank"}.}
+\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
+\code{"ahr"}, \code{"medsurv"}, \code{"wkm"}, and \code{"wmst"}. Defaults to
+\code{"logrank"}.}
 
 \item{tau}{A single positive numeric value, the restriction horizon for
 \code{"rmst"}, the truncation time for \code{"ahsw"} and \code{"ahr"}, and
@@ -128,6 +134,27 @@ p-value. Defaults to 1e-5.}
 evaluations for the quasi-Monte-Carlo integration used by the
 \code{"maxcombo"} p-value when four or more weights are supplied. Defaults
 to 25000.}
+
+\item{medsurv.method}{A character string naming the variance method for the
+\code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
+See \code{\link{medsurv_fast}}.}
+
+\item{medsurv.bw}{An optional single positive numeric value, the kernel
+bandwidth for the median hazard used by \code{medsurv.method = "km"},
+applied to both groups. \code{NULL} (default) uses a Silverman type default
+computed per group from the cut data, matching \code{\link{medsurv_fast}}.}
+
+\item{wkm.weight}{A character string naming the weight for the \code{"wkm"}
+statistic, one of \code{"PF"} (default, Pepe-Fleming combined censoring
+weight), \code{"sqrtPF"}, or \code{"constant"}. See \code{\link{wkm_fast}}.}
+
+\item{wmst.tau1}{A single non-negative numeric value, the lower window limit
+for the \code{"wmst"} statistic. Defaults to 0.}
+
+\item{wmst.tau2}{A single positive numeric value, the upper window limit for
+the \code{"wmst"} statistic, which must exceed \code{wmst.tau1}. \code{NULL}
+(default) falls back to \code{tau}. Required (through either argument) only
+when \code{"wmst"} is requested.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -160,7 +187,14 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{milestone.diff.upper}, \code{milestone.z}, and \code{milestone.p}
   for \code{"milestone"}; \code{rmw.stat} and \code{rmw.p} for \code{"rmw"};
   and \code{ahr.ahr}, \code{ahr.theta.ctrl}, \code{ahr.theta.trt},
-  \code{ahr.z}, and \code{ahr.p} for \code{"ahr"}. The Z columns
+  \code{ahr.z}, and \code{ahr.p} for \code{"ahr"};
+  \code{medsurv.ctrl}, \code{medsurv.trt}, \code{medsurv.diff},
+  \code{medsurv.diff.lower}, \code{medsurv.diff.upper}, \code{medsurv.z}, and
+  \code{medsurv.p} for \code{"medsurv"}; \code{wkm.wdiff}, \code{wkm.lower},
+  \code{wkm.upper}, \code{wkm.z}, and \code{wkm.p} for \code{"wkm"}; and
+  \code{wmst.ctrl}, \code{wmst.trt}, \code{wmst.diff},
+  \code{wmst.diff.lower}, \code{wmst.diff.upper}, \code{wmst.z}, and
+  \code{wmst.p} for \code{"wmst"}. The Z columns
   \code{logrank.z}, \code{cox.z}, and
   \code{rmst.z} carry the natural sign of each test, and the p-value columns
   follow \code{side} except for the AHSW p-values, which are two-sided.
@@ -175,8 +209,9 @@ calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing \code{\link{survdiff_fast}},
 \code{\link{coxph_fast}}, \code{\link{rmst_fast}}, \code{\link{survfit_fast}},
 \code{\link{maxcombo_fast}}, \code{\link{ahsw_fast}},
-\code{\link{milestone_fast}}, \code{\link{rmw_fast}}, and
-\code{\link{ahr_fast}}. Optionally the same
+\code{\link{milestone_fast}}, \code{\link{rmw_fast}},
+\code{\link{ahr_fast}}, \code{\link{medsurv_fast}},
+\code{\link{wkm_fast}}, and \code{\link{wmst_fast}}. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 \code{presorted = TRUE}, so each look avoids a redundant sort.
@@ -208,8 +243,8 @@ Exactly one of \code{event.looks} and \code{time.looks} must be supplied.
 
 The statistics are selected with \code{stat}, which may name one or more of
 \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
-\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"}, and
-\code{"ahr"}.
+\code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
+\code{"ahr"}, \code{"medsurv"}, \code{"wkm"}, and \code{"wmst"}.
 
 The \code{"logrank"} statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
@@ -269,6 +304,31 @@ the test statistic on the group-share scale, and the p-value. The benefit
 direction is an average hazard ratio below 1 (a negative Z), as in
 \code{\link{ahr_fast}}.
 
+The \code{"medsurv"} statistic compares the non-parametric Kaplan-Meier
+median survival times of the two groups. It reports the per-group medians,
+their difference (treatment minus control) with a plain-scale confidence
+interval, the Wald statistic, and the p-value. The variance method is
+selected with \code{medsurv.method} (\code{"km"} or \code{"nph"}), matching
+\code{\link{medsurv_fast}}; \code{medsurv.bw} optionally overrides the kernel
+bandwidth used by \code{medsurv.method = "km"}. The benefit direction is a
+positive difference (a longer median under treatment), so a positive Z favors
+treatment.
+
+The \code{"wkm"} statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
+It reports the weighted integrated survival difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the p-value.
+The weight is selected with \code{wkm.weight} (\code{"PF"}, \code{"sqrtPF"},
+or \code{"constant"}), matching \code{\link{wkm_fast}}. The benefit direction
+is a positive weighted difference (a positive Z favors treatment).
+
+The \code{"wmst"} statistic compares the window mean survival time, the area
+under the Kaplan-Meier curve between \code{wmst.tau1} and \code{wmst.tau2}.
+It reports the per-group WMST values, their difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the p-value,
+matching \code{\link{wmst_fast}}. With \code{wmst.tau1 = 0} the window mean
+survival time is the restricted mean survival time at \code{wmst.tau2}. The
+benefit direction is a positive difference (a positive Z favors treatment).
+
 When \code{by.subgroup = TRUE}, the output is given in long form with a
 \code{population} column. Each \code{(sim, look)} produces one row for the
 whole trial (\code{population = "overall"}) plus one row per subgroup level
@@ -326,5 +386,7 @@ head(res5)
   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
   \code{\link{ahsw_fast}}, \code{\link{milestone_fast}},
-  \code{\link{rmw_fast}}, \code{\link{ahr_fast}}.
+  \code{\link{rmw_fast}}, \code{\link{ahr_fast}},
+  \code{\link{medsurv_fast}}, \code{\link{wkm_fast}},
+  \code{\link{wmst_fast}}.
 }

@@ -3,6 +3,23 @@
 #include <cmath>
 using namespace Rcpp;
 
+// Reusable scratch for the weighted Kaplan-Meier core. Defined at file scope so
+// the pointer-based implementation can take it by reference from the caller and
+// avoid reallocating the per-observation buffers per cell in a fused simulation
+// loop.
+struct WkmScratch {
+  std::vector<double> width;
+  std::vector<double> wt;
+  std::vector<double> s1;
+  std::vector<double> s2;
+  std::vector<double> sp;
+  std::vector<double> a_seq;
+};
+
+// Forward declaration of the pointer-based implementation (defined below).
+void wkm_core_impl(const double*, const int*, const int*, int, int,
+                   WkmScratch&, double*);
+
 // Single-scan core for the weighted Kaplan-Meier (Pepe-Fleming) two-sample test.
 //
 // This reproduces the computation in nphsim::wkm.Stat. The integrand is a step
@@ -34,12 +51,44 @@ using namespace Rcpp;
 NumericVector wkm_core(NumericVector time, IntegerVector event, IntegerVector grp,
                        int weight_type) {
   int n = time.size();
+  WkmScratch sc;
+  double res[4];
+  wkm_core_impl(time.begin(), event.begin(), grp.begin(), n, weight_type, sc, res);
+
+  NumericVector out(4);
+  out[0] = res[0];
+  out[1] = res[1];
+  out[2] = res[2];
+  out[3] = res[3];
+  return out;
+}
+
+// Pointer-based implementation with external linkage. The input must be sorted
+// by time in ascending order, with grp coded 1 for treatment and 0 for control.
+// Writes num_raw, variance, n1, n2 into out[0..3]. The per-observation buffers
+// are taken from the caller-supplied scratch sc and reused across cells.
+// Algorithm identical to the exported wrapper above.
+void wkm_core_impl(const double* time, const int* event, const int* grp, int n,
+                   int weight_type, WkmScratch& sc, double* out) {
   int n1 = 0, n2 = 0;
   for (int i = 0; i < n; ++i) {
     if (grp[i] == 1) ++n1; else ++n2;
   }
 
-  std::vector<double> width(n), wt(n), s1(n), s2(n), sp(n);
+  if ((int) sc.width.size() < n) {
+    sc.width.resize(n);
+    sc.wt.resize(n);
+    sc.s1.resize(n);
+    sc.s2.resize(n);
+    sc.sp.resize(n);
+    sc.a_seq.resize(n);
+  }
+  double* width = sc.width.data();
+  double* wt    = sc.wt.data();
+  double* s1    = sc.s1.data();
+  double* s2    = sc.s2.data();
+  double* sp    = sc.sp.data();
+  double* a_seq = sc.a_seq.data();
 
   double surv1 = 1.0, surv2 = 1.0, cen1 = 1.0, cen2 = 1.0, survp = 1.0;
   int y1 = n1, y2 = n2, yp = n;
@@ -120,7 +169,6 @@ NumericVector wkm_core(NumericVector time, IntegerVector event, IntegerVector gr
     num_raw += wt[k] * (s1[k] - s2[k]) * width[k];
   }
 
-  std::vector<double> a_seq(n);
   double cum = 0.0;
   for (int k = 0; k < n; ++k) {
     cum += width[k] * wt[k] * sp[k];
@@ -139,10 +187,8 @@ NumericVector wkm_core(NumericVector time, IntegerVector event, IntegerVector gr
     }
   }
 
-  NumericVector out(4);
   out[0] = num_raw;
   out[1] = variance;
-  out[2] = n1;
-  out[3] = n2;
-  return out;
+  out[2] = (double) n1;
+  out[3] = (double) n2;
 }

@@ -253,3 +253,74 @@ test_that("analysis_fast stratified log-rank matches survdiff_fast with strata",
     }
   }
 })
+
+test_that("analysis_fast medsurv/wkm/wmst match per-cell wrappers (event looks)", {
+  set.seed(707)
+  dat <- simdata_fast(nsim = 12, n = c(120, 120), a.time = c(0, 12),
+                      a.prop = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
+                      e.time = list(NULL, c(0, 6, Inf)),
+                      d.median = list(36, 36), seed = 707)
+  looks <- c(110, 170)
+  res <- analysis_fast(dat, control = 1, event.looks = looks,
+                       stat = c("medsurv", "wkm", "wmst"),
+                       medsurv.method = "km", wkm.weight = "PF",
+                       wmst.tau1 = 2, wmst.tau2 = 12, side = 2)
+
+  sims <- sort(unique(dat$sim))
+  row <- 0L
+  for (s in sims) {
+    cal_ev <- with(dat[dat$sim == s & dat$event == 1, ], accrual_time + tte)
+    for (cv in looks) {
+      row <- row + 1L
+      if (cv > length(cal_ev)) next
+      cutoff <- sort(cal_ev)[cv]
+      cc <- cut_one(dat, s, cutoff)
+      both <- any(cc$group == 1) && any(cc$group != 1)
+      if (!both) next
+      n_ev <- sum(cc$event)
+
+      # Median survival difference (km variance, default bandwidth).
+      md <- medsurv_fast(cc$time, cc$event, group = cc$group, control = 1,
+                         method = "km")
+      expect_equal(res$medsurv.diff[row], unname(md["diff"]), tolerance = 1e-10)
+      expect_equal(res$medsurv.z[row],    unname(md["z"]),    tolerance = 1e-10)
+
+      # Window mean survival time difference over (2, 12].
+      wm <- wmst_fast(cc$time, cc$event, group = cc$group, control = 1,
+                      tau1 = 2, tau2 = 12)
+      expect_equal(res$wmst.diff[row], unname(wm["diff"]), tolerance = 1e-10)
+      expect_equal(res$wmst.z[row],    unname(wm["z"]),    tolerance = 1e-10)
+
+      # Weighted Kaplan-Meier (Pepe-Fleming) requires at least one event.
+      if (n_ev > 0) {
+        wk <- wkm_fast(cc$time, cc$event, cc$group, control = 1, weight = "PF")
+        expect_equal(res$wkm.wdiff[row], unname(wk["wdiff"]), tolerance = 1e-10)
+        expect_equal(res$wkm.z[row],     unname(wk["z"]),     tolerance = 1e-10)
+      }
+    }
+  }
+})
+
+test_that("analysis_fast: new statistic arguments are validated", {
+  set.seed(89)
+  dat <- simdata_fast(nsim = 5, n = c(40, 40), a.time = c(0, 6), a.prop = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 12),
+                      d.median = list(30, 30), seed = 89)
+
+  # 'wmst' needs a window through either wmst.tau2 or tau.
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "wmst"), "wmst.tau2")
+  # wmst.tau1 must be non-negative.
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "wmst", wmst.tau1 = -1, wmst.tau2 = 12),
+               "wmst.tau1")
+  # medsurv.bw, when supplied, must be positive.
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "medsurv", medsurv.bw = 0), "medsurv.bw")
+  # match.arg guards the method and weight selectors.
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "medsurv", medsurv.method = "bogus"))
+  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
+                             stat = "wkm", wkm.weight = "bogus"))
+})

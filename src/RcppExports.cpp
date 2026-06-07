@@ -39,8 +39,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // analysis_loop_core
-List analysis_loop_core(const IntegerVector& sim_ptr, const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, int look_type, const NumericVector& look_values, const IntegerVector& pop_col, const IntegerVector& pop_level, const IntegerMatrix& sub_mat, const IntegerVector& strata, bool use_strata, bool do_logrank, bool do_coxph, bool do_rmst, bool do_km, bool do_maxcombo, bool do_ahsw, bool do_milestone, bool do_rmw, bool do_ahr, int weight_scheme, double rho, double gamma, double t_star, const NumericVector& mc_rho, const NumericVector& mc_gamma, double tau, double t_eval, double s_star);
-RcppExport SEXP _FastSurvival_analysis_loop_core(SEXP sim_ptrSEXP, SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP look_typeSEXP, SEXP look_valuesSEXP, SEXP pop_colSEXP, SEXP pop_levelSEXP, SEXP sub_matSEXP, SEXP strataSEXP, SEXP use_strataSEXP, SEXP do_logrankSEXP, SEXP do_coxphSEXP, SEXP do_rmstSEXP, SEXP do_kmSEXP, SEXP do_maxcomboSEXP, SEXP do_ahswSEXP, SEXP do_milestoneSEXP, SEXP do_rmwSEXP, SEXP do_ahrSEXP, SEXP weight_schemeSEXP, SEXP rhoSEXP, SEXP gammaSEXP, SEXP t_starSEXP, SEXP mc_rhoSEXP, SEXP mc_gammaSEXP, SEXP tauSEXP, SEXP t_evalSEXP, SEXP s_starSEXP) {
+List analysis_loop_core(const IntegerVector& sim_ptr, const NumericVector& accrual, const NumericVector& tte, const IntegerVector& event, const IntegerVector& j, int look_type, const NumericVector& look_values, const IntegerVector& pop_col, const IntegerVector& pop_level, const IntegerMatrix& sub_mat, const IntegerVector& strata, bool use_strata, bool do_logrank, bool do_coxph, bool do_rmst, bool do_km, bool do_maxcombo, bool do_ahsw, bool do_milestone, bool do_rmw, bool do_ahr, bool do_medsurv, bool do_wkm, bool do_wmst, int weight_scheme, double rho, double gamma, double t_star, const NumericVector& mc_rho, const NumericVector& mc_gamma, double tau, double t_eval, double s_star, double wmst_tau1, double wmst_tau2, int wkm_weight, double medsurv_bw);
+RcppExport SEXP _FastSurvival_analysis_loop_core(SEXP sim_ptrSEXP, SEXP accrualSEXP, SEXP tteSEXP, SEXP eventSEXP, SEXP jSEXP, SEXP look_typeSEXP, SEXP look_valuesSEXP, SEXP pop_colSEXP, SEXP pop_levelSEXP, SEXP sub_matSEXP, SEXP strataSEXP, SEXP use_strataSEXP, SEXP do_logrankSEXP, SEXP do_coxphSEXP, SEXP do_rmstSEXP, SEXP do_kmSEXP, SEXP do_maxcomboSEXP, SEXP do_ahswSEXP, SEXP do_milestoneSEXP, SEXP do_rmwSEXP, SEXP do_ahrSEXP, SEXP do_medsurvSEXP, SEXP do_wkmSEXP, SEXP do_wmstSEXP, SEXP weight_schemeSEXP, SEXP rhoSEXP, SEXP gammaSEXP, SEXP t_starSEXP, SEXP mc_rhoSEXP, SEXP mc_gammaSEXP, SEXP tauSEXP, SEXP t_evalSEXP, SEXP s_starSEXP, SEXP wmst_tau1SEXP, SEXP wmst_tau2SEXP, SEXP wkm_weightSEXP, SEXP medsurv_bwSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,6 +65,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type do_milestone(do_milestoneSEXP);
     Rcpp::traits::input_parameter< bool >::type do_rmw(do_rmwSEXP);
     Rcpp::traits::input_parameter< bool >::type do_ahr(do_ahrSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_medsurv(do_medsurvSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_wkm(do_wkmSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_wmst(do_wmstSEXP);
     Rcpp::traits::input_parameter< int >::type weight_scheme(weight_schemeSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
@@ -74,7 +77,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
     Rcpp::traits::input_parameter< double >::type t_eval(t_evalSEXP);
     Rcpp::traits::input_parameter< double >::type s_star(s_starSEXP);
-    rcpp_result_gen = Rcpp::wrap(analysis_loop_core(sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star));
+    Rcpp::traits::input_parameter< double >::type wmst_tau1(wmst_tau1SEXP);
+    Rcpp::traits::input_parameter< double >::type wmst_tau2(wmst_tau2SEXP);
+    Rcpp::traits::input_parameter< int >::type wkm_weight(wkm_weightSEXP);
+    Rcpp::traits::input_parameter< double >::type medsurv_bw(medsurv_bwSEXP);
+    rcpp_result_gen = Rcpp::wrap(analysis_loop_core(sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -309,7 +316,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_ahr_core", (DL_FUNC) &_FastSurvival_ahr_core, 5},
     {"_FastSurvival_ahsw_core", (DL_FUNC) &_FastSurvival_ahsw_core, 3},
-    {"_FastSurvival_analysis_loop_core", (DL_FUNC) &_FastSurvival_analysis_loop_core, 30},
+    {"_FastSurvival_analysis_loop_core", (DL_FUNC) &_FastSurvival_analysis_loop_core, 37},
     {"_FastSurvival_combo_logrank_core", (DL_FUNC) &_FastSurvival_combo_logrank_core, 5},
     {"_FastSurvival_km_core", (DL_FUNC) &_FastSurvival_km_core, 3},
     {"_FastSurvival_logrank_core", (DL_FUNC) &_FastSurvival_logrank_core, 3},

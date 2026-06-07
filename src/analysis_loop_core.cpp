@@ -39,6 +39,59 @@ void milestone_core_impl(const double*, const int*, const int*, int, double,
 void rmw_core_impl(const double*, const int*, const int*, int, double, double*);
 void ahr_core_two_impl(const double*, const int*, int, const double*,
                        const int*, int, double, double*);
+struct WmstEvSummary {
+  double e_time; double at_risk; int n_event; double surv_after; double tail;
+};
+void wmst_core_impl(const double*, const int*, int, double, double,
+                    std::vector<WmstEvSummary>&, double*);
+struct WkmScratch {
+  std::vector<double> width; std::vector<double> wt;
+  std::vector<double> s1; std::vector<double> s2;
+  std::vector<double> sp; std::vector<double> a_seq;
+};
+void wkm_core_impl(const double*, const int*, const int*, int, int,
+                   WkmScratch&, double*);
+struct MedsurvScratch {
+  std::vector<double> event_time; std::vector<int> event_count;
+  std::vector<double> at_risk; std::vector<double> hazard_incr;
+};
+void medsurv_core_impl(const double*, const int*, int, double,
+                       MedsurvScratch&, double*);
+
+// Silverman type default bandwidth for the median kernel hazard, computed from
+// the event times of a single group. Reproduces the default bw used by
+// medsurv_fast when bw is not supplied: 1.06 sd(evt) m^(-1/5) when the event
+// times have positive spread, falling back to range / max(m, 1)^(1/3), or 1.
+static double silverman_bw(const double* t, const int* e, int n) {
+  double sum = 0.0;
+  int m = 0;
+  for (int k = 0; k < n; ++k) {
+    if (e[k] == 1) { sum += t[k]; ++m; }
+  }
+  if (m >= 2) {
+    double mean = sum / (double) m;
+    double ss = 0.0;
+    for (int k = 0; k < n; ++k) {
+      if (e[k] == 1) { double d = t[k] - mean; ss += d * d; }
+    }
+    double sd = std::sqrt(ss / (double) (m - 1));
+    if (sd > 0.0) {
+      double b = 1.06 * sd * std::pow((double) m, -1.0 / 5.0);
+      if (std::isfinite(b) && b > 0.0) return b;
+    }
+  }
+  double tmin = R_PosInf, tmax = R_NegInf;
+  for (int k = 0; k < n; ++k) {
+    if (e[k] == 1) {
+      if (t[k] < tmin) tmin = t[k];
+      if (t[k] > tmax) tmax = t[k];
+    }
+  }
+  double span = (m >= 1) ? (tmax - tmin) : 0.0;
+  double mm = (m >= 1) ? (double) m : 1.0;
+  if (span > 0.0) return span / std::pow(mm, 1.0 / 3.0);
+  return 1.0;
+}
 
 // Stable LSD radix sort of indices [0, m) by a non-negative double key. The
 // observed time at an administrative cut is always non-negative, so the IEEE
@@ -115,10 +168,12 @@ List analysis_loop_core(
     bool do_logrank, bool do_coxph, bool do_rmst, bool do_km,
     bool do_maxcombo, bool do_ahsw,
     bool do_milestone, bool do_rmw, bool do_ahr,
+    bool do_medsurv, bool do_wkm, bool do_wmst,
     int weight_scheme,              // -1 plain, 0 FH, 1 mwlrt, 2 gehan, 3 tarone-ware
     double rho, double gamma, double t_star,
     const NumericVector& mc_rho, const NumericVector& mc_gamma,
-    double tau, double t_eval, double s_star
+    double tau, double t_eval, double s_star,
+    double wmst_tau1, double wmst_tau2, int wkm_weight, double medsurv_bw
 ) {
   const int nsim    = sim_ptr.size() - 1;
   const int n_looks = look_values.size();
@@ -134,6 +189,7 @@ List analysis_loop_core(
 
   NumericMatrix lr_mat, cox_mat, rmst_mat, km_mat, ahsw_mat, mc_Uout, mc_Vout;
   NumericMatrix ms_mat, rmw_mat, ahr_mat;
+  NumericMatrix medsurv_mat, wkm_mat, wmst_mat;
   if (do_logrank) { lr_mat   = NumericMatrix(ncells, 2); std::fill(lr_mat.begin(),   lr_mat.end(),   NA_REAL); }
   if (do_coxph)   { cox_mat  = NumericMatrix(ncells, 4); std::fill(cox_mat.begin(),  cox_mat.end(),  NA_REAL); }
   if (do_rmst)    { rmst_mat = NumericMatrix(ncells, 4); std::fill(rmst_mat.begin(), rmst_mat.end(), NA_REAL); }
@@ -142,6 +198,9 @@ List analysis_loop_core(
   if (do_milestone) { ms_mat  = NumericMatrix(ncells, 4); std::fill(ms_mat.begin(),  ms_mat.end(),  NA_REAL); }
   if (do_rmw)       { rmw_mat = NumericMatrix(ncells, 5); std::fill(rmw_mat.begin(), rmw_mat.end(), NA_REAL); }
   if (do_ahr)       { ahr_mat = NumericMatrix(ncells, 5); std::fill(ahr_mat.begin(), ahr_mat.end(), NA_REAL); }
+  if (do_medsurv) { medsurv_mat = NumericMatrix(ncells, 10); std::fill(medsurv_mat.begin(), medsurv_mat.end(), NA_REAL); }
+  if (do_wkm)     { wkm_mat  = NumericMatrix(ncells, 4); std::fill(wkm_mat.begin(),  wkm_mat.end(),  NA_REAL); }
+  if (do_wmst)    { wmst_mat = NumericMatrix(ncells, 4); std::fill(wmst_mat.begin(), wmst_mat.end(), NA_REAL); }
   if (do_maxcombo) {
     mc_Uout = NumericMatrix(ncells, nw);      std::fill(mc_Uout.begin(), mc_Uout.end(), NA_REAL);
     mc_Vout = NumericMatrix(ncells, nw * nw); std::fill(mc_Vout.begin(), mc_Vout.end(), NA_REAL);
@@ -174,7 +233,7 @@ List analysis_loop_core(
   std::vector<int>    ei_sel(max_block);
   std::vector<int>    j_sel(max_block);
 
-  // Group-split buffers reused by rmst / km / ahsw.
+  // Group-split buffers reused by rmst / km / ahsw / wmst / medsurv.
   std::vector<double> t0d(max_block), t1d(max_block);
   std::vector<int>    e0i(max_block), e1i(max_block);
   std::vector<double> e0d(max_block), e1d(max_block);
@@ -191,6 +250,9 @@ List analysis_loop_core(
   std::vector<double> mc_w(nw > 0 ? nw : 1);
   std::vector<double> mc_ubuf((size_t)(nw > 0 ? nw : 1));
   std::vector<double> mc_vbuf((size_t)(nw > 0 ? nw : 1) * (nw > 0 ? nw : 1));
+  std::vector<WmstEvSummary> wmst_ev;
+  WkmScratch wkm_sc;
+  MedsurvScratch medsurv_sc;
 
   int pos = 0;
   for (int si = 0; si < nsim; ++si) {
@@ -355,10 +417,12 @@ List analysis_loop_core(
           cox_mat(pos, 2) = r[2]; cox_mat(pos, 3) = r[3];
         }
 
-        // Group splits reused by rmst / km / ahsw.
+        // Group splits reused by rmst / km / ahsw / wmst / medsurv.
         const bool need_split = (do_rmst && both) || do_km ||
                                 (do_ahsw && n_ev > 0 && both) ||
-                                (do_ahr && n_ev > 0 && both);
+                                (do_ahr && n_ev > 0 && both) ||
+                                (do_wmst && both) ||
+                                (do_medsurv && both);
         if (need_split) {
           int a0 = 0, a1 = 0;
           for (int k = 0; k < sz; ++k) {
@@ -446,6 +510,49 @@ List analysis_loop_core(
           ahr_mat(pos, 4) = ar[4];  // var_theta2
         }
 
+        // ---- Window mean survival time -----------------------------------
+        if (do_wmst && both) {
+          double w0[2], w1[2];
+          wmst_core_impl(t0d.data(), e0i.data(), n0, wmst_tau1, wmst_tau2,
+                         wmst_ev, w0);
+          wmst_core_impl(t1d.data(), e1i.data(), n1, wmst_tau1, wmst_tau2,
+                         wmst_ev, w1);
+          wmst_mat(pos, 0) = w0[0]; wmst_mat(pos, 1) = w0[1];
+          wmst_mat(pos, 2) = w1[0]; wmst_mat(pos, 3) = w1[1];
+        }
+
+        // ---- Weighted Kaplan-Meier (Pepe-Fleming, pooled) ----------------
+        if (do_wkm && n_ev > 0 && both) {
+          double wk[4];
+          wkm_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
+                        wkm_weight, wkm_sc, wk);
+          wkm_mat(pos, 0) = wk[0];  // num_raw
+          wkm_mat(pos, 1) = wk[1];  // variance
+          wkm_mat(pos, 2) = wk[2];  // n1 (treatment)
+          wkm_mat(pos, 3) = wk[3];  // n2 (control)
+        }
+
+        // ---- Median survival (per-group KM + variance summaries) ---------
+        if (do_medsurv && both) {
+          double bw0 = (medsurv_bw > 0.0) ? medsurv_bw
+                                          : silverman_bw(t0d.data(), e0i.data(), n0);
+          double bw1 = (medsurv_bw > 0.0) ? medsurv_bw
+                                          : silverman_bw(t1d.data(), e1i.data(), n1);
+          double m0[6], m1[6];
+          medsurv_core_impl(t0d.data(), e0i.data(), n0, bw0, medsurv_sc, m0);
+          medsurv_core_impl(t1d.data(), e1i.data(), n1, bw1, medsurv_sc, m1);
+          medsurv_mat(pos, 0) = m0[0];  // median (control)
+          medsurv_mat(pos, 1) = m0[2];  // greenwood
+          medsurv_mat(pos, 2) = m0[3];  // kernel hazard
+          medsurv_mat(pos, 3) = m0[4];  // nph variance increment
+          medsurv_mat(pos, 4) = m0[5];  // local hazard
+          medsurv_mat(pos, 5) = m1[0];  // median (treatment)
+          medsurv_mat(pos, 6) = m1[2];
+          medsurv_mat(pos, 7) = m1[3];
+          medsurv_mat(pos, 8) = m1[4];
+          medsurv_mat(pos, 9) = m1[5];
+        }
+
         ++pos;
       }
     }
@@ -466,6 +573,9 @@ List analysis_loop_core(
     _["mc_V"]       = do_maxcombo ? (SEXP) mc_Vout  : R_NilValue,
     _["milestone"]  = do_milestone ? (SEXP) ms_mat  : R_NilValue,
     _["rmw"]        = do_rmw       ? (SEXP) rmw_mat : R_NilValue,
-    _["ahr"]        = do_ahr       ? (SEXP) ahr_mat : R_NilValue
+    _["ahr"]        = do_ahr       ? (SEXP) ahr_mat : R_NilValue,
+    _["medsurv"]    = do_medsurv  ? (SEXP) medsurv_mat : R_NilValue,
+    _["wkm"]        = do_wkm      ? (SEXP) wkm_mat  : R_NilValue,
+    _["wmst"]       = do_wmst     ? (SEXP) wmst_mat : R_NilValue
   );
 }

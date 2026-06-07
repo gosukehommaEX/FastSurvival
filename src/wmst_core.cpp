@@ -4,6 +4,21 @@
 #include <cmath>
 using namespace Rcpp;
 
+// Per-event-time summary for the WMST computation. Defined at file scope so the
+// pointer-based implementation can take a reusable buffer of it from the caller
+// and avoid reallocating per cell in a fused simulation loop.
+struct WmstEvSummary {
+  double e_time;
+  double at_risk;
+  int n_event;
+  double surv_after;
+  double tail;
+};
+
+// Forward declaration of the pointer-based implementation (defined below).
+void wmst_core_impl(const double*, const int*, int, double, double,
+                    std::vector<WmstEvSummary>&, double*);
+
 // Single-scan core for the window mean survival time (WMST).
 //
 // For each group g in 0, ..., ngroup - 1 the function walks the time-sorted
@@ -27,80 +42,98 @@ NumericMatrix wmst_core(NumericVector time, IntegerVector event, IntegerVector g
   int n = time.size();
   NumericMatrix out(ngroup, 2);
 
+  std::vector<WmstEvSummary> ev;
+  std::vector<double> tg;
+  std::vector<int> eg;
+  tg.reserve(n);
+  eg.reserve(n);
+
   for (int g = 0; g < ngroup; ++g) {
-    int atrisk = 0;
+    tg.clear();
+    eg.clear();
     for (int i = 0; i < n; ++i) {
-      if (grp[i] == g) ++atrisk;
-    }
-
-    double surv = 1.0;
-    std::vector<double> e_time;
-    std::vector<double> at_risk;
-    std::vector<double> surv_after;
-    std::vector<int> n_event;
-
-    int i = 0;
-    while (i < n) {
-      double t0 = time[i];
-      if (t0 > tau2) break;
-      int d = 0, n_record = 0, j = i;
-      while (j < n && time[j] == t0) {
-        if (grp[j] == g) {
-          ++n_record;
-          if (event[j] == 1) ++d;
-        }
-        ++j;
-      }
-      int y = atrisk;
-      if (d > 0 && y > 0) {
-        surv *= (1.0 - (double) d / y);
-        e_time.push_back(t0);
-        at_risk.push_back((double) y);
-        surv_after.push_back(surv);
-        n_event.push_back(d);
-      }
-      atrisk -= n_record;
-      i = j;
-    }
-
-    int m = (int) e_time.size();
-
-    double wmst = 0.0;
-    double prev_t = 0.0, prev_s = 1.0;
-    for (int k = 0; k < m; ++k) {
-      double lo = std::max(prev_t, tau1);
-      double hi = std::min(e_time[k], tau2);
-      if (hi > lo) wmst += prev_s * (hi - lo);
-      prev_t = e_time[k];
-      prev_s = surv_after[k];
-    }
-    {
-      double lo = std::max(prev_t, tau1);
-      double hi = tau2;
-      if (hi > lo) wmst += prev_s * (hi - lo);
-    }
-
-    std::vector<double> tail(m, 0.0);
-    if (m >= 1) {
-      tail[m - 1] = surv_after[m - 1] * (tau2 - e_time[m - 1]);
-      for (int k = m - 2; k >= 0; --k) {
-        tail[k] = surv_after[k] * (e_time[k + 1] - e_time[k]) + tail[k + 1];
+      if (grp[i] == g) {
+        tg.push_back(time[i]);
+        eg.push_back(event[i]);
       }
     }
-
-    double variance = 0.0;
-    for (int k = 0; k < m; ++k) {
-      double rw = (e_time[k] >= tau1) ? tail[k] : wmst;
-      double y = at_risk[k];
-      int d = n_event[k];
-      if (y - d > 0) {
-        variance += rw * rw * (double) d / (y * (y - (double) d));
-      }
-    }
-
-    out(g, 0) = wmst;
-    out(g, 1) = variance;
+    double res[2];
+    wmst_core_impl(tg.data(), eg.data(), (int) tg.size(), tau1, tau2, ev, res);
+    out(g, 0) = res[0];
+    out(g, 1) = res[1];
   }
 
   return out;
+}
+
+// Pointer-based implementation with external linkage. The input must be a
+// single group, sorted by time in ascending order. Writes wmst, var into
+// out[0..1]. The per-event-time summaries are stored in the caller-supplied
+// buffer ev, which is cleared on entry and reused across cells. Algorithm
+// identical to the per-group body of the exported wrapper above.
+void wmst_core_impl(const double* time, const int* event, int n,
+                    double tau1, double tau2,
+                    std::vector<WmstEvSummary>& ev, double* out) {
+  ev.clear();
+  if ((int) ev.capacity() < n) ev.reserve(n);
+
+  int atrisk = n;
+  double surv = 1.0;
+
+  int i = 0;
+  while (i < n) {
+    double t0 = time[i];
+    if (t0 > tau2) break;
+    int d = 0, n_record = 0, j = i;
+    while (j < n && time[j] == t0) {
+      ++n_record;
+      if (event[j] == 1) ++d;
+      ++j;
+    }
+    int y = atrisk;
+    if (d > 0 && y > 0) {
+      surv *= (1.0 - (double) d / y);
+      ev.push_back(WmstEvSummary{t0, (double) y, d, surv, 0.0});
+    }
+    atrisk -= n_record;
+    i = j;
+  }
+
+  int m = (int) ev.size();
+
+  double wmst = 0.0;
+  double prev_t = 0.0, prev_s = 1.0;
+  for (int k = 0; k < m; ++k) {
+    double lo = std::max(prev_t, tau1);
+    double hi = std::min(ev[k].e_time, tau2);
+    if (hi > lo) wmst += prev_s * (hi - lo);
+    prev_t = ev[k].e_time;
+    prev_s = ev[k].surv_after;
+  }
+  {
+    double lo = std::max(prev_t, tau1);
+    double hi = tau2;
+    if (hi > lo) wmst += prev_s * (hi - lo);
+  }
+
+  if (m >= 1) {
+    ev[m - 1].tail = ev[m - 1].surv_after * (tau2 - ev[m - 1].e_time);
+    for (int k = m - 2; k >= 0; --k) {
+      ev[k].tail = ev[k].surv_after * (ev[k + 1].e_time - ev[k].e_time) +
+                   ev[k + 1].tail;
+    }
+  }
+
+  double variance = 0.0;
+  for (int k = 0; k < m; ++k) {
+    double rw = (ev[k].e_time >= tau1) ? ev[k].tail : wmst;
+    double y = ev[k].at_risk;
+    int d = ev[k].n_event;
+    if (y - d > 0) {
+      variance += rw * rw * (double) d / (y * (y - (double) d));
+    }
+  }
+
+  out[0] = wmst;
+  out[1] = variance;
 }
