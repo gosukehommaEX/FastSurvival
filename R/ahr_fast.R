@@ -25,17 +25,20 @@
 #' Uno-Horiguchi average hazard with survival weight.
 #'
 #' @param time vector of right-censored event times
-#' @param status 0/1 (or logical) event indicators, 1 for an event
+#' @param event 0/1 (or logical) event indicators, 1 for an event
 #' @param group vector with exactly two distinct values identifying the groups.
 #' @param control the value of \code{group} that denotes the reference (control)
 #'   group. The average hazard ratio is reported for the other group relative to
 #'   it.
+#' @param side 1 for a one-sided test in the direction of treatment benefit
+#'   (average hazard ratio below \code{null.ahr}) or 2 for a two-sided test
+#'   (default 2).
+#' @param conf.level confidence level for the confidence interval (default 0.95)
 #' @param tau upper limit of the interval over which the average hazard ratio is
 #'   computed. If \code{NULL} (default) the largest time observed in both groups
 #'   is used.
 #' @param null.ahr value of the average hazard ratio under the null hypothesis
 #'   used for the Z statistic and p-value (default 1)
-#' @param conf.level confidence level for the confidence interval (default 0.95)
 #' @param presorted if \code{TRUE}, assume \code{time} is already sorted in
 #'   ascending order so that each group's observations are also ascending; this
 #'   skips the internal sort (default \code{FALSE})
@@ -48,7 +51,7 @@
 #'   \code{log(ahr)} scale), \code{se.theta} (standard error of the tested
 #'   comparison-group share), \code{null.share}, \code{null.ahr}, \code{theta}
 #'   (the two group shares), \code{var.theta1}, \code{var.theta2},
-#'   \code{tau}, \code{n} (the two group sizes) and \code{groups}.
+#'   \code{side}, \code{tau}, \code{n} (the two group sizes) and \code{groups}.
 #' @references
 #' Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
 #' hazard ratio. \emph{Biometrika}, \emph{68}(1), 105-112.
@@ -65,22 +68,26 @@
 #' time2 <- rexp(n, 0.18)
 #' cens <- rexp(2 * n, 0.05)
 #' obs <- pmin(c(time1, time2), cens)
-#' status <- as.integer(c(time1, time2) <= cens)
+#' event <- as.integer(c(time1, time2) <= cens)
 #' group <- rep(c(0, 1), each = n)
-#' ahr_fast(obs, status, group, control = 0, tau = 8)
-ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
-                     conf.level = 0.95, presorted = FALSE) {
+#' ahr_fast(obs, event, group, control = 0, tau = 8)
+ahr_fast <- function(time, event, group, control, side = 2,
+                     conf.level = 0.95, tau = NULL, null.ahr = 1,
+                     presorted = FALSE) {
 
   # Input validation
   if (!is.numeric(time)) stop("'time' must be numeric.")
-  status <- as.integer(status)
-  if (length(time) != length(status) || length(time) != length(group)) {
-    stop("'time', 'status' and 'group' must have the same length.")
+  event <- as.integer(event)
+  if (!side %in% c(1L, 2L)) {
+    stop("'side' must be either 1 (one-sided) or 2 (two-sided).")
   }
-  if (anyNA(time) || anyNA(status) || anyNA(group)) {
-    stop("'time', 'status' and 'group' must not contain missing values.")
+  if (length(time) != length(event) || length(time) != length(group)) {
+    stop("'time', 'event' and 'group' must have the same length.")
   }
-  if (any(!(status %in% c(0L, 1L)))) stop("'status' must be 0 or 1.")
+  if (anyNA(time) || anyNA(event) || anyNA(group)) {
+    stop("'time', 'event' and 'group' must not contain missing values.")
+  }
+  if (any(!(event %in% c(0L, 1L)))) stop("'event' must be 0 or 1.")
   if (any(time < 0)) stop("'time' must be non-negative.")
   if (!is.numeric(null.ahr) || length(null.ahr) != 1 || null.ahr <= 0) {
     stop("'null.ahr' must be a single positive number.")
@@ -102,9 +109,9 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
   sel1 <- group == ref
   sel2 <- group == cmp
   time1 <- time[sel1]
-  status1 <- status[sel1]
+  event1 <- event[sel1]
   time2 <- time[sel2]
-  status2 <- status[sel2]
+  event2 <- event[sel2]
   n1 <- length(time1)
   n2 <- length(time2)
   if (n1 == 0 || n2 == 0) stop("Both groups must be non-empty.")
@@ -113,9 +120,9 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
     ord1 <- order(time1)
     ord2 <- order(time2)
     time1 <- time1[ord1]
-    status1 <- status1[ord1]
+    event1 <- event1[ord1]
     time2 <- time2[ord2]
-    status2 <- status2[ord2]
+    event2 <- event2[ord2]
   }
 
   if (is.null(tau)) {
@@ -127,11 +134,11 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
   }
 
   # Common evaluation grid: 0, distinct event times up to tau, and tau
-  events <- c(time1[status1 == 1], time2[status2 == 1])
+  events <- c(time1[event1 == 1], time2[event2 == 1])
   events <- events[events <= tau]
   eval_times <- sort(unique(c(0, events, tau)))
 
-  core <- ahr_core(time1, status1, time2, status2, eval_times)
+  core <- ahr_core(time1, event1, time2, event2, eval_times)
 
   theta1 <- core[["theta1"]]
   theta2 <- core[["theta2"]]
@@ -152,7 +159,14 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
     se.theta <- sqrt(var.theta2)
     null.share <- null.ahr / (1 + null.ahr)
     z <- (theta2 - null.share) / se.theta
-    p.value <- 2 * stats::pnorm(-abs(z))
+    # Treatment benefit corresponds to an average hazard ratio below null.ahr,
+    # i.e. a comparison-group share below null.share, hence a negative z. A
+    # one-sided test (side = 1) uses the lower tail.
+    p.value <- if (side == 1L) {
+      stats::pnorm(z)
+    } else {
+      2 * stats::pnorm(-abs(z))
+    }
 
     # Average hazard ratio effect: log-scale confidence interval and the
     # equivalent test on the log(ahr) scale (using var.theta1, as the AHR
@@ -160,7 +174,11 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
     log.ahr <- log(ahr)
     se.loghr <- sqrt(var.theta1 / (theta1 * theta2)^2)
     z.loghr <- (log.ahr - log(null.ahr)) / se.loghr
-    p.value.loghr <- 2 * stats::pnorm(-abs(z.loghr))
+    p.value.loghr <- if (side == 1L) {
+      stats::pnorm(z.loghr)
+    } else {
+      2 * stats::pnorm(-abs(z.loghr))
+    }
     zq <- stats::qnorm(1 - (1 - conf.level) / 2)
     lower <- exp(log.ahr - zq * se.loghr)
     upper <- exp(log.ahr + zq * se.loghr)
@@ -182,7 +200,7 @@ ahr_fast <- function(time, status, group, control, tau = NULL, null.ahr = 1,
               null.share = null.share, z.loghr = z.loghr,
               p.value.loghr = p.value.loghr, null.ahr = null.ahr,
               theta = theta, var.theta1 = var.theta1, var.theta2 = var.theta2,
-              tau = tau, n = n, groups = c(ref, cmp))
+              side = side, tau = tau, n = n, groups = c(ref, cmp))
   class(out) <- "ahr_fast"
   out
 }

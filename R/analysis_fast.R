@@ -139,7 +139,7 @@
 #'   requested.
 #' @param t.eval A single positive numeric value, the landmark time for
 #'   \code{"km"}. Required only when \code{"km"} is requested.
-#' @param conf.int A single numeric value in (0, 1), the confidence level for
+#' @param conf.level A single numeric value in (0, 1), the confidence level for
 #'   \code{"coxph"}, \code{"rmst"}, and \code{"ahsw"}. Defaults to 0.95.
 #' @param side An integer, either 1 or 2. When \code{side = 2} (default),
 #'   two-sided p-values \code{2 pnorm(-|z|)} are reported for log-rank, Cox, and
@@ -282,7 +282,7 @@ analysis_fast <- function(data, control,
                           event.looks = NULL, time.looks = NULL,
                           stat = "logrank",
                           tau = NULL, t.eval = NULL,
-                          conf.int = 0.95,
+                          conf.level = 0.95,
                           side = 2,
                           by.subgroup = FALSE,
                           weight = c("logrank", "fh", "mwlrt", "gehan",
@@ -321,7 +321,7 @@ analysis_fast <- function(data, control,
   }
   stat <- unique(stat)
 
-  if (conf.int <= 0 || conf.int >= 1) stop("'conf.int' must be in (0, 1)")
+  if (conf.level <= 0 || conf.level >= 1) stop("'conf.level' must be in (0, 1)")
   if (length(side) != 1L || !side %in% c(1, 2)) {
     stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
   }
@@ -479,7 +479,7 @@ analysis_fast <- function(data, control,
   )
 
   total <- nsim * length(looks) * n_pop
-  z_mult <- qnorm(1 - (1 - conf.int) / 2)
+  z_mult <- qnorm(1 - (1 - conf.level) / 2)
 
   # p-value helper matching analysis_fast's p_from_z.
   p_from_z <- function(z, eff_dir) {

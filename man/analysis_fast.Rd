@@ -12,7 +12,7 @@ analysis_fast(
   stat = "logrank",
   tau = NULL,
   t.eval = NULL,
-  conf.int = 0.95,
+  conf.level = 0.95,
   side = 2,
   by.subgroup = FALSE,
   weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
@@ -56,7 +56,7 @@ requested.}
 \item{t.eval}{A single positive numeric value, the landmark time for
 \code{"km"}. Required only when \code{"km"} is requested.}
 
-\item{conf.int}{A single numeric value in (0, 1), the confidence level for
+\item{conf.level}{A single numeric value in (0, 1), the confidence level for
 \code{"coxph"}, \code{"rmst"}, and \code{"ahsw"}. Defaults to 0.95.}
 
 \item{side}{An integer, either 1 or 2. When \code{side = 2} (default),

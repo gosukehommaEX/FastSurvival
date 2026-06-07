@@ -33,9 +33,14 @@ print.maxcombo_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
   rho   <- attr(x, "rho")
   gamma <- attr(x, "gamma")
   n     <- attr(x, "n")
+  control <- attr(x, "control")
 
   cat("Max-combo weighted log-rank test (two-group)\n\n")
-  cat(sprintf("  N = %d\n", n))
+  if (is.null(control)) {
+    cat(sprintf("  N = %d\n", n))
+  } else {
+    cat(sprintf("  N = %d,  control = %s\n", n, format(control)))
+  }
 
   stat_val <- as.numeric(x["statistic"])
   p_val    <- as.numeric(x["p.value"])
@@ -56,14 +61,15 @@ print.maxcombo_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
   cat("\n")
 
   if (side == 1L) {
-    cat(sprintf(" Max-combo statistic = %s (one-sided),  p-value = %s\n",
+    cat(sprintf(" Max-combo statistic = %s (one-sided),  p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   } else {
-    cat(sprintf(" Max-combo statistic = %s (two-sided),  p-value = %s\n",
+    cat(sprintf(" Max-combo statistic = %s (two-sided),  p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   }
+  cat(signif_legend())
 
   invisible(x)
 }

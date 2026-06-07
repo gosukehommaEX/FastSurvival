@@ -30,13 +30,17 @@
 print.ahsw_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
                             ...) {
   tau      <- attr(x, "tau")
-  conf.int <- attr(x, "conf.int")
-  if (is.null(conf.int)) conf.int <- 0.95
-  ci_lab   <- conf.int * 100
+  conf.level <- attr(x, "conf.level")
+  if (is.null(conf.level)) conf.level <- 0.95
+  ci_lab   <- conf.level * 100
   control  <- attr(x, "control")
+  side     <- attr(x, "side")
+  if (is.null(side)) side <- 2L
 
   cat("Average hazard with survival weight (two-group)\n\n")
-  cat(sprintf("  tau = %g,  control = %s\n\n", tau, format(control)))
+  cat(sprintf("  tau = %g,  control = %s\n", tau, format(control)))
+  cat(sprintf("  alternative = %s\n\n",
+              if (side == 1L) "one.sided" else "two.sided"))
 
   if (is.na(x[["ah.ctrl"]]) || is.na(x[["ah.trt"]])) {
     cat("  Estimate not available (zero survival at tau or non-finite",

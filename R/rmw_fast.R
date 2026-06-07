@@ -51,10 +51,10 @@
 #' @param group A vector of group labels aligned with \code{time}.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
-#' @param side An integer, either 1 or 2. If \code{side = 1}, the statistic is
-#'   the minimum of the two standardized components and a one-sided p-value is
-#'   returned. If \code{side = 2}, the statistic is the maximum of their
-#'   absolute values and a two-sided p-value is returned.
+#' @param side An integer, either 1 or 2 (default 2). If \code{side = 1}, the
+#'   statistic is the minimum of the two standardized components and a one-sided
+#'   p-value is returned. If \code{side = 2}, the statistic is the maximum of
+#'   their absolute values and a two-sided p-value is returned.
 #' @param s_star A single numeric value in \code{(0, 1]}, the
 #'   survival-probability threshold of the modestly-weighted component. The
 #'   weight is capped at \code{1 / s_star}. Defaults to 0.5. A value of 1 caps
@@ -110,7 +110,7 @@
 #' \emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
 #'
 #' @export
-rmw_fast <- function(time, event, group, control, side,
+rmw_fast <- function(time, event, group, control, side = 2,
                      s_star = 0.5, presorted = FALSE) {
 
   # Input validation
@@ -156,7 +156,7 @@ rmw_fast <- function(time, event, group, control, side,
       c(statistic = NA_real_, p.value = NA_real_),
       z = c(logrank = NA_real_, mwlrt = NA_real_),
       corr = matrix(NA_real_, 2L, 2L),
-      s_star = s_star, O1 = O1, side = side, n = n_total,
+      s_star = s_star, O1 = O1, side = side, n = n_total, control = control,
       class = "rmw_fast"
     ))
   }
@@ -194,7 +194,7 @@ rmw_fast <- function(time, event, group, control, side,
   structure(
     c(statistic = stat, p.value = p),
     z = z, corr = matrix(c(1, rho, rho, 1), 2L, 2L),
-    s_star = s_star, O1 = O1, side = side, n = n_total,
+    s_star = s_star, O1 = O1, side = side, n = n_total, control = control,
     class = "rmw_fast"
   )
 }

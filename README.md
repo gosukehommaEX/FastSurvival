@@ -34,9 +34,12 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | `survdiff_fast()` | Log-rank test, including weighted (Fleming-Harrington, modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified variants. |
 | `coxph_fast()` | Closed-form hazard ratio via the Pike-Halley Estimator with a Wald confidence interval. |
 | `rmst_fast()` | Restricted mean survival time for a single group or a two-group comparison (difference and ratio). |
+| `wmst_fast()` | Window mean survival time over an interval, generalizing the restricted mean survival time, for a single group or a two-group comparison. |
 | `milestone_fast()` | Two-group comparison of Kaplan-Meier survival at a milestone timepoint (Wald, log-log, and MOVER methods). |
+| `medsurv_fast()` | Median survival time for a single group or a two-group comparison, with a native and an `nph`-compatible variance method. |
 | `maxcombo_fast()` | Max-combo test, the maximum over a set of Fleming-Harrington weighted log-rank statistics, for non-proportional hazards. |
 | `rmw_fast()` | Robust modestly-weighted test (Magirr and Öhrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
+| `wkm_fast()` | Weighted Kaplan-Meier (Pepe-Fleming) test, the weighted integrated difference between two Kaplan-Meier curves, for non-proportional hazards. |
 | `ahsw_fast()` | Average hazard with survival weight of Uno and Horiguchi, with ratio and difference contrasts. |
 | `ahr_fast()` | Kalbfleisch-Prentice average hazard ratio between two groups over a restricted interval, for non-proportional hazards. |
 
@@ -94,6 +97,22 @@ coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 # ----------------------------------------------------------------
 rmst_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
           control = 1, tau = 500)
+
+# ----------------------------------------------------------------
+# wmst_fast(): window mean survival time over [100, 500]
+# ----------------------------------------------------------------
+wmst_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+          control = 1, tau1 = 100, tau2 = 500)
+
+# ----------------------------------------------------------------
+# medsurv_fast(): median survival time (two-group)
+# ----------------------------------------------------------------
+medsurv_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+
+# ----------------------------------------------------------------
+# wkm_fast(): weighted Kaplan-Meier (Pepe-Fleming) test
+# ----------------------------------------------------------------
+wkm_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 
 # ----------------------------------------------------------------
 # simdata_fast(): clinical trial simulation
@@ -160,12 +179,31 @@ returns the RMST with a Greenwood-type standard error and a Wald confidence
 interval; with two groups it adds the RMST difference and ratio contrasts,
 each with a standard error, confidence interval, and two-sided test.
 
+**wmst_fast** computes the window mean survival time, the area under the
+Kaplan-Meier curve between a lower and an upper window limit, generalizing the
+restricted mean survival time (which is the special case with a lower limit of
+zero). It targets late differences and early crossings by focusing the mean
+on a clinically relevant window, following Paukner and Chappell (2021). The
+same single C++ scan as `rmst_fast` accumulates the windowed area and a
+Greenwood-type variance in which each event time contributes its squared
+remaining window area. With two groups it reports the difference (treatment
+minus control) with a standard error, confidence interval, and two-sided test.
+
 **milestone_fast** compares the Kaplan-Meier survival probabilities of two
 groups at a prespecified milestone timepoint, estimating the difference
 (treatment minus control). Three inference methods are provided: a Greenwood
 Wald interval, and two methods that build the difference interval by the
 method of variance estimates recovery (MOVER) from complementary log-log and
 log transformed one-sample intervals, following Tang (2021).
+
+**medsurv_fast** estimates the Kaplan-Meier median survival time and, for two
+groups, the difference (treatment minus control), in a single C++ scan that
+locates the median on the Kaplan-Meier curve. Because the variance of a
+quantile depends on the local hazard, two variance methods are provided: a
+native method using a kernel-smoothed hazard with a Greenwood increment, and an
+`nph`-compatible method using a local constant hazard, which reproduces the
+standard error and p-value of the median comparison in the `nph` package to
+numerical precision. The point estimate is the same under both methods.
 
 **maxcombo_fast** computes the max-combo test, the maximum over a set of
 Fleming-Harrington weighted log-rank statistics, for comparing survival
@@ -189,6 +227,18 @@ components and the components are strongly correlated under the null, the
 multiplicity adjustment is small, so the test loses little power relative to
 the log-rank test in worst-case scenarios while gaining power under delayed
 effects.
+
+**wkm_fast** computes the weighted Kaplan-Meier test of Pepe and Fleming
+(1989), the weighted integral of the difference between the two Kaplan-Meier
+curves, standardized to a Wald z statistic. Unlike weighted log-rank tests it
+targets the integrated difference in survival and remains sensitive when the
+hazards cross. The default Pepe-Fleming combined weight, built from the
+censoring distributions of the two groups, gives less weight to regions with
+heavy
+censoring; square-root and constant weights are also available. The single C++
+scan evaluates the per-group Kaplan-Meier curves, the censoring weights, and
+the variance over the pooled event grid, and the result reproduces the
+weighted Kaplan-Meier statistic of the `nphsim` package.
 
 **ahsw_fast** computes the average hazard with survival weight of Uno and
 Horiguchi for two groups. The average hazard on the window up to a horizon
@@ -314,6 +364,14 @@ survival distributions. *Biometrika*, 64, 156-160.
 Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and Survival
 Analysis*. New York: John Wiley & Sons.
  
+Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics: a
+class of distance tests for censored survival data. *Biometrics*, 45(2),
+497-507.
+ 
+Pepe, M. S., & Fleming, T. R. (1991). Weighted Kaplan-Meier statistics: large
+sample and optimality considerations. *Journal of the Royal Statistical
+Society. Series B (Methodological)*, 53(2), 341-352.
+ 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, 38(20), 3782-3790.
  
@@ -331,6 +389,9 @@ Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time: an
 alternative to the hazard ratio for the design and analysis of randomized
 trials with a time-to-event outcome. *BMC Medical Research Methodology*, 13,
 152.
+ 
+Paukner, M., & Chappell, R. (2021). Window mean survival time. *Statistics in
+Medicine*, 40(25), 5521-5533.
  
 Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
 ratio in quantifying the between-group difference in survival analysis.

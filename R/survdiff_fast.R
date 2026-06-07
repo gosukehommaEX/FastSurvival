@@ -79,8 +79,8 @@
 #' @param group A vector of group labels aligned with \code{time}.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
-#' @param side An integer, either 1 or 2. If \code{side = 1}, returns the
-#'   standardized log-rank statistic (Z-score), defined as
+#' @param side An integer, either 1 or 2 (default 2). If \code{side = 1}, returns
+#'   the standardized log-rank statistic (Z-score), defined as
 #'   \code{(O_1 - E_1) / sqrt(V_1)} for the treatment group, so the Z-score is
 #'   negative when the treatment group has fewer events than expected (a
 #'   protective treatment effect). If \code{side = 2}, returns the chi-square
@@ -204,7 +204,7 @@
 #' \emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
 #'
 #' @export
-survdiff_fast <- function(time, event, group, control, side,
+survdiff_fast <- function(time, event, group, control, side = 2,
                           presorted = FALSE, strata = NULL,
                           weight = c("logrank", "fh", "mwlrt", "gehan",
                                      "tarone-ware"),
@@ -288,7 +288,7 @@ survdiff_fast <- function(time, event, group, control, side,
 
     base_attr <- list(
       O0 = O0, E0 = NA_real_, O1 = O1, E1 = NA_real_, V1 = V,
-      side = side, n = n_total, weight = weight
+      side = side, n = n_total, weight = weight, control = control
     )
     if (use_strata) base_attr$strata <- n_str
 
@@ -346,7 +346,7 @@ survdiff_fast <- function(time, event, group, control, side,
       return(structure(
         NA_real_,
         O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
-        side = side, n = n_total, strata = n_str,
+        side = side, n = n_total, strata = n_str, control = control,
         class = "survdiff_fast"
       ))
     }
@@ -357,7 +357,7 @@ survdiff_fast <- function(time, event, group, control, side,
     return(structure(
       val,
       O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
-      side = side, n = n_total, strata = n_str,
+      side = side, n = n_total, strata = n_str, control = control,
       class = "survdiff_fast"
     ))
   }
@@ -394,7 +394,7 @@ survdiff_fast <- function(time, event, group, control, side,
     return(structure(
       NA_real_,
       O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
-      side = side, n = n_total,
+      side = side, n = n_total, control = control,
       class = "survdiff_fast"
     ))
   }
@@ -405,7 +405,7 @@ survdiff_fast <- function(time, event, group, control, side,
   structure(
     val,
     O0 = O0, E0 = E0, O1 = O1, E1 = E1, V1 = V1,
-    side = side, n = n_total,
+    side = side, n = n_total, control = control,
     class = "survdiff_fast"
   )
 }

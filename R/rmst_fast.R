@@ -48,10 +48,14 @@
 #'   the two-group contrasts are returned and \code{control} must be given.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group. Required when \code{group} is supplied.
+#' @param side 1 for a one-sided test in the direction of treatment benefit
+#'   (longer restricted mean survival in the treatment group) or 2 for a
+#'   two-sided test (default 2). Applies to the two-group contrasts; the
+#'   confidence intervals are always two-sided at \code{conf.level}.
+#' @param conf.level A single numeric value in (0, 1) specifying the confidence
+#'   level. Defaults to 0.95.
 #' @param tau A single positive numeric value specifying the restriction
 #'   horizon.
-#' @param conf.int A single numeric value in (0, 1) specifying the confidence
-#'   level. Defaults to 0.95.
 #' @param presorted A logical value. If \code{TRUE}, the inputs are assumed to
 #'   be sorted in ascending order of \code{time}. If \code{FALSE} (default),
 #'   sorting is handled internally.
@@ -63,10 +67,11 @@
 #'   difference contrast (\code{diff}, \code{se.diff}, \code{diff.lower},
 #'   \code{diff.upper}, \code{z.diff}, \code{p.diff}), and the ratio contrast
 #'   (\code{ratio}, \code{ratio.lower}, \code{ratio.upper}, \code{z.ratio},
-#'   \code{p.ratio}). The restriction horizon and confidence level are stored
-#'   as attributes \code{tau} and \code{conf.int}; in two-group mode the
-#'   \code{control} label is also stored. Returns \code{NA_real_} values (still
-#'   with class \code{"rmst_fast"}) when \code{n} is zero in single-group mode.
+#'   \code{p.ratio}). The restriction horizon, confidence level, and test side
+#'   are stored as attributes \code{tau}, \code{conf.level}, and \code{side};
+#'   in two-group mode the \code{control} label is also stored. Returns
+#'   \code{NA_real_} values (still with class \code{"rmst_fast"}) when \code{n}
+#'   is zero in single-group mode.
 #'
 #' @examples
 #' set.seed(42)
@@ -111,28 +116,32 @@
 #'
 #' @importFrom stats qnorm pnorm
 #' @export
-rmst_fast <- function(time, event, group = NULL, control = NULL, tau,
-                      conf.int = 0.95, presorted = FALSE) {
+rmst_fast <- function(time, event, group = NULL, control = NULL, side = 2,
+                      conf.level = 0.95, tau, presorted = FALSE) {
   # Input validation
   n <- length(time)
   if (length(event) != n) {
     stop("'time' and 'event' must have the same length")
   }
+  if (!side %in% c(1L, 2L)) {
+    stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
+  }
   if (length(tau) != 1L || !is.finite(tau) || tau <= 0) {
     stop("'tau' must be a single positive value")
   }
-  if (conf.int <= 0 || conf.int >= 1) {
-    stop("'conf.int' must be in (0, 1)")
+  if (conf.level <= 0 || conf.level >= 1) {
+    stop("'conf.level' must be in (0, 1)")
   }
 
-  z <- qnorm(1 - (1 - conf.int) / 2)
+  z <- qnorm(1 - (1 - conf.level) / 2)
 
   # ---- Single-group mode -------------------------------------------------
   if (is.null(group)) {
     na_out <- c(rmst = NA_real_, std.err = NA_real_,
                 lower = NA_real_, upper = NA_real_)
     wrap1  <- function(v) {
-      structure(v, tau = tau, conf.int = conf.int, class = "rmst_fast")
+      structure(v, tau = tau, conf.level = conf.level, side = side,
+                class = "rmst_fast")
     }
     if (n == 0L) return(wrap1(na_out))
 
@@ -185,7 +194,15 @@ rmst_fast <- function(time, event, group = NULL, control = NULL, tau,
   est_diff <- r1 - r0
   se_diff  <- sqrt(v1 + v0)
   z_diff   <- if (is.finite(se_diff) && se_diff > 0) est_diff / se_diff else NA_real_
-  p_diff   <- if (is.na(z_diff)) NA_real_ else 2 * pnorm(-abs(z_diff))
+  # side = 1 tests the treatment-benefit direction (longer RMST in treatment,
+  # i.e. a positive contrast, upper tail).
+  p_diff   <- if (is.na(z_diff)) {
+    NA_real_
+  } else if (side == 1L) {
+    pnorm(-z_diff)
+  } else {
+    2 * pnorm(-abs(z_diff))
+  }
 
   # Ratio contrast on the log scale (delta method)
   if (is.finite(r0) && is.finite(r1) && r0 > 0 && r1 > 0) {
@@ -193,7 +210,13 @@ rmst_fast <- function(time, event, group = NULL, control = NULL, tau,
     se_lr    <- sqrt(v1 / (r1 * r1) + v0 / (r0 * r0))
     log_r    <- log(ratio)
     z_ratio  <- if (se_lr > 0) log_r / se_lr else NA_real_
-    p_ratio  <- if (is.na(z_ratio)) NA_real_ else 2 * pnorm(-abs(z_ratio))
+    p_ratio  <- if (is.na(z_ratio)) {
+      NA_real_
+    } else if (side == 1L) {
+      pnorm(-z_ratio)
+    } else {
+      2 * pnorm(-abs(z_ratio))
+    }
     ratio_lo <- exp(log_r - z * se_lr)
     ratio_hi <- exp(log_r + z * se_lr)
   } else {
@@ -217,6 +240,6 @@ rmst_fast <- function(time, event, group = NULL, control = NULL, tau,
     p.ratio     = p_ratio
   )
 
-  structure(out, tau = tau, conf.int = conf.int,
+  structure(out, tau = tau, conf.level = conf.level, side = side,
             control = control, class = "rmst_fast")
 }

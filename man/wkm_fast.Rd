@@ -42,7 +42,7 @@ A named numeric vector of class \code{"wkm_fast"} with the weighted
 Computes the weighted Kaplan-Meier (WKM) statistic of Pepe and Fleming for
 comparing two survival curves. The statistic is the weighted integral of the
 difference between the Kaplan-Meier estimates of the treatment and control
-groups over the observed range, standardised to a Wald z statistic. Unlike
+groups over the observed range, standardized to a Wald z statistic. Unlike
 weighted log-rank tests, this test targets the integrated difference in
 survival and is sensitive to differences even when the hazard functions
 cross. The single scan over the sorted data is performed in C++ for use
@@ -50,9 +50,10 @@ inside simulation loops.
 }
 \details{
 The default weight is the Pepe-Fleming combined censoring weight
-w(t) = n G1(t) G2(t) / (n1 G1(t) + n2 G2(t)), where Gj is the Kaplan-Meier
-estimate of the censoring survival function in group j. This weight
-downweights regions with heavy censoring and stabilises the variance in the
+w(t) = n G1(t) G2(t) / (n1 G1(t) + n2 G2(t)), where G1 and G2 are the
+Kaplan-Meier estimates of the censoring survival functions of the two
+groups. This weight gives less weight to regions with heavy censoring and
+stabilizes the variance in the
 tail. The choice \code{weight = "sqrtPF"} uses its square root, and
 \code{weight = "constant"} uses a weight of 1, in which case the numerator
 reduces to the difference in restricted mean survival time over the observed
@@ -72,4 +73,13 @@ time <- pmin(tt, cc)
 event <- as.integer(tt <= cc)
 wkm_fast(time, event, group = g, control = 0)
 
+}
+\references{
+Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics: a
+class of distance tests for censored survival data. Biometrics, 45(2),
+497-507.
+
+Pepe, M. S., & Fleming, T. R. (1991). Weighted Kaplan-Meier statistics:
+large sample and optimality considerations. Journal of the Royal Statistical
+Society. Series B (Methodological), 53(2), 341-352.
 }

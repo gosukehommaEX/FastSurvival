@@ -31,9 +31,15 @@ print.rmw_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) {
   corr   <- attr(x, "corr")
   s_star <- attr(x, "s_star")
   n      <- attr(x, "n")
+  control <- attr(x, "control")
 
   cat("Robust modestly-weighted log-rank test (two-group)\n\n")
-  cat(sprintf("  N = %d,  s_star = %s\n", n, format(s_star)))
+  if (is.null(control)) {
+    cat(sprintf("  N = %d,  s_star = %s\n", n, format(s_star)))
+  } else {
+    cat(sprintf("  N = %d,  control = %s,  s_star = %s\n",
+                n, format(control), format(s_star)))
+  }
 
   stat_val <- as.numeric(x)[1L]
   p_val    <- as.numeric(x)[2L]
@@ -53,14 +59,15 @@ print.rmw_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) {
   cat(sprintf("\n  Null correlation = %s\n", format(round(corr[1L, 2L], digits))))
 
   if (side == 2L) {
-    cat(sprintf(" Max |Z| = %s,  two-sided p-value = %s\n",
+    cat(sprintf(" Max |Z| = %s,  two-sided p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   } else {
-    cat(sprintf(" min Z = %s,  one-sided p-value = %s\n",
+    cat(sprintf(" min Z = %s,  one-sided p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   }
+  cat(signif_legend())
 
   invisible(x)
 }

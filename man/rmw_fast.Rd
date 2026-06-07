@@ -4,7 +4,15 @@
 \alias{rmw_fast}
 \title{Robust Modestly-Weighted Log-Rank Test for Two-Group Survival Data}
 \usage{
-rmw_fast(time, event, group, control, side, s_star = 0.5, presorted = FALSE)
+rmw_fast(
+  time,
+  event,
+  group,
+  control,
+  side = 2,
+  s_star = 0.5,
+  presorted = FALSE
+)
 }
 \arguments{
 \item{time}{A numeric vector of follow-up times for all subjects.}
@@ -17,10 +25,10 @@ rmw_fast(time, event, group, control, side, s_star = 0.5, presorted = FALSE)
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group.}
 
-\item{side}{An integer, either 1 or 2. If \code{side = 1}, the statistic is
-the minimum of the two standardized components and a one-sided p-value is
-returned. If \code{side = 2}, the statistic is the maximum of their
-absolute values and a two-sided p-value is returned.}
+\item{side}{An integer, either 1 or 2 (default 2). If \code{side = 1}, the
+statistic is the minimum of the two standardized components and a one-sided
+p-value is returned. If \code{side = 2}, the statistic is the maximum of
+their absolute values and a two-sided p-value is returned.}
 
 \item{s_star}{A single numeric value in \code{(0, 1]}, the
 survival-probability threshold of the modestly-weighted component. The

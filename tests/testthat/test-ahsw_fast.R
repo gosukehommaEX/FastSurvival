@@ -102,7 +102,7 @@ test_that("confidence interval endpoints match the pure-R reference", {
   conf <- 0.95
   z   <- qnorm(1 - (1 - conf) / 2)
   fit <- ahsw_fast(ov$futime, ov$fustat, ov$rx, control = 1, tau = tau,
-                   conf.int = conf)
+                   conf.level = conf)
   ref0 <- ref_ahsw1(ov$futime[ov$rx == 1], ov$fustat[ov$rx == 1], tau)
   ref1 <- ref_ahsw1(ov$futime[ov$rx == 2], ov$fustat[ov$rx == 2], tau)
 
@@ -145,13 +145,13 @@ test_that("character and factor group give the same result as numeric", {
                tolerance = 1e-10)
 })
 
-test_that("attributes record tau, conf.int, and control", {
+test_that("attributes record tau, conf.level, and control", {
   skip_if_not_installed("survival")
   ov  <- survival::ovarian
   fit <- ahsw_fast(ov$futime, ov$fustat, ov$rx, control = 1, tau = 600,
-                   conf.int = 0.9)
+                   conf.level = 0.9)
   expect_equal(attr(fit, "tau"), 600)
-  expect_equal(attr(fit, "conf.int"), 0.9)
+  expect_equal(attr(fit, "conf.level"), 0.9)
   expect_equal(attr(fit, "control"), 1)
 })
 

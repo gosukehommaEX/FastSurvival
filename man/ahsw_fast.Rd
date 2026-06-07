@@ -4,7 +4,16 @@
 \alias{ahsw_fast}
 \title{Fast Average Hazard with Survival Weight (Two-Group Comparison)}
 \usage{
-ahsw_fast(time, event, group, control, tau, conf.int = 0.95, presorted = FALSE)
+ahsw_fast(
+  time,
+  event,
+  group,
+  control,
+  side = 2,
+  conf.level = 0.95,
+  tau,
+  presorted = FALSE
+)
 }
 \arguments{
 \item{time}{A numeric vector of follow-up times for all subjects.}
@@ -17,12 +26,18 @@ ahsw_fast(time, event, group, control, tau, conf.int = 0.95, presorted = FALSE)
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group.}
 
+\item{side}{1 for a one-sided test in the direction of treatment benefit
+(lower average hazard in the treatment group, i.e. a ratio below 1 and a
+negative difference) or 2 for a two-sided test (default 2). The reported
+p-values follow this choice; the confidence intervals are always two-sided
+at \code{conf.level}.}
+
+\item{conf.level}{A single numeric value in (0, 1) specifying the confidence
+level. Defaults to 0.95.}
+
 \item{tau}{A single positive numeric value, the truncation time point for the
 average hazard. Both groups must have positive Kaplan-Meier survival at
 \code{tau}.}
-
-\item{conf.int}{A single numeric value in (0, 1) specifying the confidence
-level. Defaults to 0.95.}
 
 \item{presorted}{A logical value. If \code{TRUE}, \code{time}, \code{event},
 and \code{group} are assumed to be sorted in ascending order of
@@ -35,7 +50,7 @@ An object of class \code{"ahsw_fast"}, a named numeric vector
   the ratio contrast (\code{rah}, \code{rah.lower}, \code{rah.upper},
   \code{p.rah}), and the difference contrast (\code{dah}, \code{dah.lower},
   \code{dah.upper}, \code{p.dah}). The truncation time and confidence level
-  are stored as attributes \code{tau} and \code{conf.int}, and the
+  are stored as attributes \code{tau} and \code{conf.level}, and the
   \code{control} label is also stored. Returns \code{NA} values (still with
   class \code{"ahsw_fast"}) when either group has zero survival at \code{tau}
   or a non-finite variance.

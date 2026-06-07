@@ -134,12 +134,13 @@ test_that("side argument controls the p-value direction", {
   group <- rep(c(0L, 1L), each = n_each)
   tau <- 7
 
-  two <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "two.sided")
-  up <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "upper")
-  lo <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = "lower")
+  two <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = 2)
+  one <- milestone_fast(obs, status, group, control = 0L, tau = tau, side = 1)
 
-  expect_equal(up$p.value + lo$p.value, 1, tolerance = 1e-10)
-  expect_equal(two$p.value, 2 * min(up$p.value, lo$p.value), tolerance = 1e-10)
+  # side = 1 reports the treatment-benefit one-sided p-value (upper tail for the
+  # default Wald statistic); the two-sided p-value is twice the smaller tail.
+  expect_equal(two$p.value, 2 * min(one$p.value, 1 - one$p.value),
+               tolerance = 1e-10)
 })
 
 test_that("input validation catches malformed arguments", {

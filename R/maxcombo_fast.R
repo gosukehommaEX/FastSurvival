@@ -54,10 +54,10 @@
 #' @param group A vector of group labels aligned with \code{time}.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
-#' @param side An integer, either 1 or 2. If \code{side = 1} (default), the
+#' @param side An integer, either 1 or 2. If \code{side = 1}, the
 #'   one-sided max-combo test for treatment benefit is computed. If
-#'   \code{side = 2}, the two-sided test based on the maximum absolute component
-#'   is computed.
+#'   \code{side = 2} (default), the two-sided test based on the maximum absolute
+#'   component is computed.
 #' @param rho A numeric vector of Fleming-Harrington first parameters, one per
 #'   component weight. Defaults to \code{c(0, 0, 1, 1)}.
 #' @param gamma A numeric vector of Fleming-Harrington second parameters, one
@@ -137,7 +137,7 @@
 #' @importFrom stats pnorm cov2cor
 #' @importFrom mvtnorm pmvnorm GenzBretz TVPACK
 #' @export
-maxcombo_fast <- function(time, event, group, control, side = 1,
+maxcombo_fast <- function(time, event, group, control, side = 2,
                           rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
                           presorted = FALSE, abseps = 1e-5, maxpts = 25000) {
   # Input validation
@@ -190,6 +190,7 @@ maxcombo_fast <- function(time, event, group, control, side = 1,
     na_out <- c(statistic = NA_real_, p.value = NA_real_)
     return(structure(na_out, z = z_na, corr = NULL,
                      rho = rho, gamma = gamma, side = side, n = n_total,
+                     control = control,
                      class = "maxcombo_fast"))
   }
 
@@ -235,5 +236,6 @@ maxcombo_fast <- function(time, event, group, control, side = 1,
 
   structure(out, z = z_vec, corr = corr_mat,
             rho = rho, gamma = gamma, side = side, n = n_total,
+            control = control,
             class = "maxcombo_fast")
 }

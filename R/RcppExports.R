@@ -440,3 +440,7 @@ wkm_core <- function(time, event, grp, weight_type) {
     .Call(`_FastSurvival_wkm_core`, time, event, grp, weight_type)
 }
 
+wmst_core <- function(time, event, grp, ngroup, tau1, tau2) {
+    .Call(`_FastSurvival_wmst_core`, time, event, grp, ngroup, tau1, tau2)
+}
+

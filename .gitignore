@@ -16,3 +16,6 @@ NAMESPACE.bak
 # roxygen2
 /inst/doc/
 inst/doc
+
+# Validation/benchmark script outputs
+tools/benchmarks/

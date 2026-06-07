@@ -12,22 +12,22 @@
 #' milestone survival in trial design.
 #'
 #' @param time A numeric vector of follow-up times.
-#' @param status An integer vector of event indicators, 1 for an event and 0
+#' @param event An integer vector of event indicators, 1 for an event and 0
 #'   for a censored observation.
 #' @param group A vector with exactly two distinct values identifying the
 #'   group.
 #' @param control The value of \code{group} that denotes the control group. The
 #'   other value is the treatment group and the difference is reported as
 #'   treatment minus control.
+#' @param side 1 for a one-sided test in the direction of treatment benefit
+#'   (treatment milestone survival larger than control) or 2 for a two-sided
+#'   test (default 2). The confidence interval is always reported as a
+#'   two-sided interval at \code{conf.level}.
+#' @param conf.level The confidence level for the reported intervals.
 #' @param tau The milestone timepoint at which the survival probabilities are
 #'   compared. A single positive number.
 #' @param method The inference method for the difference in milestone survival,
 #'   one of \code{"wald"}, \code{"loglog"}, or \code{"mover"}.
-#' @param side The alternative hypothesis for the difference, one of
-#'   \code{"two.sided"}, \code{"upper"} (treatment survival larger), or
-#'   \code{"lower"} (treatment survival smaller). The confidence interval is
-#'   always reported as a two-sided interval at \code{conf.level}.
-#' @param conf.level The confidence level for the reported intervals.
 #' @param presorted Logical. If \code{TRUE} the input is assumed to be sorted
 #'   by \code{time} in ascending order and the internal sort is skipped. This
 #'   is intended for repeated calls inside simulation loops.
@@ -47,25 +47,27 @@
 #' @examples
 #' set.seed(1)
 #' time <- c(rexp(50, 0.1), rexp(50, 0.07))
-#' status <- rep(1, 100)
+#' event <- rep(1, 100)
 #' group <- rep(c(0, 1), each = 50)
-#' milestone_fast(time, status, group, control = 0, tau = 10, method = "loglog")
+#' milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 #'
 #' @export
-milestone_fast <- function(time, status, group, control, tau,
+milestone_fast <- function(time, event, group, control, side = 2,
+                           conf.level = 0.95, tau,
                            method = c("wald", "loglog", "mover"),
-                           side = c("two.sided", "upper", "lower"),
-                           conf.level = 0.95, presorted = FALSE) {
+                           presorted = FALSE) {
   method <- match.arg(method)
-  side <- match.arg(side)
+  if (!side %in% c(1L, 2L)) {
+    stop("'side' must be either 1 (one-sided) or 2 (two-sided).")
+  }
 
   if (!is.numeric(time)) stop("'time' must be numeric.")
-  if (length(status) != length(time) || length(group) != length(time)) {
-    stop("'time', 'status', and 'group' must have the same length.")
+  if (length(event) != length(time) || length(group) != length(time)) {
+    stop("'time', 'event', and 'group' must have the same length.")
   }
-  status <- as.integer(status)
-  if (any(is.na(status)) || any(!status %in% c(0L, 1L))) {
-    stop("'status' must contain only 0 (censored) and 1 (event).")
+  event <- as.integer(event)
+  if (any(is.na(event)) || any(!event %in% c(0L, 1L))) {
+    stop("'event' must contain only 0 (censored) and 1 (event).")
   }
   if (length(tau) != 1L || !is.finite(tau) || tau <= 0) {
     stop("'tau' must be a single positive number.")
@@ -90,7 +92,7 @@ milestone_fast <- function(time, status, group, control, tau,
   trt <- lev[as.character(lev) != as.character(control)]
   grp01 <- as.integer(as.character(group) != as.character(control))
 
-  core <- milestone_core(as.numeric(time), status, grp01,
+  core <- milestone_core(as.numeric(time), event, grp01,
                          as.numeric(tau), as.logical(presorted))
 
   surv0 <- core$surv0
@@ -154,14 +156,20 @@ milestone_fast <- function(time, status, group, control, tau,
     }
   }
 
+  # One-sided p-value (side = 1) tests the treatment-benefit direction, i.e.
+  # higher milestone survival in the treatment group. The benefit tail depends
+  # on the sign convention of the test statistic: for "wald" and "mover" a
+  # positive statistic favours treatment (upper tail), whereas for "loglog" the
+  # complementary log-log transform reverses the sign so benefit lies in the
+  # lower tail.
   p_value <- if (is.na(stat)) {
     NA_real_
-  } else if (side == "two.sided") {
+  } else if (side == 2L) {
     2 * stats::pnorm(-abs(stat))
-  } else if (side == "upper") {
-    stats::pnorm(-stat)
-  } else {
+  } else if (method == "loglog") {
     stats::pnorm(stat)
+  } else {
+    stats::pnorm(-stat)
   }
 
   structure(

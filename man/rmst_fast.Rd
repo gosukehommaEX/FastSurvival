@@ -9,8 +9,9 @@ rmst_fast(
   event,
   group = NULL,
   control = NULL,
+  side = 2,
+  conf.level = 0.95,
   tau,
-  conf.int = 0.95,
   presorted = FALSE
 )
 }
@@ -27,11 +28,16 @@ the two-group contrasts are returned and \code{control} must be given.}
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group. Required when \code{group} is supplied.}
 
+\item{side}{1 for a one-sided test in the direction of treatment benefit
+(longer restricted mean survival in the treatment group) or 2 for a
+two-sided test (default 2). Applies to the two-group contrasts; the
+confidence intervals are always two-sided at \code{conf.level}.}
+
+\item{conf.level}{A single numeric value in (0, 1) specifying the confidence
+level. Defaults to 0.95.}
+
 \item{tau}{A single positive numeric value specifying the restriction
 horizon.}
-
-\item{conf.int}{A single numeric value in (0, 1) specifying the confidence
-level. Defaults to 0.95.}
 
 \item{presorted}{A logical value. If \code{TRUE}, the inputs are assumed to
 be sorted in ascending order of \code{time}. If \code{FALSE} (default),
@@ -45,10 +51,11 @@ An object of class \code{"rmst_fast"}, a named numeric vector. In
   difference contrast (\code{diff}, \code{se.diff}, \code{diff.lower},
   \code{diff.upper}, \code{z.diff}, \code{p.diff}), and the ratio contrast
   (\code{ratio}, \code{ratio.lower}, \code{ratio.upper}, \code{z.ratio},
-  \code{p.ratio}). The restriction horizon and confidence level are stored
-  as attributes \code{tau} and \code{conf.int}; in two-group mode the
-  \code{control} label is also stored. Returns \code{NA_real_} values (still
-  with class \code{"rmst_fast"}) when \code{n} is zero in single-group mode.
+  \code{p.ratio}). The restriction horizon, confidence level, and test side
+  are stored as attributes \code{tau}, \code{conf.level}, and \code{side};
+  in two-group mode the \code{control} label is also stored. Returns
+  \code{NA_real_} values (still with class \code{"rmst_fast"}) when \code{n}
+  is zero in single-group mode.
 }
 \description{
 Computes the restricted mean survival time (RMST) up to a horizon \code{tau}

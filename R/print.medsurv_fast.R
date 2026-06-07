@@ -80,7 +80,7 @@ print.medsurv_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
     printCoefmat(con_mat, digits = digits, has.Pvalue = TRUE, P.values = TRUE,
                  cs.ind = 1:3, tst.ind = 4L)
   } else {
-    cat("Median survival time (one-group)\n\n")
+    cat("Median survival time (single-group)\n\n")
     cat(sprintf("  method = %s\n\n", method))
 
     if (is.na(x["median"])) {

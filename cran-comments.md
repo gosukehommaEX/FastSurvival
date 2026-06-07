@@ -1,11 +1,12 @@
 ## Update
 
 This is an update from version 0.1.0 to 0.2.0. It adds several survival
-analysis functions (`rmst_fast()`, `milestone_fast()`, `maxcombo_fast()`,
-`ahsw_fast()`), extends `survdiff_fast()` with weighted and stratified
-log-rank tests, and adds a simulation and sequential-analysis layer
-(`simdata_fast()` subgroups, `analysis_fast()`, `simsummary_fast()`). See
-NEWS.md for the full list of changes.
+analysis functions (`rmst_fast()`, `wmst_fast()`, `milestone_fast()`,
+`medsurv_fast()`, `maxcombo_fast()`, `rmw_fast()`, `wkm_fast()`, `ahsw_fast()`,
+`ahr_fast()`), extends `survdiff_fast()` with weighted and stratified log-rank
+tests, and adds a simulation and sequential-analysis layer (`simdata_fast()`
+subgroups, `analysis_fast()`, `simsummary_fast()`). See NEWS.md for the full
+list of changes.
 
 ## Notes for the reviewer
 

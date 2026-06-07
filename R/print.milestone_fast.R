@@ -39,8 +39,10 @@ print.milestone_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
 
   cat("Milestone survival (two-group)\n\n")
   cat(sprintf("  tau = %g,  control = %s\n", tau, format(control)))
+  alt <- x[["side"]]
+  if (is.numeric(alt)) alt <- if (alt == 1L) "one.sided" else "two.sided"
   cat(sprintf("  method = %s,  alternative = %s\n\n",
-              x[["method"]], x[["side"]]))
+              x[["method"]], alt))
 
   if (is.na(x[["surv"]][["control"]]) || is.na(x[["surv"]][["treatment"]])) {
     cat("  Estimate not available.\n")

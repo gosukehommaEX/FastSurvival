@@ -40,9 +40,11 @@
 print.rmst_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) {
 
   tau      <- attr(x, "tau")
-  conf.int <- attr(x, "conf.int")
-  if (is.null(conf.int)) conf.int <- 0.95
-  ci_lab   <- conf.int * 100
+  conf.level <- attr(x, "conf.level")
+  if (is.null(conf.level)) conf.level <- 0.95
+  ci_lab   <- conf.level * 100
+  side     <- attr(x, "side")
+  if (is.null(side)) side <- 2L
 
   two_group <- "diff" %in% names(x)
 
@@ -71,7 +73,9 @@ print.rmst_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) 
   # ---- Two-group mode ----------------------------------------------------
   control <- attr(x, "control")
   cat("Restricted mean survival time (two-group)\n\n")
-  cat(sprintf("  tau = %g,  control = %s\n\n", tau, format(control)))
+  cat(sprintf("  tau = %g,  control = %s\n", tau, format(control)))
+  cat(sprintf("  alternative = %s\n\n",
+              if (side == 1L) "one.sided" else "two.sided"))
 
   g_tab <- matrix(
     c(x[["rmst.ctrl"]], x[["rmst.trt"]]),

@@ -30,11 +30,11 @@
 print.survfit_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) {
 
   t_eval    <- attr(x, "t_eval")
-  conf.int  <- attr(x, "conf.int")
+  conf.level  <- attr(x, "conf.level")
   conf.type <- attr(x, "conf.type")
-  if (is.null(conf.int))  conf.int  <- 0.95
+  if (is.null(conf.level))  conf.level  <- 0.95
   if (is.null(conf.type)) conf.type <- "log"
-  ci_lab <- conf.int * 100
+  ci_lab <- conf.level * 100
 
   cat("Kaplan-Meier survival estimate (single time point)\n\n")
 

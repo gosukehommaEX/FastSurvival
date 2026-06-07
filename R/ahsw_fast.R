@@ -45,11 +45,16 @@
 #' @param group A vector of group labels aligned with \code{time}.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
+#' @param side 1 for a one-sided test in the direction of treatment benefit
+#'   (lower average hazard in the treatment group, i.e. a ratio below 1 and a
+#'   negative difference) or 2 for a two-sided test (default 2). The reported
+#'   p-values follow this choice; the confidence intervals are always two-sided
+#'   at \code{conf.level}.
+#' @param conf.level A single numeric value in (0, 1) specifying the confidence
+#'   level. Defaults to 0.95.
 #' @param tau A single positive numeric value, the truncation time point for the
 #'   average hazard. Both groups must have positive Kaplan-Meier survival at
 #'   \code{tau}.
-#' @param conf.int A single numeric value in (0, 1) specifying the confidence
-#'   level. Defaults to 0.95.
 #' @param presorted A logical value. If \code{TRUE}, \code{time}, \code{event},
 #'   and \code{group} are assumed to be sorted in ascending order of
 #'   \code{time}, and the internal \code{order()} call is skipped. If
@@ -60,7 +65,7 @@
 #'   the ratio contrast (\code{rah}, \code{rah.lower}, \code{rah.upper},
 #'   \code{p.rah}), and the difference contrast (\code{dah}, \code{dah.lower},
 #'   \code{dah.upper}, \code{p.dah}). The truncation time and confidence level
-#'   are stored as attributes \code{tau} and \code{conf.int}, and the
+#'   are stored as attributes \code{tau} and \code{conf.level}, and the
 #'   \code{control} label is also stored. Returns \code{NA} values (still with
 #'   class \code{"ahsw_fast"}) when either group has zero survival at \code{tau}
 #'   or a non-finite variance.
@@ -96,21 +101,24 @@
 #'
 #' @importFrom stats qnorm pnorm
 #' @export
-ahsw_fast <- function(time, event, group, control, tau,
-                      conf.int = 0.95, presorted = FALSE) {
+ahsw_fast <- function(time, event, group, control, side = 2,
+                      conf.level = 0.95, tau, presorted = FALSE) {
   # Input validation
   n_total <- length(time)
   if (length(event) != n_total || length(group) != n_total) {
     stop("'time', 'event', and 'group' must have the same length")
   }
+  if (!side %in% c(1L, 2L)) {
+    stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
+  }
   if (length(tau) != 1L || !is.finite(tau) || tau <= 0) {
     stop("'tau' must be a single positive value")
   }
-  if (conf.int <= 0 || conf.int >= 1) {
-    stop("'conf.int' must be in (0, 1)")
+  if (conf.level <= 0 || conf.level >= 1) {
+    stop("'conf.level' must be in (0, 1)")
   }
 
-  z <- qnorm(1 - (1 - conf.int) / 2)
+  z <- qnorm(1 - (1 - conf.level) / 2)
 
   # Treatment indicator: 1 = treatment, 0 = control
   if (is.factor(group)) group <- as.character(group)
@@ -150,8 +158,8 @@ ahsw_fast <- function(time, event, group, control, tau,
   )
 
   wrap <- function(v) {
-    structure(v, tau = tau, conf.int = conf.int, control = control,
-              class = "ahsw_fast")
+    structure(v, tau = tau, conf.level = conf.level, side = side,
+              control = control, class = "ahsw_fast")
   }
 
   # Bail out if either group has zero survival at tau or a non-finite variance
@@ -161,16 +169,30 @@ ahsw_fast <- function(time, event, group, control, tau,
     return(wrap(out))
   }
 
-  # Ratio of average hazards on the log scale
+  # Ratio of average hazards on the log scale. Treatment benefit is a ratio
+  # below 1 (log_rah < 0); the one-sided test (side = 1) uses the lower tail.
   log_rah <- log(a1 / a0)
   se_rah  <- sqrt(vQ1 / n1 + vQ0 / n0)
   rah     <- exp(log_rah)
-  p_rah   <- if (se_rah > 0) 2 * pnorm(-abs(log_rah) / se_rah) else NA_real_
+  p_rah   <- if (se_rah <= 0) {
+    NA_real_
+  } else if (side == 1L) {
+    pnorm(log_rah / se_rah)
+  } else {
+    2 * pnorm(-abs(log_rah) / se_rah)
+  }
 
-  # Difference of average hazards on the identity scale
+  # Difference of average hazards on the identity scale. Treatment benefit is a
+  # negative difference; the one-sided test uses the lower tail.
   dah    <- a1 - a0
   se_dah <- sqrt(vU1 / n1 + vU0 / n0)
-  p_dah  <- if (se_dah > 0) 2 * pnorm(-abs(dah) / se_dah) else NA_real_
+  p_dah  <- if (se_dah <= 0) {
+    NA_real_
+  } else if (side == 1L) {
+    pnorm(dah / se_dah)
+  } else {
+    2 * pnorm(-abs(dah) / se_dah)
+  }
 
   out["rah"]       <- rah
   out["rah.lower"] <- exp(log_rah - z * se_rah)

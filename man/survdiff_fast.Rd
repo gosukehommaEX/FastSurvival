@@ -9,7 +9,7 @@ survdiff_fast(
   event,
   group,
   control,
-  side,
+  side = 2,
   presorted = FALSE,
   strata = NULL,
   weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
@@ -29,8 +29,8 @@ survdiff_fast(
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group.}
 
-\item{side}{An integer, either 1 or 2. If \code{side = 1}, returns the
-standardized log-rank statistic (Z-score), defined as
+\item{side}{An integer, either 1 or 2 (default 2). If \code{side = 1}, returns
+the standardized log-rank statistic (Z-score), defined as
 \code{(O_1 - E_1) / sqrt(V_1)} for the treatment group, so the Z-score is
 negative when the treatment group has fewer events than expected (a
 protective treatment effect). If \code{side = 2}, returns the chi-square

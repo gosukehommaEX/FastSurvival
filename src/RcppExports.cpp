@@ -289,6 +289,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// wmst_core
+NumericMatrix wmst_core(NumericVector time, IntegerVector event, IntegerVector grp, int ngroup, double tau1, double tau2);
+RcppExport SEXP _FastSurvival_wmst_core(SEXP timeSEXP, SEXP eventSEXP, SEXP grpSEXP, SEXP ngroupSEXP, SEXP tau1SEXP, SEXP tau2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type event(eventSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type grp(grpSEXP);
+    Rcpp::traits::input_parameter< int >::type ngroup(ngroupSEXP);
+    Rcpp::traits::input_parameter< double >::type tau1(tau1SEXP);
+    Rcpp::traits::input_parameter< double >::type tau2(tau2SEXP);
+    rcpp_result_gen = Rcpp::wrap(wmst_core(time, event, grp, ngroup, tau1, tau2));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_ahr_core", (DL_FUNC) &_FastSurvival_ahr_core, 5},
@@ -307,6 +323,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FastSurvival_stratified_weighted_logrank_core", (DL_FUNC) &_FastSurvival_stratified_weighted_logrank_core, 8},
     {"_FastSurvival_weighted_logrank_core", (DL_FUNC) &_FastSurvival_weighted_logrank_core, 7},
     {"_FastSurvival_wkm_core", (DL_FUNC) &_FastSurvival_wkm_core, 4},
+    {"_FastSurvival_wmst_core", (DL_FUNC) &_FastSurvival_wmst_core, 6},
     {NULL, NULL, 0}
 };
 

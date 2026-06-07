@@ -40,6 +40,7 @@ print.survdiff_fast <- function(x, digits = max(1L, getOption("digits") - 3L), .
   n    <- attr(x, "n")
   wt   <- attr(x, "weight")
   n_str <- attr(x, "strata")
+  control <- attr(x, "control")
 
   # Header. All variants carry the (two-group) scope tag for consistency with
   # the other test summaries in the package.
@@ -61,7 +62,11 @@ print.survdiff_fast <- function(x, digits = max(1L, getOption("digits") - 3L), .
       cat(sprintf("%s (two-group)\n\n", scheme_label))
     }
   }
-  cat(sprintf("  N = %d\n", n))
+  if (is.null(control)) {
+    cat(sprintf("  N = %d\n", n))
+  } else {
+    cat(sprintf("  N = %d,  control = %s\n", n, format(control)))
+  }
 
   if (is.na(x) || !is.finite(V1) || V1 == 0) {
     cat("  Test statistic not available (V1 = 0).\n")
@@ -103,15 +108,18 @@ print.survdiff_fast <- function(x, digits = max(1L, getOption("digits") - 3L), .
   stat_val <- as.numeric(x)
   if (side == 2L) {
     p_val <- pchisq(stat_val, df = 1L, lower.tail = FALSE)
-    cat(sprintf(" Chi-square = %s on 1 df,  p-value = %s\n",
+    cat(sprintf(" Chi-square = %s on 1 df,  p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   } else {
-    p_val <- 2 * pnorm(-abs(stat_val))
-    cat(sprintf(" Z = %s,  two-sided p-value = %s\n",
+    # side = 1: the statistic is the signed log-rank Z, negative under a
+    # protective treatment effect, so the one-sided p-value uses the lower tail.
+    p_val <- pnorm(stat_val)
+    cat(sprintf(" Z = %s,  one-sided p-value = %s %s\n",
                 format(signif(stat_val, digits)),
-                format.pval(p_val, digits = digits)))
+                format.pval(p_val, digits = digits), signif_star(p_val)))
   }
+  cat(signif_legend())
 
   invisible(x)
 }

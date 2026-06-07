@@ -4,8 +4,18 @@
   * `rmst_fast()`: restricted mean survival time for a single group or a
     two-group comparison (difference and ratio contrasts), integrating the
     Kaplan-Meier survival step function in a single C++ scan.
+  * `wmst_fast()`: window mean survival time over an interval, generalizing
+    `rmst_fast()` (which is the special case with a lower window limit of
+    zero), for a single group or a two-group difference, computed in the same
+    single C++ scan with a Greenwood-type variance in which each event time
+    contributes its squared remaining window area.
   * `milestone_fast()`: two-group comparison of Kaplan-Meier survival at a
     milestone timepoint, with Wald, log-log, and MOVER inference methods.
+  * `medsurv_fast()`: median survival time for a single group or a two-group
+    difference, with a native kernel-hazard variance method and an
+    `nph`-compatible local-constant-hazard method that reproduces the median
+    comparison of the `nph` package to numerical precision; the point estimate
+    is the same under both methods.
   * `maxcombo_fast()`: max-combo test over a set of Fleming-Harrington
     weighted log-rank statistics, with the joint p-value obtained from the
     implied multivariate normal distribution.
@@ -13,6 +23,10 @@
     the maximum of the standard log-rank and a modestly-weighted log-rank
     statistic, with the joint p-value obtained from the implied bivariate
     normal distribution.
+  * `wkm_fast()`: weighted Kaplan-Meier (Pepe-Fleming) test, the weighted
+    integrated difference between two Kaplan-Meier curves, with Pepe-Fleming,
+    square-root, and constant weights, reproducing the weighted Kaplan-Meier
+    statistic of the `nphsim` package.
   * `ahsw_fast()`: average hazard with survival weight of Uno and Horiguchi,
     reporting the ratio (RAH) and difference (DAH) contrasts.
   * `ahr_fast()`: Kalbfleisch-Prentice average hazard ratio between two groups

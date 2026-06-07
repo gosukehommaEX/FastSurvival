@@ -4,7 +4,7 @@
 \alias{print.ahr_fast}
 \title{Print an ahr_fast object}
 \usage{
-\method{print}{ahr_fast}(x, digits = 4, ...)
+\method{print}{ahr_fast}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{x}{an object of class \code{"ahr_fast"}}

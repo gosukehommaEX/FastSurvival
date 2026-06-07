@@ -94,3 +94,7 @@ medsurv_fast(time, event, group = g, control = 0)
 medsurv_fast(time, event, group = g, control = 0, method = "nph")
 
 }
+\references{
+Fleming, T. R., & Harrington, D. P. (1991). Counting Processes and Survival
+Analysis. New York: John Wiley & Sons.
+}

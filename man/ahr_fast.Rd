@@ -6,19 +6,20 @@
 \usage{
 ahr_fast(
   time,
-  status,
+  event,
   group,
   control,
+  side = 2,
+  conf.level = 0.95,
   tau = NULL,
   null.ahr = 1,
-  conf.level = 0.95,
   presorted = FALSE
 )
 }
 \arguments{
 \item{time}{vector of right-censored event times}
 
-\item{status}{0/1 (or logical) event indicators, 1 for an event}
+\item{event}{0/1 (or logical) event indicators, 1 for an event}
 
 \item{group}{vector with exactly two distinct values identifying the groups.}
 
@@ -26,14 +27,18 @@ ahr_fast(
 group. The average hazard ratio is reported for the other group relative to
 it.}
 
+\item{side}{1 for a one-sided test in the direction of treatment benefit
+(average hazard ratio below \code{null.ahr}) or 2 for a two-sided test
+(default 2).}
+
+\item{conf.level}{confidence level for the confidence interval (default 0.95)}
+
 \item{tau}{upper limit of the interval over which the average hazard ratio is
 computed. If \code{NULL} (default) the largest time observed in both groups
 is used.}
 
 \item{null.ahr}{value of the average hazard ratio under the null hypothesis
 used for the Z statistic and p-value (default 1)}
-
-\item{conf.level}{confidence level for the confidence interval (default 0.95)}
 
 \item{presorted}{if \code{TRUE}, assume \code{time} is already sorted in
 ascending order so that each group's observations are also ascending; this
@@ -49,7 +54,7 @@ An object of class \code{"ahr_fast"}, a list with elements
   \code{log(ahr)} scale), \code{se.theta} (standard error of the tested
   comparison-group share), \code{null.share}, \code{null.ahr}, \code{theta}
   (the two group shares), \code{var.theta1}, \code{var.theta2},
-  \code{tau}, \code{n} (the two group sizes) and \code{groups}.
+  \code{side}, \code{tau}, \code{n} (the two group sizes) and \code{groups}.
 }
 \description{
 Estimates the average hazard ratio of Kalbfleisch and Prentice (1981) between
@@ -84,9 +89,9 @@ time1 <- rexp(n, 0.1)
 time2 <- rexp(n, 0.18)
 cens <- rexp(2 * n, 0.05)
 obs <- pmin(c(time1, time2), cens)
-status <- as.integer(c(time1, time2) <= cens)
+event <- as.integer(c(time1, time2) <= cens)
 group <- rep(c(0, 1), each = n)
-ahr_fast(obs, status, group, control = 0, tau = 8)
+ahr_fast(obs, event, group, control = 0, tau = 8)
 }
 \references{
 Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average
