@@ -64,6 +64,7 @@ print(rmst_fast(time, event, group = group, control = 0, tau = 10))
 #> Restricted mean survival time (two-group)
 #> 
 #>   tau = 10,  control = 0
+#>   alternative = two.sided
 #> 
 #>             RMST
 #> control   6.7572

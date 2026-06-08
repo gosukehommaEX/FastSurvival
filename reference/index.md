@@ -15,12 +15,19 @@ inside simulation loops.
 - [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
   : Fast Restricted Mean Survival Time (Single Group or Two-Group
   Comparison)
+- [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
+  : Fast window mean survival time and between-group difference
 - [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
   : Compare Milestone Survival Probabilities Between Two Groups
+- [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  : Fast non-parametric median survival time and between-group
+  difference
 - [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
   : Fast Max-Combo Weighted Log-Rank Test for Two-Group Survival Data
 - [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
   : Robust Modestly-Weighted Log-Rank Test for Two-Group Survival Data
+- [`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
+  : Fast weighted Kaplan-Meier (Pepe-Fleming) two-sample test
 - [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
   : Fast Average Hazard with Survival Weight (Two-Group Comparison)
 - [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
@@ -50,6 +57,8 @@ Display methods for the returned S3 objects.
   : Print Method for coxph_fast Objects
 - [`print(`*`<maxcombo_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.maxcombo_fast.md)
   : Print Method for maxcombo_fast Objects
+- [`print(`*`<medsurv_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.medsurv_fast.md)
+  : Print Method for medsurv_fast Objects
 - [`print(`*`<milestone_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.milestone_fast.md)
   : Print Method for milestone_fast Objects
 - [`print(`*`<rmst_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.rmst_fast.md)
@@ -62,6 +71,10 @@ Display methods for the returned S3 objects.
   : Print Method for survdiff_fast Objects
 - [`print(`*`<survfit_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.survfit_fast.md)
   : Print Method for survfit_fast Objects
+- [`print(`*`<wkm_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.wkm_fast.md)
+  : Print Method for wkm_fast Objects
+- [`print(`*`<wmst_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.wmst_fast.md)
+  : Print Method for wmst_fast Objects
 
 ## Package
 

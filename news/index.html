@@ -44,11 +44,17 @@
 <ul><li>
 <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>: restricted mean survival time for a single group or a two-group comparison (difference and ratio contrasts), integrating the Kaplan-Meier survival step function in a single C++ scan.</li>
 <li>
+<code><a href="../reference/wmst_fast.html">wmst_fast()</a></code>: window mean survival time over an interval, generalizing <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> (which is the special case with a lower window limit of zero), for a single group or a two-group difference, computed in the same single C++ scan with a Greenwood-type variance in which each event time contributes its squared remaining window area.</li>
+<li>
 <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code>: two-group comparison of Kaplan-Meier survival at a milestone timepoint, with Wald, log-log, and MOVER inference methods.</li>
+<li>
+<code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code>: median survival time for a single group or a two-group difference, with a native kernel-hazard variance method and an <code>nph</code>-compatible local-constant-hazard method that reproduces the median comparison of the <code>nph</code> package to numerical precision; the point estimate is the same under both methods.</li>
 <li>
 <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code>: max-combo test over a set of Fleming-Harrington weighted log-rank statistics, with the joint p-value obtained from the implied multivariate normal distribution.</li>
 <li>
 <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code>: robust modestly-weighted log-rank test of Magirr and Öhrn, the maximum of the standard log-rank and a modestly-weighted log-rank statistic, with the joint p-value obtained from the implied bivariate normal distribution.</li>
+<li>
+<code><a href="../reference/wkm_fast.html">wkm_fast()</a></code>: weighted Kaplan-Meier (Pepe-Fleming) test, the weighted integrated difference between two Kaplan-Meier curves, with Pepe-Fleming, square-root, and constant weights, reproducing the weighted Kaplan-Meier statistic of the <code>nphsim</code> package.</li>
 <li>
 <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code>: average hazard with survival weight of Uno and Horiguchi, reporting the ratio (RAH) and difference (DAH) contrasts.</li>
 <li>

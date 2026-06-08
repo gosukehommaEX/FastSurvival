@@ -49,11 +49,13 @@ fit <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 print(fit)
 #> Log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 1
 #> 
 #>           Observed Expected (O-E)^2/E (O-E)^2/V
 #> control          7   5.2335    0.5962    1.0627
 #> treatment        5   6.7665    0.4612    1.0627
 #> 
-#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026
+#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

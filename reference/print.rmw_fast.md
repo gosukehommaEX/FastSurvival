@@ -45,12 +45,14 @@ fit <- rmw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 print(fit)
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
-#>   N = 26,  s_star = 0.5
+#>   N = 26,  control = 1,  s_star = 0.5
 #> 
 #>                         Z
 #> log-rank          -1.0309
 #> modestly-weighted -0.7583
 #> 
 #>   Null correlation = 0.9821
-#>  min Z = -1.031,  one-sided p-value = 0.169
+#>  min Z = -1.031,  one-sided p-value = 0.169  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

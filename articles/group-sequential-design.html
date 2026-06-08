@@ -76,238 +76,244 @@
 <h2 id="purpose">Purpose<a class="anchor" aria-label="anchor" href="#purpose"></a>
 </h2>
 <p>This vignette demonstrates the three simulation functions working
-together: <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates the trial data,
-<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs the interim analyses, and
-<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the operating characteristics.
-We set up a three-look group sequential design with an O’Brien-Fleming
-type efficacy boundary, then check that the simulated rejection
-probabilities match the closed-form values from <a href="https://cran.r-project.org/package=gsDesign" class="external-link">gsDesign</a>.</p>
+together on a real phase 3 trial: <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates
+the trial data, <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs the interim and
+final analyses, and <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the
+operating characteristics. We reproduce the group sequential design of
+the innovaTV 301 trial and check that the simulated operating
+characteristics match the closed-form values from <a href="https://cran.r-project.org/package=gsDesign" class="external-link">gsDesign</a> and <a href="https://cran.r-project.org/package=rpact" class="external-link">rpact</a>.</p>
 <p>The point is not that simulation replaces the closed-form calculation
-under proportional hazards, where gsDesign is exact, but that once the
-two agree on a case gsDesign can handle, the same simulation machinery
-can be trusted for cases it cannot, such as non-proportional hazards or
-data-dependent timing.</p>
+under proportional hazards, where gsDesign and rpact are exact, but that
+once the simulation agrees on a case they can handle, the same machinery
+can be trusted for cases they cannot, such as non-proportional hazards
+or data-dependent analysis timing. The benchmark code is shown but not
+executed when the vignette is built, because the simulation uses many
+replicates; the printed results are those obtained from an interactive
+run.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="the-design">The design<a class="anchor" aria-label="anchor" href="#the-design"></a>
+<h2 id="the-innovatv-301-trial">The innovaTV 301 trial<a class="anchor" aria-label="anchor" href="#the-innovatv-301-trial"></a>
 </h2>
-<p>We consider a two-group trial with a one-sided test at level 0.025,
-three equally spaced looks by information fraction, and an
-O’Brien-Fleming spending function for the efficacy boundary. We first
-obtain the design from gsDesign.</p>
+<p>innovaTV 301 (ENGOT-cx12/GOG-3057) was a phase 3, open-label trial of
+tisotumab vedotin versus the investigator’s choice of chemotherapy in
+patients with recurrent or metastatic cervical cancer (Vergote et al.,
+2024). The primary end point was overall survival, with patients
+randomly assigned in a 1:1 ratio.</p>
+<p>The design enrolled approximately 482 patients and was powered at 90%
+on the occurrence of 336 total deaths, with one prespecified interim
+efficacy analysis at about 75% of information (252 of 336 events). The
+overall two-sided type I error was controlled at 5% using the Lan-DeMets
+spending function with an O’Brien-Fleming boundary. For planning we take
+an exponential overall survival with a median of 12.9 months in the
+tisotumab vedotin group and 9.0 months in the chemotherapy group (a
+hazard ratio of about 0.70), accrual over 23 months, and a 5% annual
+dropout rate in each group.</p>
+</div>
+<div class="section level2">
+<h2 id="simulating-the-trial">Simulating the trial<a class="anchor" aria-label="anchor" href="#simulating-the-trial"></a>
+</h2>
+<p><code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates the survival, censoring, and
+entry times for all replicates in one fused C++ pass. We specify the two
+group sizes, the accrual window, the per-group event medians, and a
+per-group dropout hazard corresponding to 5% per 12 months.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<span>  nsim     <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">241</span>, <span class="fl">241</span><span class="op">)</span>,</span>
+<span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
+<span>  a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">12.9</span>, <span class="fl">9.0</span><span class="op">)</span>,</span>
+<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  seed     <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="interim-and-final-analyses">Interim and final analyses<a class="anchor" aria-label="anchor" href="#interim-and-final-analyses"></a>
+</h2>
+<p><code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> runs the event-driven looks. We analyze
+at 252 and 336 events, take the chemotherapy group as the control, and
+compute both the log-rank and the Cox statistics with a two-sided test,
+matching the trial.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>  <span class="va">df</span>, control <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span>,</span>
+<span>  stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="spending-boundaries">Spending boundaries<a class="anchor" aria-label="anchor" href="#spending-boundaries"></a>
+</h2>
+<p>The efficacy boundary is the Lan-DeMets O’Brien-Fleming spending
+function at the planned information fractions. We obtain it from
+gsDesign and convert the upper Z boundaries to two-sided nominal p-value
+boundaries, which is the scale <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> consumes
+through its <code>p.col</code> argument.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://keaven.github.io/gsDesign/" class="external-link">gsDesign</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">k</span>     <span class="op">&lt;-</span> <span class="fl">3</span></span>
-<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.025</span></span>
-<span></span>
 <span><span class="va">gsd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://keaven.github.io/gsDesign/reference/gsDesign.html" class="external-link">gsDesign</a></span><span class="op">(</span></span>
-<span>  k         <span class="op">=</span> <span class="va">k</span>,</span>
-<span>  test.type <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  alpha     <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  sfu       <span class="op">=</span> <span class="va">sfLDOF</span>,</span>
-<span>  timing    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span> <span class="op">/</span> <span class="fl">3</span></span>
+<span>  k      <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  timing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span> <span class="op">/</span> <span class="fl">336</span>,</span>
+<span>  alpha  <span class="op">=</span> <span class="fl">0.025</span>,</span>
+<span>  beta   <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  sfu    <span class="op">=</span> <span class="va">sfLDOF</span>,</span>
+<span>  test.type <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Upper (efficacy) Z boundaries at the three looks</span></span>
-<span><span class="va">z_bounds</span> <span class="op">&lt;-</span> <span class="va">gsd</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span></span>
-<span><span class="va">z_bounds</span></span>
-<span><span class="co">#&gt; [1] 3.710303 2.511427 1.993048</span></span></code></pre></div>
-<p>The boundaries are increasing in stringency at the earlier looks, as
-expected for an O’Brien-Fleming spending function. We will compare
-against these boundaries on the Z scale.</p>
+<span><span class="va">spend_alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="va">gsd</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span>, lower.tail <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">spend_alpha</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="simulate-the-trial-under-the-null">Simulate the trial under the null<a class="anchor" aria-label="anchor" href="#simulate-the-trial-under-the-null"></a>
+<h2 id="operating-characteristics">Operating characteristics<a class="anchor" aria-label="anchor" href="#operating-characteristics"></a>
 </h2>
-<p>Under the null hypothesis the two groups share the same hazard. We
-simulate many trials, each with the planned accrual and follow-up, and
-analyze at three event-count looks corresponding to the information
-fractions above. The target final event count is chosen for the design,
-and the interim looks are at one third and two thirds of it.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">nsim</span>         <span class="op">&lt;-</span> <span class="fl">2000</span></span>
-<span><span class="va">final_events</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
-<span><span class="va">event_looks</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">final_events</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span> <span class="op">/</span> <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">df_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim     <span class="op">=</span> <span class="va">nsim</span>,</span>
-<span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">350</span>, <span class="fl">350</span><span class="op">)</span>,</span>
-<span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span>
-<span>  a.rate   <span class="op">=</span> <span class="fl">700</span> <span class="op">/</span> <span class="fl">12</span>,</span>
-<span>  e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>  seed     <span class="op">=</span> <span class="fl">101</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df_null</span>, control <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">event_looks</span>,</span>
-<span>  stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sum_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">res_null</span>,</span>
-<span>  eff.col   <span class="op">=</span> <span class="st">"logrank.z"</span>,</span>
-<span>  efficacy  <span class="op">=</span> <span class="op">-</span><span class="va">z_bounds</span>,</span>
-<span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">sum_null</span></span>
-<span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
-<span><span class="co">#&gt;   Simulations: 2000</span></span>
-<span><span class="co">#&gt;   Boundaries: efficacy on 'logrank.z' (direction = lower)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.33      100.0      517.5    -3.7103           0.0000</span></span>
-<span><span class="co">#&gt;     2        0.67      200.0      699.9    -2.5114           0.0065</span></span>
-<span><span class="co">#&gt;     3        1.00      300.0      700.0    -1.9930           0.0215</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
-<span><span class="co">#&gt;     1        0.33      517.5      100.0          0.0    417.5          8.87</span></span>
-<span><span class="co">#&gt;     2        0.67      699.9      200.0          0.0    499.9         13.03</span></span>
-<span><span class="co">#&gt;     3        1.00      700.0      300.0          0.0    400.0         17.50</span></span>
-<span><span class="co">#&gt;  Cross. Eff.</span></span>
-<span><span class="co">#&gt;       0.0000</span></span>
-<span><span class="co">#&gt;       0.0065</span></span>
-<span><span class="co">#&gt;       0.0150</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Overall</span></span>
-<span><span class="co">#&gt;   Rejection rate (efficacy):    0.0215</span></span>
-<span><span class="co">#&gt;   Expected events at stop:      299.4</span></span>
-<span><span class="co">#&gt;   Expected sample size at stop: 700.0</span></span>
-<span><span class="co">#&gt;   Expected analysis time at stop:17.47</span></span></code></pre></div>
-<p>The cumulative rejection probability at the final look estimates the
-type I error. It should be close to the nominal 0.025.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">overall_null</span> <span class="op">&lt;-</span> <span class="va">sum_null</span><span class="op">[</span><span class="va">sum_null</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"simulation"</span>, <span class="st">"gsDesign"</span><span class="op">)</span>,</span>
-<span>  alpha  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">overall_null</span><span class="op">$</span><span class="va">cum.reject</span>, <span class="va">alpha</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;       source  alpha</span></span>
-<span><span class="co">#&gt; 1 simulation 0.0215</span></span>
-<span><span class="co">#&gt; 2   gsDesign 0.0250</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="simulate-under-the-alternative">Simulate under the alternative<a class="anchor" aria-label="anchor" href="#simulate-under-the-alternative"></a>
-</h2>
-<p>Under the alternative the treatment group has a lower hazard. The
-same design and the same boundaries now estimate the power.</p>
+<p><code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> applies the nominal p-value boundaries
+to the simulated log-rank p-values and aggregates the crossing
+probabilities, expected events, expected sample size, and expected
+analysis time across the looks.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df_alt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim     <span class="op">=</span> <span class="va">nsim</span>,</span>
-<span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">350</span>, <span class="fl">350</span><span class="op">)</span>,</span>
-<span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span>
-<span>  a.rate   <span class="op">=</span> <span class="fl">700</span> <span class="op">/</span> <span class="fl">12</span>,</span>
-<span>  e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.035</span><span class="op">)</span>,</span>
-<span>  seed     <span class="op">=</span> <span class="fl">202</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_alt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df_alt</span>, control <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">event_looks</span>,</span>
-<span>  stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sum_alt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">res_alt</span>,</span>
-<span>  eff.col   <span class="op">=</span> <span class="st">"logrank.z"</span>,</span>
-<span>  efficacy  <span class="op">=</span> <span class="op">-</span><span class="va">z_bounds</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
+<span>  <span class="va">res</span>,</span>
+<span>  p.col     <span class="op">=</span> <span class="st">"logrank.p"</span>,</span>
+<span>  alpha     <span class="op">=</span> <span class="va">spend_alpha</span>,</span>
 <span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">sum_alt</span></span>
-<span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
-<span><span class="co">#&gt;   Simulations: 2000</span></span>
-<span><span class="co">#&gt;   Boundaries: efficacy on 'logrank.z' (direction = lower)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.33      100.0      559.6    -3.7103           0.0240</span></span>
-<span><span class="co">#&gt;     2        0.67      200.0      700.0    -2.5114           0.5005</span></span>
-<span><span class="co">#&gt;     3        1.00      300.0      700.0    -1.9930           0.8645</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
-<span><span class="co">#&gt;     1        0.33      559.6      100.0          0.0    459.6          9.59</span></span>
-<span><span class="co">#&gt;     2        0.67      700.0      200.0          0.0    500.0         14.21</span></span>
-<span><span class="co">#&gt;     3        1.00      700.0      300.0          0.0    400.0         19.53</span></span>
-<span><span class="co">#&gt;  Cross. Eff.</span></span>
-<span><span class="co">#&gt;       0.0240</span></span>
-<span><span class="co">#&gt;       0.4765</span></span>
-<span><span class="co">#&gt;       0.3640</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Overall</span></span>
-<span><span class="co">#&gt;   Rejection rate (efficacy):    0.8645</span></span>
-<span><span class="co">#&gt;   Expected events at stop:      247.6</span></span>
-<span><span class="co">#&gt;   Expected sample size at stop: 696.9</span></span>
-<span><span class="co">#&gt;   Expected analysis time at stop:16.74</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The interactive run produces the following output.</p>
+<pre><code>Group-Sequential Operating Characteristics (simsummary_fast)
+  Simulations: 10000
+  Boundaries: nominal p-value on 'logrank.p'
+
+Stopping Boundaries: Look by Look
+ Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.
+    1        0.75      252.0      482.0    0.0193           0.6881
+    2        1.00      336.0      482.0    0.0442           0.9000
+
+Overall
+  Rejection rate (efficacy):    0.9000
+  Expected events at stop:      278.2
+  Expected sample size at stop: 482.0
+  Expected analysis time at stop:27.31</code></pre>
 </div>
 <div class="section level2">
-<h2 id="comparing-the-boundary-crossing-probabilities">Comparing the boundary-crossing probabilities<a class="anchor" aria-label="anchor" href="#comparing-the-boundary-crossing-probabilities"></a>
+<h2 id="comparison-with-the-closed-form-design">Comparison with the closed-form design<a class="anchor" aria-label="anchor" href="#comparison-with-the-closed-form-design"></a>
 </h2>
-<p>For a closed-form reference, recompute the design at the alternative
-effect size and read off the cumulative crossing probabilities at each
-look, then put them next to the per-look cumulative rejection from the
-simulation.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sim_cum</span> <span class="op">&lt;-</span> <span class="va">sum_alt</span><span class="op">[</span><span class="va">sum_alt</span><span class="op">$</span><span class="va">look</span> <span class="op">!=</span> <span class="st">"overall"</span>, <span class="st">"cum.reject"</span><span class="op">]</span></span>
+<p>For an independent closed-form reference we recompute the same design
+with rpact and read off the operating characteristics. The full rpact
+output is long, so we extract only the quantities needed for the
+comparison.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.rpact.org" class="external-link">rpact</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  look       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span>,</span>
-<span>  simulation <span class="op">=</span> <span class="va">sim_cum</span>,</span>
-<span>  z.boundary <span class="op">=</span> <span class="va">z_bounds</span></span>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://docs.rpact.org/reference/getDesignGroupSequential.html" class="external-link">getDesignGroupSequential</a></span><span class="op">(</span></span>
+<span>  kMax <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  beta  <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  sided <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  typeOfDesign <span class="op">=</span> <span class="st">"asOF"</span>,</span>
+<span>  informationRates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span> <span class="op">/</span> <span class="fl">336</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;   look simulation z.boundary</span></span>
-<span><span class="co">#&gt; 1    1     0.0240   3.710303</span></span>
-<span><span class="co">#&gt; 2    2     0.5005   2.511427</span></span>
-<span><span class="co">#&gt; 3    3     0.8645   1.993048</span></span></code></pre></div>
-<p>The simulated cumulative rejection probabilities track the spending
-implied by the boundaries. Small discrepancies are Monte Carlo error and
-shrink as <code>nsim</code> increases. The type I error under the null
-and the power under the alternative both align with the closed-form
-design.</p>
+<span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://docs.rpact.org/reference/getPowerSurvival.html" class="external-link">getPowerSurvival</a></span><span class="op">(</span></span>
+<span>  <span class="va">design</span>,</span>
+<span>  maxNumberOfEvents   <span class="op">=</span> <span class="fl">336</span>,</span>
+<span>  median1             <span class="op">=</span> <span class="fl">12.9</span>,</span>
+<span>  median2             <span class="op">=</span> <span class="fl">9.0</span>,</span>
+<span>  maxNumberOfSubjects <span class="op">=</span> <span class="fl">482</span>,</span>
+<span>  accrualTime         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
+<span>  dropoutRate1        <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
+<span>  dropoutRate2        <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
+<span>  allocationRatioPlanned <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The simulated and closed-form operating characteristics agree
+closely. The efficacy boundaries are the spending boundaries fed into
+the simulation, so they match by construction; the crossing
+probabilities, expected events, and expected timing are estimated
+independently by simulation and line up with the analytic values.</p>
+<table class="table">
+<thead><tr class="header">
+<th>Quantity</th>
+<th>FastSurvival (10,000 sims)</th>
+<th>gsDesign / rpact</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Interim efficacy boundary (two-sided nominal p)</td>
+<td>0.0193</td>
+<td>0.0193</td>
+</tr>
+<tr class="even">
+<td>Final efficacy boundary (two-sided nominal p)</td>
+<td>0.0442</td>
+<td>0.0442</td>
+</tr>
+<tr class="odd">
+<td>Probability of crossing at the interim</td>
+<td>0.688</td>
+<td>0.698</td>
+</tr>
+<tr class="even">
+<td>Overall power</td>
+<td>0.900</td>
+<td>0.905</td>
+</tr>
+<tr class="odd">
+<td>Expected number of events at stop</td>
+<td>278</td>
+<td>277</td>
+</tr>
+<tr class="even">
+<td>Expected analysis time at stop (months)</td>
+<td>27.3</td>
+<td>27.3</td>
+</tr>
+</tbody>
+</table>
+<p>Remaining differences are Monte Carlo error and shrink as
+<code>nsim</code> increases.</p>
 </div>
 <div class="section level2">
 <h2 id="beyond-proportional-hazards">Beyond proportional hazards<a class="anchor" aria-label="anchor" href="#beyond-proportional-hazards"></a>
 </h2>
 <p>The value of the simulation trio is that nothing in the workflow
 assumes proportional hazards. To study a delayed treatment effect,
-replace the constant alternative hazard with a piecewise specification
-and keep everything else the same. The log-rank statistic loses power
-under a delayed effect, and a weighted or max-combo statistic can be
-substituted at the <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> step to recover it.
-Because gsDesign cannot evaluate these cases in closed form, the
-validated simulation machinery becomes the tool of choice.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+replace the constant event hazard with a piecewise specification through
+<code>e.hazard</code> and <code>e.time</code> and keep everything else
+the same. The log-rank statistic loses power under a delayed effect, and
+a weighted or max-combo statistic can be substituted at the
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> step to recover it. Because gsDesign and
+rpact cannot evaluate these cases in closed form, the validated
+simulation machinery becomes the tool of choice.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim     <span class="op">=</span> <span class="va">nsim</span>,</span>
-<span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">350</span>, <span class="fl">350</span><span class="op">)</span>,</span>
-<span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span>
-<span>  a.rate   <span class="op">=</span> <span class="fl">700</span> <span class="op">/</span> <span class="fl">12</span>,</span>
-<span>  e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.05</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.030</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  e.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">6</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>  seed     <span class="op">=</span> <span class="fl">303</span></span>
+<span>  nsim     <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">241</span>, <span class="fl">241</span><span class="op">)</span>,</span>
+<span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
+<span>  a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.077</span>, <span class="fl">0.045</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.077</span>, <span class="fl">0.077</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  e.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  seed     <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">res_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df_delay</span>, control <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">event_looks</span>,</span>
-<span>  stat <span class="op">=</span> <span class="st">"maxcombo"</span></span>
+<span>  <span class="va">df_delay</span>, control <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span>,</span>
+<span>  stat <span class="op">=</span> <span class="st">"maxcombo"</span>, side <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Vergote, I., González-Martín, A., Fujiwara, K., et al. (2024).
+Tisotumab vedotin as second- or third-line therapy for recurrent
+cervical cancer. <em>New England Journal of Medicine</em>, 391(1),
+44-55.</p>
 <p>O’Brien, P. C., &amp; Fleming, T. R. (1979). A multiple testing
 procedure for clinical trials. <em>Biometrics</em>, 35(3), 549-556.</p>
 <p>Lan, K. K. G., &amp; DeMets, D. L. (1983). Discrete sequential
 boundaries for clinical trials. <em>Biometrika</em>, 70(3), 659-663.</p>
-<p>Karrison, T. G. (2016). Versatile tests for comparing survival curves
-based on weighted log-rank statistics. <em>The Stata Journal</em>,
-16(3), 678-690.</p>
 <p>Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
 analysis methods for time to event endpoints under nonproportional
 hazards: a comparative analysis. <em>Statistics in Biopharmaceutical

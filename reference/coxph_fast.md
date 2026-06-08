@@ -12,7 +12,15 @@ single C++ pass without intermediate R-level vector copies.
 ## Usage
 
 ``` r
-coxph_fast(time, event, group, control, conf.int = 0.95, presorted = FALSE)
+coxph_fast(
+  time,
+  event,
+  group,
+  control,
+  side = 2,
+  conf.level = 0.95,
+  presorted = FALSE
+)
 ```
 
 ## Arguments
@@ -38,7 +46,14 @@ coxph_fast(time, event, group, control, conf.int = 0.95, presorted = FALSE)
   control group. Subjects with `group != control` are treated as the
   treatment group.
 
-- conf.int:
+- side:
+
+  1 for a one-sided test in the direction of treatment benefit (hazard
+  ratio below 1, i.e. a negative coefficient) or 2 for a two-sided test
+  (default 2). The reported p-value follows this choice; the confidence
+  interval is always two-sided at `conf.level`.
+
+- conf.level:
 
   A single numeric value in (0, 1) specifying the confidence level for
   the Wald interval. Defaults to 0.95.
@@ -71,8 +86,8 @@ length 5 with elements matching the column names of
 - `lower .95`:
 
   Lower bound of the Wald confidence interval for the hazard ratio. The
-  label reflects `conf.int` (e.g., `"lower .90"` when
-  `conf.int = 0.90`).
+  label reflects `conf.level` (e.g., `"lower .90"` when
+  `conf.level = 0.90`).
 
 - `upper .95`:
 
@@ -163,6 +178,9 @@ fit_fast <- coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 fit_fast
 #> Pike-Halley estimator for the hazard ratio (two-group)
 #> 
+#>   control = 1
+#>   alternative = two.sided
+#> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
 #> group -0.5964    0.5508   0.5868 -1.016     0.31
@@ -183,6 +201,9 @@ coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
            control = 1, presorted = TRUE)
 #> Pike-Halley estimator for the hazard ratio (two-group)
 #> 
+#>   control = 1
+#>   alternative = two.sided
+#> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
 #> group -0.5964    0.5508   0.5868 -1.016     0.31
@@ -199,8 +220,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>        expr      min        lq       mean   median       uq      max neval cld
-#>  coxph_fast   44.393   53.4195   69.67609   67.676   71.153 5086.543  1000  a 
-#>       coxph 1478.717 1528.1745 1606.74936 1547.014 1566.887 6912.699  1000   b
+#>        expr      min       lq      mean   median        uq      max neval cld
+#>  coxph_fast   38.157   45.893   60.1547   64.435   69.6435  211.253  1000  a 
+#>       coxph 1345.522 1422.952 1519.1900 1448.169 1478.4335 7489.658  1000   b
 # }
 ```

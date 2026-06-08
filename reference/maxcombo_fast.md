@@ -19,7 +19,7 @@ maxcombo_fast(
   event,
   group,
   control,
-  side = 1,
+  side = 2,
   rho = c(0, 0, 1, 1),
   gamma = c(0, 1, 0, 1),
   presorted = FALSE,
@@ -50,8 +50,8 @@ maxcombo_fast(
 
 - side:
 
-  An integer, either 1 or 2. If `side = 1` (default), the one-sided
-  max-combo test for treatment benefit is computed. If `side = 2`, the
+  An integer, either 1 or 2. If `side = 1`, the one-sided max-combo test
+  for treatment benefit is computed. If `side = 2` (default), the
   two-sided test based on the maximum absolute component is computed.
 
 - rho:
@@ -169,16 +169,16 @@ library(survival)
 fit <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 fit["statistic"]
 #> statistic 
-#> -1.298019 
+#>  1.298019 
 fit["p.value"]
-#>   p.value 
-#> 0.1513071 
+#>  p.value 
+#> 0.302523 
 
 # Two-sided test
 maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1, side = 2)
 #> Max-combo weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 1
 #> 
 #>               Z
 #> FH(0,0) -1.0309
@@ -186,20 +186,24 @@ maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1, side = 2)
 #> FH(1,0) -1.2980
 #> FH(1,1) -0.0576
 #> 
-#>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024
+#>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Custom weight set: proportional plus late-difference only
 maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1,
               rho = c(0, 0), gamma = c(0, 1))
 #> Max-combo weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 1
 #> 
 #>               Z
 #> FH(0,0) -1.0309
 #> FH(0,1)  0.0101
 #> 
-#>  Max-combo statistic = -1.031 (one-sided),  p-value = 0.2045
+#>  Max-combo statistic = 1.031 (two-sided),  p-value = 0.409  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # presorted = TRUE: sort once outside, reuse inside a loop
 ord <- order(ovarian$futime)
@@ -207,7 +211,7 @@ maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
               control = 1, presorted = TRUE)
 #> Max-combo weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 1
 #> 
 #>               Z
 #> FH(0,0) -1.0309
@@ -215,7 +219,9 @@ maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #> FH(1,0) -1.2980
 #> FH(1,1) -0.0576
 #> 
-#>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512
+#>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)

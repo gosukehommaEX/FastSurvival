@@ -64,7 +64,7 @@ vectors.</p>
 <span>  <span class="va">t_sorted</span>,</span>
 <span>  <span class="va">e_sorted</span>,</span>
 <span>  <span class="va">t_eval</span>,</span>
-<span>  conf.int <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  conf.type <span class="op">=</span> <span class="st">"log"</span>,</span>
 <span>  presorted <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -89,7 +89,7 @@ sorted in ascending order when <code>presorted = TRUE</code>.</p></dd>
 the survival probability is evaluated.</p></dd>
 
 
-<dt id="arg-conf-int">conf.int<a class="anchor" aria-label="anchor" href="#arg-conf-int"></a></dt>
+<dt id="arg-conf-level">conf.level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
 <dd><p>A single numeric value in (0, 1) specifying the
 confidence level. Defaults to 0.95.</p></dd>
 
@@ -114,7 +114,7 @@ If <code>FALSE</code>, the vectors are sorted internally before computation.</p>
   estimate, the Greenwood standard error SE[S(t)], and the lower and upper
   confidence limits at <code>t_eval</code>. The evaluation time, confidence
   level, and confidence interval type are stored as attributes
-  <code>t_eval</code>, <code>conf.int</code>, and <code>conf.type</code>.
+  <code>t_eval</code>, <code>conf.level</code>, and <code>conf.type</code>.
   Returns a vector of <code>NA_real_</code> values (still with class
   <code>"survfit_fast"</code>) when <code>n</code> is zero.</p>
     </div>
@@ -149,7 +149,7 @@ computation.</p>
     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).</p></li>
 </ul><p>The returned object has class <code>"survfit_fast"</code> and is a named numeric
 vector of length 4 with the evaluation time <code>t_eval</code>, the confidence
-level <code>conf.int</code>, and the confidence interval type <code>conf.type</code>
+level <code>conf.level</code>, and the confidence interval type <code>conf.type</code>
 stored as attributes. A <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method formats the result similarly
 to <code>print(summary(survival::survfit(...)))</code>.</p>
     </div>

@@ -74,8 +74,9 @@ the function is suitable for simulation loops with <code>presorted = TRUE</code>
 <span>  <span class="va">event</span>,</span>
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  control <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  <span class="va">tau</span>,</span>
-<span>  conf.int <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -104,14 +105,21 @@ the two-group contrasts are returned and <code>control</code> must be given.</p>
 represents the control group. Required when <code>group</code> is supplied.</p></dd>
 
 
+<dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
+<dd><p>1 for a one-sided test in the direction of treatment benefit
+(longer restricted mean survival in the treatment group) or 2 for a
+two-sided test (default 2). Applies to the two-group contrasts; the
+confidence intervals are always two-sided at <code>conf.level</code>.</p></dd>
+
+
+<dt id="arg-conf-level">conf.level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
+<dd><p>A single numeric value in (0, 1) specifying the confidence
+level. Defaults to 0.95.</p></dd>
+
+
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
 <dd><p>A single positive numeric value specifying the restriction
 horizon.</p></dd>
-
-
-<dt id="arg-conf-int">conf.int<a class="anchor" aria-label="anchor" href="#arg-conf-int"></a></dt>
-<dd><p>A single numeric value in (0, 1) specifying the confidence
-level. Defaults to 0.95.</p></dd>
 
 
 <dt id="arg-presorted">presorted<a class="anchor" aria-label="anchor" href="#arg-presorted"></a></dt>
@@ -129,10 +137,11 @@ sorting is handled internally.</p></dd>
   difference contrast (<code>diff</code>, <code>se.diff</code>, <code>diff.lower</code>,
   <code>diff.upper</code>, <code>z.diff</code>, <code>p.diff</code>), and the ratio contrast
   (<code>ratio</code>, <code>ratio.lower</code>, <code>ratio.upper</code>, <code>z.ratio</code>,
-  <code>p.ratio</code>). The restriction horizon and confidence level are stored
-  as attributes <code>tau</code> and <code>conf.int</code>; in two-group mode the
-  <code>control</code> label is also stored. Returns <code>NA_real_</code> values (still
-  with class <code>"rmst_fast"</code>) when <code>n</code> is zero in single-group mode.</p>
+  <code>p.ratio</code>). The restriction horizon, confidence level, and test side
+  are stored as attributes <code>tau</code>, <code>conf.level</code>, and <code>side</code>;
+  in two-group mode the <code>control</code> label is also stored. Returns
+  <code>NA_real_</code> values (still with class <code>"rmst_fast"</code>) when <code>n</code>
+  is zero in single-group mode.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -209,6 +218,7 @@ point.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricted mean survival time (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 10,  control = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             RMST</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control   6.7572</span>

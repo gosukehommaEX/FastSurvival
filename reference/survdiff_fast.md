@@ -21,7 +21,7 @@ survdiff_fast(
   event,
   group,
   control,
-  side,
+  side = 2,
   presorted = FALSE,
   strata = NULL,
   weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
@@ -53,11 +53,12 @@ survdiff_fast(
 
 - side:
 
-  An integer, either 1 or 2. If `side = 1`, returns the standardized
-  log-rank statistic (Z-score), defined as `(O_1 - E_1) / sqrt(V_1)` for
-  the treatment group, so the Z-score is negative when the treatment
-  group has fewer events than expected (a protective treatment effect).
-  If `side = 2`, returns the chi-square statistic (Z^2).
+  An integer, either 1 or 2 (default 2). If `side = 1`, returns the
+  standardized log-rank statistic (Z-score), defined as
+  `(O_1 - E_1) / sqrt(V_1)` for the treatment group, so the Z-score is
+  negative when the treatment group has fewer events than expected (a
+  protective treatment effect). If `side = 2`, returns the chi-square
+  statistic (Z^2).
 
 - presorted:
 
@@ -225,13 +226,15 @@ fit <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 2)
 fit
 #> Log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed Expected (O-E)^2/E (O-E)^2/V
 #> control          5   6.7665    0.4612    1.0627
 #> treatment        7   5.2335    0.5962    1.0627
 #> 
-#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026
+#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 chisq_ref <- survdiff(Surv(futime, fustat) ~ rx, data = ovarian)$chisq
 cat("survdiff_fast chi-square:", as.numeric(fit), "\n")
@@ -243,13 +246,15 @@ cat("survdiff      chi-square:", chisq_ref,       "\n")
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1)
 #> Log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed Expected (O-E)^2/E (O-E)^2/V
 #> control          5   6.7665    0.4612    1.0627
 #> treatment        7   5.2335    0.5962    1.0627
 #> 
-#>  Z = 1.031,  two-sided p-value = 0.3026
+#>  Z = 1.031,  one-sided p-value = 0.8487  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # presorted = TRUE: sort once outside, reuse inside a loop
 ord <- order(ovarian$futime)
@@ -257,13 +262,15 @@ survdiff_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
               control = 2, side = 2, presorted = TRUE)
 #> Log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed Expected (O-E)^2/E (O-E)^2/V
 #> control          5   6.7665    0.4612    1.0627
 #> treatment        7   5.2335    0.5962    1.0627
 #> 
-#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026
+#>  Chi-square = 1.063 on 1 df,  p-value = 0.3026  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Stratified log-rank test: compare with survdiff + strata()
 fit_str <- survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2,
@@ -281,39 +288,45 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
               weight = "fh", rho = 0, gamma = 1)
 #> Fleming-Harrington weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed
 #> control          5
 #> treatment        7
 #> 
-#>  Z = -0.0101,  two-sided p-value = 0.9919
+#>  Z = -0.0101,  one-sided p-value = 0.496  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Modestly-weighted log-rank test with t_star = 365
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
               weight = "mwlrt", t_star = 365)
 #> Modestly-weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed
 #> control          5
 #> treatment        7
 #> 
-#>  Z = 0.7583,  two-sided p-value = 0.4483
+#>  Z = 0.7583,  one-sided p-value = 0.7759  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # Stratified weighted log-rank test: Fleming-Harrington G(0,1) within strata
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
               weight = "fh", rho = 0, gamma = 1, strata = ovarian$resid.ds)
 #> Stratified Fleming-Harrington weighted log-rank test (two-group, 2 strata)
 #> 
-#>   N = 26
+#>   N = 26,  control = 2
 #> 
 #>           Observed
 #> control          5
 #> treatment        7
 #> 
-#>  Z = 0.5667,  two-sided p-value = 0.5709
+#>  Z = 0.5667,  one-sided p-value = 0.7145  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # \donttest{
 library(microbenchmark)
@@ -324,8 +337,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>           expr     min      lq       mean   median       uq      max neval cld
-#>  survdiff_fast  42.890  50.995   59.50986  62.3160   65.322  145.992  1000  a 
-#>       survdiff 939.311 980.042 1015.43056 990.3915 1002.098 6971.659  1000   b
+#>           expr     min      lq      mean   median       uq      max neval cld
+#>  survdiff_fast  37.135  42.864  51.35392  53.1735  57.8705  183.872  1000  a 
+#>       survdiff 792.203 842.272 896.11290 861.3905 883.5030 6481.836  1000   b
 # }
 ```

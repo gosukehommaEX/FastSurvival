@@ -15,7 +15,16 @@ simulation loops with `presorted = TRUE`.
 ## Usage
 
 ``` r
-ahsw_fast(time, event, group, control, tau, conf.int = 0.95, presorted = FALSE)
+ahsw_fast(
+  time,
+  event,
+  group,
+  control,
+  side = 2,
+  conf.level = 0.95,
+  tau,
+  presorted = FALSE
+)
 ```
 
 ## Arguments
@@ -38,16 +47,24 @@ ahsw_fast(time, event, group, control, tau, conf.int = 0.95, presorted = FALSE)
   A scalar value indicating which level of `group` represents the
   control group.
 
+- side:
+
+  1 for a one-sided test in the direction of treatment benefit (lower
+  average hazard in the treatment group, i.e. a ratio below 1 and a
+  negative difference) or 2 for a two-sided test (default 2). The
+  reported p-values follow this choice; the confidence intervals are
+  always two-sided at `conf.level`.
+
+- conf.level:
+
+  A single numeric value in (0, 1) specifying the confidence level.
+  Defaults to 0.95.
+
 - tau:
 
   A single positive numeric value, the truncation time point for the
   average hazard. Both groups must have positive Kaplan-Meier survival
   at `tau`.
-
-- conf.int:
-
-  A single numeric value in (0, 1) specifying the confidence level.
-  Defaults to 0.95.
 
 - presorted:
 
@@ -62,9 +79,9 @@ An object of class `"ahsw_fast"`, a named numeric vector containing the
 per-group average hazards (`ah.ctrl`, `ah.trt`), the ratio contrast
 (`rah`, `rah.lower`, `rah.upper`, `p.rah`), and the difference contrast
 (`dah`, `dah.lower`, `dah.upper`, `p.dah`). The truncation time and
-confidence level are stored as attributes `tau` and `conf.int`, and the
-`control` label is also stored. Returns `NA` values (still with class
-`"ahsw_fast"`) when either group has zero survival at `tau` or a
+confidence level are stored as attributes `tau` and `conf.level`, and
+the `control` label is also stored. Returns `NA` values (still with
+class `"ahsw_fast"`) when either group has zero survival at `tau` or a
 non-finite variance.
 
 ## Details
@@ -120,6 +137,7 @@ ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1, tau = 600)
 #> Average hazard with survival weight (two-group)
 #> 
 #>   tau = 600,  control = 1
+#>   alternative = two.sided
 #> 
 #>               AH
 #> control   0.0011
@@ -136,6 +154,7 @@ ahsw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #> Average hazard with survival weight (two-group)
 #> 
 #>   tau = 600,  control = 1
+#>   alternative = two.sided
 #> 
 #>               AH
 #> control   0.0011

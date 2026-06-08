@@ -49,7 +49,7 @@ fit <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 print(fit)
 #> Max-combo weighted log-rank test (two-group)
 #> 
-#>   N = 26
+#>   N = 26,  control = 1
 #> 
 #>               Z
 #> FH(0,0) -1.0309
@@ -57,5 +57,7 @@ print(fit)
 #> FH(1,0) -1.2980
 #> FH(1,1) -0.0576
 #> 
-#>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512
+#>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
