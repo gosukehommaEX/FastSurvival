@@ -12,7 +12,8 @@ wmst_fast(
   tau1 = 0,
   tau2 = NULL,
   side = 2,
-  conf.level = 0.95
+  conf.level = 0.95,
+  presorted = FALSE
 )
 }
 \arguments{
@@ -36,6 +37,10 @@ time), or the maximum observed time for a single group.}
 treatment superiority (difference greater than 0).}
 
 \item{conf.level}{Confidence level for the intervals.}
+
+\item{presorted}{Logical; set to \code{TRUE} when \code{time}, \code{event}
+and \code{group} are already sorted in ascending order of \code{time}, to
+skip the internal sort. Defaults to \code{FALSE}.}
 }
 \value{
 A named numeric vector of class \code{"wmst_fast"}. For a single

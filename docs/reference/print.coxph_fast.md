@@ -46,6 +46,9 @@ fit <- coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 print(fit)
 #> Pike-Halley estimator for the hazard ratio (two-group)
 #> 
+#>   control = 1
+#>   alternative = two.sided
+#> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
 #> group -0.5964    0.5508   0.5868 -1.016     0.31

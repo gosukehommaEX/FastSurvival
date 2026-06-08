@@ -47,6 +47,9 @@
 #' @param bw Optional kernel bandwidth for the hazard at the median, used only
 #'   when \code{method = "km"}. Either a single value applied to both groups or
 #'   one value per group. If omitted, a Silverman type default is used.
+#' @param presorted Logical; set to \code{TRUE} when \code{time}, \code{event}
+#'   and \code{group} are already sorted in ascending order of \code{time}, to
+#'   skip the internal sort. Defaults to \code{FALSE}.
 #'
 #' @return A named numeric vector of class \code{"medsurv_fast"}. For a single
 #'   group the elements are the median, its standard error and confidence
@@ -73,7 +76,8 @@
 #' @export
 medsurv_fast <- function(time, event, group = NULL, control = NULL,
                          side = 2, conf.level = 0.95, conf.type = "log",
-                         method = c("km", "nph"), bw = NULL) {
+                         method = c("km", "nph"), bw = NULL,
+                         presorted = FALSE) {
   method <- match.arg(method)
 
   n_obs <- length(time)
@@ -126,10 +130,16 @@ medsurv_fast <- function(time, event, group = NULL, control = NULL,
     ngroup <- 1L
   }
 
-  ord <- order(time)
-  s_time <- as.numeric(time)[ord]
-  s_event <- as.integer(event)[ord]
-  s_grp <- gcode[ord]
+  if (presorted) {
+    s_time <- as.numeric(time)
+    s_event <- as.integer(event)
+    s_grp <- gcode
+  } else {
+    ord <- order(time)
+    s_time <- as.numeric(time)[ord]
+    s_event <- as.integer(event)[ord]
+    s_grp <- gcode[ord]
+  }
 
   bw_vec <- numeric(ngroup)
   for (g in seq_len(ngroup) - 1L) {

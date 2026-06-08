@@ -77,7 +77,7 @@ hazards.</p>
 <span>  <span class="va">event</span>,</span>
 <span>  <span class="va">group</span>,</span>
 <span>  <span class="va">control</span>,</span>
-<span>  <span class="va">side</span>,</span>
+<span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  strata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"fh"</span>, <span class="st">"mwlrt"</span>, <span class="st">"gehan"</span>, <span class="st">"tarone-ware"</span><span class="op">)</span>,</span>
@@ -110,8 +110,8 @@ represents the control group.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
-<dd><p>An integer, either 1 or 2. If <code>side = 1</code>, returns the
-standardized log-rank statistic (Z-score), defined as
+<dd><p>An integer, either 1 or 2 (default 2). If <code>side = 1</code>, returns
+the standardized log-rank statistic (Z-score), defined as
 <code>(O_1 - E_1) / sqrt(V_1)</code> for the treatment group, so the Z-score is
 negative when the treatment group has fewer events than expected (a
 protective treatment effect). If <code>side = 2</code>, returns the chi-square
@@ -268,13 +268,15 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span><span class="va">fit</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed Expected (O-E)^2/E (O-E)^2/V</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5   6.7665    0.4612    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7   5.2335    0.5962    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.063 on 1 df,  p-value = 0.3026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.063 on 1 df,  p-value = 0.3026  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">chisq_ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span><span class="op">$</span><span class="va">chisq</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"survdiff_fast chi-square:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
@@ -286,13 +288,15 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span><span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed Expected (O-E)^2/E (O-E)^2/V</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5   6.7665    0.4612    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7   5.2335    0.5962    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 1.031,  two-sided p-value = 0.3026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 1.031,  one-sided p-value = 0.8487  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># presorted = TRUE: sort once outside, reuse inside a loop</span></span></span>
 <span class="r-in"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span></span>
@@ -300,13 +304,15 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span>              control <span class="op">=</span> <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">2</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed Expected (O-E)^2/E (O-E)^2/V</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5   6.7665    0.4612    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7   5.2335    0.5962    1.0627</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.063 on 1 df,  p-value = 0.3026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.063 on 1 df,  p-value = 0.3026  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Stratified log-rank test: compare with survdiff + strata()</span></span></span>
 <span class="r-in"><span><span class="va">fit_str</span> <span class="op">&lt;-</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>,</span></span>
@@ -324,39 +330,45 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span>              weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="fl">0</span>, gamma <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fleming-Harrington weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = -0.0101,  two-sided p-value = 0.9919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = -0.0101,  one-sided p-value = 0.496  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Modestly-weighted log-rank test with t_star = 365</span></span></span>
 <span class="r-in"><span><span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>              weight <span class="op">=</span> <span class="st">"mwlrt"</span>, t_star <span class="op">=</span> <span class="fl">365</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Modestly-weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.7583,  two-sided p-value = 0.4483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.7583,  one-sided p-value = 0.7759  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Stratified weighted log-rank test: Fleming-Harrington G(0,1) within strata</span></span></span>
 <span class="r-in"><span><span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>              weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="fl">0</span>, gamma <span class="op">=</span> <span class="fl">1</span>, strata <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">resid.ds</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Stratified Fleming-Harrington weighted log-rank test (two-group, 2 strata)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Observed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.5667,  two-sided p-value = 0.5709</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.5667,  one-sided p-value = 0.7145  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span></span>
@@ -368,8 +380,8 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           expr   min     lq      mean  median      uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  25.1   62.9   88.0184   84.70  101.35   528.2  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 726.6 1459.8 1747.0017 1642.95 1859.15 14116.6  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  22.5   47.5   73.0549   63.50   82.85   615.5  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 664.7 1116.0 1564.8944 1331.95 1629.80 11693.4  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

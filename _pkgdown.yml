@@ -18,9 +18,12 @@ reference:
   - survdiff_fast
   - coxph_fast
   - rmst_fast
+  - wmst_fast
   - milestone_fast
+  - medsurv_fast
   - maxcombo_fast
   - rmw_fast
+  - wkm_fast
   - ahsw_fast
   - ahr_fast
 

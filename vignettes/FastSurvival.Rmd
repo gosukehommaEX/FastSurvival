@@ -37,21 +37,26 @@ an S3 object with a `print()` method. `survfit_fast()` evaluates the
 Kaplan-Meier estimate at a single time point. `survdiff_fast()` computes the
 log-rank test and its weighted and stratified variants. `coxph_fast()`
 returns a closed-form hazard ratio. `rmst_fast()` returns the restricted mean
-survival time. `milestone_fast()` compares survival at a milestone timepoint.
-`maxcombo_fast()` computes the max-combo test. `rmw_fast()` computes the
-robust modestly-weighted log-rank test. `ahsw_fast()` computes the
-average hazard with survival weight. `ahr_fast()` computes the
+survival time, and `wmst_fast()` the window mean survival time over an
+interval. `milestone_fast()` compares survival at a milestone timepoint, and
+`medsurv_fast()` compares median survival times. `maxcombo_fast()` computes the
+max-combo test, `rmw_fast()` the robust modestly-weighted log-rank test, and
+`wkm_fast()` the weighted Kaplan-Meier (Pepe-Fleming) test. `ahsw_fast()`
+computes the average hazard with survival weight, and `ahr_fast()` the
 Kalbfleisch-Prentice average hazard ratio.
 
 The simulation functions support a full simulation study. `simdata_fast()`
 generates individual patient data for one- or two-group trials.
 `analysis_fast()` performs interim or sequential analyses of the simulated
-data at one or more looks. `simsummary_fast()` aggregates the operating
-characteristics from the analysis output against supplied boundaries.
+data at one or more looks, and can compute any of the estimation and testing
+statistics above, optionally within subgroups. `simsummary_fast()` aggregates
+the operating characteristics from the analysis output against supplied
+boundaries.
 
 # A minimal example
 
-The following example uses the `ovarian` dataset from the survival package.
+The following example uses the `ovarian` dataset from the survival package,
+with a one-sided test of treatment benefit (`side = 1`).
 
 ```{r quick}
 library(survival)
@@ -63,19 +68,21 @@ survfit_fast(ovarian$futime[ord], ovarian$fustat[ord],
 
 # Log-rank test
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
-              control = 1, side = 2)
+              control = 1, side = 1)
 
 # Hazard ratio via the Pike-Halley Estimator
-coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
+           control = 1, side = 1)
 ```
 
 # Where to go next
 
 Three further vignettes cover the package in depth. *Validation of
-FastSurvival* checks numerical agreement with established packages. *Speed
-comparison* quantifies the performance gain. *Group sequential design with
-the simulation trio* demonstrates `simdata_fast()`, `analysis_fast()`, and
-`simsummary_fast()` against a gsDesign reference.
+FastSurvival* checks numerical agreement with established packages on a real
+clinical-trial dataset. *Speed comparison* quantifies the performance gain.
+*Group sequential design with the simulation trio* demonstrates
+`simdata_fast()`, `analysis_fast()`, and `simsummary_fast()` against a gsDesign
+reference.
 
 # References
 

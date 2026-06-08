@@ -18,8 +18,9 @@ rmst_fast(
   event,
   group = NULL,
   control = NULL,
+  side = 2,
+  conf.level = 0.95,
   tau,
-  conf.int = 0.95,
   presorted = FALSE
 )
 ```
@@ -46,14 +47,21 @@ rmst_fast(
   A scalar value indicating which level of `group` represents the
   control group. Required when `group` is supplied.
 
-- tau:
+- side:
 
-  A single positive numeric value specifying the restriction horizon.
+  1 for a one-sided test in the direction of treatment benefit (longer
+  restricted mean survival in the treatment group) or 2 for a two-sided
+  test (default 2). Applies to the two-group contrasts; the confidence
+  intervals are always two-sided at `conf.level`.
 
-- conf.int:
+- conf.level:
 
   A single numeric value in (0, 1) specifying the confidence level.
   Defaults to 0.95.
+
+- tau:
+
+  A single positive numeric value specifying the restriction horizon.
 
 - presorted:
 
@@ -69,10 +77,10 @@ single-group mode it has length 4 with elements `rmst`, `std.err`,
 (`rmst.ctrl`, `rmst.trt`), the difference contrast (`diff`, `se.diff`,
 `diff.lower`, `diff.upper`, `z.diff`, `p.diff`), and the ratio contrast
 (`ratio`, `ratio.lower`, `ratio.upper`, `z.ratio`, `p.ratio`). The
-restriction horizon and confidence level are stored as attributes `tau`
-and `conf.int`; in two-group mode the `control` label is also stored.
-Returns `NA_real_` values (still with class `"rmst_fast"`) when `n` is
-zero in single-group mode.
+restriction horizon, confidence level, and test side are stored as
+attributes `tau`, `conf.level`, and `side`; in two-group mode the
+`control` label is also stored. Returns `NA_real_` values (still with
+class `"rmst_fast"`) when `n` is zero in single-group mode.
 
 ## Details
 
@@ -157,6 +165,7 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 #> Restricted mean survival time (two-group)
 #> 
 #>   tau = 10,  control = 0
+#>   alternative = two.sided
 #> 
 #>             RMST
 #> control   6.7572

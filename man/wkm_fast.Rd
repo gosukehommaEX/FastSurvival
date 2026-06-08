@@ -11,7 +11,8 @@ wkm_fast(
   control = NULL,
   side = 2,
   conf.level = 0.95,
-  weight = c("PF", "sqrtPF", "constant")
+  weight = c("PF", "sqrtPF", "constant"),
+  presorted = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,10 @@ difference.}
 \item{weight}{Weight function, one of \code{"PF"} (Pepe-Fleming combined
 censoring weight), \code{"sqrtPF"} (its square root) or \code{"constant"}
 (weight 1).}
+
+\item{presorted}{Logical; set to \code{TRUE} when \code{time}, \code{event}
+and \code{group} are already sorted in ascending order of \code{time}, to
+skip the internal sort. Defaults to \code{FALSE}.}
 }
 \value{
 A named numeric vector of class \code{"wkm_fast"} with the weighted

@@ -22,18 +22,22 @@
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/km_core.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/logrank_core.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/pihe_core.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.ahr_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.ahsw_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.coxph_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.maxcombo_fast.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.medsurv_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.milestone_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.rmst_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.rmw_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.survdiff_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.survfit_fast.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.wkm_fast.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/print.wmst_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/rmst_core.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/rmw_core.html</loc></url>
@@ -45,5 +49,7 @@
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.html</loc></url>
 <url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/weighted_logrank_core.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.html</loc></url>
+<url><loc>https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.html</loc></url>
 </urlset>
 

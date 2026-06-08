@@ -51,6 +51,7 @@ Suggests:
     survAH,
     simtrial,
     gsDesign,
+    rpact,
     nph,
     nphRCT,
     microbenchmark,

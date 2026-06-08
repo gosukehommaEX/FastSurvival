@@ -8,8 +8,9 @@ calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing survdiff_fast,
 coxph_fast, rmst_fast, survfit_fast,
 maxcombo_fast, ahsw_fast,
-milestone_fast, rmw_fast, and
-ahr_fast. Optionally the same
+milestone_fast, rmw_fast,
+ahr_fast, medsurv_fast,
+wkm_fast, and wmst_fast. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:description" content='Performs interim or sequential analyses of simulated two-group
@@ -21,8 +22,9 @@ calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing survdiff_fast,
 coxph_fast, rmst_fast, survfit_fast,
 maxcombo_fast, ahsw_fast,
-milestone_fast, rmw_fast, and
-ahr_fast. Optionally the same
+milestone_fast, rmw_fast,
+ahr_fast, medsurv_fast,
+wkm_fast, and wmst_fast. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
@@ -75,8 +77,9 @@ calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing <code><a href="survdiff_fast.html">survdiff_fast</a></code>,
 <code><a href="coxph_fast.html">coxph_fast</a></code>, <code><a href="rmst_fast.html">rmst_fast</a></code>, <code><a href="survfit_fast.html">survfit_fast</a></code>,
 <code><a href="maxcombo_fast.html">maxcombo_fast</a></code>, <code><a href="ahsw_fast.html">ahsw_fast</a></code>,
-<code><a href="milestone_fast.html">milestone_fast</a></code>, <code><a href="rmw_fast.html">rmw_fast</a></code>, and
-<code><a href="ahr_fast.html">ahr_fast</a></code>. Optionally the same
+<code><a href="milestone_fast.html">milestone_fast</a></code>, <code><a href="rmw_fast.html">rmw_fast</a></code>,
+<code><a href="ahr_fast.html">ahr_fast</a></code>, <code><a href="medsurv_fast.html">medsurv_fast</a></code>,
+<code><a href="wkm_fast.html">wkm_fast</a></code>, and <code><a href="wmst_fast.html">wmst_fast</a></code>. Optionally the same
 statistics are also reported within each subgroup. The censoring and time
 sorting are handled by a C++ backend, and the analysis cores are called with
 <code>presorted = TRUE</code>, so each look avoids a redundant sort.</p>
@@ -92,7 +95,7 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <span>  stat <span class="op">=</span> <span class="st">"logrank"</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  t.eval <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  conf.int <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  by.subgroup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"fh"</span>, <span class="st">"mwlrt"</span>, <span class="st">"gehan"</span>, <span class="st">"tarone-ware"</span><span class="op">)</span>,</span>
@@ -105,7 +108,12 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <span>  mc.rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  mc.gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  abseps <span class="op">=</span> <span class="fl">1e-05</span>,</span>
-<span>  maxpts <span class="op">=</span> <span class="fl">25000</span></span>
+<span>  maxpts <span class="op">=</span> <span class="fl">25000</span>,</span>
+<span>  medsurv.method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"km"</span>, <span class="st">"nph"</span><span class="op">)</span>,</span>
+<span>  medsurv.bw <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  wkm.weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PF"</span>, <span class="st">"sqrtPF"</span>, <span class="st">"constant"</span><span class="op">)</span>,</span>
+<span>  wmst.tau1 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  wmst.tau2 <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,8 +145,9 @@ Mutually exclusive with <code>event.looks</code>.</p></dd>
 <dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
 <dd><p>A character vector naming the statistics to compute. Any subset
 of <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"</code>,
-<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>, and
-<code>"ahr"</code>. Defaults to <code>"logrank"</code>.</p></dd>
+<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>,
+<code>"ahr"</code>, <code>"medsurv"</code>, <code>"wkm"</code>, and <code>"wmst"</code>. Defaults to
+<code>"logrank"</code>.</p></dd>
 
 
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
@@ -154,7 +163,7 @@ requested.</p></dd>
 <code>"km"</code>. Required only when <code>"km"</code> is requested.</p></dd>
 
 
-<dt id="arg-conf-int">conf.int<a class="anchor" aria-label="anchor" href="#arg-conf-int"></a></dt>
+<dt id="arg-conf-level">conf.level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
 <dd><p>A single numeric value in (0, 1), the confidence level for
 <code>"coxph"</code>, <code>"rmst"</code>, and <code>"ahsw"</code>. Defaults to 0.95.</p></dd>
 
@@ -254,6 +263,37 @@ evaluations for the quasi-Monte-Carlo integration used by the
 <code>"maxcombo"</code> p-value when four or more weights are supplied. Defaults
 to 25000.</p></dd>
 
+
+<dt id="arg-medsurv-method">medsurv.method<a class="anchor" aria-label="anchor" href="#arg-medsurv-method"></a></dt>
+<dd><p>A character string naming the variance method for the
+<code>"medsurv"</code> statistic, one of <code>"km"</code> (default) or <code>"nph"</code>.
+See <code><a href="medsurv_fast.html">medsurv_fast</a></code>.</p></dd>
+
+
+<dt id="arg-medsurv-bw">medsurv.bw<a class="anchor" aria-label="anchor" href="#arg-medsurv-bw"></a></dt>
+<dd><p>An optional single positive numeric value, the kernel
+bandwidth for the median hazard used by <code>medsurv.method = "km"</code>,
+applied to both groups. <code>NULL</code> (default) uses a Silverman type default
+computed per group from the cut data, matching <code><a href="medsurv_fast.html">medsurv_fast</a></code>.</p></dd>
+
+
+<dt id="arg-wkm-weight">wkm.weight<a class="anchor" aria-label="anchor" href="#arg-wkm-weight"></a></dt>
+<dd><p>A character string naming the weight for the <code>"wkm"</code>
+statistic, one of <code>"PF"</code> (default, Pepe-Fleming combined censoring
+weight), <code>"sqrtPF"</code>, or <code>"constant"</code>. See <code><a href="wkm_fast.html">wkm_fast</a></code>.</p></dd>
+
+
+<dt id="arg-wmst-tau-">wmst.tau1<a class="anchor" aria-label="anchor" href="#arg-wmst-tau-"></a></dt>
+<dd><p>A single non-negative numeric value, the lower window limit
+for the <code>"wmst"</code> statistic. Defaults to 0.</p></dd>
+
+
+<dt id="arg-wmst-tau-">wmst.tau2<a class="anchor" aria-label="anchor" href="#arg-wmst-tau-"></a></dt>
+<dd><p>A single positive numeric value, the upper window limit for
+the <code>"wmst"</code> statistic, which must exceed <code>wmst.tau1</code>. <code>NULL</code>
+(default) falls back to <code>tau</code>. Required (through either argument) only
+when <code>"wmst"</code> is requested.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -287,7 +327,14 @@ to 25000.</p></dd>
   <code>milestone.diff.upper</code>, <code>milestone.z</code>, and <code>milestone.p</code>
   for <code>"milestone"</code>; <code>rmw.stat</code> and <code>rmw.p</code> for <code>"rmw"</code>;
   and <code>ahr.ahr</code>, <code>ahr.theta.ctrl</code>, <code>ahr.theta.trt</code>,
-  <code>ahr.z</code>, and <code>ahr.p</code> for <code>"ahr"</code>. The Z columns
+  <code>ahr.z</code>, and <code>ahr.p</code> for <code>"ahr"</code>;
+  <code>medsurv.ctrl</code>, <code>medsurv.trt</code>, <code>medsurv.diff</code>,
+  <code>medsurv.diff.lower</code>, <code>medsurv.diff.upper</code>, <code>medsurv.z</code>, and
+  <code>medsurv.p</code> for <code>"medsurv"</code>; <code>wkm.wdiff</code>, <code>wkm.lower</code>,
+  <code>wkm.upper</code>, <code>wkm.z</code>, and <code>wkm.p</code> for <code>"wkm"</code>; and
+  <code>wmst.ctrl</code>, <code>wmst.trt</code>, <code>wmst.diff</code>,
+  <code>wmst.diff.lower</code>, <code>wmst.diff.upper</code>, <code>wmst.z</code>, and
+  <code>wmst.p</code> for <code>"wmst"</code>. The Z columns
   <code>logrank.z</code>, <code>cox.z</code>, and
   <code>rmst.z</code> carry the natural sign of each test, and the p-value columns
   follow <code>side</code> except for the AHSW p-values, which are two-sided.</p>
@@ -316,8 +363,8 @@ overall analysis and for every subgroup analysis at that look.</p>
 <p>Exactly one of <code>event.looks</code> and <code>time.looks</code> must be supplied.</p>
 <p>The statistics are selected with <code>stat</code>, which may name one or more of
 <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"</code>,
-<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>, and
-<code>"ahr"</code>.</p>
+<code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>,
+<code>"ahr"</code>, <code>"medsurv"</code>, <code>"wkm"</code>, and <code>"wmst"</code>.</p>
 <p>The <code>"logrank"</code> statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
 behavior of earlier versions of this function exactly. A non-default
@@ -370,6 +417,28 @@ over the window from 0 to <code>tau</code>. It reports the average hazard ratio
 the test statistic on the group-share scale, and the p-value. The benefit
 direction is an average hazard ratio below 1 (a negative Z), as in
 <code><a href="ahr_fast.html">ahr_fast</a></code>.</p>
+<p>The <code>"medsurv"</code> statistic compares the non-parametric Kaplan-Meier
+median survival times of the two groups. It reports the per-group medians,
+their difference (treatment minus control) with a plain-scale confidence
+interval, the Wald statistic, and the p-value. The variance method is
+selected with <code>medsurv.method</code> (<code>"km"</code> or <code>"nph"</code>), matching
+<code><a href="medsurv_fast.html">medsurv_fast</a></code>; <code>medsurv.bw</code> optionally overrides the kernel
+bandwidth used by <code>medsurv.method = "km"</code>. The benefit direction is a
+positive difference (a longer median under treatment), so a positive Z favors
+treatment.</p>
+<p>The <code>"wkm"</code> statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
+It reports the weighted integrated survival difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the p-value.
+The weight is selected with <code>wkm.weight</code> (<code>"PF"</code>, <code>"sqrtPF"</code>,
+or <code>"constant"</code>), matching <code><a href="wkm_fast.html">wkm_fast</a></code>. The benefit direction
+is a positive weighted difference (a positive Z favors treatment).</p>
+<p>The <code>"wmst"</code> statistic compares the window mean survival time, the area
+under the Kaplan-Meier curve between <code>wmst.tau1</code> and <code>wmst.tau2</code>.
+It reports the per-group WMST values, their difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the p-value,
+matching <code><a href="wmst_fast.html">wmst_fast</a></code>. With <code>wmst.tau1 = 0</code> the window mean
+survival time is the restricted mean survival time at <code>wmst.tau2</code>. The
+benefit direction is a positive difference (a positive Z favors treatment).</p>
 <p>When <code>by.subgroup = TRUE</code>, the output is given in long form with a
 <code>population</code> column. Each <code>(sim, look)</code> produces one row for the
 whole trial (<code>population = "overall"</code>) plus one row per subgroup level
@@ -391,7 +460,9 @@ the whole-population analysis.</p>
   <code><a href="coxph_fast.html">coxph_fast</a></code>, <code><a href="rmst_fast.html">rmst_fast</a></code>,
   <code><a href="survfit_fast.html">survfit_fast</a></code>, <code><a href="maxcombo_fast.html">maxcombo_fast</a></code>,
   <code><a href="ahsw_fast.html">ahsw_fast</a></code>, <code><a href="milestone_fast.html">milestone_fast</a></code>,
-  <code><a href="rmw_fast.html">rmw_fast</a></code>, <code><a href="ahr_fast.html">ahr_fast</a></code>.</p></div>
+  <code><a href="rmw_fast.html">rmw_fast</a></code>, <code><a href="ahr_fast.html">ahr_fast</a></code>,
+  <code><a href="medsurv_fast.html">medsurv_fast</a></code>, <code><a href="wkm_fast.html">wkm_fast</a></code>,
+  <code><a href="wmst_fast.html">wmst_fast</a></code>.</p></div>
     </div>
 
     <div class="section level2">

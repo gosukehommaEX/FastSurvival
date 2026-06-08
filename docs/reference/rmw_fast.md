@@ -15,7 +15,15 @@ single pass by the C++ core `rmw_core`.
 ## Usage
 
 ``` r
-rmw_fast(time, event, group, control, side, s_star = 0.5, presorted = FALSE)
+rmw_fast(
+  time,
+  event,
+  group,
+  control,
+  side = 2,
+  s_star = 0.5,
+  presorted = FALSE
+)
 ```
 
 ## Arguments
@@ -40,9 +48,9 @@ rmw_fast(time, event, group, control, side, s_star = 0.5, presorted = FALSE)
 
 - side:
 
-  An integer, either 1 or 2. If `side = 1`, the statistic is the minimum
-  of the two standardized components and a one-sided p-value is
-  returned. If `side = 2`, the statistic is the maximum of their
+  An integer, either 1 or 2 (default 2). If `side = 1`, the statistic is
+  the minimum of the two standardized components and a one-sided p-value
+  is returned. If `side = 2`, the statistic is the maximum of their
   absolute values and a two-sided p-value is returned.
 
 - s_star:
@@ -132,14 +140,16 @@ fit <- rmw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 fit
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
-#>   N = 26,  s_star = 0.5
+#>   N = 26,  control = 1,  s_star = 0.5
 #> 
 #>                         Z
 #> log-rank          -1.0309
 #> modestly-weighted -0.7583
 #> 
 #>   Null correlation = 0.9821
-#>  min Z = -1.031,  one-sided p-value = 0.169
+#>  min Z = -1.031,  one-sided p-value = 0.169  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # The log-rank component matches survdiff_fast with weight = "logrank"
 z_lr <- as.numeric(survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
@@ -154,14 +164,16 @@ rmw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
          control = 1, side = 2, s_star = 0.5)
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
-#>   N = 26,  s_star = 0.5
+#>   N = 26,  control = 1,  s_star = 0.5
 #> 
 #>                         Z
 #> log-rank          -1.0309
 #> modestly-weighted -0.7583
 #> 
 #>   Null correlation = 0.9821
-#>  Max |Z| = 1.031,  two-sided p-value = 0.338
+#>  Max |Z| = 1.031,  two-sided p-value = 0.338  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # presorted = TRUE: sort once outside, reuse inside a loop
 ord <- order(ovarian$futime)
@@ -169,12 +181,14 @@ rmw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
          control = 1, side = 1, s_star = 0.5, presorted = TRUE)
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
-#>   N = 26,  s_star = 0.5
+#>   N = 26,  control = 1,  s_star = 0.5
 #> 
 #>                         Z
 #> log-rank          -1.0309
 #> modestly-weighted -0.7583
 #> 
 #>   Null correlation = 0.9821
-#>  min Z = -1.031,  one-sided p-value = 0.169
+#>  min Z = -1.031,  one-sided p-value = 0.169  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

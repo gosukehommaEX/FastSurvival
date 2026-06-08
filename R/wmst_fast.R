@@ -32,6 +32,9 @@
 #' @param side Either 2 for a two-sided test or 1 for a one-sided test of
 #'   treatment superiority (difference greater than 0).
 #' @param conf.level Confidence level for the intervals.
+#' @param presorted Logical; set to \code{TRUE} when \code{time}, \code{event}
+#'   and \code{group} are already sorted in ascending order of \code{time}, to
+#'   skip the internal sort. Defaults to \code{FALSE}.
 #'
 #' @return A named numeric vector of class \code{"wmst_fast"}. For a single
 #'   group the elements are the WMST, its standard error and confidence limits.
@@ -56,7 +59,8 @@
 #' @importFrom stats qnorm pnorm
 #' @export
 wmst_fast <- function(time, event, group = NULL, control = NULL,
-                      tau1 = 0, tau2 = NULL, side = 2, conf.level = 0.95) {
+                      tau1 = 0, tau2 = NULL, side = 2, conf.level = 0.95,
+                      presorted = FALSE) {
   n_obs <- length(time)
   if (length(event) != n_obs) {
     stop("time and event must have the same length.")
@@ -118,10 +122,16 @@ wmst_fast <- function(time, event, group = NULL, control = NULL,
     stop("tau2 must be greater than tau1.")
   }
 
-  ord <- order(time)
-  s_time <- as.numeric(time)[ord]
-  s_event <- as.integer(event)[ord]
-  s_grp <- as.integer(gcode)[ord]
+  if (presorted) {
+    s_time <- as.numeric(time)
+    s_event <- as.integer(event)
+    s_grp <- as.integer(gcode)
+  } else {
+    ord <- order(time)
+    s_time <- as.numeric(time)[ord]
+    s_event <- as.integer(event)[ord]
+    s_grp <- as.integer(gcode)[ord]
+  }
 
   core <- wmst_core(s_time, s_event, s_grp, ngroup, tau1, tau2)
   wmst_v <- core[, 1]

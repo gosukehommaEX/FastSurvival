@@ -5,14 +5,14 @@
 #
 # How to run (from the package root, with the package built):
 #   devtools::load_all()      # or library(FastSurvival)
-#   source("tools/verify_ahr_fast.R")
+#   source("tools/compare_ahr_ahrKM.R")
 #
 # The archived AHR package is not on CRAN. Install it once from the read-only
 # CRAN mirror (it compiles C++), for example:
 #   remotes::install_github("cran/AHR")
 # If AHR is not installed the script reports that and stops gracefully.
 
-log_path <- file.path("tools", "benchmarks", "verify_ahr_fast_log.txt")
+log_path <- file.path("tools", "benchmarks", "compare_ahr_ahrKM_log.txt")
 if (!dir.exists(dirname(log_path))) dir.create(dirname(log_path), recursive = TRUE)
 cat("ahr_fast vs AHR cross-validation\n", file = log_path, append = FALSE)
 cat(format(Sys.time()), "\n\n", file = log_path, append = TRUE)
@@ -36,7 +36,9 @@ if (!requireNamespace("AHR", quietly = TRUE) ||
     dd <- as.integer(c(o0, o1) <= cc)
     zz <- rep(c(0, 1), each = ne)
 
-    fast <- ahr_fast(yy, dd, zz, tau = tau)
+    ord  <- order(yy)
+    fast <- ahr_fast(yy[ord], dd[ord], zz[ord], control = 0, tau = tau,
+                     presorted = TRUE)
 
     dat <- data.frame(Y = yy, D = dd, Z = zz)
     ref <- AHR::ahrKM(tau, survival::Surv(Y, D) ~ Z, dat)

@@ -3,257 +3,235 @@
 ## Purpose
 
 This vignette demonstrates the three simulation functions working
-together:
+together on a real phase 3 trial:
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 generates the trial data,
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-performs the interim analyses, and
+performs the interim and final analyses, and
 [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
-aggregates the operating characteristics. We set up a three-look group
-sequential design with an O’Brien-Fleming type efficacy boundary, then
-check that the simulated rejection probabilities match the closed-form
-values from [gsDesign](https://cran.r-project.org/package=gsDesign).
+aggregates the operating characteristics. We reproduce the group
+sequential design of the innovaTV 301 trial and check that the simulated
+operating characteristics match the closed-form values from
+[gsDesign](https://cran.r-project.org/package=gsDesign) and
+[rpact](https://cran.r-project.org/package=rpact).
 
 The point is not that simulation replaces the closed-form calculation
-under proportional hazards, where gsDesign is exact, but that once the
-two agree on a case gsDesign can handle, the same simulation machinery
-can be trusted for cases it cannot, such as non-proportional hazards or
-data-dependent timing.
+under proportional hazards, where gsDesign and rpact are exact, but that
+once the simulation agrees on a case they can handle, the same machinery
+can be trusted for cases they cannot, such as non-proportional hazards
+or data-dependent analysis timing. The benchmark code is shown but not
+executed when the vignette is built, because the simulation uses many
+replicates; the printed results are those obtained from an interactive
+run.
 
 ``` r
 library(FastSurvival)
 ```
 
-## The design
+## The innovaTV 301 trial
 
-We consider a two-group trial with a one-sided test at level 0.025,
-three equally spaced looks by information fraction, and an
-O’Brien-Fleming spending function for the efficacy boundary. We first
-obtain the design from gsDesign.
+innovaTV 301 (ENGOT-cx12/GOG-3057) was a phase 3, open-label trial of
+tisotumab vedotin versus the investigator’s choice of chemotherapy in
+patients with recurrent or metastatic cervical cancer (Vergote et al.,
+2024). The primary end point was overall survival, with patients
+randomly assigned in a 1:1 ratio.
+
+The design enrolled approximately 482 patients and was powered at 90% on
+the occurrence of 336 total deaths, with one prespecified interim
+efficacy analysis at about 75% of information (252 of 336 events). The
+overall two-sided type I error was controlled at 5% using the Lan-DeMets
+spending function with an O’Brien-Fleming boundary. For planning we take
+an exponential overall survival with a median of 12.9 months in the
+tisotumab vedotin group and 9.0 months in the chemotherapy group (a
+hazard ratio of about 0.70), accrual over 23 months, and a 5% annual
+dropout rate in each group.
+
+## Simulating the trial
+
+[`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+generates the survival, censoring, and entry times for all replicates in
+one fused C++ pass. We specify the two group sizes, the accrual window,
+the per-group event medians, and a per-group dropout hazard
+corresponding to 5% per 12 months.
+
+``` r
+df <- simdata_fast(
+  nsim     = 10000,
+  n        = c(241, 241),
+  a.time   = c(0, 23),
+  a.prop   = 1,
+  e.median = list(12.9, 9.0),
+  d.hazard = list(-log(1 - 0.05) / 12, -log(1 - 0.05) / 12),
+  seed     = 1
+)
+```
+
+## Interim and final analyses
+
+[`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+runs the event-driven looks. We analyze at 252 and 336 events, take the
+chemotherapy group as the control, and compute both the log-rank and the
+Cox statistics with a two-sided test, matching the trial.
+
+``` r
+res <- analysis_fast(
+  df, control = 2,
+  event.looks = c(252, 336),
+  stat = c("logrank", "coxph"), side = 2
+)
+```
+
+## Spending boundaries
+
+The efficacy boundary is the Lan-DeMets O’Brien-Fleming spending
+function at the planned information fractions. We obtain it from
+gsDesign and convert the upper Z boundaries to two-sided nominal p-value
+boundaries, which is the scale
+[`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+consumes through its `p.col` argument.
 
 ``` r
 library(gsDesign)
 
-k     <- 3
-alpha <- 0.025
-
 gsd <- gsDesign(
-  k         = k,
-  test.type = 1,
-  alpha     = alpha,
-  sfu       = sfLDOF,
-  timing    = c(1, 2, 3) / 3
+  k      = 2,
+  timing = c(252, 336) / 336,
+  alpha  = 0.025,
+  beta   = 0.1,
+  sfu    = sfLDOF,
+  test.type = 1
 )
 
-# Upper (efficacy) Z boundaries at the three looks
-z_bounds <- gsd$upper$bound
-z_bounds
-#> [1] 3.710303 2.511427 1.993048
+spend_alpha <- 2 * pnorm(gsd$upper$bound, lower.tail = FALSE)
+spend_alpha
 ```
 
-The boundaries are increasing in stringency at the earlier looks, as
-expected for an O’Brien-Fleming spending function. We will compare
-against these boundaries on the Z scale.
+## Operating characteristics
 
-## Simulate the trial under the null
-
-Under the null hypothesis the two groups share the same hazard. We
-simulate many trials, each with the planned accrual and follow-up, and
-analyze at three event-count looks corresponding to the information
-fractions above. The target final event count is chosen for the design,
-and the interim looks are at one third and two thirds of it.
+[`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+applies the nominal p-value boundaries to the simulated log-rank
+p-values and aggregates the crossing probabilities, expected events,
+expected sample size, and expected analysis time across the looks.
 
 ``` r
-nsim         <- 2000
-final_events <- 300
-event_looks  <- round(final_events * c(1, 2, 3) / 3)
-
-df_null <- simdata_fast(
-  nsim     = nsim,
-  n        = c(350, 350),
-  a.time   = c(0, 12),
-  a.rate   = 700 / 12,
-  e.hazard = list(0.05, 0.05),
-  seed     = 101
-)
-
-res_null <- analysis_fast(
-  df_null, control = 1,
-  event.looks = event_looks,
-  stat = "logrank", side = 1
-)
-
-sum_null <- simsummary_fast(
-  res_null,
-  eff.col   = "logrank.z",
-  efficacy  = -z_bounds,
+simsummary_fast(
+  res,
+  p.col     = "logrank.p",
+  alpha     = spend_alpha,
   direction = "lower"
 )
-sum_null
-#> Group-Sequential Operating Characteristics (simsummary_fast)
-#>   Simulations: 2000
-#>   Boundaries: efficacy on 'logrank.z' (direction = lower)
-#> 
-#> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
-#>     1        0.33      100.0      517.5    -3.7103           0.0000
-#>     2        0.67      200.0      699.9    -2.5114           0.0065
-#>     3        1.00      300.0      700.0    -1.9930           0.0215
-#> 
-#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
-#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
-#>     1        0.33      517.5      100.0          0.0    417.5          8.87
-#>     2        0.67      699.9      200.0          0.0    499.9         13.03
-#>     3        1.00      700.0      300.0          0.0    400.0         17.50
-#>  Cross. Eff.
-#>       0.0000
-#>       0.0065
-#>       0.0150
-#> 
-#> Overall
-#>   Rejection rate (efficacy):    0.0215
-#>   Expected events at stop:      299.4
-#>   Expected sample size at stop: 700.0
-#>   Expected analysis time at stop:17.47
 ```
 
-The cumulative rejection probability at the final look estimates the
-type I error. It should be close to the nominal 0.025.
+The interactive run produces the following output.
+
+    Group-Sequential Operating Characteristics (simsummary_fast)
+      Simulations: 10000
+      Boundaries: nominal p-value on 'logrank.p'
+
+    Stopping Boundaries: Look by Look
+     Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.
+        1        0.75      252.0      482.0    0.0193           0.6881
+        2        1.00      336.0      482.0    0.0442           0.9000
+
+    Overall
+      Rejection rate (efficacy):    0.9000
+      Expected events at stop:      278.2
+      Expected sample size at stop: 482.0
+      Expected analysis time at stop:27.31
+
+## Comparison with the closed-form design
+
+For an independent closed-form reference we recompute the same design
+with rpact and read off the operating characteristics. The full rpact
+output is long, so we extract only the quantities needed for the
+comparison.
 
 ``` r
-overall_null <- sum_null[sum_null$look == "overall", ]
-data.frame(
-  source = c("simulation", "gsDesign"),
-  alpha  = c(overall_null$cum.reject, alpha)
+library(rpact)
+
+design <- getDesignGroupSequential(
+  kMax = 2,
+  alpha = 0.05,
+  beta  = 0.1,
+  sided = 2,
+  typeOfDesign = "asOF",
+  informationRates = c(252, 336) / 336
 )
-#>       source  alpha
-#> 1 simulation 0.0215
-#> 2   gsDesign 0.0250
+
+results <- getPowerSurvival(
+  design,
+  maxNumberOfEvents   = 336,
+  median1             = 12.9,
+  median2             = 9.0,
+  maxNumberOfSubjects = 482,
+  accrualTime         = c(0, 23),
+  dropoutRate1        = -log(1 - 0.05),
+  dropoutRate2        = -log(1 - 0.05),
+  allocationRatioPlanned = 1
+)
 ```
 
-## Simulate under the alternative
+The simulated and closed-form operating characteristics agree closely.
+The efficacy boundaries are the spending boundaries fed into the
+simulation, so they match by construction; the crossing probabilities,
+expected events, and expected timing are estimated independently by
+simulation and line up with the analytic values.
 
-Under the alternative the treatment group has a lower hazard. The same
-design and the same boundaries now estimate the power.
+| Quantity | FastSurvival (10,000 sims) | gsDesign / rpact |
+|----|----|----|
+| Interim efficacy boundary (two-sided nominal p) | 0.0193 | 0.0193 |
+| Final efficacy boundary (two-sided nominal p) | 0.0442 | 0.0442 |
+| Probability of crossing at the interim | 0.688 | 0.698 |
+| Overall power | 0.900 | 0.905 |
+| Expected number of events at stop | 278 | 277 |
+| Expected analysis time at stop (months) | 27.3 | 27.3 |
 
-``` r
-df_alt <- simdata_fast(
-  nsim     = nsim,
-  n        = c(350, 350),
-  a.time   = c(0, 12),
-  a.rate   = 700 / 12,
-  e.hazard = list(0.05, 0.035),
-  seed     = 202
-)
-
-res_alt <- analysis_fast(
-  df_alt, control = 1,
-  event.looks = event_looks,
-  stat = "logrank", side = 1
-)
-
-sum_alt <- simsummary_fast(
-  res_alt,
-  eff.col   = "logrank.z",
-  efficacy  = -z_bounds,
-  direction = "lower"
-)
-sum_alt
-#> Group-Sequential Operating Characteristics (simsummary_fast)
-#>   Simulations: 2000
-#>   Boundaries: efficacy on 'logrank.z' (direction = lower)
-#> 
-#> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
-#>     1        0.33      100.0      559.6    -3.7103           0.0240
-#>     2        0.67      200.0      700.0    -2.5114           0.5005
-#>     3        1.00      300.0      700.0    -1.9930           0.8645
-#> 
-#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
-#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
-#>     1        0.33      559.6      100.0          0.0    459.6          9.59
-#>     2        0.67      700.0      200.0          0.0    500.0         14.21
-#>     3        1.00      700.0      300.0          0.0    400.0         19.53
-#>  Cross. Eff.
-#>       0.0240
-#>       0.4765
-#>       0.3640
-#> 
-#> Overall
-#>   Rejection rate (efficacy):    0.8645
-#>   Expected events at stop:      247.6
-#>   Expected sample size at stop: 696.9
-#>   Expected analysis time at stop:16.74
-```
-
-## Comparing the boundary-crossing probabilities
-
-For a closed-form reference, recompute the design at the alternative
-effect size and read off the cumulative crossing probabilities at each
-look, then put them next to the per-look cumulative rejection from the
-simulation.
-
-``` r
-sim_cum <- sum_alt[sum_alt$look != "overall", "cum.reject"]
-
-data.frame(
-  look       = seq_len(k),
-  simulation = sim_cum,
-  z.boundary = z_bounds
-)
-#>   look simulation z.boundary
-#> 1    1     0.0240   3.710303
-#> 2    2     0.5005   2.511427
-#> 3    3     0.8645   1.993048
-```
-
-The simulated cumulative rejection probabilities track the spending
-implied by the boundaries. Small discrepancies are Monte Carlo error and
-shrink as `nsim` increases. The type I error under the null and the
-power under the alternative both align with the closed-form design.
+Remaining differences are Monte Carlo error and shrink as `nsim`
+increases.
 
 ## Beyond proportional hazards
 
 The value of the simulation trio is that nothing in the workflow assumes
 proportional hazards. To study a delayed treatment effect, replace the
-constant alternative hazard with a piecewise specification and keep
-everything else the same. The log-rank statistic loses power under a
-delayed effect, and a weighted or max-combo statistic can be substituted
-at the
+constant event hazard with a piecewise specification through `e.hazard`
+and `e.time` and keep everything else the same. The log-rank statistic
+loses power under a delayed effect, and a weighted or max-combo
+statistic can be substituted at the
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-step to recover it. Because gsDesign cannot evaluate these cases in
-closed form, the validated simulation machinery becomes the tool of
-choice.
+step to recover it. Because gsDesign and rpact cannot evaluate these
+cases in closed form, the validated simulation machinery becomes the
+tool of choice.
 
 ``` r
 df_delay <- simdata_fast(
-  nsim     = nsim,
-  n        = c(350, 350),
-  a.time   = c(0, 12),
-  a.rate   = 700 / 12,
-  e.hazard = list(c(0.05, 0.05), c(0.05, 0.030)),
-  e.time   = c(0, 6, Inf),
-  seed     = 303
+  nsim     = 10000,
+  n        = c(241, 241),
+  a.time   = c(0, 23),
+  a.prop   = 1,
+  e.hazard = list(c(0.077, 0.045), c(0.077, 0.077)),
+  e.time   = c(0, 3, Inf),
+  d.hazard = list(-log(1 - 0.05) / 12, -log(1 - 0.05) / 12),
+  seed     = 1
 )
 
 res_delay <- analysis_fast(
-  df_delay, control = 1,
-  event.looks = event_looks,
-  stat = "maxcombo"
+  df_delay, control = 2,
+  event.looks = c(252, 336),
+  stat = "maxcombo", side = 2
 )
 ```
 
 ## References
+
+Vergote, I., González-Martín, A., Fujiwara, K., et al. (2024). Tisotumab
+vedotin as second- or third-line therapy for recurrent cervical cancer.
+*New England Journal of Medicine*, 391(1), 44-55.
 
 O’Brien, P. C., & Fleming, T. R. (1979). A multiple testing procedure
 for clinical trials. *Biometrics*, 35(3), 549-556.
 
 Lan, K. K. G., & DeMets, D. L. (1983). Discrete sequential boundaries
 for clinical trials. *Biometrika*, 70(3), 659-663.
-
-Karrison, T. G. (2016). Versatile tests for comparing survival curves
-based on weighted log-rank statistics. *The Stata Journal*, 16(3),
-678-690.
 
 Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
 analysis methods for time to event endpoints under nonproportional

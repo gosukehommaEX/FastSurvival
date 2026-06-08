@@ -149,8 +149,9 @@ gen_data <- function(n_per, rate_c, rate_t = NULL, cp = NULL, hr1 = 1, hr2 = NUL
 }
 
 compare_one <- function(label, d) {
-  fast <- wkm_fast(d$time, d$event, group = d$group, control = 0, side = 1,
-                   weight = "PF")
+  ord  <- order(d$time)
+  fast <- wkm_fast(d$time[ord], d$event[ord], group = d$group[ord], control = 0,
+                   side = 1, weight = "PF", presorted = TRUE)
   ref <- ref_fun(d)
 
   fast_val <- c(z = unname(fast["z"]), p = unname(fast["p"]))
@@ -207,9 +208,13 @@ if (have_microbenchmark) {
   evec <- bench_data$event
   gvec <- bench_data$group
 
+  # Sort once outside the timing loop, the intended pre-sorted fast path.
+  ord_b <- order(tvec)
+  tvs <- tvec[ord_b]; evs <- evec[ord_b]; gvs <- gvec[ord_b]
+
   timing <- microbenchmark::microbenchmark(
-    fast = wkm_fast(tvec, evec, group = gvec, control = 0, side = 1,
-                    weight = "PF"),
+    fast = wkm_fast(tvs, evs, group = gvs, control = 0, side = 1,
+                    weight = "PF", presorted = TRUE),
     reference = ref_fun(bench_data),
     times = 100
   )

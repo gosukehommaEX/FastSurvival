@@ -12,12 +12,13 @@ for use inside simulation loops.
 ``` r
 ahr_fast(
   time,
-  status,
+  event,
   group,
   control,
+  side = 2,
+  conf.level = 0.95,
   tau = NULL,
   null.ahr = 1,
-  conf.level = 0.95,
   presorted = FALSE
 )
 ```
@@ -28,7 +29,7 @@ ahr_fast(
 
   vector of right-censored event times
 
-- status:
+- event:
 
   0/1 (or logical) event indicators, 1 for an event
 
@@ -41,6 +42,15 @@ ahr_fast(
   the value of `group` that denotes the reference (control) group. The
   average hazard ratio is reported for the other group relative to it.
 
+- side:
+
+  1 for a one-sided test in the direction of treatment benefit (average
+  hazard ratio below `null.ahr`) or 2 for a two-sided test (default 2).
+
+- conf.level:
+
+  confidence level for the confidence interval (default 0.95)
+
 - tau:
 
   upper limit of the interval over which the average hazard ratio is
@@ -51,10 +61,6 @@ ahr_fast(
 
   value of the average hazard ratio under the null hypothesis used for
   the Z statistic and p-value (default 1)
-
-- conf.level:
-
-  confidence level for the confidence interval (default 0.95)
 
 - presorted:
 
@@ -71,7 +77,7 @@ hazard ratio, comparison vs reference), `log.ahr`, `se.loghr`, `lower`,
 `p.value.loghr` (the equivalent test on the `log(ahr)` scale),
 `se.theta` (standard error of the tested comparison-group share),
 `null.share`, `null.ahr`, `theta` (the two group shares), `var.theta1`,
-`var.theta2`, `tau`, `n` (the two group sizes) and `groups`.
+`var.theta2`, `side`, `tau`, `n` (the two group sizes) and `groups`.
 
 ## Details
 
@@ -115,23 +121,23 @@ time1 <- rexp(n, 0.1)
 time2 <- rexp(n, 0.18)
 cens <- rexp(2 * n, 0.05)
 obs <- pmin(c(time1, time2), cens)
-status <- as.integer(c(time1, time2) <= cens)
+event <- as.integer(c(time1, time2) <= cens)
 group <- rep(c(0, 1), each = n)
-ahr_fast(obs, status, group, control = 0, tau = 8)
+ahr_fast(obs, event, group, control = 0, tau = 8)
+#> Kalbfleisch-Prentice average hazard ratio (two-group)
 #> 
-#> Kalbfleisch-Prentice average hazard ratio
-#> Comparison group '1' vs reference '0' over [0, 8]
+#>   tau = 8,  control = 0
+#>   alternative = two.sided
 #> 
-#>   AHR          : 2.248
-#>   95% CI      : 1.699, 2.973
-#>   log(AHR)     : 0.81  (se 0.1427)
-#>   Z (H0: AHR = 1) : 6.317  [theta scale]
-#>   p-value      : 2.661e-10  [theta scale]
-#>   (log scale: Z = 5.676, p = 1.379e-08)
+#>            theta   n
+#> control   0.3079 200
+#> treatment 0.6921 200
 #> 
-#> Group shares of total hazard (theta):
-#>              0        1
-#> theta   0.3079   0.6921
-#> n     200.0000 200.0000
-#> 
+#>                                             Est. lower 95% upper 95%     z
+#> average hazard ratio (treatment / control) 2.248     1.699     2.973 6.317
+#>                                            Pr(>|z|)    
+#> average hazard ratio (treatment / control) 2.66e-10 ***
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#>   (log scale: z = 5.676, p = 1.379e-08)
 ```

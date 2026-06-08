@@ -1,6 +1,13 @@
-"fn","fast_ms","base_ms","speed_ratio"
-"survfit",0.0637515,3.2743005,51.3603679913414
-"survdiff",0.073101,2.297901,31.4346041777814
-"coxph",0.112001,3.7979005,33.9095231292578
-"rmst",0.087451,4.544101,51.9616813987261
-"wlr_fh",0.142701,46.63815,326.824268925936
+"method","replaces","fast_ms","ref_ms","speedup"
+"survfit_fast()","survfit() + summary()",0.082,3.3915,41.4
+"survdiff_fast()","survdiff()",0.0639,2.3491,36.8
+"coxph_fast()","coxph()",0.1192,4.0147,33.7
+"rmst_fast()","survRM2::rmst2()",0.0962,4.1758,43.4
+"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.104,36.5342,351.3
+"wmst_fast()","survWMST::wmst()",0.3933,219.653,558.5
+"milestone_fast()","survfit() + summary()",0.1964,3.3243,16.9
+"medsurv_fast()","nph::nphparams()",0.3596,10.3127,28.7
+"maxcombo_fast()","nph::logrank.maxtest()",0.3933,125.3735,318.7
+"rmw_fast()","nphRCT::wlrt() (two components)",0.296,22.8268,77.1
+"ahsw_fast()","survAH::ah2()",0.1467,60.1881,410.1
+"ahr_fast()","AHR::ahrKM()",0.4499,58.5532,130.1

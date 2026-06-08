@@ -16,13 +16,13 @@ respectively. See Tang (2021) for the MOVER difference interval and Tang
 ``` r
 milestone_fast(
   time,
-  status,
+  event,
   group,
   control,
+  side = 2,
+  conf.level = 0.95,
   tau,
   method = c("wald", "loglog", "mover"),
-  side = c("two.sided", "upper", "lower"),
-  conf.level = 0.95,
   presorted = FALSE
 )
 ```
@@ -33,7 +33,7 @@ milestone_fast(
 
   A numeric vector of follow-up times.
 
-- status:
+- event:
 
   An integer vector of event indicators, 1 for an event and 0 for a
   censored observation.
@@ -48,6 +48,17 @@ milestone_fast(
   is the treatment group and the difference is reported as treatment
   minus control.
 
+- side:
+
+  1 for a one-sided test in the direction of treatment benefit
+  (treatment milestone survival larger than control) or 2 for a
+  two-sided test (default 2). The confidence interval is always reported
+  as a two-sided interval at `conf.level`.
+
+- conf.level:
+
+  The confidence level for the reported intervals.
+
 - tau:
 
   The milestone timepoint at which the survival probabilities are
@@ -57,17 +68,6 @@ milestone_fast(
 
   The inference method for the difference in milestone survival, one of
   `"wald"`, `"loglog"`, or `"mover"`.
-
-- side:
-
-  The alternative hypothesis for the difference, one of `"two.sided"`,
-  `"upper"` (treatment survival larger), or `"lower"` (treatment
-  survival smaller). The confidence interval is always reported as a
-  two-sided interval at `conf.level`.
-
-- conf.level:
-
-  The confidence level for the reported intervals.
 
 - presorted:
 
@@ -96,9 +96,9 @@ integration method. *Statistics in Medicine*, *41*(4), 798-814.
 ``` r
 set.seed(1)
 time <- c(rexp(50, 0.1), rexp(50, 0.07))
-status <- rep(1, 100)
+event <- rep(1, 100)
 group <- rep(c(0, 1), each = 50)
-milestone_fast(time, status, group, control = 0, tau = 10, method = "loglog")
+milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 #> Milestone survival (two-group)
 #> 
 #>   tau = 10,  control = 0

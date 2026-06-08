@@ -13,7 +13,8 @@ medsurv_fast(
   conf.level = 0.95,
   conf.type = "log",
   method = c("km", "nph"),
-  bw = NULL
+  bw = NULL,
+  presorted = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,10 @@ kernel hazard) or \code{"nph"} (local constant hazard with a
 \item{bw}{Optional kernel bandwidth for the hazard at the median, used only
 when \code{method = "km"}. Either a single value applied to both groups or
 one value per group. If omitted, a Silverman type default is used.}
+
+\item{presorted}{Logical; set to \code{TRUE} when \code{time}, \code{event}
+and \code{group} are already sorted in ascending order of \code{time}, to
+skip the internal sort. Defaults to \code{FALSE}.}
 }
 \value{
 A named numeric vector of class \code{"medsurv_fast"}. For a single

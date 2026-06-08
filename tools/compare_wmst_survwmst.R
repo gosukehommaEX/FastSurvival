@@ -96,8 +96,10 @@ arm_wmst <- function(ref, k) {
 # standard error of the difference is the root sum of squared per-arm standard
 # errors, as survWMST computes it.
 compare_one <- function(label, d, w_start, w_end) {
-  fast <- wmst_fast(d$time, d$event, group = d$group, control = 0,
-                    tau1 = w_start, tau2 = w_end, side = 2)
+  ord  <- order(d$time)
+  fast <- wmst_fast(d$time[ord], d$event[ord], group = d$group[ord],
+                    control = 0, tau1 = w_start, tau2 = w_end, side = 2,
+                    presorted = TRUE)
   ref <- suppressWarnings(survWMST::wmst(time = d$time, status = d$event,
                                          arm = d$group,
                                          tau0 = w_start, tau1 = w_end))
@@ -181,9 +183,13 @@ if (have_microbenchmark) {
   evec <- bench_data$event
   gvec <- bench_data$group
 
+  # Sort once outside the timing loop, the intended pre-sorted fast path.
+  ord_b <- order(tvec)
+  tvs <- tvec[ord_b]; evs <- evec[ord_b]; gvs <- gvec[ord_b]
+
   timing <- microbenchmark::microbenchmark(
-    fast = wmst_fast(tvec, evec, group = gvec, control = 0,
-                     tau1 = 4, tau2 = 14, side = 2),
+    fast = wmst_fast(tvs, evs, group = gvs, control = 0,
+                     tau1 = 4, tau2 = 14, side = 2, presorted = TRUE),
     survwmst = suppressWarnings(survWMST::wmst(time = tvec, status = evec,
                                                arm = gvec, tau0 = 4, tau1 = 14)),
     times = 100

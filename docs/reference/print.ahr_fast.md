@@ -6,7 +6,7 @@ Print an ahr_fast object
 
 ``` r
 # S3 method for class 'ahr_fast'
-print(x, digits = 4, ...)
+print(x, digits = max(3L, getOption("digits") - 3L), ...)
 ```
 
 ## Arguments

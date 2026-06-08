@@ -15,8 +15,11 @@ for each simulated trial by reusing
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
 [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
 [`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+[`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+[`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md),
 and
-[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
+[`wmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md).
 Optionally the same statistics are also reported within each subgroup.
 The censoring and time sorting are handled by a C++ backend, and the
 analysis cores are called with `presorted = TRUE`, so each look avoids a
@@ -33,7 +36,7 @@ analysis_fast(
   stat = "logrank",
   tau = NULL,
   t.eval = NULL,
-  conf.int = 0.95,
+  conf.level = 0.95,
   side = 2,
   by.subgroup = FALSE,
   weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
@@ -46,7 +49,12 @@ analysis_fast(
   mc.rho = c(0, 0, 1, 1),
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
-  maxpts = 25000
+  maxpts = 25000,
+  medsurv.method = c("km", "nph"),
+  medsurv.bw = NULL,
+  wkm.weight = c("PF", "sqrtPF", "constant"),
+  wmst.tau1 = 0,
+  wmst.tau2 = NULL
 )
 ```
 
@@ -78,7 +86,8 @@ analysis_fast(
 
   A character vector naming the statistics to compute. Any subset of
   `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
-  `"milestone"`, `"rmw"`, and `"ahr"`. Defaults to `"logrank"`.
+  `"milestone"`, `"rmw"`, `"ahr"`, `"medsurv"`, `"wkm"`, and `"wmst"`.
+  Defaults to `"logrank"`.
 
 - tau:
 
@@ -92,7 +101,7 @@ analysis_fast(
   A single positive numeric value, the landmark time for `"km"`.
   Required only when `"km"` is requested.
 
-- conf.int:
+- conf.level:
 
   A single numeric value in (0, 1), the confidence level for `"coxph"`,
   `"rmst"`, and `"ahsw"`. Defaults to 0.95.
@@ -192,6 +201,39 @@ analysis_fast(
   for the quasi-Monte-Carlo integration used by the `"maxcombo"` p-value
   when four or more weights are supplied. Defaults to 25000.
 
+- medsurv.method:
+
+  A character string naming the variance method for the `"medsurv"`
+  statistic, one of `"km"` (default) or `"nph"`. See
+  [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
+
+- medsurv.bw:
+
+  An optional single positive numeric value, the kernel bandwidth for
+  the median hazard used by `medsurv.method = "km"`, applied to both
+  groups. `NULL` (default) uses a Silverman type default computed per
+  group from the cut data, matching
+  [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
+
+- wkm.weight:
+
+  A character string naming the weight for the `"wkm"` statistic, one of
+  `"PF"` (default, Pepe-Fleming combined censoring weight), `"sqrtPF"`,
+  or `"constant"`. See
+  [`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md).
+
+- wmst.tau1:
+
+  A single non-negative numeric value, the lower window limit for the
+  `"wmst"` statistic. Defaults to 0.
+
+- wmst.tau2:
+
+  A single positive numeric value, the upper window limit for the
+  `"wmst"` statistic, which must exceed `wmst.tau1`. `NULL` (default)
+  falls back to `tau`. Required (through either argument) only when
+  `"wmst"` is requested.
+
 ## Value
 
 A data frame. When `by.subgroup = FALSE`, it has `nsim * length(looks)`
@@ -219,7 +261,12 @@ and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`,
 `milestone.diff.lower`, `milestone.diff.upper`, `milestone.z`, and
 `milestone.p` for `"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and
 `ahr.ahr`, `ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for
-`"ahr"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
+`"ahr"`; `medsurv.ctrl`, `medsurv.trt`, `medsurv.diff`,
+`medsurv.diff.lower`, `medsurv.diff.upper`, `medsurv.z`, and `medsurv.p`
+for `"medsurv"`; `wkm.wdiff`, `wkm.lower`, `wkm.upper`, `wkm.z`, and
+`wkm.p` for `"wkm"`; and `wmst.ctrl`, `wmst.trt`, `wmst.diff`,
+`wmst.diff.lower`, `wmst.diff.upper`, `wmst.z`, and `wmst.p` for
+`"wmst"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
 natural sign of each test, and the p-value columns follow `side` except
 for the AHSW p-values, which are two-sided.
 
@@ -251,7 +298,7 @@ Exactly one of `event.looks` and `time.looks` must be supplied.
 
 The statistics are selected with `stat`, which may name one or more of
 `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
-`"milestone"`, `"rmw"`, and `"ahr"`.
+`"milestone"`, `"rmw"`, `"ahr"`, `"medsurv"`, `"wkm"`, and `"wmst"`.
 
 The `"logrank"` statistic is configurable. By default it is the ordinary
 unweighted, unstratified two-group log-rank test and reproduces the
@@ -314,6 +361,35 @@ The benefit direction is an average hazard ratio below 1 (a negative Z),
 as in
 [`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 
+The `"medsurv"` statistic compares the non-parametric Kaplan-Meier
+median survival times of the two groups. It reports the per-group
+medians, their difference (treatment minus control) with a plain-scale
+confidence interval, the Wald statistic, and the p-value. The variance
+method is selected with `medsurv.method` (`"km"` or `"nph"`), matching
+[`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md);
+`medsurv.bw` optionally overrides the kernel bandwidth used by
+`medsurv.method = "km"`. The benefit direction is a positive difference
+(a longer median under treatment), so a positive Z favors treatment.
+
+The `"wkm"` statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
+It reports the weighted integrated survival difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the
+p-value. The weight is selected with `wkm.weight` (`"PF"`, `"sqrtPF"`,
+or `"constant"`), matching
+[`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md).
+The benefit direction is a positive weighted difference (a positive Z
+favors treatment).
+
+The `"wmst"` statistic compares the window mean survival time, the area
+under the Kaplan-Meier curve between `wmst.tau1` and `wmst.tau2`. It
+reports the per-group WMST values, their difference (treatment minus
+control) with its confidence interval, the Wald statistic, and the
+p-value, matching
+[`wmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md).
+With `wmst.tau1 = 0` the window mean survival time is the restricted
+mean survival time at `wmst.tau2`. The benefit direction is a positive
+difference (a positive Z favors treatment).
+
 When `by.subgroup = TRUE`, the output is given in long form with a
 `population` column. Each `(sim, look)` produces one row for the whole
 trial (`population = "overall"`) plus one row per subgroup level of each
@@ -339,7 +415,10 @@ and one row per `(sim, look)`, matching the whole-population analysis.
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
 [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
 [`rmw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
-[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+[`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+[`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md),
+[`wmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md).
 
 ## Examples
 

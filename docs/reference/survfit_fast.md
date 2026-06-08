@@ -14,7 +14,7 @@ survfit_fast(
   t_sorted,
   e_sorted,
   t_eval,
-  conf.int = 0.95,
+  conf.level = 0.95,
   conf.type = "log",
   presorted = TRUE
 )
@@ -37,7 +37,7 @@ survfit_fast(
   A single numeric value specifying the time point at which the survival
   probability is evaluated.
 
-- conf.int:
+- conf.level:
 
   A single numeric value in (0, 1) specifying the confidence level.
   Defaults to 0.95.
@@ -60,7 +60,7 @@ length 4 with elements `surv`, `std.err`, `lower`, and `upper`,
 representing the Kaplan-Meier survival estimate, the Greenwood standard
 error SE\[S(t)\], and the lower and upper confidence limits at `t_eval`.
 The evaluation time, confidence level, and confidence interval type are
-stored as attributes `t_eval`, `conf.int`, and `conf.type`. Returns a
+stored as attributes `t_eval`, `conf.level`, and `conf.type`. Returns a
 vector of `NA_real_` values (still with class `"survfit_fast"`) when `n`
 is zero.
 
@@ -107,8 +107,8 @@ Three confidence interval types are supported via `conf.type`:
 
 The returned object has class `"survfit_fast"` and is a named numeric
 vector of length 4 with the evaluation time `t_eval`, the confidence
-level `conf.int`, and the confidence interval type `conf.type` stored as
-attributes. A [`print()`](https://rdrr.io/r/base/print.html) method
+level `conf.level`, and the confidence interval type `conf.type` stored
+as attributes. A [`print()`](https://rdrr.io/r/base/print.html) method
 formats the result similarly to
 `print(summary(survival::survfit(...)))`.
 

@@ -48,6 +48,7 @@ print(fit)
 #> Average hazard with survival weight (two-group)
 #> 
 #>   tau = 600,  control = 1
+#>   alternative = two.sided
 #> 
 #>               AH
 #> control   0.0011

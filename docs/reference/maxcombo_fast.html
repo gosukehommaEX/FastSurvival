@@ -74,7 +74,7 @@ through the joint distribution.</p>
 <span>  <span class="va">event</span>,</span>
 <span>  <span class="va">group</span>,</span>
 <span>  <span class="va">control</span>,</span>
-<span>  side <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -106,10 +106,10 @@ represents the control group.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
-<dd><p>An integer, either 1 or 2. If <code>side = 1</code> (default), the
+<dd><p>An integer, either 1 or 2. If <code>side = 1</code>, the
 one-sided max-combo test for treatment benefit is computed. If
-<code>side = 2</code>, the two-sided test based on the maximum absolute component
-is computed.</p></dd>
+<code>side = 2</code> (default), the two-sided test based on the maximum absolute
+component is computed.</p></dd>
 
 
 <dt id="arg-rho">rho<a class="anchor" aria-label="anchor" href="#arg-rho"></a></dt>
@@ -215,16 +215,16 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">[</span><span class="st">"statistic"</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> statistic </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -1.298019 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1.298019 </span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">[</span><span class="st">"p.value"</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   p.value </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.1513071 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  p.value </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.302523 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Two-sided test</span></span></span>
 <span class="r-in"><span><span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Max-combo weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Z</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,0) -1.0309</span>
@@ -232,20 +232,24 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,0) -1.2980</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,1) -0.0576</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Custom weight set: proportional plus late-difference only</span></span></span>
 <span class="r-in"><span><span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>              rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Max-combo weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Z</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,0) -1.0309</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,1)  0.0101</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = -1.031 (one-sided),  p-value = 0.2045</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.031 (two-sided),  p-value = 0.409  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># presorted = TRUE: sort once outside, reuse inside a loop</span></span></span>
 <span class="r-in"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span></span>
@@ -253,7 +257,7 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-in"><span>              control <span class="op">=</span> <span class="fl">1</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Max-combo weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Z</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,0) -1.0309</span>
@@ -261,7 +265,9 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,0) -1.2980</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,1) -0.0576</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Cross-check against simtrial::maxcombo (one-sided)</span></span></span>

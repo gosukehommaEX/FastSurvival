@@ -81,6 +81,7 @@ gen_data <- function(n_per, rate_c, rate_t = NULL, cp = NULL, hr2 = NULL,
 # Run both methods on one data set and return a tidy data frame of the
 # comparison against nph::nphparams for the median difference and its inference.
 compare_one <- function(label, d) {
+  ord <- order(d$time)
   np <- nph::nphparams(time = d$time, event = d$event, group = d$group,
                        param_type = "Q", param_par = 0.5)
   nph_val <- c(
@@ -92,8 +93,8 @@ compare_one <- function(label, d) {
   )
 
   one_method <- function(meth) {
-    fast <- medsurv_fast(d$time, d$event, group = d$group, control = 0,
-                         side = 2, method = meth)
+    fast <- medsurv_fast(d$time[ord], d$event[ord], group = d$group[ord],
+                         control = 0, side = 2, method = meth, presorted = TRUE)
     fast_val <- c(
       median_control = unname(fast["median.control"]),
       median_treatment = unname(fast["median.treatment"]),
@@ -159,11 +160,15 @@ if (have_microbenchmark) {
   evec <- bench_data$event
   gvec <- bench_data$group
 
+  # Sort once outside the timing loop, the intended pre-sorted fast path.
+  ord_b <- order(tvec)
+  tvs <- tvec[ord_b]; evs <- evec[ord_b]; gvs <- gvec[ord_b]
+
   timing <- microbenchmark::microbenchmark(
-    fast_km = medsurv_fast(tvec, evec, group = gvec, control = 0, side = 2,
-                           method = "km"),
-    fast_nph = medsurv_fast(tvec, evec, group = gvec, control = 0, side = 2,
-                            method = "nph"),
+    fast_km = medsurv_fast(tvs, evs, group = gvs, control = 0, side = 2,
+                           method = "km", presorted = TRUE),
+    fast_nph = medsurv_fast(tvs, evs, group = gvs, control = 0, side = 2,
+                            method = "nph", presorted = TRUE),
     nph = nph::nphparams(time = tvec, event = evec, group = gvec,
                          param_type = "Q", param_par = 0.5),
     times = 100

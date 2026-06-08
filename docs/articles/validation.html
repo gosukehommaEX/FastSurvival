@@ -78,34 +78,60 @@
 <p>FastSurvival is built for speed, but a fast estimator is only useful
 if it returns the same answer as the established implementation. This
 vignette checks the numerical agreement between each FastSurvival
-function and a reference from a well-known package: the survival package
-for the Kaplan-Meier estimate, the log-rank test, the Cox hazard ratio,
-and milestone survival; survRM2 for the restricted mean survival time;
-and survAH for the average hazard with survival weight. The weighted
-log-rank and max-combo tests are checked against the nph package, and
-the robust modestly-weighted test against the nphRCT package. The same
-comparisons form the basis of the automated test suite shipped with the
-package.</p>
+function and a reference, on a real clinical-trial dataset. We use the
+<code>gbsg</code> data from the survival package, the German Breast
+Cancer Study Group cohort of 686 patients, with recurrence-free survival
+time <code>rfstime</code> (in days), the event indicator
+<code>status</code>, and the treatment indicator <code>hormon</code> (0
+= no hormonal therapy, 1 = hormonal therapy). Throughout we take the
+no-hormone arm as the control (<code>control = 0</code>) and report
+one-sided tests of treatment benefit (<code>side = 1</code>).</p>
+<p>The references are: the survival package for the Kaplan-Meier
+estimate, the log-rank test, the Cox hazard ratio, milestone survival,
+and the median survival comparison; survRM2 for the restricted mean
+survival time; survAH for the average hazard with survival weight; nph
+for the weighted log-rank test and the max-combo test; and nphRCT for
+the robust modestly-weighted test. The window mean survival time and the
+weighted Kaplan-Meier statistic, which have no direct package
+counterpart on CRAN, are checked against a Kaplan-Meier integral
+computed from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> and against the restricted mean
+survival time identity, respectively. The same comparisons form the
+basis of the automated test suite shipped with the package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="reference-data">Reference data<a class="anchor" aria-label="anchor" href="#reference-data"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># German Breast Cancer Study Group cohort</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rfstime"</span>, <span class="st">"status"</span>, <span class="st">"hormon"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 'data.frame':    686 obs. of  3 variables:</span></span>
+<span><span class="co">#&gt;  $ rfstime: int  1838 403 1603 177 1855 842 293 42 564 1093 ...</span></span>
+<span><span class="co">#&gt;  $ status : int  0 1 0 0 0 1 1 0 1 1 ...</span></span>
+<span><span class="co">#&gt;  $ hormon : int  0 0 0 0 1 0 0 1 1 0 ...</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>hormon <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span><span class="op">)</span></span>
+<span><span class="co">#&gt; hormon</span></span>
+<span><span class="co">#&gt;   0   1 </span></span>
+<span><span class="co">#&gt; 440 246</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="kaplan-meier-survival">Kaplan-Meier survival<a class="anchor" aria-label="anchor" href="#kaplan-meier-survival"></a>
 </h2>
 <p><code><a href="../reference/survfit_fast.html">survfit_fast()</a></code> evaluates the Kaplan-Meier estimate at a
 single time point. We compare against <code>summary(survfit(...))</code>
-at the same time on the <code>ovarian</code> dataset.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
+at the same time (1000 days).</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># survfit_fast assumes time-sorted input; the C++ core groups tied times in the</span></span>
+<span><span class="co"># survival::survfit risk-set convention, so the data only need ordering by time.</span></span>
+<span><span class="va">ord</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span><span class="op">)</span></span>
+<span><span class="va">fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survfit_fast.html">survfit_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>,</span>
+<span>                     t_eval <span class="op">=</span> <span class="fl">1000</span>, conf.type <span class="op">=</span> <span class="st">"log-log"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span>
-<span><span class="va">t_s</span> <span class="op">&lt;-</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span></span>
-<span><span class="va">e_s</span> <span class="op">&lt;-</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survfit_fast.html">survfit_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, t_eval <span class="op">=</span> <span class="fl">500</span>, conf.type <span class="op">=</span> <span class="st">"log"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
-<span><span class="va">ref</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, times <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">fit</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
+<span><span class="va">ref</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, times <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"survival"</span>, <span class="st">"std.err"</span><span class="op">)</span>,</span>
@@ -114,24 +140,24 @@ at the same time on the <code>ovarian</code> dataset.</p>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   quantity       fast   survival</span></span>
-<span><span class="co">#&gt; 1 survival 0.59607843 0.59607843</span></span>
-<span><span class="co">#&gt; 2  std.err 0.09992615 0.09992615</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 survival 0.65775040 0.65775040</span></span>
+<span><span class="co">#&gt; 2  std.err 0.01905146 0.01905146</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="log-rank-test">Log-rank test<a class="anchor" aria-label="anchor" href="#log-rank-test"></a>
 </h2>
-<p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> returns a two-sided chi-square statistic
-when <code>side = 2</code>, matching the statistic from
+<p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> with <code>side = 1</code> returns a
+signed Z-score. Its square is the chi-square statistic from
 <code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fast_lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                         control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fast_lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ref_lr</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
+<span><span class="va">ref_lr</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">fast_lr</span><span class="op">)</span>, survival <span class="op">=</span> <span class="va">ref_lr</span><span class="op">$</span><span class="va">chisq</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">fast_lr</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>, survival <span class="op">=</span> <span class="va">ref_lr</span><span class="op">$</span><span class="va">chisq</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     fast survival </span></span>
-<span><span class="co">#&gt;  1.06274  1.06274</span></span></code></pre></div>
+<span><span class="co">#&gt; 8.564781 8.564781</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="weighted-log-rank-test">Weighted log-rank test<a class="anchor" aria-label="anchor" href="#weighted-log-rank-test"></a>
@@ -139,27 +165,27 @@ when <code>side = 2</code>, matching the statistic from
 <p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> also computes Fleming-Harrington G(rho,
 gamma) weighted log-rank tests through the <code>weight = "fh"</code>
 argument. The <a href="https://cran.r-project.org/package=nph" class="external-link">nph</a>
-package provides <code><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test()</a></code> with the same family, so we
-compare the chi-square statistic across several weight choices on the
-<code>ovarian</code> data.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+package provides <code>logrank.test()</code> with the same family, so we
+compare the chi-square statistic (the squared one-sided Z) across
+several weight choices.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fh_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fh_grid</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">fh_grid</span><span class="op">$</span><span class="va">rho</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
 <span>  <span class="va">g</span> <span class="op">&lt;-</span> <span class="va">fh_grid</span><span class="op">$</span><span class="va">gamma</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
-<span>  <span class="va">fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                                   control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  <span class="va">fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                                   control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                                   weight <span class="op">=</span> <span class="st">"fh"</span>, rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">nph_chisq</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
+<span>  <span class="va">nph_chisq</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">logrank.test</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
 <span>                                 rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">Chisq</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span>, fast <span class="op">=</span> <span class="va">fast</span>, nph <span class="op">=</span> <span class="va">nph_chisq</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="va">r</span>, gamma <span class="op">=</span> <span class="va">g</span>, fast <span class="op">=</span> <span class="va">fast</span><span class="op">^</span><span class="fl">2</span>, nph <span class="op">=</span> <span class="va">nph_chisq</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   rho gamma         fast          nph</span></span>
-<span><span class="co">#&gt; 1   0     1 0.0001020735 0.0001020735</span></span>
-<span><span class="co">#&gt; 2   1     0 1.6848546117 1.6848546117</span></span>
-<span><span class="co">#&gt; 3   0     0 1.0627398613 1.0627398613</span></span>
-<span><span class="co">#&gt; 4   1     1 0.0033228087 0.0033228087</span></span></code></pre></div>
+<span><span class="co">#&gt;   rho gamma     fast      nph</span></span>
+<span><span class="co">#&gt; 1   0     1 5.110660 5.110660</span></span>
+<span><span class="co">#&gt; 2   1     0 8.713791 8.713791</span></span>
+<span><span class="co">#&gt; 3   0     0 8.564781 8.564781</span></span>
+<span><span class="co">#&gt; 4   1     1 5.881310 5.881310</span></span></code></pre></div>
 <p>The two implementations agree to numerical precision across the
 weight family, including the ordinary log-rank test recovered at
 <code>rho = 0, gamma = 0</code>.</p>
@@ -168,40 +194,117 @@ weight family, including the ordinary log-rank test recovered at
 <h2 id="cox-hazard-ratio">Cox hazard ratio<a class="anchor" aria-label="anchor" href="#cox-hazard-ratio"></a>
 </h2>
 <p><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> returns the Pike-Halley Estimator, a
-closed-form approximation to the Cox partial likelihood maximizer. On
-data with a moderate hazard ratio the two agree closely. We report the
-log hazard ratio from both.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fast_hr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+closed-form approximation to the Cox partial likelihood maximizer. We
+report the log hazard ratio from both; the sign convention is the same
+and <code>side</code> does not affect the point estimate.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fast_hr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                      control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ref_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
+<span><span class="va">ref_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span>, cox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; fast.coef       cox </span></span>
-<span><span class="co">#&gt;  -0.59638  -0.59638</span></span></code></pre></div>
+<span><span class="co">#&gt;  fast.coef        cox </span></span>
+<span><span class="co">#&gt; -0.3638987 -0.3640099</span></span></code></pre></div>
+<p>Because the Pike-Halley Estimator is a closed-form approximation
+rather than the exact partial-likelihood maximizer, the two log hazard
+ratios are not expected to be identical. They differ slightly, here in
+the fourth decimal place, which reflects the approximation and is not a
+sign of error.</p>
 </div>
 <div class="section level2">
 <h2 id="restricted-mean-survival-time">Restricted mean survival time<a class="anchor" aria-label="anchor" href="#restricted-mean-survival-time"></a>
 </h2>
 <p><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> integrates the Kaplan-Meier survival curve
 up to a horizon. We compare the two-group RMST difference against
-<code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code> at 1000 days.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survRM2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">arm</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">tau</span>  <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
-<span><span class="va">fast_rmst</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                       control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
+<span><span class="va">fast_rmst</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                       control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="va">tau</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ref_rmst</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">rmst2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, status <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span>
-<span>                   arm <span class="op">=</span> <span class="va">arm</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
+<span><span class="va">ref_rmst</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">rmst2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, status <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>,</span>
+<span>                   arm <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_rmst</span><span class="op">)</span><span class="op">[</span><span class="st">"diff"</span><span class="op">]</span>,</span>
 <span>  survRM2 <span class="op">=</span> <span class="va">ref_rmst</span><span class="op">$</span><span class="va">unadjusted.result</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; fast.diff   survRM2 </span></span>
-<span><span class="co">#&gt;  98.88034  98.88034</span></span></code></pre></div>
+<span><span class="co">#&gt;  51.14447  51.14447</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="window-mean-survival-time">Window mean survival time<a class="anchor" aria-label="anchor" href="#window-mean-survival-time"></a>
+</h2>
+<p><code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> integrates the Kaplan-Meier curve between a
+lower and an upper window limit, generalizing the restricted mean
+survival time. CRAN has no dedicated WMST package, so we validate the
+per-group windowed area directly against a Kaplan-Meier step-function
+integral computed from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> over the same window. A
+full comparison against the <code>survWMST</code> package, which is
+distributed on GitHub, is provided in
+<code>tools/compare_wmst_survwmst.R</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tau1</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span><span class="va">tau2</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span></span>
+<span><span class="va">fast_wm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wmst_fast.html">wmst_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                     control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>, tau1 <span class="op">=</span> <span class="va">tau1</span>, tau2 <span class="op">=</span> <span class="va">tau2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Integral of the Kaplan-Meier step function over [lo, hi] for one group.</span></span>
+<span><span class="va">km_window_area</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">gi</span>, <span class="va">lo</span>, <span class="va">hi</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">[</span><span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span> <span class="op">==</span> <span class="va">gi</span>, <span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">tk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">sf</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span>
+<span>  <span class="va">sk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">sf</span><span class="op">$</span><span class="va">surv</span><span class="op">)</span></span>
+<span>  <span class="va">brk</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lo</span>, <span class="va">hi</span>, <span class="va">sf</span><span class="op">$</span><span class="va">time</span><span class="op">[</span><span class="va">sf</span><span class="op">$</span><span class="va">time</span> <span class="op">&gt;</span> <span class="va">lo</span> <span class="op">&amp;</span> <span class="va">sf</span><span class="op">$</span><span class="va">time</span> <span class="op">&lt;</span> <span class="va">hi</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">area</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">b</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">brk</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">u</span>  <span class="op">&lt;-</span> <span class="va">brk</span><span class="op">[</span><span class="va">b</span><span class="op">]</span></span>
+<span>    <span class="va">su</span> <span class="op">&lt;-</span> <span class="va">sk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">tk</span> <span class="op">&lt;=</span> <span class="va">u</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span>    <span class="va">area</span> <span class="op">&lt;-</span> <span class="va">area</span> <span class="op">+</span> <span class="va">su</span> <span class="op">*</span> <span class="op">(</span><span class="va">brk</span><span class="op">[</span><span class="va">b</span> <span class="op">+</span> <span class="fl">1L</span><span class="op">]</span> <span class="op">-</span> <span class="va">u</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">area</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  group    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treatment"</span><span class="op">)</span>,</span>
+<span>  fast     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_wm</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wmst.control"</span>, <span class="st">"wmst.treatment"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  survfit  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">km_window_area</span><span class="op">(</span><span class="fl">0</span>, <span class="va">tau1</span>, <span class="va">tau2</span><span class="op">)</span>, <span class="fu">km_window_area</span><span class="op">(</span><span class="fl">1</span>, <span class="va">tau1</span>, <span class="va">tau2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;       group     fast  survfit</span></span>
+<span><span class="co">#&gt; 1   control 628.0064 628.0064</span></span>
+<span><span class="co">#&gt; 2 treatment 678.3393 678.3393</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="weighted-kaplan-meier-test">Weighted Kaplan-Meier test<a class="anchor" aria-label="anchor" href="#weighted-kaplan-meier-test"></a>
+</h2>
+<p><code><a href="../reference/wkm_fast.html">wkm_fast()</a></code> computes the weighted Kaplan-Meier
+(Pepe-Fleming) test, the weighted integral of the difference between the
+two Kaplan-Meier curves. With the constant weight the weighted
+difference reduces exactly to the difference in restricted mean survival
+time over the observed range, which gives a clean internal check against
+<code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> evaluated at the largest observed time.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tmax</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fast_wk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wkm_fast.html">wkm_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                    control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>, weight <span class="op">=</span> <span class="st">"constant"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ref_rm</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                     control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="va">tmax</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>wkm.constant <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_wk</span><span class="op">)</span><span class="op">[</span><span class="st">"wdiff"</span><span class="op">]</span>, rmst <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">ref_rm</span><span class="op">)</span><span class="op">[</span><span class="st">"diff"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; wkm.constant.wdiff          rmst.diff </span></span>
+<span><span class="co">#&gt;           256.7207           256.7207</span></span></code></pre></div>
+<p>With the default Pepe-Fleming weight, <code><a href="../reference/wkm_fast.html">wkm_fast()</a></code>
+reproduces the weighted Kaplan-Meier statistic of the
+<code>nphsim</code> package. Because <code>nphsim</code> is distributed
+only on GitHub, that comparison is kept in
+<code>tools/compare_wkm_nphsim.R</code> (which also bundles a
+survival-only reproduction of the statistic) and in the test suite,
+rather than in this vignette.</p>
 </div>
 <div class="section level2">
 <h2 id="milestone-survival">Milestone survival<a class="anchor" aria-label="anchor" href="#milestone-survival"></a>
@@ -209,26 +312,63 @@ up to a horizon. We compare the two-group RMST difference against
 <p><code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> compares Kaplan-Meier survival between
 two groups at a milestone timepoint. The per-group survival
 probabilities match those from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tstar</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tstar</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
-<span><span class="va">fast_ms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/milestone_fast.html">milestone_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                          control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tstar</span>, method <span class="op">=</span> <span class="st">"wald"</span><span class="op">)</span></span>
+<span><span class="va">fast_ms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/milestone_fast.html">milestone_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                          control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="va">tstar</span>, method <span class="op">=</span> <span class="st">"loglog"</span>,</span>
+<span>                          side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
+<span><span class="va">fit_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
 <span><span class="va">ref_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_g</span>, times <span class="op">=</span> <span class="va">tstar</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">ms_surv</span> <span class="op">&lt;-</span> <span class="va">fast_ms</span><span class="op">$</span><span class="va">surv</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  group    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treatment"</span><span class="op">)</span>,</span>
-<span>  fast     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ms_surv</span><span class="op">[</span><span class="st">"control"</span><span class="op">]</span>, <span class="va">ms_surv</span><span class="op">[</span><span class="st">"treatment"</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  fast     <span class="op">=</span> <span class="va">fast_ms</span><span class="op">$</span><span class="va">surv</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treatment"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>  survival <span class="op">=</span> <span class="va">ref_g</span><span class="op">$</span><span class="va">surv</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;       group      fast  survival</span></span>
-<span><span class="co">#&gt; 1   control 0.5384615 0.5384615</span></span>
-<span><span class="co">#&gt; 2 treatment 0.6581197 0.6581197</span></span></code></pre></div>
+<span><span class="co">#&gt; 1   control 0.6208762 0.6208762</span></span>
+<span><span class="co">#&gt; 2 treatment 0.7230082 0.7230082</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="median-survival-time">Median survival time<a class="anchor" aria-label="anchor" href="#median-survival-time"></a>
+</h2>
+<p><code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code> estimates the Kaplan-Meier median
+survival time and, for two groups, their difference. The point estimate
+is the Kaplan-Meier median (the first time at which the product-limit
+curve reaches 0.5), the same convention as <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>, so
+the per-group medians match those reported by <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>
+exactly.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fast_med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/medsurv_fast.html">medsurv_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"nph"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_med</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
+<span><span class="va">med_ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_med</span><span class="op">)</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="st">"median"</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  group    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treatment"</span><span class="op">)</span>,</span>
+<span>  fast     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_med</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"median.control"</span>, <span class="st">"median.treatment"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  survival <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">med_ref</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">med_ref</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;       group fast survival</span></span>
+<span><span class="co">#&gt; 1   control 1528     1528</span></span>
+<span><span class="co">#&gt; 2 treatment 2018     2018</span></span></code></pre></div>
+<p>We use <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> as the reference here, rather than
+<code><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nph::nphparams()</a></code>, because the two define the median on
+different survival curves: <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> and
+<code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code> use the Kaplan-Meier (product-limit) median,
+whereas <code><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nph::nphparams()</a></code> reads the median off the
+Nelson-Aalen curve, S(t) = exp(-H(t)), which lies above the Kaplan-Meier
+curve and so can cross 0.5 at a later time on tied data. The
+<code>method = "nph"</code> standard error reproduces the
+<code><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nph::nphparams()</a></code> standard error to numerical precision when
+the two medians coincide; that comparison is run on tie-free scenarios
+in <code>tools/compare_medsurv_nphparams.R</code> and in the package
+test suite.</p>
 </div>
 <div class="section level2">
 <h2 id="average-hazard-with-survival-weight">Average hazard with survival weight<a class="anchor" aria-label="anchor" href="#average-hazard-with-survival-weight"></a>
@@ -236,17 +376,16 @@ probabilities match those from <code><a href="https://rdrr.io/pkg/survival/man/s
 <p><code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> computes the average hazard with survival
 weight of Uno and Horiguchi. We compare the per-group average hazard
 against <code><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">survAH::ah2()</a></code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survAH</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">arm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
-<span><span class="va">fast_ah</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ahsw_fast.html">ahsw_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                     control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
+<span><span class="va">fast_ah</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ahsw_fast.html">ahsw_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                     control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="va">tau</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ref_ah</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">ah2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, status <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span>
-<span>               arm <span class="op">=</span> <span class="va">arm</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
+<span><span class="va">ref_ah</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">ah2</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, status <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>,</span>
+<span>               arm <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AH (control)"</span>, <span class="st">"AH (treatment)"</span><span class="op">)</span>,</span>
@@ -255,65 +394,66 @@ against <code><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-
 <span>               <span class="va">ref_ah</span><span class="op">$</span><span class="va">ah</span><span class="op">[</span><span class="st">"AH (arm1)"</span>, <span class="st">"Est."</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;         quantity        fast      survAH</span></span>
-<span><span class="co">#&gt; 1   AH (control) 0.001235076 0.001235076</span></span>
-<span><span class="co">#&gt; 2 AH (treatment) 0.000723445 0.000723445</span></span></code></pre></div>
+<span><span class="co">#&gt;         quantity         fast       survAH</span></span>
+<span><span class="co">#&gt; 1   AH (control) 0.0004585857 0.0004585857</span></span>
+<span><span class="co">#&gt; 2 AH (treatment) 0.0003155277 0.0003155277</span></span></code></pre></div>
 <p>The average hazard is the ratio of the cumulative event probability
-to the restricted mean survival time, so for the <code>ovarian</code>
-data, where follow-up is measured in days, the values are on the order
-of 1e-03 per day in both groups.</p>
+to the restricted mean survival time, so for the <code>gbsg</code> data,
+where follow-up is measured in days, the values are on the order of
+1e-04 per day in both groups.</p>
 </div>
 <div class="section level2">
 <h2 id="average-hazard-ratio">Average hazard ratio<a class="anchor" aria-label="anchor" href="#average-hazard-ratio"></a>
 </h2>
 <p><code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> computes the Kalbfleisch-Prentice average
 hazard ratio between two groups over a restricted interval. The
-reference implementation is <code><a href="https://rdrr.io/pkg/AHR/man/ahrKM.html" class="external-link">ahrKM()</a></code> from the AHR package,
+reference implementation is <code>ahrKM()</code> from the AHR package,
 but that package has been archived on CRAN, so here we check the point
 estimates against a direct survival-based computation: each group’s
 Kaplan-Meier curve from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>, integrated to form the
 group shares of the total hazard.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
-<span><span class="va">fast_ahr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ahr_fast.html">ahr_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                     control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tau</span><span class="op">)</span></span>
+<span><span class="va">fast_ahr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ahr_fast.html">ahr_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                     control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="va">tau</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">g</span>  <span class="op">&lt;-</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span></span>
-<span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span>,</span>
-<span>        <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="fl">2</span> <span class="op">&amp;</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">g</span>  <span class="op">&lt;-</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span></span>
+<span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span>,</span>
+<span>        <span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">ev</span><span class="op">[</span><span class="va">ev</span> <span class="op">&lt;=</span> <span class="va">tau</span><span class="op">]</span>, <span class="va">tau</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">km_on_grid</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">gi</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="va">gi</span>, <span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">[</span><span class="va">g</span> <span class="op">==</span> <span class="va">gi</span>, <span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/approxfun.html" class="external-link">approxfun</a></span><span class="op">(</span><span class="va">sf</span><span class="op">$</span><span class="va">time</span>, <span class="va">sf</span><span class="op">$</span><span class="va">surv</span>, method <span class="op">=</span> <span class="st">"constant"</span>,</span>
 <span>            yleft <span class="op">=</span> <span class="fl">1</span>, rule <span class="op">=</span> <span class="fl">2</span>, f <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">(</span><span class="va">grid</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
+<span><span class="va">S0</span>  <span class="op">&lt;-</span> <span class="fu">km_on_grid</span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">S1</span>  <span class="op">&lt;-</span> <span class="fu">km_on_grid</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">S2</span>  <span class="op">&lt;-</span> <span class="fu">km_on_grid</span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">m</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">grid</span><span class="op">)</span></span>
-<span><span class="va">dS1</span> <span class="op">&lt;-</span> <span class="va">S1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">S1</span><span class="op">[</span><span class="op">-</span><span class="va">m</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">GL</span>  <span class="op">&lt;-</span> <span class="va">S1</span><span class="op">[</span><span class="va">m</span><span class="op">]</span> <span class="op">*</span> <span class="va">S2</span><span class="op">[</span><span class="va">m</span><span class="op">]</span></span>
-<span><span class="va">ref_theta1</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">S2</span> <span class="op">*</span> <span class="va">dS1</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">GL</span><span class="op">)</span></span>
+<span><span class="va">dS0</span> <span class="op">&lt;-</span> <span class="va">S0</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">S0</span><span class="op">[</span><span class="op">-</span><span class="va">m</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">GL</span>  <span class="op">&lt;-</span> <span class="va">S0</span><span class="op">[</span><span class="va">m</span><span class="op">]</span> <span class="op">*</span> <span class="va">S1</span><span class="op">[</span><span class="va">m</span><span class="op">]</span></span>
+<span><span class="va">ref_theta_ctrl</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">S1</span> <span class="op">*</span> <span class="va">dS0</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">GL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  quantity  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"theta (group 1)"</span>, <span class="st">"theta (group 2)"</span>, <span class="st">"AHR"</span><span class="op">)</span>,</span>
+<span>  quantity  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"theta (control)"</span>, <span class="st">"theta (treatment)"</span>, <span class="st">"AHR"</span><span class="op">)</span>,</span>
 <span>  fast      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fast_ahr</span><span class="op">$</span><span class="va">theta</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">fast_ahr</span><span class="op">$</span><span class="va">theta</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, <span class="va">fast_ahr</span><span class="op">$</span><span class="va">ahr</span><span class="op">)</span>,</span>
-<span>  reference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ref_theta1</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">ref_theta1</span>, <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ref_theta1</span><span class="op">)</span> <span class="op">/</span> <span class="va">ref_theta1</span><span class="op">)</span>,</span>
+<span>  reference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ref_theta_ctrl</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">ref_theta_ctrl</span>,</span>
+<span>                <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ref_theta_ctrl</span><span class="op">)</span> <span class="op">/</span> <span class="va">ref_theta_ctrl</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;          quantity      fast reference</span></span>
-<span><span class="co">#&gt; 1 theta (group 1) 0.6965377 0.6965377</span></span>
-<span><span class="co">#&gt; 2 theta (group 2) 0.3034623 0.3034623</span></span>
-<span><span class="co">#&gt; 3             AHR 0.4356725 0.4356725</span></span></code></pre></div>
+<span><span class="co">#&gt;            quantity      fast reference</span></span>
+<span><span class="co">#&gt; 1   theta (control) 0.5974108 0.5974108</span></span>
+<span><span class="co">#&gt; 2 theta (treatment) 0.4025892 0.4025892</span></span>
+<span><span class="co">#&gt; 3               AHR 0.6738899 0.6738899</span></span></code></pre></div>
 <p>The point estimates match the survival-based reference to numerical
 precision. The average hazard ratio was additionally cross-checked
 against the archived AHR package, the reference implementation used by
 Dormuth et al. (2024): the two group shares, the average hazard ratio,
 the variances, and both test statistics agree to within the order of
 1e-15. That external comparison is reproducible with the
-<code>tools/verify_ahr_fast.R</code> script shipped in the package
+<code>tools/compare_ahr_ahrKM.R</code> script shipped in the package
 sources.</p>
 </div>
 <div class="section level2">
@@ -321,7 +461,7 @@ sources.</p>
 </h2>
 <p><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> computes the max-combo test, the most
 extreme of a set of Fleming-Harrington weighted log-rank statistics. The
-<code>nph</code> package provides <code><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">logrank.maxtest()</a></code>, whose
+<code>nph</code> package provides <code>logrank.maxtest()</code>, whose
 default weight set is FH(0, 0), FH(0, 1), and FH(1, 0). We request the
 same three weights from <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> and compare the
 component Z-scores. The individual Z-scores are kept in the
@@ -329,14 +469,14 @@ component Z-scores. The individual Z-scores are kept in the
 benefit for the treatment group under the package convention. Because
 <code>nph</code> orients the contrast in the opposite direction, the
 signs are mirrored, so we compare absolute values.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rho</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fast_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/maxcombo_fast.html">maxcombo_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
-<span>                         control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span>, rho <span class="op">=</span> <span class="va">rho</span>, gamma <span class="op">=</span> <span class="va">gamma</span><span class="op">)</span></span>
+<span><span class="va">fast_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/maxcombo_fast.html">maxcombo_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
+<span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>, rho <span class="op">=</span> <span class="va">rho</span>, gamma <span class="op">=</span> <span class="va">gamma</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">nph_mc</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">logrank.maxtest</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span><span class="op">)</span></span>
+<span><span class="va">nph_mc</span> <span class="op">&lt;-</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">logrank.maxtest</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FH(0,0)"</span>, <span class="st">"FH(0,1)"</span>, <span class="st">"FH(1,0)"</span><span class="op">)</span>,</span>
@@ -344,17 +484,16 @@ signs are mirrored, so we compare absolute values.</p>
 <span>  nph    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">nph_mc</span><span class="op">$</span><span class="va">tests</span><span class="op">$</span><span class="va">z</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;    weight       fast        nph</span></span>
-<span><span class="co">#&gt; 1 FH(0,0) 1.03089275 1.03089275</span></span>
-<span><span class="co">#&gt; 2 FH(0,1) 0.01010314 0.01010314</span></span>
-<span><span class="co">#&gt; 3 FH(1,0) 1.29801950 1.29801950</span></span></code></pre></div>
+<span><span class="co">#&gt;    weight     fast      nph</span></span>
+<span><span class="co">#&gt; 1 FH(0,0) 2.926565 2.926565</span></span>
+<span><span class="co">#&gt; 2 FH(0,1) 2.260677 2.260677</span></span>
+<span><span class="co">#&gt; 3 FH(1,0) 2.951913 2.951913</span></span></code></pre></div>
 <p>The component statistics agree in absolute value. The final max-combo
-statistic is the largest of these, which for the two-sided test is
-<code>max(abs(Z))</code> and is therefore always non-negative. The
-p-values from the two packages are close but not identical, since they
-use different numerical methods for the joint distribution (a
-multivariate normal integral here, a Bonferroni-style combination in
-<code>nph</code>).</p>
+statistic is the largest of these, which for the one-sided test is the
+most extreme component Z. The p-values from the two packages are close
+but not identical, since they use different numerical methods for the
+joint distribution (a multivariate normal integral here, a
+Bonferroni-style combination in <code>nph</code>).</p>
 </div>
 <div class="section level2">
 <h2 id="robust-modestly-weighted-log-rank-test">Robust modestly-weighted log-rank test<a class="anchor" aria-label="anchor" href="#robust-modestly-weighted-log-rank-test"></a>
@@ -371,20 +510,20 @@ component uses the survival-threshold parameterization, so
 the max-combo test the package orients a negative Z toward treatment
 benefit while <code>nphRCT</code> uses the opposite sign, so we compare
 absolute values.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ov_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  time  <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>,</span>
-<span>  event <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span>
-<span>  arm   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span> <span class="op">==</span> <span class="fl">1</span>, <span class="st">"control"</span>, <span class="st">"experimental"</span><span class="op">)</span>,</span>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gbsg_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  time  <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>,</span>
+<span>  event <span class="op">=</span> <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>,</span>
+<span>  arm   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span> <span class="op">==</span> <span class="fl">0</span>, <span class="st">"control"</span>, <span class="st">"experimental"</span><span class="op">)</span>,</span>
 <span>                 levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"experimental"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_rmw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmw_fast.html">rmw_fast</a></span><span class="op">(</span><span class="va">ov_df</span><span class="op">$</span><span class="va">time</span>, <span class="va">ov_df</span><span class="op">$</span><span class="va">event</span>, <span class="va">ov_df</span><span class="op">$</span><span class="va">arm</span>,</span>
+<span><span class="va">fit_rmw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rmw_fast.html">rmw_fast</a></span><span class="op">(</span><span class="va">gbsg_df</span><span class="op">$</span><span class="va">time</span>, <span class="va">gbsg_df</span><span class="op">$</span><span class="va">event</span>, <span class="va">gbsg_df</span><span class="op">$</span><span class="va">arm</span>,</span>
 <span>                    control <span class="op">=</span> <span class="st">"control"</span>, side <span class="op">=</span> <span class="fl">1</span>, s_star <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">z_lr_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">ov_df</span>,</span>
+<span><span class="va">z_lr_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">gbsg_df</span>,</span>
 <span>                         method <span class="op">=</span> <span class="st">"mw"</span>, s_star <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">z</span></span>
-<span><span class="va">z_mw_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">ov_df</span>,</span>
+<span><span class="va">z_mw_nph</span> <span class="op">&lt;-</span> <span class="fu">nphRCT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">wlrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span>, data <span class="op">=</span> <span class="va">gbsg_df</span>,</span>
 <span>                         method <span class="op">=</span> <span class="st">"mw"</span>, s_star <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">$</span><span class="va">z</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -393,32 +532,34 @@ absolute values.</p>
 <span>  nphRCT    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">z_lr_nph</span>, <span class="va">z_mw_nph</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;                          component      fast    nphRCT</span></span>
-<span><span class="co">#&gt; 1            log-rank (s_star = 1) 1.0308927 1.0308927</span></span>
-<span><span class="co">#&gt; 2 modestly-weighted (s_star = 0.5) 0.7582546 0.7582546</span></span></code></pre></div>
+<span><span class="co">#&gt;                          component     fast   nphRCT</span></span>
+<span><span class="co">#&gt; 1            log-rank (s_star = 1) 2.926565 2.926565</span></span>
+<span><span class="co">#&gt; 2 modestly-weighted (s_star = 0.5) 2.773749 2.773749</span></span></code></pre></div>
 <p>The component statistics agree in absolute value. The null
 correlation of the two components, reported in the <code>corr</code>
 attribute, matches the covariance computed by the authors’
-<code>find_cor</code> routine to numerical precision (0.98 on the
-<code>ovarian</code> data). The combined statistic and one-sided p-value
-then follow from the bivariate normal distribution of the two
-components, evaluated with <code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>. On the POPLAR
-overall-survival data analyzed in the original article,
-<code><a href="../reference/rmw_fast.html">rmw_fast()</a></code> reproduces the published one-sided p-values of
-0.0028 for the log-rank test, 0.0009 for the modestly-weighted test, and
-0.0012 for the rMW test, with a component correlation of 0.97.</p>
+<code>find_cor</code> routine to numerical precision. The combined
+statistic and one-sided p-value then follow from the bivariate normal
+distribution of the two components, evaluated with
+<code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>. On the POPLAR overall-survival data
+analyzed in the original article, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code> reproduces the
+published one-sided p-values of 0.0028 for the log-rank test, 0.0009 for
+the modestly-weighted test, and 0.0012 for the rMW test, with a
+component correlation of 0.97.</p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
 <p>Across all functions the FastSurvival results reproduce the reference
-values from the established packages. The point estimates and test
+values on the <code>gbsg</code> data. The point estimates and test
 statistics agree to numerical precision for the Kaplan-Meier, log-rank,
-RMST, milestone, and average-hazard quantities, the average hazard ratio
-matches a survival-based reference, and the closed-form Cox hazard ratio
-agrees with the partial-likelihood maximizer to the order expected for
-the Pike-Halley approximation. This agreement is verified continuously
-by the package test suite.</p>
+weighted log-rank, RMST, milestone, median, and average-hazard
+quantities; the window mean survival time matches a Kaplan-Meier
+integral and the weighted Kaplan-Meier statistic matches the RMST
+identity; the average hazard ratio matches a survival-based reference;
+and the closed-form Cox hazard ratio agrees with the partial-likelihood
+maximizer to the order expected for the Pike-Halley approximation. This
+agreement is verified continuously by the package test suite.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -441,12 +582,21 @@ ratio estimator. <em>Manuscript under review.</em></p>
 time: an alternative to the hazard ratio for the design and analysis of
 randomized trials with a time-to-event outcome. <em>BMC Medical Research
 Methodology</em>, 13, 152.</p>
-<p>Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the
-hazard ratio in quantifying the between-group difference in survival
-analysis. <em>Journal of Clinical Oncology</em>, 32(22), 2380-2385.</p>
+<p>Paukner, M., &amp; Chappell, R. (2021). Window mean survival time.
+<em>Statistics in Medicine</em>, 40(25), 5521-5533.</p>
+<p>Pepe, M. S., &amp; Fleming, T. R. (1989). Weighted Kaplan-Meier
+statistics: a class of distance tests for censored survival data.
+<em>Biometrics</em>, 45(2), 497-507.</p>
+<p>Pepe, M. S., &amp; Fleming, T. R. (1991). Weighted Kaplan-Meier
+statistics: large sample and optimality considerations. <em>Journal of
+the Royal Statistical Society. Series B (Methodological)</em>, 53(2),
+341-352.</p>
 <p>Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
 estimators from one and two sample survival data. <em>Statistics in
 Medicine</em>, 40(23), 4961-4976.</p>
+<p>Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the
+hazard ratio in quantifying the between-group difference in survival
+analysis. <em>Journal of Clinical Oncology</em>, 32(22), 2380-2385.</p>
 <p>Uno, H., &amp; Horiguchi, M. (2023). Ratio and difference of average
 hazard with survival weight: new measures to quantify survival benefit
 of new therapy. <em>Statistics in Medicine</em>, 42(7), 936-952.</p>
@@ -458,10 +608,6 @@ ratios. <em>Biometrical Journal</em>, 66(6), e202300271.</p>
 <p>Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. <em>The Stata Journal</em>,
 16(3), 678-690.</p>
-<p>Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
-analysis methods for time to event endpoints under nonproportional
-hazards: a comparative analysis. <em>Statistics in Biopharmaceutical
-Research</em>, 12(2), 187-198.</p>
 <p>Magirr, D., &amp; Burman, C.-F. (2019). Modestly weighted logrank
 tests. <em>Statistics in Medicine</em>, 38(20), 3782-3790.</p>
 <p>Magirr, D., &amp; Öhrn, F. (2026). Robust modestly weighted log-rank

@@ -34,6 +34,9 @@
 #' @param weight Weight function, one of \code{"PF"} (Pepe-Fleming combined
 #'   censoring weight), \code{"sqrtPF"} (its square root) or \code{"constant"}
 #'   (weight 1).
+#' @param presorted Logical; set to \code{TRUE} when \code{time}, \code{event}
+#'   and \code{group} are already sorted in ascending order of \code{time}, to
+#'   skip the internal sort. Defaults to \code{FALSE}.
 #'
 #' @return A named numeric vector of class \code{"wkm_fast"} with the weighted
 #'   integrated difference, its standard error and confidence limits, and the
@@ -62,7 +65,8 @@
 #' @export
 wkm_fast <- function(time, event, group, control = NULL,
                      side = 2, conf.level = 0.95,
-                     weight = c("PF", "sqrtPF", "constant")) {
+                     weight = c("PF", "sqrtPF", "constant"),
+                     presorted = FALSE) {
   weight <- match.arg(weight)
 
   n_obs <- length(time)
@@ -101,10 +105,16 @@ wkm_fast <- function(time, event, group, control = NULL,
   treatment_label <- levels_g[levels_g != control]
   gcode <- ifelse(group == control, 0L, 1L)
 
-  ord <- order(time)
-  s_time <- as.numeric(time)[ord]
-  s_event <- as.integer(event)[ord]
-  s_grp <- as.integer(gcode)[ord]
+  if (presorted) {
+    s_time <- as.numeric(time)
+    s_event <- as.integer(event)
+    s_grp <- as.integer(gcode)
+  } else {
+    ord <- order(time)
+    s_time <- as.numeric(time)[ord]
+    s_event <- as.integer(event)[ord]
+    s_grp <- as.integer(gcode)[ord]
+  }
 
   weight_type <- switch(weight, PF = 0L, sqrtPF = 1L, constant = 2L)
 
