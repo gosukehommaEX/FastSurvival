@@ -33,7 +33,10 @@ Kaplan
 Karrison
 Kitchin
 Korn
+Labour
 Lan
+MRCT
+MRCTs
 Magirr
 Martín
 MaxCombo
@@ -56,12 +59,14 @@ Royston
 Silverman
 Stata
 Tarone
+Teng
 Tian
 Tisotumab
 Uno
 Vergote
 WKM
 WMST
+Zhang
 ahr
 ahrKM
 ahsw
@@ -89,6 +94,7 @@ maximizer
 maxtest
 medsurv
 microbenchmark
+multiregional
 mw
 nonproportional
 nph
@@ -115,6 +121,7 @@ survdiff
 survfit
 th
 tisotumab
+undemonstrated
 unpooled
 unrounded
 unstratified
