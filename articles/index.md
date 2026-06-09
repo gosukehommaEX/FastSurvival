@@ -12,3 +12,5 @@
   trio](https://gosukehommaEX.github.io/FastSurvival/articles/group-sequential-design.md):
 - [Investigating the Freidlin and Korn strong null
   scenario](https://gosukehommaEX.github.io/FastSurvival/articles/investigate-freidlin-and-korn.md):
+- [MRCT with complex survival analysis
+  design](https://gosukehommaEX.github.io/FastSurvival/articles/mrct-regional-consistency.md):
