@@ -71,6 +71,25 @@
     output and supplied group-sequential boundaries, with a
     [`print()`](https://rdrr.io/r/base/print.html) method that lays the
     results out as a group-sequential design report.
+- New visualization layer:
+  - [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md):
+    assembles one or more two-group scenarios into a `scenario_fast`
+    object for design-stage exploration, with a
+    [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method that
+    draws the analytic survival curves and the piecewise hazard ratio of
+    each scenario and a [`print()`](https://rdrr.io/r/base/print.html)
+    method that summarizes the medians, the start and end hazard ratios,
+    and whether the curves cross.
+  - [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md):
+    builds the Kaplan-Meier curves of a single trial realization (for
+    example one replicate of
+    [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md))
+    into a `kmcurve_fast` object, with a
+    [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method that
+    draws the curves with optional restricted-mean shading and a
+    smoothed time-varying hazard-ratio panel, and a
+    [`print()`](https://rdrr.io/r/base/print.html) method that
+    summarizes the events and medians.
 - Each estimation and testing function has a corresponding
   [`print()`](https://rdrr.io/r/base/print.html) method, and the print
   methods share a unified display format.

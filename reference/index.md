@@ -45,6 +45,20 @@ operating characteristics.
 - [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
   : Summarize Operating Characteristics from Sequential Analysis Output
 
+## Design and visualization
+
+Assemble design-stage scenarios and build analysis-stage Kaplan-Meier
+curves, each with plot and print methods.
+
+- [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md)
+  : Build a Set of Two-Group Trial Scenarios for Design Exploration
+- [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  : Build Kaplan-Meier Curves for One Trial Realization
+- [`plot(`*`<scenario_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.scenario_fast.md)
+  : Plot Method for Scenario Sets
+- [`plot(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md)
+  : Plot Method for Kaplan-Meier Curves
+
 ## Print methods
 
 Display methods for the returned S3 objects.
@@ -55,6 +69,8 @@ Display methods for the returned S3 objects.
   : Print Method for ahsw_fast Objects
 - [`print(`*`<coxph_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.coxph_fast.md)
   : Print Method for coxph_fast Objects
+- [`print(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md)
+  : Print Method for Kaplan-Meier Curves
 - [`print(`*`<maxcombo_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.maxcombo_fast.md)
   : Print Method for maxcombo_fast Objects
 - [`print(`*`<medsurv_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.medsurv_fast.md)
@@ -65,6 +81,8 @@ Display methods for the returned S3 objects.
   : Print Method for rmst_fast Objects
 - [`print(`*`<rmw_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.rmw_fast.md)
   : Print Method for rmw_fast Objects
+- [`print(`*`<scenario_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.scenario_fast.md)
+  : Print Method for Scenario Sets
 - [`print(`*`<simsummary_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
   : Print Method for Sequential Analysis Summaries
 - [`print(`*`<survdiff_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.survdiff_fast.md)

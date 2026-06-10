@@ -24,6 +24,7 @@
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
     <li><a class="dropdown-item" href="../articles/mrct-regional-consistency.html">MRCT with complex survival analysis design</a></li>
+    <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -71,6 +72,12 @@
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>: interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times, computed by a fused C++ kernel that reuses the analysis cores of the standalone functions. Supports subgroup analyses.</li>
 <li>
 <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>: operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> output and supplied group-sequential boundaries, with a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that lays the results out as a group-sequential design report.</li>
+</ul></li>
+<li>New visualization layer:
+<ul><li>
+<code><a href="../reference/gen_scenario_fast.html">gen_scenario_fast()</a></code>: assembles one or more two-group scenarios into a <code>scenario_fast</code> object for design-stage exploration, with a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method that draws the analytic survival curves and the piecewise hazard ratio of each scenario and a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that summarizes the medians, the start and end hazard ratios, and whether the curves cross.</li>
+<li>
+<code><a href="../reference/kmcurve_fast.html">kmcurve_fast()</a></code>: builds the Kaplan-Meier curves of a single trial realization (for example one replicate of <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>) into a <code>kmcurve_fast</code> object, with a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method that draws the curves with optional restricted-mean shading and a smoothed time-varying hazard-ratio panel, and a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that summarizes the events and medians.</li>
 </ul></li>
 <li>Each estimation and testing function has a corresponding <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method, and the print methods share a unified display format.</li>
 </ul></div>

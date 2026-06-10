@@ -45,6 +45,13 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
 | [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries. |
 
+### Visualization
+
+| Function | Description |
+|----|----|
+| [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md) | Assemble one or more two-group scenarios into a `scenario_fast` object for design-stage exploration, with [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (analytic survival curves and the piecewise hazard ratio) and [`print()`](https://rdrr.io/r/base/print.html) methods. |
+| [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md) | Build the Kaplan-Meier curves of a single trial realization into a `kmcurve_fast` object, with [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (curves, restricted-mean shading, and a smoothed time-varying hazard-ratio panel) and [`print()`](https://rdrr.io/r/base/print.html) methods. |
+
 The estimation and testing functions return S3-class objects with
 [`print()`](https://rdrr.io/r/base/print.html) methods that display the
 results in a format similar to the corresponding `survival` package
@@ -301,6 +308,35 @@ computed elsewhere (for example by gsDesign or rpact) and estimates the
 stopping probabilities by Monte Carlo over the simulated trials; it does
 not compute or spend alpha itself.
 
+**gen_scenario_fast** assembles one or more two-group scenarios, each a
+complete set of
+[`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+arguments, into a single object for design-stage exploration. Its
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method draws,
+for every scenario, the analytic control and experimental survival
+curves with the piecewise-constant hazard ratio on a secondary axis,
+computed directly from the piecewise-exponential parameters without
+simulation, and its [`print()`](https://rdrr.io/r/base/print.html)
+method summarizes the medians, the hazard ratio at the start and end of
+the window, and whether the curves cross. The same object can be passed
+to
+[`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+to generate the data.
+
+**kmcurve_fast** builds the Kaplan-Meier step functions of a single
+realized data set, for example one replicate from
+[`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
+for both the two-group and single-group cases. Its
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method draws
+the curves and can shade the area under each curve up to a truncation
+time to visualize the restricted mean survival time, and can add a
+second panel showing the smoothed time-varying hazard ratio, a
+kernel-smoothed Nelson-Aalen estimate, together with the constant Cox
+proportional-hazards estimate. Its
+[`print()`](https://rdrr.io/r/base/print.html) method reports the sample
+sizes, events, and medians, with the Cox hazard ratio in the two-group
+case.
+
 ## Using the functions together
 
 A typical simulation workflow combines the simulation and analysis
@@ -502,6 +538,20 @@ operating characteristics.
 - [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
   : Summarize Operating Characteristics from Sequential Analysis Output
 
+## Design and visualization
+
+Assemble design-stage scenarios and build analysis-stage Kaplan-Meier
+curves, each with plot and print methods.
+
+- [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md)
+  : Build a Set of Two-Group Trial Scenarios for Design Exploration
+- [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  : Build Kaplan-Meier Curves for One Trial Realization
+- [`plot(`*`<scenario_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.scenario_fast.md)
+  : Plot Method for Scenario Sets
+- [`plot(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md)
+  : Plot Method for Kaplan-Meier Curves
+
 ## Print methods
 
 Display methods for the returned S3 objects.
@@ -512,6 +562,8 @@ Display methods for the returned S3 objects.
   : Print Method for ahsw_fast Objects
 - [`print(`*`<coxph_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.coxph_fast.md)
   : Print Method for coxph_fast Objects
+- [`print(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md)
+  : Print Method for Kaplan-Meier Curves
 - [`print(`*`<maxcombo_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.maxcombo_fast.md)
   : Print Method for maxcombo_fast Objects
 - [`print(`*`<medsurv_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.medsurv_fast.md)
@@ -522,6 +574,8 @@ Display methods for the returned S3 objects.
   : Print Method for rmst_fast Objects
 - [`print(`*`<rmw_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.rmw_fast.md)
   : Print Method for rmw_fast Objects
+- [`print(`*`<scenario_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.scenario_fast.md)
+  : Print Method for Scenario Sets
 - [`print(`*`<simsummary_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
   : Print Method for Sequential Analysis Summaries
 - [`print(`*`<survdiff_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/print.survdiff_fast.md)
@@ -556,3 +610,5 @@ Display methods for the returned S3 objects.
   scenario](https://gosukehommaEX.github.io/FastSurvival/articles/investigate-freidlin-and-korn.md):
 - [MRCT with complex survival analysis
   design](https://gosukehommaEX.github.io/FastSurvival/articles/mrct-regional-consistency.md):
+- [Comparing the log-rank test and RMST under nonproportional
+  hazards](https://gosukehommaEX.github.io/FastSurvival/articles/compare-logrank-rmst.md):
