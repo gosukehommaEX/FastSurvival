@@ -20,6 +20,7 @@ Dormuth
 ENGOT
 Epanechnikov
 FH
+Foulkes
 Freidlin
 GL
 Gehan
@@ -34,6 +35,7 @@ Karrison
 Kitchin
 Korn
 Labour
+Lachin
 Lan
 MRCT
 MRCTs
@@ -42,7 +44,6 @@ Martín
 MaxCombo
 Modelling
 Mukhopadhyay
-Nelson
 Ohrn
 Parmar
 Paukner
@@ -56,6 +57,7 @@ Rauch
 Rcpp
 Roychoudhury
 Royston
+Schoenfeld
 Silverman
 Stata
 Tarone
@@ -87,6 +89,7 @@ immuno
 innovaTV
 keaven
 kk
+kmcurve
 logrank
 lr
 maxcombo

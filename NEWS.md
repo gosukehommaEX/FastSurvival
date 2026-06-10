@@ -54,6 +54,17 @@
     `analysis_fast()` output and supplied group-sequential boundaries, with a
     `print()` method that lays the results out as a group-sequential design
     report.
+* New visualization layer:
+  * `gen_scenario_fast()`: assembles one or more two-group scenarios into a
+    `scenario_fast` object for design-stage exploration, with a `plot()`
+    method that draws the analytic survival curves and the piecewise hazard
+    ratio of each scenario and a `print()` method that summarizes the
+    medians, the start and end hazard ratios, and whether the curves cross.
+  * `kmcurve_fast()`: builds the Kaplan-Meier curves of a single trial
+    realization (for example one replicate of `simdata_fast()`) into a
+    `kmcurve_fast` object, with a `plot()` method that draws the curves with
+    optional restricted-mean shading and a smoothed time-varying hazard-ratio
+    panel, and a `print()` method that summarizes the events and medians.
 * Each estimation and testing function has a corresponding `print()` method,
   and the print methods share a unified display format.
 

@@ -311,8 +311,7 @@ clinical trials* (Notification No. 0928010).
 Teng, Z., Lin, J., & Zhang, B. (2018). Practical recommendations for regional
 consistency evaluation in multi-regional clinical trials with different
 endpoints. *Statistics in Biopharmaceutical Research*, 10(1), 50-56.
-https://doi.org/10.1080/19466315.2017.1379431
 
 Homma, G. (2024). Cautionary note on regional consistency evaluation in
 multiregional clinical trials with binary outcomes. *Pharmaceutical Statistics*,
-23(3), 385-398. https://doi.org/10.1002/pst.2358
+23(3), 385-398.

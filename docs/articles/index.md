@@ -14,3 +14,5 @@
   scenario](https://gosukehommaEX.github.io/FastSurvival/articles/investigate-freidlin-and-korn.md):
 - [MRCT with complex survival analysis
   design](https://gosukehommaEX.github.io/FastSurvival/articles/mrct-regional-consistency.md):
+- [Comparing the log-rank test and RMST under nonproportional
+  hazards](https://gosukehommaEX.github.io/FastSurvival/articles/compare-logrank-rmst.md):

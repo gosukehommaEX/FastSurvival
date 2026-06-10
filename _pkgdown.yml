@@ -36,6 +36,16 @@ reference:
   - analysis_fast
   - simsummary_fast
 
+- title: Design and visualization
+  desc: >
+    Assemble design-stage scenarios and build analysis-stage Kaplan-Meier
+    curves, each with plot and print methods.
+  contents:
+  - gen_scenario_fast
+  - kmcurve_fast
+  - plot.scenario_fast
+  - plot.kmcurve_fast
+
 - title: Print methods
   desc: Display methods for the returned S3 objects.
   contents:
@@ -55,3 +65,4 @@ articles:
   - group-sequential-design
   - investigate-freidlin-and-korn
   - mrct-regional-consistency
+  - compare-logrank-rmst

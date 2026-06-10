@@ -40,6 +40,7 @@ through the joint distribution."><meta property="og:image" content="https://gosu
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
     <li><a class="dropdown-item" href="../articles/mrct-regional-consistency.html">MRCT with complex survival analysis design</a></li>
+    <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -219,8 +220,8 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> statistic </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1.298019 </span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">[</span><span class="st">"p.value"</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  p.value </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.302523 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   p.value </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3022772 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Two-sided test</span></span></span>
 <span class="r-in"><span><span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
@@ -267,7 +268,7 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,0) -1.2980</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,1) -0.0576</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3024  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = 1.298 (two-sided),  p-value = 0.3025  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
@@ -283,7 +284,7 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-in"><span>  <span class="fu">simtrial</span><span class="fu">::</span><span class="fu"><a href="https://merck.github.io/simtrial/reference/maxcombo.html" class="external-link">maxcombo</a></span><span class="op">(</span><span class="va">df</span>, rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                     return_corr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">p_value</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1511967</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1512057</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

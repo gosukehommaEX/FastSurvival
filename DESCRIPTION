@@ -23,7 +23,10 @@ Description: Provides fast alternatives to standard survival analysis functions
     Kalbfleisch-Prentice average hazard ratio (ahr_fast()). The simulation
     layer generates individual patient data (simdata_fast()), performs interim
     or sequential analyses (analysis_fast()), and aggregates operating
-    characteristics (simsummary_fast()). All functions are designed for repeated
+    characteristics (simsummary_fast()). A visualization layer assembles
+    design-stage scenarios (gen_scenario_fast()) and builds analysis-stage
+    Kaplan-Meier curves (kmcurve_fast()), each with plot and print methods.
+    All functions are designed for repeated
     evaluation inside large simulation loops, such as adaptive sample-size
     re-estimation, probability-of-success calculations, and regional consistency
     evaluation in multi-regional trials. Core computations are implemented in
@@ -39,6 +42,9 @@ LazyData: false
 Depends:
     R (>= 4.1.0)
 Imports:
+    graphics,
+    grDevices,
+    stats,
     dqrng,
     Rcpp,
     mvtnorm

@@ -51,6 +51,13 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | `analysis_fast()` | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
 | `simsummary_fast()` | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from `analysis_fast()` output and supplied boundaries. |
 
+### Visualization
+
+| Function | Description |
+|----------|-------------|
+| `gen_scenario_fast()` | Assemble one or more two-group scenarios into a `scenario_fast` object for design-stage exploration, with `plot()` (analytic survival curves and the piecewise hazard ratio) and `print()` methods. |
+| `kmcurve_fast()` | Build the Kaplan-Meier curves of a single trial realization into a `kmcurve_fast` object, with `plot()` (curves, restricted-mean shading, and a smoothed time-varying hazard-ratio panel) and `print()` methods. |
+
 The estimation and testing functions return S3-class objects with `print()`
 methods that display the results in a format similar to the corresponding
 `survival` package functions.
@@ -288,6 +295,26 @@ expected analysis timing. It consumes group-sequential boundaries computed
 elsewhere (for example by gsDesign or rpact) and estimates the stopping
 probabilities by Monte Carlo over the simulated trials; it does not compute
 or spend alpha itself.
+
+**gen_scenario_fast** assembles one or more two-group scenarios, each a
+complete set of `simdata_fast()` arguments, into a single object for
+design-stage exploration. Its `plot()` method draws, for every scenario, the
+analytic control and experimental survival curves with the piecewise-constant
+hazard ratio on a secondary axis, computed directly from the
+piecewise-exponential parameters without simulation, and its `print()` method
+summarizes the medians, the hazard ratio at the start and end of the window,
+and whether the curves cross. The same object can be passed to
+`simdata_fast()` to generate the data.
+
+**kmcurve_fast** builds the Kaplan-Meier step functions of a single realized
+data set, for example one replicate from `simdata_fast()`, for both the
+two-group and single-group cases. Its `plot()` method draws the curves and can
+shade the area under each curve up to a truncation time to visualize the
+restricted mean survival time, and can add a second panel showing the smoothed
+time-varying hazard ratio, a kernel-smoothed Nelson-Aalen estimate, together
+with the constant Cox proportional-hazards estimate. Its `print()` method
+reports the sample sizes, events, and medians, with the Cox hazard ratio in
+the two-group case.
 
 ## Using the functions together
 
