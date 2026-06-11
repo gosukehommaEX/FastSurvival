@@ -259,11 +259,14 @@ zero-over-zero ratio). `Analysis_time` is the mean calendar time of the look
 itself, taken over all trials, and so is reported at every look. At the later
 looks the table gives, per analysis, the conditional regional consistency
 probability for each method. Method 2 is the looser criterion and so its
-conditional probability runs higher than Method 1's, and both tend to be lower at
-the earliest efficacy look, where the late-starting region 1 has contributed the
-fewest events and its hazard ratio is the most variable. This calendar-driven
-behavior is exactly what the closed-form formulas, which assume a single final
-analysis and simultaneous accrual, cannot capture.
+conditional probability runs higher than Method 1's at both efficacy looks. For
+each method the conditional consistency is comparable at the two efficacy looks,
+if anything slightly higher at the interim, because the trials that cross the
+stringent interim efficacy boundary are enriched for a strong overall effect,
+which also makes the regional criteria more likely to be met. This calendar-driven
+behavior, together with the late-starting region 1 whose events accrue on a
+different schedule, is exactly what the closed-form formulas, which assume a
+single final analysis and simultaneous accrual, cannot capture.
 
 ## Tying back to the trio: standard operating characteristics
 

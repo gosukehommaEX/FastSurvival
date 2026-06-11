@@ -178,20 +178,22 @@ Simulated power at the fixed analysis (one-sided 0.025).
 
 Under proportional hazards the log-rank test reaches its design power
 and RMST is somewhat lower, as expected when the hazard ratio is
-constant and the log-rank test is the efficient choice. The two
-nonproportional scenarios are governed by the truncation time, because
-the treatment benefit accrues only after the delay and RMST can detect
-it only over a window that spans the separation. Under the delayed
-effect the late effect is strong, so the log-rank test stays powerful,
-while RMST recovers more signal as the window lengthens. Under crossing
-hazards the early reversal cancels much of the late benefit on the
-hazard scale, so the log-rank test loses power; RMST summarizes the net
-survival difference over the window, which here stays modest because the
-early harm offsets part of the later gain. The single-trial plot above
-shows the mechanism: the smoothed hazard ratio crosses one within the
-follow-up window, the situation in which a single hazard-ratio summary
-is least informative. The table reports the power that results from
-these mechanisms at the chosen truncation time.
+constant and the log-rank test is the efficient choice. At this common
+sample size and this truncation time the unweighted log-rank test is at
+least as powerful as RMST in all three scenarios, and the gap widens
+under nonproportional hazards. Under the delayed effect the post-delay
+hazard ratio is stronger than the design value, so the log-rank test is
+in fact more powerful here than under proportional hazards; RMST detects
+the same late separation but averages it over a window that also spans
+the early no-difference period, so its power is markedly lower. Under
+crossing hazards both tests lose power because the early reversal
+offsets the late benefit, and RMST is affected most: the net survival
+difference over the window is small, so its power drops to around one
+tenth while the log-rank test retains moderate power. The single-trial
+plot above shows the mechanism, with the smoothed hazard ratio crossing
+one within the follow-up window, the situation in which a single
+hazard-ratio summary is least informative. These rankings are specific
+to the chosen truncation time, which the next paragraph takes up.
 
 The truncation time for RMST is set here to 30 months, within the
 minimum follow-up of 36 months, so that every subject contributes over
@@ -200,3 +202,22 @@ effect on the RMST result: a window that ends before the treatment
 benefit has accumulated leaves RMST little to detect, so it must be long
 enough to span the separation, and it should be prespecified on clinical
 grounds rather than tuned to the data.
+
+## References
+
+Lachin, J. M., & Foulkes, M. A. (1986). Evaluation of sample size and
+power for analyses of survival with allowance for nonuniform patient
+entry, losses to follow-up, noncompliance, and stratification.
+*Biometrics*, 42(3), 507-519.
+
+Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
+an alternative to the hazard ratio for the design and analysis of
+randomized trials with a time-to-event outcome. *BMC Medical Research
+Methodology*, 13, 152.
+
+Schoenfeld, D. A. (1983). Sample-size formula for the
+proportional-hazards regression model. *Biometrics*, 39(2), 499-503.
+
+Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
+ratio in quantifying the between-group difference in survival analysis.
+*Journal of Clinical Oncology*, 32(22), 2380-2385.

@@ -6,6 +6,7 @@ Biometrical
 Biometrics
 Biometrika
 Biopharmaceutical
+Bluhmki
 Bonferroni
 Breslow
 Burman
@@ -23,6 +24,7 @@ FH
 Foulkes
 Freidlin
 GL
+Gaschler
 Gehan
 González
 Halabi
@@ -40,17 +42,20 @@ Lan
 MRCT
 MRCTs
 Magirr
+Markefski
 Martín
 MaxCombo
 Modelling
 Mukhopadhyay
 Ohrn
+PFS
 Parmar
 Paukner
 Pauly
 Pepe
 Peto
 PiHE
+Pocock
 RMST
 Ramlau
 Rauch
@@ -60,6 +65,7 @@ Royston
 Schoenfeld
 Silverman
 Stata
+TTP
 Tarone
 Teng
 Tian
@@ -82,7 +88,9 @@ dqrng
 du
 eq
 et
+exponentials
 fh
+gatekeeping
 gsDesign
 gw
 immuno
