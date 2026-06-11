@@ -213,9 +213,3 @@ analysis? *Journal of Clinical Oncology*, 37(35), 3455-3459.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, 38(20), 3782-3790.
-
-Mukhopadhyay, P., Ye, J., Anderson, K. M., Roychoudhury, S., Rubin, E.
-H., Halabi, S., & Chappell, R. J. (2022). Log-rank test vs MaxCombo and
-difference in restricted mean survival time tests for comparing survival
-under nonproportional hazards in immuno-oncology trials: A systematic
-review and meta-analysis. *JAMA Oncology*, 8(9), 1294-1300.

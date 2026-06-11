@@ -113,7 +113,7 @@ coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 
 ## Where to go next
 
-Three further vignettes cover the package in depth. *Validation of
+Several further vignettes cover the package in depth. *Validation of
 FastSurvival* checks numerical agreement with established packages on a
 real clinical-trial dataset. *Speed comparison* quantifies the
 performance gain. *Group sequential design with the simulation trio*
@@ -122,7 +122,9 @@ demonstrates
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
 and
 [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
-against a gsDesign reference.
+against a gsDesign reference. Further applied vignettes work the
+simulation trio through nonproportional-hazards, correlated
+multiple-endpoint, and multiregional settings.
 
 ## References
 

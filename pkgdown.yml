@@ -3,13 +3,14 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   compare-logrank-rmst: compare-logrank-rmst.html
+  correlated-pfs-os-gsd: correlated-pfs-os-gsd.html
   FastSurvival: FastSurvival.html
   group-sequential-design: group-sequential-design.html
   investigate-freidlin-and-korn: investigate-freidlin-and-korn.html
   mrct-regional-consistency: mrct-regional-consistency.html
   speed-comparison: speed-comparison.html
   validation: validation.html
-last_built: 2026-06-10T13:23Z
+last_built: 2026-06-11T10:46Z
 urls:
   reference: https://gosukehommaEX.github.io/FastSurvival/reference
   article: https://gosukehommaEX.github.io/FastSurvival/articles

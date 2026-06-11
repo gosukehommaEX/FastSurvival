@@ -93,6 +93,13 @@
 - Each estimation and testing function has a corresponding
   [`print()`](https://rdrr.io/r/base/print.html) method, and the print
   methods share a unified display format.
+- New vignettes accompany the analysis, simulation, and visualization
+  layers: validation against established packages, a speed comparison, a
+  group-sequential design reproduction, a log-rank versus RMST
+  comparison under nonproportional hazards, the Freidlin-Korn
+  strong-null investigation, a correlated PFS and OS group-sequential
+  design under the Fleischer model, and a multiregional
+  regional-consistency evaluation.
 
 ## FastSurvival 0.1.0
 
