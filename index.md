@@ -41,7 +41,7 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 
 | Function | Description |
 |----|----|
-| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one- or two-group trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, and optional subgroups. |
+| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one- or two-group trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
 | [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
 | [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries. |
 
@@ -142,6 +142,19 @@ df2 <- simdata_fast(
   e.hazard = list(c(0.08, 0.08), c(0.08, 0.04)),
   e.time   = c(0, 6, Inf),
   seed     = 2
+)
+
+# Two correlated endpoints (e.g. PFS and OS) from an illness-death model:
+# an intermediate event (h01) and a terminal event (h02). With the post-event
+# hazard defaulting to h02 this is the Fleischer maximal-independence model.
+df3 <- simdata_fast(
+  nsim       = 1000,
+  n          = c(100, 100),
+  a.time     = c(0, 12),
+  a.rate     = 200 / 12,
+  h01.median = list(6, 9),     # intermediate event (e.g. progression)
+  h02.median = list(14, 18),   # terminal event (e.g. death)
+  seed       = 3
 )
 ```
 
@@ -282,10 +295,14 @@ time-to-event trials. Accrual times follow a piecewise-uniform
 distribution, and survival and dropout times follow either a simple or
 piecewise exponential distribution, selected automatically based on
 whether a scalar or vector hazard is supplied. Optional subgroups are
-defined by a prevalence specification. The entire generation pipeline
-runs in a single C++ kernel that materializes the output data frame
-once, avoiding intermediate R-level vector operations and copies, and
-random-number generation uses
+defined by a prevalence specification. It can also generate two
+correlated time-to-event endpoints, such as progression-free and overall
+survival, from an illness-death model with transition hazards for the
+intermediate event, the direct terminal event, and the post-event
+terminal event, and with optional treatment switching. The entire
+generation pipeline runs in a single C++ kernel that materializes the
+output data frame once, avoiding intermediate R-level vector operations
+and copies, and random-number generation uses
 [dqrng](https://cran.r-project.org/package=dqrng) for speed.
 
 **analysis_fast** performs interim or sequential analyses of simulated
