@@ -12,6 +12,7 @@ overhead of the standard implementations becomes a bottleneck. Core
 computations are implemented in C++ via Rcpp.
 
 ``` r
+
 library(FastSurvival)
 ```
 
@@ -64,6 +65,7 @@ The following example uses the `ovarian` dataset from the survival
 package, with a one-sided test of treatment benefit (`side = 1`).
 
 ``` r
+
 library(survival)
 
 # Single-time-point Kaplan-Meier estimate

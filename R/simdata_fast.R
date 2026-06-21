@@ -70,11 +70,56 @@
 #'   list for group-specific prevalence).
 #' @param fixed.alloc Logical; when \code{TRUE} subgroup sizes are
 #'   deterministic rather than drawn.
+#' @param h01.hazard Transition hazard(s) for the non-terminal (intermediate)
+#'   event (state 0 to state 1) in the illness-death model. A scalar or vector
+#'   for one group, or a two-element list for two groups. Supplying any of
+#'   \code{h01.*} or \code{h02.*} activates the illness-death model with two
+#'   correlated endpoints, and is mutually exclusive with \code{e.hazard} /
+#'   \code{e.median}.
+#' @param h01.median Median(s) for the intermediate event; an alternative to
+#'   \code{h01.hazard}.
+#' @param h01.time Breakpoints for a piecewise \code{h01.hazard} (last element
+#'   \code{Inf}).
+#' @param h02.hazard Transition hazard(s) for the terminal event without a prior
+#'   intermediate event (state 0 to state 2). Same group and piecewise
+#'   conventions as \code{h01.hazard}.
+#' @param h02.median Median(s) for the direct terminal event; an alternative to
+#'   \code{h02.hazard}.
+#' @param h02.time Breakpoints for a piecewise \code{h02.hazard}.
+#' @param h12.hazard Transition hazard(s) for the terminal event after an
+#'   intermediate event (state 1 to state 2) for subjects who do not switch.
+#'   Defaults to \code{h02.hazard}, which gives the Fleischer
+#'   maximal-independence model (Fleischer Theorem 1 when there is no switching).
+#' @param h12.median Median(s) for the post-event terminal event; an alternative
+#'   to \code{h12.hazard}.
+#' @param h12.time Breakpoints for a piecewise \code{h12.hazard}, measured from
+#'   the intermediate-event time (clock-reset).
+#' @param switch.prop Probability that a subject with an intermediate event
+#'   switches treatment, a scalar or a two-element list (control, treatment).
+#'   Defaults to zero (no switching); the treatment group is typically left at
+#'   zero.
+#' @param h12.switch.hazard Transition hazard(s) from state 1 to state 2 for
+#'   subjects who switch. Required when any \code{switch.prop} is positive.
+#' @param h12.switch.median Median(s) for the post-switch terminal event; an
+#'   alternative to \code{h12.switch.hazard}.
+#' @param h12.switch.time Breakpoints for a piecewise \code{h12.switch.hazard},
+#'   measured from the switch (intermediate-event) time (clock-reset).
+#' @param switch.clock Time origin for the post-event hazards. Currently only
+#'   \code{"reset"} (measured from the intermediate event) is implemented.
 #'
 #' @return A \code{data.frame} with \code{nsim * sum(n)} rows. The columns are
 #'   \code{sim}, \code{group}, any subgroup columns, \code{accrual_time},
 #'   \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
 #'   \code{calendar_time}.
+#'   In the illness-death model the columns are instead \code{sim},
+#'   \code{group}, \code{accrual_time}, \code{e1_surv_time},
+#'   \code{e2_surv_time}, \code{dropout_time}, \code{e1_tte}, \code{e1_event},
+#'   \code{e2_tte}, \code{e2_event}, \code{e1_calendar_time},
+#'   \code{e2_calendar_time}, \code{intermediate}, \code{switched}, and
+#'   \code{switch_time}, where \code{e1} is the first (state-0 exit) endpoint
+#'   and \code{e2} is the terminal endpoint. In oncology \code{e1} is
+#'   progression-free survival, \code{e2} is overall survival, and
+#'   \code{intermediate} flags progression.
 #'
 #' @examples
 #' # One-group simulation, simple exponential, no dropout
@@ -160,6 +205,35 @@
 #' )
 #' head(df5)
 #'
+#' # Two correlated endpoints, no switching (reduces to Fleischer Theorem 1
+#' # because h12 defaults to h02). In oncology e1 is PFS and e2 is OS; here the
+#' # control has faster intermediate events and faster direct terminal events.
+#' dfid <- simdata_fast(
+#'   nsim       = 100,
+#'   n          = c(150, 150),
+#'   a.time     = c(0, 12),
+#'   a.rate     = 300 / 12,
+#'   h01.median = list(8, 12),
+#'   h02.median = list(24, 30),
+#'   seed       = 6
+#' )
+#' head(dfid)
+#'
+#' # With treatment switching: 40 percent of control subjects who reach the
+#' # intermediate event switch and then follow a more favorable post-event hazard
+#' dfsw <- simdata_fast(
+#'   nsim              = 100,
+#'   n                 = c(150, 150),
+#'   a.time            = c(0, 12),
+#'   a.rate            = 300 / 12,
+#'   h01.median        = list(8, 12),
+#'   h02.median        = list(24, 30),
+#'   switch.prop       = list(0.4, 0),
+#'   h12.switch.median = list(36, 36),
+#'   seed              = 7
+#' )
+#' head(dfsw)
+#'
 #' @seealso \code{\link{analysis_fast}}
 #'
 #' @export
@@ -177,9 +251,48 @@ simdata_fast <- function(nsim       = 1000,
                          d.time     = NULL,
                          seed       = NULL,
                          prevalence = NULL,
-                         fixed.alloc = FALSE) {
+                         fixed.alloc = FALSE,
+                         h01.hazard   = NULL,
+                         h01.median   = NULL,
+                         h01.time     = NULL,
+                         h02.hazard   = NULL,
+                         h02.median   = NULL,
+                         h02.time     = NULL,
+                         h12.hazard   = NULL,
+                         h12.median   = NULL,
+                         h12.time     = NULL,
+                         switch.prop  = NULL,
+                         h12.switch.hazard = NULL,
+                         h12.switch.median = NULL,
+                         h12.switch.time   = NULL,
+                         switch.clock = "reset") {
 
   if (!is.null(seed)) dqrng::dqset.seed(seed)
+
+  # Illness-death (two correlated endpoints, optional switching) mode dispatches
+  # to a separate kernel; the single-endpoint path below is left unchanged (same
+  # output schema and same dqrng consumption order when these arguments are not
+  # supplied).
+  if (!is.null(h01.hazard) || !is.null(h01.median) ||
+      !is.null(h02.hazard) || !is.null(h02.median)) {
+    if (!is.null(e.hazard) || !is.null(e.median)) {
+      stop("Specify the illness-death model with 'h01.*' / 'h02.*', not ",
+           "'e.hazard' / 'e.median'.")
+    }
+    return(simdata_fast_id(
+      nsim = nsim, n = n, alloc = alloc, a.time = a.time,
+      a.rate = a.rate, a.prop = a.prop,
+      h01.hazard = h01.hazard, h01.median = h01.median, h01.time = h01.time,
+      h02.hazard = h02.hazard, h02.median = h02.median, h02.time = h02.time,
+      h12.hazard = h12.hazard, h12.median = h12.median, h12.time = h12.time,
+      switch.prop = switch.prop,
+      h12.switch.hazard = h12.switch.hazard,
+      h12.switch.median = h12.switch.median,
+      h12.switch.time = h12.switch.time,
+      switch.clock = switch.clock,
+      d.hazard = d.hazard, d.median = d.median, d.time = d.time,
+      prevalence = prevalence))
+  }
 
   use_subgroup        <- !is.null(prevalence)
   group_specific_prev <- use_subgroup && is_group_specific_prev(prevalence)
@@ -555,4 +668,215 @@ convert_median_to_hazard <- function(median_arg) {
   } else {
     log(2) / median_arg
   }
+}
+
+
+# ------------------------------------------------------------------ #
+#  Internal helper: resolve accrual interval counts (illness-death path)
+# ------------------------------------------------------------------ #
+# Replicates the accrual resolution of the single-endpoint path for the
+# illness-death wrapper, returning the completed accrual breakpoints and the
+# per-interval subject counts for each group.
+resolve_accrual_counts <- function(n_grp_int, a.time, a.rate, a.prop) {
+  n_total    <- sum(n_grp_int)
+  n_int_time <- length(a.time) - 1L
+  acc_tol    <- 1e-8 * max(1, n_total)
+  use_rate   <- !is.null(a.rate)
+  use_prop   <- !is.null(a.prop)
+  if (use_rate == use_prop) stop("Supply exactly one of 'a.rate' and 'a.prop'")
+  if (length(a.time) < 2L) stop("'a.time' must have at least two elements")
+  if (any(diff(a.time) <= 0)) stop("'a.time' must be strictly increasing")
+
+  if (use_rate) {
+    if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
+    if (length(a.rate) == n_int_time) {
+      implied <- sum(a.rate * diff(a.time))
+      if (abs(implied - n_total) > acc_tol) {
+        stop("'a.rate' implies ", round(implied, 4), " subjects over the ",
+             "accrual period but sum(n) is ", n_total, ".")
+      }
+      a.time_full <- a.time
+    } else if (length(a.rate) == n_int_time + 1L) {
+      bounded <- if (n_int_time >= 1L) {
+        sum(a.rate[seq_len(n_int_time)] * diff(a.time))
+      } else {
+        0
+      }
+      remaining <- n_total - bounded
+      if (remaining <= 0) {
+        stop("The specified accrual intervals already accrue ", round(bounded, 4),
+             " subjects, at least sum(n) = ", n_total, ".")
+      }
+      final_dur   <- remaining / a.rate[length(a.rate)]
+      a.time_full <- c(a.time, a.time[length(a.time)] + final_dur)
+    } else {
+      stop("'a.rate' must have length equal to length(a.time) - 1 or length(a.time)")
+    }
+    weights_a <- a.rate * diff(a.time_full)
+  } else {
+    if (any(a.prop <= 0)) stop("All 'a.prop' values must be positive")
+    if (length(a.prop) != n_int_time) {
+      stop("'a.prop' must have length equal to length(a.time) - 1")
+    }
+    a.time_full <- a.time
+    weights_a   <- as.numeric(a.prop)
+  }
+
+  a_int_prob   <- weights_a / sum(weights_a)
+  acc_counts_c <- accrual_cell_counts(as.integer(n_grp_int[1L]), a_int_prob)
+  acc_counts_t <- if (length(n_grp_int) == 2L) {
+    accrual_cell_counts(as.integer(n_grp_int[2L]), a_int_prob)
+  } else {
+    integer(0)
+  }
+  list(a.time_full = a.time_full,
+       acc_counts_c = acc_counts_c, acc_counts_t = acc_counts_t)
+}
+
+# ------------------------------------------------------------------ #
+#  Internal wrapper: illness-death (two-endpoint, switching) simulation
+# ------------------------------------------------------------------ #
+# Validates the transition-hazard arguments, builds the per-group
+# piecewise-exponential pre-computations, and calls simdata_core_id. The seed is
+# already set by the caller. Subgroups are not supported here.
+simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
+                            h01.hazard, h01.median, h01.time,
+                            h02.hazard, h02.median, h02.time,
+                            h12.hazard, h12.median, h12.time,
+                            switch.prop,
+                            h12.switch.hazard, h12.switch.median, h12.switch.time,
+                            switch.clock,
+                            d.hazard, d.median, d.time,
+                            prevalence) {
+
+  if (!is.null(prevalence)) {
+    stop("Subgroups ('prevalence') are not supported with the illness-death ",
+         "model; call simdata_fast separately per subgroup and combine with rbind().")
+  }
+  if (!identical(switch.clock, "reset")) {
+    stop("Only switch.clock = \"reset\" is currently implemented.")
+  }
+
+  # Resolve transition hazards (exactly one of hazard or median per quantity).
+  if (!is.null(h01.hazard) && !is.null(h01.median)) {
+    stop("Specify exactly one of 'h01.hazard' and 'h01.median'")
+  }
+  if (is.null(h01.hazard) && is.null(h01.median)) {
+    stop("One of 'h01.hazard' or 'h01.median' must be supplied for the ",
+         "illness-death model")
+  }
+  if (!is.null(h01.median)) h01.hazard <- convert_median_to_hazard(h01.median)
+
+  if (!is.null(h02.hazard) && !is.null(h02.median)) {
+    stop("Specify exactly one of 'h02.hazard' and 'h02.median'")
+  }
+  if (is.null(h02.hazard) && is.null(h02.median)) {
+    stop("One of 'h02.hazard' or 'h02.median' must be supplied for the ",
+         "illness-death model")
+  }
+  if (!is.null(h02.median)) h02.hazard <- convert_median_to_hazard(h02.median)
+
+  if (!is.null(h12.hazard) && !is.null(h12.median)) {
+    stop("Specify exactly one of 'h12.hazard' and 'h12.median'")
+  }
+  if (!is.null(h12.median)) h12.hazard <- convert_median_to_hazard(h12.median)
+
+  if (!is.null(h12.switch.hazard) && !is.null(h12.switch.median)) {
+    stop("Specify exactly one of 'h12.switch.hazard' and 'h12.switch.median'")
+  }
+  if (!is.null(h12.switch.median)) {
+    h12.switch.hazard <- convert_median_to_hazard(h12.switch.median)
+  }
+
+  has_dropout <- !is.null(d.hazard) || !is.null(d.median)
+  if (!is.null(d.hazard) && !is.null(d.median)) {
+    stop("Specify exactly one of 'd.hazard' and 'd.median'")
+  }
+  if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
+
+  # A two-group simulation is signalled by a length-two 'n' or any group-specific
+  # (length-two list) hazard / switch argument.
+  is_two_group <- (length(n) == 2L) ||
+    is.list(h01.hazard) || is.list(h02.hazard) ||
+    is.list(h12.hazard) || is.list(h12.switch.hazard) ||
+    is.list(switch.prop)
+
+  if (length(n) == 1L) {
+    n_grp <- if (is_two_group) round(n * alloc / sum(alloc)) else n
+  } else if (length(n) == 2L) {
+    n_grp <- n
+  } else {
+    stop("'n' must be a scalar (total N) or a vector of length 2 (per-group)")
+  }
+  n_groups  <- if (is_two_group) 2L else 1L
+  n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
+  g2        <- (n_groups == 2L)
+
+  # Resolve a possibly group-specific argument for group g (1 = control,
+  # 2 = treatment). A length-two list is per group; anything else is shared.
+  id_grp <- function(x, g) if (is.list(x)) x[[g]] else x
+
+  get_pi <- function(g) {
+    if (is.null(switch.prop)) return(0)
+    p <- id_grp(switch.prop, g)
+    if (is.null(p)) 0 else as.numeric(p)
+  }
+  pi_c <- get_pi(1L)
+  pi_t <- if (g2) get_pi(2L) else 0
+
+  if ((pi_c > 0 || pi_t > 0) && is.null(h12.switch.hazard)) {
+    stop("'h12.switch.hazard' (or 'h12.switch.median') must be supplied when ",
+         "any 'switch.prop' is positive")
+  }
+
+  # Post-event no-switch hazard defaults to the direct terminal hazard h02.
+  get_h12      <- function(g) if (is.null(h12.hazard)) id_grp(h02.hazard, g) else id_grp(h12.hazard, g)
+  get_h12_time <- function(g) if (is.null(h12.hazard)) id_grp(h02.time, g)   else id_grp(h12.time, g)
+
+  h01_c <- piecewise_precompute(id_grp(h01.hazard, 1L), id_grp(h01.time, 1L))
+  h01_t <- if (g2) piecewise_precompute(id_grp(h01.hazard, 2L), id_grp(h01.time, 2L)) else h01_c
+  h02_c <- piecewise_precompute(id_grp(h02.hazard, 1L), id_grp(h02.time, 1L))
+  h02_t <- if (g2) piecewise_precompute(id_grp(h02.hazard, 2L), id_grp(h02.time, 2L)) else h02_c
+  h12_c <- piecewise_precompute(get_h12(1L), get_h12_time(1L))
+  h12_t <- if (g2) piecewise_precompute(get_h12(2L), get_h12_time(2L)) else h12_c
+
+  empty_spec <- list(hazard = 1, fin_time = numeric(0), cum_haz = numeric(0))
+  if (pi_c > 0 || pi_t > 0) {
+    h12s_c <- piecewise_precompute(id_grp(h12.switch.hazard, 1L), id_grp(h12.switch.time, 1L))
+    h12s_t <- if (g2) {
+      piecewise_precompute(id_grp(h12.switch.hazard, 2L), id_grp(h12.switch.time, 2L))
+    } else {
+      h12s_c
+    }
+  } else {
+    h12s_c <- empty_spec
+    h12s_t <- empty_spec
+  }
+
+  if (has_dropout) {
+    d_c <- piecewise_precompute(id_grp(d.hazard, 1L), id_grp(d.time, 1L))
+    d_t <- if (g2) piecewise_precompute(id_grp(d.hazard, 2L), id_grp(d.time, 2L)) else d_c
+  } else {
+    d_c <- empty_spec
+    d_t <- empty_spec
+  }
+
+  acc <- resolve_accrual_counts(n_grp_int, a.time, a.rate, a.prop)
+
+  simdata_core_id(
+    as.integer(nsim), n_grp_int,
+    as.numeric(acc$a.time_full), acc$acc_counts_c, acc$acc_counts_t,
+    h01_c$hazard, h01_c$fin_time, h01_c$cum_haz,
+    h01_t$hazard, h01_t$fin_time, h01_t$cum_haz,
+    h02_c$hazard, h02_c$fin_time, h02_c$cum_haz,
+    h02_t$hazard, h02_t$fin_time, h02_t$cum_haz,
+    h12_c$hazard, h12_c$fin_time, h12_c$cum_haz,
+    h12_t$hazard, h12_t$fin_time, h12_t$cum_haz,
+    h12s_c$hazard, h12s_c$fin_time, h12s_c$cum_haz,
+    h12s_t$hazard, h12s_t$fin_time, h12s_t$cum_haz,
+    as.numeric(pi_c), as.numeric(pi_t),
+    has_dropout,
+    d_c$hazard, d_c$fin_time, d_c$cum_haz,
+    d_t$hazard, d_t$fin_time, d_t$cum_haz
+  )
 }

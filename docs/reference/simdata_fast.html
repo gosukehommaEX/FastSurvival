@@ -85,7 +85,21 @@ reference implementation, so results are reproducible from <code>seed</code>.</p
 <span>  d.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prevalence <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fixed.alloc <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  fixed.alloc <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  h01.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h01.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h01.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  switch.prop <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.switch.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.switch.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.switch.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  switch.clock <span class="op">=</span> <span class="st">"reset"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -168,13 +182,100 @@ list for group-specific prevalence).</p></dd>
 <dd><p>Logical; when <code>TRUE</code> subgroup sizes are
 deterministic rather than drawn.</p></dd>
 
+
+<dt id="arg-h-hazard">h01.hazard<a class="anchor" aria-label="anchor" href="#arg-h-hazard"></a></dt>
+<dd><p>Transition hazard(s) for the non-terminal (intermediate)
+event (state 0 to state 1) in the illness-death model. A scalar or vector
+for one group, or a two-element list for two groups. Supplying any of
+<code>h01.*</code> or <code>h02.*</code> activates the illness-death model with two
+correlated endpoints, and is mutually exclusive with <code>e.hazard</code> /
+<code>e.median</code>.</p></dd>
+
+
+<dt id="arg-h-median">h01.median<a class="anchor" aria-label="anchor" href="#arg-h-median"></a></dt>
+<dd><p>Median(s) for the intermediate event; an alternative to
+<code>h01.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-time">h01.time<a class="anchor" aria-label="anchor" href="#arg-h-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h01.hazard</code> (last element
+<code>Inf</code>).</p></dd>
+
+
+<dt id="arg-h-hazard">h02.hazard<a class="anchor" aria-label="anchor" href="#arg-h-hazard"></a></dt>
+<dd><p>Transition hazard(s) for the terminal event without a prior
+intermediate event (state 0 to state 2). Same group and piecewise
+conventions as <code>h01.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-median">h02.median<a class="anchor" aria-label="anchor" href="#arg-h-median"></a></dt>
+<dd><p>Median(s) for the direct terminal event; an alternative to
+<code>h02.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-time">h02.time<a class="anchor" aria-label="anchor" href="#arg-h-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h02.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-hazard">h12.hazard<a class="anchor" aria-label="anchor" href="#arg-h-hazard"></a></dt>
+<dd><p>Transition hazard(s) for the terminal event after an
+intermediate event (state 1 to state 2) for subjects who do not switch.
+Defaults to <code>h02.hazard</code>, which gives the Fleischer
+maximal-independence model (Fleischer Theorem 1 when there is no switching).</p></dd>
+
+
+<dt id="arg-h-median">h12.median<a class="anchor" aria-label="anchor" href="#arg-h-median"></a></dt>
+<dd><p>Median(s) for the post-event terminal event; an alternative
+to <code>h12.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-time">h12.time<a class="anchor" aria-label="anchor" href="#arg-h-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h12.hazard</code>, measured from
+the intermediate-event time (clock-reset).</p></dd>
+
+
+<dt id="arg-switch-prop">switch.prop<a class="anchor" aria-label="anchor" href="#arg-switch-prop"></a></dt>
+<dd><p>Probability that a subject with an intermediate event
+switches treatment, a scalar or a two-element list (control, treatment).
+Defaults to zero (no switching); the treatment group is typically left at
+zero.</p></dd>
+
+
+<dt id="arg-h-switch-hazard">h12.switch.hazard<a class="anchor" aria-label="anchor" href="#arg-h-switch-hazard"></a></dt>
+<dd><p>Transition hazard(s) from state 1 to state 2 for
+subjects who switch. Required when any <code>switch.prop</code> is positive.</p></dd>
+
+
+<dt id="arg-h-switch-median">h12.switch.median<a class="anchor" aria-label="anchor" href="#arg-h-switch-median"></a></dt>
+<dd><p>Median(s) for the post-switch terminal event; an
+alternative to <code>h12.switch.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-time">h12.switch.time<a class="anchor" aria-label="anchor" href="#arg-h-switch-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h12.switch.hazard</code>,
+measured from the switch (intermediate-event) time (clock-reset).</p></dd>
+
+
+<dt id="arg-switch-clock">switch.clock<a class="anchor" aria-label="anchor" href="#arg-switch-clock"></a></dt>
+<dd><p>Time origin for the post-event hazards. Currently only
+<code>"reset"</code> (measured from the intermediate event) is implemented.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>data.frame</code> with <code>nsim * sum(n)</code> rows. The columns are
   <code>sim</code>, <code>group</code>, any subgroup columns, <code>accrual_time</code>,
   <code>surv_time</code>, <code>dropout_time</code>, <code>tte</code>, <code>event</code>, and
-  <code>calendar_time</code>.</p>
+  <code>calendar_time</code>.
+  In the illness-death model the columns are instead <code>sim</code>,
+  <code>group</code>, <code>accrual_time</code>, <code>e1_surv_time</code>,
+  <code>e2_surv_time</code>, <code>dropout_time</code>, <code>e1_tte</code>, <code>e1_event</code>,
+  <code>e2_tte</code>, <code>e2_event</code>, <code>e1_calendar_time</code>,
+  <code>e2_calendar_time</code>, <code>intermediate</code>, <code>switched</code>, and
+  <code>switch_time</code>, where <code>e1</code> is the first (state-0 exit) endpoint
+  and <code>e2</code> is the terminal endpoint. In oncology <code>e1</code> is
+  progression-free survival, <code>e2</code> is overall survival, and
+  <code>intermediate</code> flags progression.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -362,6 +463,77 @@ prevalence distribution.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4     1      34.30876</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5     1      11.31682</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6     1      18.57670</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Two correlated endpoints, no switching (reduces to Fleischer Theorem 1</span></span></span>
+<span class="r-in"><span><span class="co"># because h12 defaults to h02). In oncology e1 is PFS and e2 is OS; here the</span></span></span>
+<span class="r-in"><span><span class="co"># control has faster intermediate events and faster direct terminal events.</span></span></span>
+<span class="r-in"><span><span class="va">dfid</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  nsim       <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>  n          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150</span>, <span class="fl">150</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.time     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.rate     <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  h01.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h02.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  seed       <span class="op">=</span> <span class="fl">6</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dfid</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim group accrual_time e1_surv_time e2_surv_time dropout_time    e1_tte</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1     1     3.210288     1.262139    86.027025          Inf  1.262139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1     1     5.488111    13.830983    91.509522          Inf 13.830983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   1     1    10.250797     2.811514     6.206717          Inf  2.811514</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   1     1     9.997081    10.769714    19.784649          Inf 10.769714</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   1     1     6.210510    15.100728    56.583233          Inf 15.100728</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   1     1     7.528979     7.054905    10.651538          Inf  7.054905</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   e1_event    e2_tte e2_event e1_calendar_time e2_calendar_time intermediate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1 86.027025        1         4.472427         89.23731            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        1 91.509522        1        19.319094         96.99763            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        1  6.206717        1        13.062311         16.45751            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        1 19.784649        1        20.766795         29.78173            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        1 56.583233        1        21.311238         62.79374            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        1 10.651538        1        14.583884         18.18052            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   switched switch_time</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        0          NA</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># With treatment switching: 40 percent of control subjects who reach the</span></span></span>
+<span class="r-in"><span><span class="co"># intermediate event switch and then follow a more favorable post-event hazard</span></span></span>
+<span class="r-in"><span><span class="va">dfsw</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  nsim              <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>  n                 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150</span>, <span class="fl">150</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.time            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.rate            <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  h01.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h02.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  switch.prop       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h12.switch.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">36</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  seed              <span class="op">=</span> <span class="fl">7</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dfsw</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim group accrual_time e1_surv_time e2_surv_time dropout_time     e1_tte</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1     1     7.559415   14.4396084   36.8236195          Inf 14.4396084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1     1     1.437074    0.6125605    0.6125605          Inf  0.6125605</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   1     1     4.659691   61.4042624   61.4042624          Inf 61.4042624</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   1     1     8.729861    0.6111453   83.4156438          Inf  0.6111453</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   1     1     1.966126   10.6181068  101.0631930          Inf 10.6181068</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   1     1    11.790063    3.0603097   87.5269704          Inf  3.0603097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   e1_event      e2_tte e2_event e1_calendar_time e2_calendar_time intermediate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1  36.8236195        1        21.999024        44.383035            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        1   0.6125605        1         2.049635         2.049635            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        1  61.4042624        1        66.063953        66.063953            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        1  83.4156438        1         9.341006        92.145505            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        1 101.0631930        1        12.584233       103.029319            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        1  87.5269704        1        14.850373        99.317034            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   switched switch_time</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        1   0.6111453</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        0          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        0          NA</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

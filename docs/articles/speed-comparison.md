@@ -16,6 +16,7 @@ a single desktop machine. Absolute timings depend on hardware, sample
 size, and event rate, so the ratios matter more than the raw values.
 
 ``` r
+
 library(FastSurvival)
 library(survival)
 library(microbenchmark)
@@ -32,6 +33,7 @@ and prepare the sorted vectors, the binary arm indicator, and the
 restriction horizon used by the time-restricted methods.
 
 ``` r
+
 dataset <- simdata_fast(
   nsim     = 1,
   n        = 500,
@@ -65,6 +67,7 @@ df_rmw <- data.frame(
 ## survfit_fast vs survfit + summary
 
 ``` r
+
 microbenchmark(
   fast = survfit_fast(t_s, e_s, t_eval = tau, presorted = TRUE),
   ref  = summary(survfit(Surv(tte, event) ~ 1, data = dataset), times = tau),
@@ -75,6 +78,7 @@ microbenchmark(
 ## survdiff_fast vs survdiff
 
 ``` r
+
 microbenchmark(
   fast = survdiff_fast(t_s, e_s, g_s, control = 1, side = 1, presorted = TRUE),
   ref  = survdiff(Surv(tte, event) ~ group, data = dataset),
@@ -85,6 +89,7 @@ microbenchmark(
 ## coxph_fast vs coxph
 
 ``` r
+
 microbenchmark(
   fast = coxph_fast(t_s, e_s, g_s, control = 1, side = 1, presorted = TRUE),
   ref  = coxph(Surv(tte, event) ~ I(group == 2), data = dataset),
@@ -95,6 +100,7 @@ microbenchmark(
 ## rmst_fast vs survRM2::rmst2
 
 ``` r
+
 microbenchmark(
   fast = rmst_fast(t_s, e_s, g_s, control = 1, tau = tau, side = 1,
                    presorted = TRUE),
@@ -107,6 +113,7 @@ microbenchmark(
 ## survdiff_fast(weight = “fh”) vs nph::logrank.test
 
 ``` r
+
 microbenchmark(
   fast = survdiff_fast(t_s, e_s, g_s, control = 1, side = 1,
                        weight = "fh", rho = 0, gamma = 1, presorted = TRUE),
@@ -126,6 +133,7 @@ survWMST with `remotes::install_github("pauknemj/survWMST")` and run the
 block to reproduce it.
 
 ``` r
+
 microbenchmark(
   fast = wmst_fast(t_s, e_s, g_s, control = 1, tau1 = 0, tau2 = tau,
                    side = 1, presorted = TRUE),
@@ -138,6 +146,7 @@ microbenchmark(
 ## milestone_fast vs survfit + summary
 
 ``` r
+
 microbenchmark(
   fast = milestone_fast(t_s, e_s, g_s, control = 1, tau = tau, side = 1,
                         presorted = TRUE),
@@ -150,6 +159,7 @@ microbenchmark(
 ## medsurv_fast vs nph::nphparams
 
 ``` r
+
 microbenchmark(
   fast = medsurv_fast(t_s, e_s, g_s, control = 1, side = 1,
                       method = "nph", presorted = TRUE),
@@ -163,6 +173,7 @@ microbenchmark(
 ## maxcombo_fast vs nph::logrank.maxtest
 
 ``` r
+
 microbenchmark(
   fast = maxcombo_fast(t_s, e_s, g_s, control = 1, side = 1,
                        rho = c(0, 0, 1), gamma = c(0, 1, 0), presorted = TRUE),
@@ -179,6 +190,7 @@ combines a standard and a modestly-weighted log-rank statistic, so the
 reference computes both weighted log-rank components with nphRCT.
 
 ``` r
+
 microbenchmark(
   fast = rmw_fast(t_s, e_s, g_s, control = 1, side = 1, s_star = 0.5,
                   presorted = TRUE),
@@ -201,6 +213,7 @@ Install nphsim with `remotes::install_github("keaven/nphsim")` and run
 the block to reproduce it.
 
 ``` r
+
 microbenchmark(
   fast = wkm_fast(t_s, e_s, g_s, control = 1, side = 1, weight = "PF",
                   presorted = TRUE),
@@ -214,6 +227,7 @@ microbenchmark(
 ## ahsw_fast vs survAH::ah2
 
 ``` r
+
 microbenchmark(
   fast = ahsw_fast(t_s, e_s, g_s, control = 1, tau = tau, side = 1,
                    presorted = TRUE),
@@ -233,6 +247,7 @@ AHR with `remotes::install_github("cran/AHR")` and run the block to
 reproduce it.
 
 ``` r
+
 microbenchmark(
   fast = ahr_fast(t_s, e_s, g_s, control = 1, tau = tau, side = 1,
                   presorted = TRUE),

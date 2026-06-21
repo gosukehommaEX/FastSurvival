@@ -28,7 +28,21 @@ simdata_fast(
   d.time = NULL,
   seed = NULL,
   prevalence = NULL,
-  fixed.alloc = FALSE
+  fixed.alloc = FALSE,
+  h01.hazard = NULL,
+  h01.median = NULL,
+  h01.time = NULL,
+  h02.hazard = NULL,
+  h02.median = NULL,
+  h02.time = NULL,
+  h12.hazard = NULL,
+  h12.median = NULL,
+  h12.time = NULL,
+  switch.prop = NULL,
+  h12.switch.hazard = NULL,
+  h12.switch.median = NULL,
+  h12.switch.time = NULL,
+  switch.clock = "reset"
 )
 ```
 
@@ -109,11 +123,93 @@ simdata_fast(
   Logical; when `TRUE` subgroup sizes are deterministic rather than
   drawn.
 
+- h01.hazard:
+
+  Transition hazard(s) for the non-terminal (intermediate) event (state
+  0 to state 1) in the illness-death model. A scalar or vector for one
+  group, or a two-element list for two groups. Supplying any of `h01.*`
+  or `h02.*` activates the illness-death model with two correlated
+  endpoints, and is mutually exclusive with `e.hazard` / `e.median`.
+
+- h01.median:
+
+  Median(s) for the intermediate event; an alternative to `h01.hazard`.
+
+- h01.time:
+
+  Breakpoints for a piecewise `h01.hazard` (last element `Inf`).
+
+- h02.hazard:
+
+  Transition hazard(s) for the terminal event without a prior
+  intermediate event (state 0 to state 2). Same group and piecewise
+  conventions as `h01.hazard`.
+
+- h02.median:
+
+  Median(s) for the direct terminal event; an alternative to
+  `h02.hazard`.
+
+- h02.time:
+
+  Breakpoints for a piecewise `h02.hazard`.
+
+- h12.hazard:
+
+  Transition hazard(s) for the terminal event after an intermediate
+  event (state 1 to state 2) for subjects who do not switch. Defaults to
+  `h02.hazard`, which gives the Fleischer maximal-independence model
+  (Fleischer Theorem 1 when there is no switching).
+
+- h12.median:
+
+  Median(s) for the post-event terminal event; an alternative to
+  `h12.hazard`.
+
+- h12.time:
+
+  Breakpoints for a piecewise `h12.hazard`, measured from the
+  intermediate-event time (clock-reset).
+
+- switch.prop:
+
+  Probability that a subject with an intermediate event switches
+  treatment, a scalar or a two-element list (control, treatment).
+  Defaults to zero (no switching); the treatment group is typically left
+  at zero.
+
+- h12.switch.hazard:
+
+  Transition hazard(s) from state 1 to state 2 for subjects who switch.
+  Required when any `switch.prop` is positive.
+
+- h12.switch.median:
+
+  Median(s) for the post-switch terminal event; an alternative to
+  `h12.switch.hazard`.
+
+- h12.switch.time:
+
+  Breakpoints for a piecewise `h12.switch.hazard`, measured from the
+  switch (intermediate-event) time (clock-reset).
+
+- switch.clock:
+
+  Time origin for the post-event hazards. Currently only `"reset"`
+  (measured from the intermediate event) is implemented.
+
 ## Value
 
 A `data.frame` with `nsim * sum(n)` rows. The columns are `sim`,
 `group`, any subgroup columns, `accrual_time`, `surv_time`,
-`dropout_time`, `tte`, `event`, and `calendar_time`.
+`dropout_time`, `tte`, `event`, and `calendar_time`. In the
+illness-death model the columns are instead `sim`, `group`,
+`accrual_time`, `e1_surv_time`, `e2_surv_time`, `dropout_time`,
+`e1_tte`, `e1_event`, `e2_tte`, `e2_event`, `e1_calendar_time`,
+`e2_calendar_time`, `intermediate`, `switched`, and `switch_time`, where
+`e1` is the first (state-0 exit) endpoint and `e2` is the terminal
+endpoint. In oncology `e1` is progression-free survival, `e2` is overall
+survival, and `intermediate` flags progression.
 
 ## Details
 
@@ -305,4 +401,75 @@ head(df5)
 #> 4     1      34.30876
 #> 5     1      11.31682
 #> 6     1      18.57670
+
+# Two correlated endpoints, no switching (reduces to Fleischer Theorem 1
+# because h12 defaults to h02). In oncology e1 is PFS and e2 is OS; here the
+# control has faster intermediate events and faster direct terminal events.
+dfid <- simdata_fast(
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  h01.median = list(8, 12),
+  h02.median = list(24, 30),
+  seed       = 6
+)
+head(dfid)
+#>   sim group accrual_time e1_surv_time e2_surv_time dropout_time    e1_tte
+#> 1   1     1     3.210288     1.262139    86.027025          Inf  1.262139
+#> 2   1     1     5.488111    13.830983    91.509522          Inf 13.830983
+#> 3   1     1    10.250797     2.811514     6.206717          Inf  2.811514
+#> 4   1     1     9.997081    10.769714    19.784649          Inf 10.769714
+#> 5   1     1     6.210510    15.100728    56.583233          Inf 15.100728
+#> 6   1     1     7.528979     7.054905    10.651538          Inf  7.054905
+#>   e1_event    e2_tte e2_event e1_calendar_time e2_calendar_time intermediate
+#> 1        1 86.027025        1         4.472427         89.23731            1
+#> 2        1 91.509522        1        19.319094         96.99763            1
+#> 3        1  6.206717        1        13.062311         16.45751            1
+#> 4        1 19.784649        1        20.766795         29.78173            1
+#> 5        1 56.583233        1        21.311238         62.79374            1
+#> 6        1 10.651538        1        14.583884         18.18052            1
+#>   switched switch_time
+#> 1        0          NA
+#> 2        0          NA
+#> 3        0          NA
+#> 4        0          NA
+#> 5        0          NA
+#> 6        0          NA
+
+# With treatment switching: 40 percent of control subjects who reach the
+# intermediate event switch and then follow a more favorable post-event hazard
+dfsw <- simdata_fast(
+  nsim              = 100,
+  n                 = c(150, 150),
+  a.time            = c(0, 12),
+  a.rate            = 300 / 12,
+  h01.median        = list(8, 12),
+  h02.median        = list(24, 30),
+  switch.prop       = list(0.4, 0),
+  h12.switch.median = list(36, 36),
+  seed              = 7
+)
+head(dfsw)
+#>   sim group accrual_time e1_surv_time e2_surv_time dropout_time     e1_tte
+#> 1   1     1     7.559415   14.4396084   36.8236195          Inf 14.4396084
+#> 2   1     1     1.437074    0.6125605    0.6125605          Inf  0.6125605
+#> 3   1     1     4.659691   61.4042624   61.4042624          Inf 61.4042624
+#> 4   1     1     8.729861    0.6111453   83.4156438          Inf  0.6111453
+#> 5   1     1     1.966126   10.6181068  101.0631930          Inf 10.6181068
+#> 6   1     1    11.790063    3.0603097   87.5269704          Inf  3.0603097
+#>   e1_event      e2_tte e2_event e1_calendar_time e2_calendar_time intermediate
+#> 1        1  36.8236195        1        21.999024        44.383035            1
+#> 2        1   0.6125605        1         2.049635         2.049635            0
+#> 3        1  61.4042624        1        66.063953        66.063953            0
+#> 4        1  83.4156438        1         9.341006        92.145505            1
+#> 5        1 101.0631930        1        12.584233       103.029319            1
+#> 6        1  87.5269704        1        14.850373        99.317034            1
+#>   switched switch_time
+#> 1        0          NA
+#> 2        0          NA
+#> 3        0          NA
+#> 4        1   0.6111453
+#> 5        0          NA
+#> 6        0          NA
 ```

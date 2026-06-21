@@ -19,7 +19,21 @@ simdata_fast(
   d.time = NULL,
   seed = NULL,
   prevalence = NULL,
-  fixed.alloc = FALSE
+  fixed.alloc = FALSE,
+  h01.hazard = NULL,
+  h01.median = NULL,
+  h01.time = NULL,
+  h02.hazard = NULL,
+  h02.median = NULL,
+  h02.time = NULL,
+  h12.hazard = NULL,
+  h12.median = NULL,
+  h12.time = NULL,
+  switch.prop = NULL,
+  h12.switch.hazard = NULL,
+  h12.switch.median = NULL,
+  h12.switch.time = NULL,
+  switch.clock = "reset"
 )
 }
 \arguments{
@@ -68,12 +82,71 @@ list for group-specific prevalence).}
 
 \item{fixed.alloc}{Logical; when \code{TRUE} subgroup sizes are
 deterministic rather than drawn.}
+
+\item{h01.hazard}{Transition hazard(s) for the non-terminal (intermediate)
+event (state 0 to state 1) in the illness-death model. A scalar or vector
+for one group, or a two-element list for two groups. Supplying any of
+\code{h01.*} or \code{h02.*} activates the illness-death model with two
+correlated endpoints, and is mutually exclusive with \code{e.hazard} /
+\code{e.median}.}
+
+\item{h01.median}{Median(s) for the intermediate event; an alternative to
+\code{h01.hazard}.}
+
+\item{h01.time}{Breakpoints for a piecewise \code{h01.hazard} (last element
+\code{Inf}).}
+
+\item{h02.hazard}{Transition hazard(s) for the terminal event without a prior
+intermediate event (state 0 to state 2). Same group and piecewise
+conventions as \code{h01.hazard}.}
+
+\item{h02.median}{Median(s) for the direct terminal event; an alternative to
+\code{h02.hazard}.}
+
+\item{h02.time}{Breakpoints for a piecewise \code{h02.hazard}.}
+
+\item{h12.hazard}{Transition hazard(s) for the terminal event after an
+intermediate event (state 1 to state 2) for subjects who do not switch.
+Defaults to \code{h02.hazard}, which gives the Fleischer
+maximal-independence model (Fleischer Theorem 1 when there is no switching).}
+
+\item{h12.median}{Median(s) for the post-event terminal event; an alternative
+to \code{h12.hazard}.}
+
+\item{h12.time}{Breakpoints for a piecewise \code{h12.hazard}, measured from
+the intermediate-event time (clock-reset).}
+
+\item{switch.prop}{Probability that a subject with an intermediate event
+switches treatment, a scalar or a two-element list (control, treatment).
+Defaults to zero (no switching); the treatment group is typically left at
+zero.}
+
+\item{h12.switch.hazard}{Transition hazard(s) from state 1 to state 2 for
+subjects who switch. Required when any \code{switch.prop} is positive.}
+
+\item{h12.switch.median}{Median(s) for the post-switch terminal event; an
+alternative to \code{h12.switch.hazard}.}
+
+\item{h12.switch.time}{Breakpoints for a piecewise \code{h12.switch.hazard},
+measured from the switch (intermediate-event) time (clock-reset).}
+
+\item{switch.clock}{Time origin for the post-event hazards. Currently only
+\code{"reset"} (measured from the intermediate event) is implemented.}
 }
 \value{
 A \code{data.frame} with \code{nsim * sum(n)} rows. The columns are
   \code{sim}, \code{group}, any subgroup columns, \code{accrual_time},
   \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
   \code{calendar_time}.
+  In the illness-death model the columns are instead \code{sim},
+  \code{group}, \code{accrual_time}, \code{e1_surv_time},
+  \code{e2_surv_time}, \code{dropout_time}, \code{e1_tte}, \code{e1_event},
+  \code{e2_tte}, \code{e2_event}, \code{e1_calendar_time},
+  \code{e2_calendar_time}, \code{intermediate}, \code{switched}, and
+  \code{switch_time}, where \code{e1} is the first (state-0 exit) endpoint
+  and \code{e2} is the terminal endpoint. In oncology \code{e1} is
+  progression-free survival, \code{e2} is overall survival, and
+  \code{intermediate} flags progression.
 }
 \description{
 Simulates time-to-event trial data for one or two groups across many
@@ -197,6 +270,35 @@ df5 <- simdata_fast(
   seed       = 5
 )
 head(df5)
+
+# Two correlated endpoints, no switching (reduces to Fleischer Theorem 1
+# because h12 defaults to h02). In oncology e1 is PFS and e2 is OS; here the
+# control has faster intermediate events and faster direct terminal events.
+dfid <- simdata_fast(
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  h01.median = list(8, 12),
+  h02.median = list(24, 30),
+  seed       = 6
+)
+head(dfid)
+
+# With treatment switching: 40 percent of control subjects who reach the
+# intermediate event switch and then follow a more favorable post-event hazard
+dfsw <- simdata_fast(
+  nsim              = 100,
+  n                 = c(150, 150),
+  a.time            = c(0, 12),
+  a.rate            = 300 / 12,
+  h01.median        = list(8, 12),
+  h02.median        = list(24, 30),
+  switch.prop       = list(0.4, 0),
+  h12.switch.median = list(36, 36),
+  seed              = 7
+)
+head(dfsw)
 
 }
 \seealso{

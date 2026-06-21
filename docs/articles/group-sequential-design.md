@@ -25,6 +25,7 @@ replicates; the printed results are those obtained from an interactive
 run.
 
 ``` r
+
 library(FastSurvival)
 ```
 
@@ -55,6 +56,7 @@ the per-group event medians, and a per-group dropout hazard
 corresponding to 5% per 12 months.
 
 ``` r
+
 df <- simdata_fast(
   nsim     = 10000,
   n        = c(241, 241),
@@ -74,6 +76,7 @@ chemotherapy group as the control, and compute both the log-rank and the
 Cox statistics with a two-sided test, matching the trial.
 
 ``` r
+
 res <- analysis_fast(
   df, control = 2,
   event.looks = c(252, 336),
@@ -91,6 +94,7 @@ boundaries, which is the scale
 consumes through its `p.col` argument.
 
 ``` r
+
 library(gsDesign)
 
 gsd <- gsDesign(
@@ -114,6 +118,7 @@ p-values and aggregates the crossing probabilities, expected events,
 expected sample size, and expected analysis time across the looks.
 
 ``` r
+
 simsummary_fast(
   res,
   p.col     = "logrank.p",
@@ -147,6 +152,7 @@ output is long, so we extract only the quantities needed for the
 comparison.
 
 ``` r
+
 library(rpact)
 
 design <- getDesignGroupSequential(
@@ -203,6 +209,7 @@ cases in closed form, the validated simulation machinery becomes the
 tool of choice.
 
 ``` r
+
 df_delay <- simdata_fast(
   nsim     = 10000,
   n        = c(241, 241),

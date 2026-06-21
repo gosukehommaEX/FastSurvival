@@ -1,6 +1,7 @@
 # MRCT with complex survival analysis design
 
 ``` r
+
 library(FastSurvival)
 ```
 
@@ -72,6 +73,7 @@ starts three months after the other regions. Enrollment runs over a
 12.5-month window and survival is exponential.
 
 ``` r
+
 NSIM    <- 10000       # number of simulated trials
 SEED    <- 1
 
@@ -94,6 +96,7 @@ on the overall log-rank `Z` scale, where treatment benefit is a negative
 set to `NA` omits that rule at that look.
 
 ``` r
+
 eff.bound <- c(NA, -2.437, -2)   # lower efficacy boundary on logrank.z
 fut.bound <- c(0.381, NA, -2)    # upper (non-binding) futility boundary
 ```
@@ -111,6 +114,7 @@ subpopulations. A `subgroup` column tags the region, and the shared
 `sim` index links the regional blocks into one trial per simulation.
 
 ``` r
+
 K      <- length(N.T)
 blocks <- lapply(seq_len(K), function(k) {
   a.time_k <- if (k == 1L) c(a_delay, a) else c(0, a)
@@ -155,6 +159,7 @@ request the log-rank statistic for the overall efficacy decision and the
 Cox hazard ratio for the consistency criteria.
 
 ``` r
+
 res <- analysis_fast(
   data        = data_all,
   control     = 1,
@@ -187,6 +192,7 @@ possibility for the late-starting region), its hazard ratio is `NA`;
 such an undemonstrated criterion is treated as not met.
 
 ``` r
+
 ov  <- res[res$population == "overall", ]
 key <- function(d) paste(d$sim, d$look)
 
@@ -215,6 +221,7 @@ boundary crossing; when both boundaries are crossed at the same look,
 efficacy takes precedence.
 
 ``` r
+
 sims  <- sort(unique(ov$sim));  nsim <- length(sims)
 looks <- sort(unique(ov$look)); nlk  <- length(looks)
 cell  <- cbind(match(ov$sim, sims), match(ov$look, looks))
@@ -247,6 +254,7 @@ stop, and `JOI_M1` and `JOI_M2` are the joint probabilities of an
 efficacy stop together with consistency.
 
 ``` r
+
 con1 <- con2 <- joi1 <- joi2 <- eff <- atime <- rep(NA_real_, nlk)
 for (k in seq_len(nlk)) {
   atime[k] <- mean(Cutm[, k], na.rm = TRUE)   # calendar time of look k (all trials)
@@ -311,6 +319,7 @@ usual group-sequential operating characteristics, here as an independent
 check on the efficacy column above.
 
 ``` r
+
 gs <- simsummary_fast(
   res[res$population == "overall", ],
   eff.col   = "logrank.z", efficacy = eff.bound,

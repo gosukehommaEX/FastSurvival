@@ -44,7 +44,11 @@
     when a trailing rate is supplied) and `a.prop` gives accrual proportions,
     with deterministic per-interval accrual counts. The entire generation
     pipeline runs in a single C++ kernel that materializes the output data
-    frame once.
+    frame once. It can also generate two correlated time-to-event
+    endpoints (for example progression-free and overall survival) from an
+    illness-death model with three transition hazards and optional
+    treatment switching, reducing to the Fleischer maximal-independence
+    model when the post-event hazard equals the direct terminal hazard.
   * `analysis_fast()`: interim or sequential analysis of simulated data at one
     or more looks, defined by target event counts or calendar times, computed
     by a fused C++ kernel that reuses the analysis cores of the standalone

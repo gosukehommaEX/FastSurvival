@@ -31,6 +31,7 @@ annual dropout. The same sample size is then applied unchanged to all
 three scenarios.
 
 ``` r
+
 m0             <- 12
 lam0           <- log(2) / m0
 hr_ph          <- 0.75
@@ -58,6 +59,7 @@ a_rate  <- n_total / accrual
 ```
 
 ``` r
+
 data.frame(
   "Total n"       = n_total,
   "Per group"     = n_per,
@@ -81,6 +83,7 @@ design-stage scenario plot shows the assumed survival curves and the
 piecewise hazard ratio for each scenario.
 
 ``` r
+
 scn <- gen_scenario_fast(
   scenarios = list(
     "PH" = list(
@@ -112,6 +115,7 @@ hazard ratio and the RMST shading up to the truncation time, which makes
 the early reversal of the effect visible in a single realized trial.
 
 ``` r
+
 scenarios <- scn$scenarios
 seeds     <- c(101, 102, 103)
 
@@ -147,6 +151,7 @@ for (i in seq_along(scenarios)) {
 ```
 
 ``` r
+
 ex  <- examples[["Crossing"]]
 fit <- kmcurve_fast(ex$tte, ex$event, ex$group, control = 1)
 plot(fit, hr = TRUE, rmst = TRUE, tau = tau, bw = 3)
@@ -161,6 +166,7 @@ replicates in which each test rejects at the one-sided 0.025 level, for
 each scenario.
 
 ``` r
+
 knitr::kable(
   power_tab, digits = 3,
   col.names = c("Scenario", "Log-rank", "RMST"),
@@ -174,7 +180,7 @@ knitr::kable(
 | Delayed effect |    0.952 | 0.748 |
 | Crossing       |    0.435 | 0.086 |
 
-Simulated power at the fixed analysis (one-sided 0.025).
+Simulated power at the fixed analysis (one-sided 0.025). {.table}
 
 Under proportional hazards the log-rank test reaches its design power
 and RMST is somewhat lower, as expected when the hazard ratio is

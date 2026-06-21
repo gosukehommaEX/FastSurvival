@@ -20,6 +20,7 @@ at any time point; the scenario of an experimental arm that is uniformly
 worse is one point in this strong null.
 
 ``` r
+
 library(FastSurvival)
 ```
 
@@ -35,6 +36,7 @@ experimental hazard ratio of 16 for the first 0.1 year followed by 0.76
 afterwards. The analysis is at 5 years.
 
 ``` r
+
 e_time <- c(0, 0.1, Inf)         # change point at 0.1 year
 cut    <- 5                      # analysis at 5 years
 
@@ -81,6 +83,7 @@ at 5 years and testing is one-sided in the direction of experimental
 benefit.
 
 ``` r
+
 NSIM    <- 2000L     # raise (e.g. 5000) for tighter Monte Carlo error
 N_TOTAL <- 2000L
 ALPHA   <- 0.025
@@ -134,6 +137,7 @@ keep the rate at or below 2.5%; a rate well above 2.5% means the test is
 declaring a harmful treatment beneficial.
 
 ``` r
+
 rates <- vapply(scenarios, run_one_scenario, numeric(4L))
 colnames(rates) <- vapply(scenarios, function(s) s$label, character(1L))
 round(rates, 3)
@@ -159,7 +163,7 @@ round(rates, 3)
 One-sided rejection rate in favor of the experimental arm (2000
 simulated trials, n = 2000). Under the weak null every valid test is
 near 2.5%; under the strong null the experimental arm is uniformly
-worse, so a rate above 2.5% reflects a spurious finding.
+worse, so a rate above 2.5% reflects a spurious finding. {.table}
 
 ## Interpretation
 

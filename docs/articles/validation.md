@@ -27,12 +27,14 @@ comparisons form the basis of the automated test suite shipped with the
 package.
 
 ``` r
+
 library(FastSurvival)
 ```
 
 ## Reference data
 
 ``` r
+
 library(survival)
 
 # German Breast Cancer Study Group cohort
@@ -54,6 +56,7 @@ evaluates the Kaplan-Meier estimate at a single time point. We compare
 against `summary(survfit(...))` at the same time (1000 days).
 
 ``` r
+
 # survfit_fast assumes time-sorted input; the C++ core groups tied times in the
 # survival::survfit risk-set convention, so the data only need ordering by time.
 ord  <- order(gbsg$rfstime)
@@ -82,6 +85,7 @@ statistic from
 [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html).
 
 ``` r
+
 fast_lr <- survdiff_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                          control = 0, side = 1)
 
@@ -102,6 +106,7 @@ through the `weight = "fh"` argument. The
 statistic (the squared one-sided Z) across several weight choices.
 
 ``` r
+
 fh_grid <- data.frame(rho = c(0, 1, 0, 1), gamma = c(1, 0, 0, 1))
 
 do.call(rbind, lapply(seq_len(nrow(fh_grid)), function(i) {
@@ -134,6 +139,7 @@ both; the sign convention is the same and `side` does not affect the
 point estimate.
 
 ``` r
+
 fast_hr <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                       control = 0, side = 1)
 
@@ -159,6 +165,7 @@ the two-group RMST difference against
 days.
 
 ``` r
+
 library(survRM2)
 
 tau <- 1000
@@ -187,6 +194,7 @@ same window. A full comparison against the `survWMST` package, which is
 distributed on GitHub, is provided in `tools/compare_wmst_survwmst.R`.
 
 ``` r
+
 tau1 <- 200
 tau2 <- 1000
 
@@ -231,6 +239,7 @@ which gives a clean internal check against
 evaluated at the largest observed time.
 
 ``` r
+
 tmax <- max(gbsg$rfstime)
 
 fast_wk <- wkm_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
@@ -260,6 +269,7 @@ timepoint. The per-group survival probabilities match those from
 [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html).
 
 ``` r
+
 tstar <- 1000
 
 fast_ms <- milestone_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
@@ -292,6 +302,7 @@ per-group medians match those reported by
 [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) exactly.
 
 ``` r
+
 fast_med <- medsurv_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                          control = 0, side = 1, method = "nph")
 
@@ -333,6 +344,7 @@ We compare the per-group average hazard against
 [`survAH::ah2()`](https://rdrr.io/pkg/survAH/man/ah2.html).
 
 ``` r
+
 library(survAH)
 
 tau <- 1000
@@ -372,6 +384,7 @@ survival-based computation: each group’s Kaplan-Meier curve from
 to form the group shares of the total hazard.
 
 ``` r
+
 tau <- 1000
 
 fast_ahr <- ahr_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
@@ -431,6 +444,7 @@ the contrast in the opposite direction, the signs are mirrored, so we
 compare absolute values.
 
 ``` r
+
 rho   <- c(0, 0, 1)
 gamma <- c(0, 1, 0)
 
@@ -474,6 +488,7 @@ toward treatment benefit while `nphRCT` uses the opposite sign, so we
 compare absolute values.
 
 ``` r
+
 gbsg_df <- data.frame(
   time  = gbsg$rfstime,
   event = gbsg$status,
