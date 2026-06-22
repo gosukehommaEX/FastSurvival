@@ -110,8 +110,8 @@ survdiff_fast(
   A single non-negative numeric value, the timepoint of the
   modestly-weighted log-rank test. Required only when
   `weight = "mwlrt"`. The weight is capped at `1 / S(t_star)`, where
-  `S(t_star)` is the smallest pooled Kaplan-Meier value at or after
-  `t_star`. A value of 0 yields the ordinary log-rank test.
+  `S(t_star)` is the pooled Kaplan-Meier value at `t_star`. A value of 0
+  yields the ordinary log-rank test.
 
 ## Value
 
@@ -309,7 +309,7 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #> control          5
 #> treatment        7
 #> 
-#>  Z = 0.7583,  one-sided p-value = 0.7759  
+#>  Z = 0.8447,  one-sided p-value = 0.8009  
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -337,8 +337,11 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>           expr     min      lq       mean   median        uq      max neval cld
-#>  survdiff_fast  43.952  52.588   69.52892  62.6670   65.5125 4819.935  1000  a 
-#>       survdiff 946.847 983.355 1020.01536 992.6775 1011.1970 8593.817  1000   b
+#>           expr     min       lq       mean   median        uq      max neval
+#>  survdiff_fast  43.310  51.4710   59.77755  62.7875   65.4715  178.302  1000
+#>       survdiff 948.649 983.6495 1023.28627 992.8715 1004.8095 5988.490  1000
+#>  cld
+#>   a 
+#>    b
 # }
 ```

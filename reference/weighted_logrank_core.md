@@ -72,11 +72,10 @@ numerator sum w (O1 - E1), and V is the weighted variance.
 The scheme codes are: 0 = Fleming-Harrington G(rho, gamma) with weight
 `S_minus^rho * (1 - S_minus)^gamma`; 1 = modestly-weighted log-rank with
 weight `min(1 / S_minus, max_weight)`, where `max_weight` is the
-reciprocal of the smallest right-continuous pooled Kaplan-Meier value at
-or after `t_star` (and is 1 when `t_star = 0`); 2 = Gehan-Breslow with
-weight `n_j`; 3 = Tarone-Ware with weight `sqrt(n_j)`. Here `S_minus` is
-the left-continuous pooled Kaplan-Meier estimate just prior to each
-event time, initialized at 1. The modestly-weighted scheme requires the
-largest weight to be known before accumulation, so its `max_weight` is
-obtained in a first pass over the event times; the other schemes
-accumulate in a single pass.
+reciprocal of the pooled Kaplan-Meier value at `t_star` (and is 1 when
+`t_star = 0`); 2 = Gehan-Breslow with weight `n_j`; 3 = Tarone-Ware with
+weight `sqrt(n_j)`. Here `S_minus` is the left-continuous pooled
+Kaplan-Meier estimate just prior to each event time, initialized at 1.
+The modestly-weighted scheme requires the largest weight to be known
+before accumulation, so its `max_weight` is obtained in a first pass
+over the event times; the other schemes accumulate in a single pass.
