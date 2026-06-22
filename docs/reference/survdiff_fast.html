@@ -169,8 +169,8 @@ Fleming-Harrington G(0, 1) test for delayed effects.</p></dd>
 <dd><p>A single non-negative numeric value, the timepoint of the
 modestly-weighted log-rank test. Required only when <code>weight =
 "mwlrt"</code>. The weight is capped at <code>1 / S(t_star)</code>, where
-<code>S(t_star)</code> is the smallest pooled Kaplan-Meier value at or after
-<code>t_star</code>. A value of 0 yields the ordinary log-rank test.</p></dd>
+<code>S(t_star)</code> is the pooled Kaplan-Meier value at <code>t_star</code>.
+A value of 0 yields the ordinary log-rank test.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -355,7 +355,7 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control          5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treatment        7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.7583,  one-sided p-value = 0.7759  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Z = 0.8447,  one-sided p-value = 0.8009  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
@@ -383,9 +383,9 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr   min      lq     mean  median      uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  23.5   47.75   78.261   66.50   91.60   576.1  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 693.5 1163.60 1626.778 1410.35 1791.45 19532.4  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq     mean   median        uq     max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  23.402   52.551   91.404   69.001   91.5005 11959.3  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 668.701 1227.351 1622.894 1428.851 1723.8515 52924.8  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -107,7 +107,7 @@ void stratified_weighted_logrank_core_impl(
     if (scheme == 1 && t_star > 0.0) {
       int nrisk = n1_init + n0_init;
       double s_km = 1.0;
-      double s_min_post = R_PosInf;
+      double s_star = 1.0;   // within-stratum pooled KM at t_star: product over events <= t_star
       int i = b;
       while (i < e) {
         const double t = time_sorted[i];
@@ -120,15 +120,13 @@ void stratified_weighted_logrank_core_impl(
         }
         if (d > 0 && nrisk > 0) {
           s_km *= (1.0 - (double)d / (double)nrisk);
-          if (t >= t_star && s_km < s_min_post) s_min_post = s_km;
         }
+        if (t < t_star) s_star = s_km;   // within-stratum KM just before t_star (events strictly < t_star)
         nrisk -= c;
         i = jj;
       }
-      if (R_finite(s_min_post) && s_min_post > 0.0) {
-        max_weight = 1.0 / s_min_post;
-      } else if (s_km > 0.0) {
-        max_weight = 1.0 / s_km;
+      if (s_star > 0.0) {
+        max_weight = 1.0 / s_star;
       }
     }
 

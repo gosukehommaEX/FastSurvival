@@ -72,8 +72,8 @@ Fleming-Harrington G(0, 1) test for delayed effects.}
 \item{t_star}{A single non-negative numeric value, the timepoint of the
 modestly-weighted log-rank test. Required only when \code{weight =
 "mwlrt"}. The weight is capped at \code{1 / S(t_star)}, where
-\code{S(t_star)} is the smallest pooled Kaplan-Meier value at or after
-\code{t_star}. A value of 0 yields the ordinary log-rank test.}
+\code{S(t_star)} is the pooled Kaplan-Meier value at \code{t_star}.
+A value of 0 yields the ordinary log-rank test.}
 }
 \value{
 An object of class \code{"survdiff_fast"}, which is a length-one

@@ -137,8 +137,8 @@ when <code>scheme = 1</code>).</p></dd>
     <p>The scheme codes are: 0 = Fleming-Harrington G(rho, gamma) with weight
 <code>S_minus^rho * (1 - S_minus)^gamma</code>; 1 = modestly-weighted log-rank
 with weight <code>min(1 / S_minus, max_weight)</code>, where <code>max_weight</code>
-is the reciprocal of the smallest right-continuous pooled Kaplan-Meier
-value at or after <code>t_star</code> (and is 1 when <code>t_star = 0</code>);
+is the reciprocal of the pooled Kaplan-Meier value at <code>t_star</code>
+(and is 1 when <code>t_star = 0</code>);
 2 = Gehan-Breslow with weight <code>n_j</code>; 3 = Tarone-Ware with weight
 <code>sqrt(n_j)</code>. Here <code>S_minus</code> is the left-continuous pooled
 Kaplan-Meier estimate just prior to each event time, initialized at 1.

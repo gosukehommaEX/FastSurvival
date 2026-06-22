@@ -151,8 +151,8 @@ ref_wlr_z <- function(time, event, j, scheme, rho = 0, gamma = 0, t_star = 0) {
       if (t_star <= 0) {
         rep(1, length(ut))
       } else {
-        post <- s[ut >= t_star]
-        mw   <- if (length(post) > 0) 1 / min(post) else 1 / s[length(s)]
+        pre <- s[ut < t_star]
+        mw  <- if (length(pre) > 0) 1 / pre[length(pre)] else 1
         pmin(1 / s_minus, mw)
       }
     },
@@ -313,8 +313,8 @@ ref_swlr_z <- function(time, event, j, strata,
         if (t_star <= 0) {
           rep(1, length(ut))
         } else {
-          post <- s[ut >= t_star]
-          mw   <- if (length(post) > 0) 1 / min(post) else 1 / s[length(s)]
+          pre <- s[ut < t_star]
+          mw  <- if (length(pre) > 0) 1 / pre[length(pre)] else 1
           pmin(1 / s_minus, mw)
         }
       },

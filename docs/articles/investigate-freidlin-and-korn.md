@@ -144,7 +144,7 @@ round(rates, 3)
 #>                   Equal survival (weak null)
 #> Log-rank                               0.028
 #> FH(0,1)                                0.026
-#> Modestly weighted                      0.024
+#> Modestly weighted                      0.028
 #> MaxCombo                               0.024
 #>                   Experimental uniformly worse (strong null)
 #> Log-rank                                               0.000
@@ -157,7 +157,7 @@ round(rates, 3)
 |:---|---:|---:|
 | Log-rank | 0.028 | 0.000 |
 | FH(0,1) | 0.026 | 0.610 |
-| Modestly weighted | 0.024 | 0.000 |
+| Modestly weighted | 0.028 | 0.000 |
 | MaxCombo | 0.024 | 0.516 |
 
 One-sided rejection rate in favor of the experimental arm (2000

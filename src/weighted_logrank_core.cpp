@@ -25,8 +25,8 @@ void weighted_logrank_core_impl(const double*, const int*, const int*, int,
 //' The scheme codes are: 0 = Fleming-Harrington G(rho, gamma) with weight
 //' \code{S_minus^rho * (1 - S_minus)^gamma}; 1 = modestly-weighted log-rank
 //' with weight \code{min(1 / S_minus, max_weight)}, where \code{max_weight}
-//' is the reciprocal of the smallest right-continuous pooled Kaplan-Meier
-//' value at or after \code{t_star} (and is 1 when \code{t_star = 0});
+//' is the reciprocal of the pooled Kaplan-Meier value at \code{t_star}
+//' (and is 1 when \code{t_star = 0});
 //' 2 = Gehan-Breslow with weight \code{n_j}; 3 = Tarone-Ware with weight
 //' \code{sqrt(n_j)}. Here \code{S_minus} is the left-continuous pooled
 //' Kaplan-Meier estimate just prior to each event time, initialized at 1.
@@ -93,14 +93,14 @@ void weighted_logrank_core_impl(
 
   // ---------------------------------------------------------------- //
   //  First pass for the modestly-weighted scheme: determine max_weight
-  //  as the reciprocal of the smallest right-continuous pooled KM value
-  //  at or after t_star. When t_star = 0, max_weight is 1.
+  //  as the reciprocal of the pooled Kaplan-Meier value at t_star
+  //  (Magirr-Burman 2019). When t_star = 0, max_weight is 1.
   // ---------------------------------------------------------------- //
   double max_weight = 1.0;
   if (scheme == 1 && t_star > 0.0) {
     int nrisk = n1_init + n0_init;   // pooled at-risk count
     double s = 1.0;                  // right-continuous pooled KM
-    double s_min_post = R_PosInf;
+    double s_star = 1.0;             // pooled KM at t_star: product over event times <= t_star
     int i = 0;
     while (i < n) {
       const double t = time_sorted[i];
@@ -113,16 +113,13 @@ void weighted_logrank_core_impl(
       }
       if (d > 0 && nrisk > 0) {
         s *= (1.0 - (double)d / (double)nrisk);
-        if (t >= t_star && s < s_min_post) s_min_post = s;
       }
+      if (t < t_star) s_star = s;   // pooled KM just before t_star (events strictly < t_star), matching nphRCT
       nrisk -= c;
       i = jj;
     }
-    if (R_finite(s_min_post) && s_min_post > 0.0) {
-      max_weight = 1.0 / s_min_post;
-    } else if (s > 0.0) {
-      // No events at or after t_star: fall back to the final KM value
-      max_weight = 1.0 / s;
+    if (s_star > 0.0) {
+      max_weight = 1.0 / s_star;
     }
   }
 
