@@ -18,6 +18,7 @@ Collett
 DAH
 DeMets
 Dormuth
+Dunnett
 ENGOT
 Epanechnikov
 FH
@@ -112,6 +113,7 @@ nph
 nphRCT
 nphparams
 nphsim
+pairwise
 parametrize
 pauknemj
 pkgdown
@@ -124,6 +126,7 @@ rpact
 simdata
 simsummary
 struct
+subsetting
 surv
 survAH
 survRM

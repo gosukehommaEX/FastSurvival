@@ -49,10 +49,18 @@
     illness-death model with three transition hazards and optional
     treatment switching, reducing to the Fleischer maximal-independence
     model when the post-event hazard equals the direct terminal hazard.
+    A vector `n` of length greater than two together with a per-arm
+    survival list generates a multi-arm trial, each arm produced with the
+    single-group kernel over a common accrual window and labeled 1 to
+    `length(n)`, for analysis as pairwise contrasts against a shared control.
   * `analysis_fast()`: interim or sequential analysis of simulated data at one
     or more looks, defined by target event counts or calendar times, computed
     by a fused C++ kernel that reuses the analysis cores of the standalone
     functions. Supports subgroup analyses.
+  * `pairwise_fast()`: runs `analysis_fast()` for each experimental arm against a
+    shared control on multi-arm data, at either fixed calendar looks or the
+    per-simulation cutoffs of a designated primary contrast, and stacks the
+    results with an optional Bonferroni adjustment across contrasts.
   * `simsummary_fast()`: operating-characteristic summary (rejection and
     futility rates, stopping-look distribution, expected timing) from
     `analysis_fast()` output and supplied group-sequential boundaries, with a
@@ -75,8 +83,9 @@
   validation against established packages, a speed comparison, a group-sequential
   design reproduction, a log-rank versus RMST comparison under nonproportional
   hazards, the Freidlin-Korn strong-null investigation, a correlated PFS and OS
-  group-sequential design under the Fleischer model, and a multiregional
-  regional-consistency evaluation.
+  group-sequential design under the Fleischer model, a multiregional
+  regional-consistency evaluation, and a multi-arm design analyzed as pairwise
+  contrasts against a shared control.
 
 # FastSurvival 0.1.0
 

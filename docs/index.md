@@ -41,8 +41,9 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 
 | Function | Description |
 |----|----|
-| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one- or two-group trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
+| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
 | [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
+| [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | Pairwise comparison of each experimental arm against a shared control on multi-arm data, at fixed calendar looks or a primary contrast’s event-driven cutoffs, with an optional Bonferroni adjustment. |
 | [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries. |
 
 ### Visualization
@@ -315,6 +316,17 @@ C++ kernel that reuses the same analysis cores as the standalone
 functions, so the same results are obtained without the per-iteration
 overhead of repeated wrapper calls. Statistics can also be reported
 within each subgroup.
+
+**pairwise_fast** compares each experimental arm against a shared
+control on multi-arm data by running
+[`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+once per contrast and stacking the results with an `arm` column. With
+fixed calendar looks every contrast shares the same data cutoff. With an
+event-driven design a designated primary contrast fixes the
+per-simulation calendar cutoff at which all contrasts are analyzed,
+reproducing the standard rule that the primary analysis defines a single
+data cutoff. An optional Bonferroni adjustment controls the family-wise
+error rate across the contrasts at each look.
 
 **simsummary_fast** aggregates the per-simulation, per-look output of
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)

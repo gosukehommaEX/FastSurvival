@@ -38,6 +38,7 @@ accumulation in a single C++ pass without intermediate R-level vector copies."><
     <li><a class="dropdown-item" href="../articles/mrct-regional-consistency.html">MRCT with complex survival analysis design</a></li>
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
+    <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -261,9 +262,9 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min       lq      mean   median       uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   28.701   61.251  102.9081   84.801  115.451  2805.8  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1098.200 1991.751 2955.5587 2360.101 2912.901 51607.1  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min      lq      mean median      uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   26.6   72.05  123.1503  101.2  139.70   9659.1  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1060.2 2320.25 2927.5735 2785.6 3031.65 142599.5  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

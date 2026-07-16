@@ -39,9 +39,25 @@
 #' sizes are deterministic; otherwise subgroup membership is drawn from the
 #' prevalence distribution.
 #'
+#' When \code{n} is a vector of length greater than two together with a per-arm
+#' survival list, the simulation is a multi-arm trial. Each arm is generated in
+#' turn with the validated single-group kernel over a common accrual window, and
+#' the arms are stacked into one data frame with a \code{group} column labeled 1
+#' to \code{length(n)} in the order of \code{n}. Per-arm survival is supplied as
+#' an \code{e.hazard} or \code{e.median} list with one element per arm, and
+#' optional dropout as a shared value or a per-arm list through \code{d.hazard}
+#' or \code{d.median}. The arms share the master \code{seed}, so the result is
+#' reproducible. A multi-arm design is analyzed as a set of pairwise contrasts by
+#' subsetting the output to the control arm and one other arm and calling
+#' \code{\link{analysis_fast}} once per contrast. Multi-arm mode does not support
+#' subgroups or the illness-death model, which remain two-group.
+#'
 #' @param nsim Number of simulated trials.
-#' @param n Either a single total sample size (split by \code{alloc}) or a
-#'   length-two vector of per-group sample sizes.
+#' @param n Either a single total sample size (split by \code{alloc}), a
+#'   length-two vector of per-group sample sizes, or, for a multi-arm trial, a
+#'   vector of length greater than two giving the per-arm sample sizes (which
+#'   requires a per-arm \code{e.hazard} or \code{e.median} list). When \code{n}
+#'   is a per-arm vector, \code{alloc} is ignored.
 #' @param alloc A length-two allocation ratio, used when \code{n} is scalar.
 #' @param a.time A numeric vector of accrual-interval breakpoints.
 #' @param a.rate Absolute accrual rates (subjects per unit time), interpreted in
@@ -234,6 +250,21 @@
 #' )
 #' head(dfsw)
 #'
+#' # Three-arm trial (one control and two treatment arms) analyzed as pairwise
+#' # contrasts against the shared control.
+#' dfk <- simdata_fast(
+#'   nsim     = 100,
+#'   n        = c(120, 120, 120),
+#'   a.time   = c(0, 12),
+#'   a.rate   = 360 / 12,
+#'   e.median = list(12, 16, 20),
+#'   seed     = 8
+#' )
+#' # Control arm (group 1) versus treatment arm 2, one-sided log-rank at month 24.
+#' sub12 <- dfk[dfk$group %in% c(1, 2), ]
+#' res12 <- analysis_fast(sub12, control = 1, time.looks = 24, side = 1)
+#' head(res12)
+#'
 #' @seealso \code{\link{analysis_fast}}
 #'
 #' @export
@@ -292,6 +323,28 @@ simdata_fast <- function(nsim       = 1000,
       switch.clock = switch.clock,
       d.hazard = d.hazard, d.median = d.median, d.time = d.time,
       prevalence = prevalence))
+  }
+
+  # Multi-arm (K > 2) mode dispatches to a separate assembler that generates each
+  # arm with the validated single-group kernel and stacks the results with
+  # per-arm group labels 1 to K. It is entered only when 'n' has length greater
+  # than two AND a matching per-arm survival list is supplied; a length-(>2) 'n'
+  # without such a list falls through to the historical length check below, so
+  # the one-group and two-group paths, their dqrng consumption order, and the
+  # existing input-validation behavior are all unchanged. The master seed set
+  # above is shared by every arm, so the multi-arm result is reproducible.
+  if (length(n) > 2L) {
+    surv_spec <- if (!is.null(e.hazard)) e.hazard else e.median
+    if (is.list(surv_spec) && length(surv_spec) == length(n)) {
+      return(simdata_fast_karm(
+        nsim = nsim, n = n, a.time = a.time,
+        a.rate = a.rate, a.prop = a.prop,
+        e.hazard = e.hazard, e.median = e.median, e.time = e.time,
+        d.hazard = d.hazard, d.median = d.median, d.time = d.time,
+        prevalence = prevalence,
+        h01.hazard = h01.hazard, h01.median = h01.median,
+        h02.hazard = h02.hazard, h02.median = h02.median))
+    }
   }
 
   use_subgroup        <- !is.null(prevalence)
@@ -879,4 +932,159 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
     d_c$hazard, d_c$fin_time, d_c$cum_haz,
     d_t$hazard, d_t$fin_time, d_t$cum_haz
   )
+}
+
+# ------------------------------------------------------------------ #
+#  Internal helper: resolve whole-trial accrual for the multi-arm path
+# ------------------------------------------------------------------ #
+# Completes the accrual breakpoints (solving an open final interval from the
+# total when a trailing 'a.rate' is supplied) and returns the per-interval
+# accrual proportions, so every arm can be generated over a common accrual
+# window by passing the completed breakpoints together with these proportions as
+# a fully specified 'a.prop'. This mirrors the accrual resolution of the
+# single-endpoint path and is deliberately self-contained so the two-group path
+# is left byte-identical.
+resolve_karm_accrual <- function(n_total, a.time, a.rate, a.prop) {
+  n_int_time <- length(a.time) - 1L
+  acc_tol    <- 1e-8 * max(1, n_total)
+  use_rate   <- !is.null(a.rate)
+  use_prop   <- !is.null(a.prop)
+  if (use_rate == use_prop) stop("Supply exactly one of 'a.rate' and 'a.prop'")
+  if (length(a.time) < 2L) stop("'a.time' must have at least two elements")
+  if (any(diff(a.time) <= 0)) stop("'a.time' must be strictly increasing")
+
+  if (use_rate) {
+    if (any(a.rate <= 0)) stop("All 'a.rate' values must be positive")
+    if (length(a.rate) == n_int_time) {
+      implied <- sum(a.rate * diff(a.time))
+      if (abs(implied - n_total) > acc_tol) {
+        stop("'a.rate' implies ", round(implied, 4), " subjects over the ",
+             "accrual period but sum(n) is ", n_total, ".")
+      }
+      a.time_full <- a.time
+    } else if (length(a.rate) == n_int_time + 1L) {
+      bounded <- if (n_int_time >= 1L) {
+        sum(a.rate[seq_len(n_int_time)] * diff(a.time))
+      } else {
+        0
+      }
+      remaining <- n_total - bounded
+      if (remaining <= 0) {
+        stop("The specified accrual intervals already accrue ", round(bounded, 4),
+             " subjects, at least sum(n) = ", n_total, ".")
+      }
+      final_dur   <- remaining / a.rate[length(a.rate)]
+      a.time_full <- c(a.time, a.time[length(a.time)] + final_dur)
+    } else {
+      stop("'a.rate' must have length equal to length(a.time) - 1 or length(a.time)")
+    }
+    weights_a <- a.rate * diff(a.time_full)
+  } else {
+    if (any(a.prop <= 0)) stop("All 'a.prop' values must be positive")
+    if (length(a.prop) != n_int_time) {
+      stop("'a.prop' must have length equal to length(a.time) - 1")
+    }
+    a.time_full <- a.time
+    weights_a   <- as.numeric(a.prop)
+  }
+  list(a.time_full = a.time_full, a_int_prob = weights_a / sum(weights_a))
+}
+
+# ------------------------------------------------------------------ #
+#  Internal wrapper: multi-arm (K > 2) simulation
+# ------------------------------------------------------------------ #
+# Generates each of the K arms with the validated single-group path of
+# simdata_fast (a scalar 'n' and a non-list hazard), sharing a common accrual
+# window supplied as fully specified proportions, and stacks the arms into one
+# data frame with a 'group' column labeled 1 to K in the order of 'n'. The master
+# seed is set by the caller and the arms consume the same dqrng stream in order,
+# so the result is reproducible from 'seed'. Subgroups and the illness-death
+# model are not supported here.
+simdata_fast_karm <- function(nsim, n, a.time, a.rate, a.prop,
+                              e.hazard, e.median, e.time,
+                              d.hazard, d.median, d.time,
+                              prevalence,
+                              h01.hazard, h01.median,
+                              h02.hazard, h02.median) {
+  K <- length(n)
+
+  if (!is.null(prevalence)) {
+    stop("Multi-arm mode (length(n) > 2) does not support 'prevalence' ",
+         "subgroups.")
+  }
+  if (!is.null(h01.hazard) || !is.null(h01.median) ||
+      !is.null(h02.hazard) || !is.null(h02.median)) {
+    stop("Multi-arm mode (length(n) > 2) does not support the illness-death ",
+         "model, which is two-group.")
+  }
+  if (!is.null(e.hazard) && !is.null(e.median)) {
+    stop("Specify exactly one of 'e.hazard' and 'e.median'")
+  }
+  if (is.null(e.hazard) && is.null(e.median)) {
+    stop("One of 'e.hazard' or 'e.median' must be supplied")
+  }
+
+  # Per-arm survival specification: a length-K list, one element per arm.
+  surv_is_median <- is.null(e.hazard)
+  surv_arg       <- if (surv_is_median) e.median else e.hazard
+  if (!is.list(surv_arg) || length(surv_arg) != K) {
+    stop("In multi-arm mode '", if (surv_is_median) "e.median" else "e.hazard",
+         "' must be a list with one element per arm, so its length must equal ",
+         "length(n) = ", K, ".")
+  }
+
+  # Optional per-arm dropout: NULL, a shared scalar or vector, or a length-K list.
+  if (!is.null(d.hazard) && !is.null(d.median)) {
+    stop("Specify at most one of 'd.hazard' and 'd.median'")
+  }
+  drop_is_median <- is.null(d.hazard) && !is.null(d.median)
+  drop_arg       <- if (!is.null(d.hazard)) d.hazard else d.median
+  has_dropout    <- !is.null(drop_arg)
+  if (has_dropout && is.list(drop_arg) && length(drop_arg) != K) {
+    stop("In multi-arm mode a list 'd.hazard' or 'd.median' must have one ",
+         "element per arm, so its length must equal length(n) = ", K, ".")
+  }
+
+  # Resolve the whole-trial accrual once so every arm shares the same accrual
+  # window and shape.
+  acc         <- resolve_karm_accrual(sum(n), a.time, a.rate, a.prop)
+  a.time_full <- acc$a.time_full
+  a_int_prob  <- acc$a_int_prob
+
+  # A possibly per-arm 'e.time' / 'd.time': a list is indexed per arm, anything
+  # else is shared across arms.
+  arm_e_time <- function(g) if (is.list(e.time)) e.time[[g]] else e.time
+  arm_d_time <- function(g) if (is.list(d.time)) d.time[[g]] else d.time
+
+  blocks <- vector("list", K)
+  for (g in seq_len(K)) {
+    args <- list(
+      nsim   = nsim,
+      n      = as.numeric(n[g]),
+      a.time = a.time_full,
+      a.prop = a_int_prob,
+      e.time = arm_e_time(g)
+    )
+    if (surv_is_median) {
+      args$e.median <- surv_arg[[g]]
+    } else {
+      args$e.hazard <- surv_arg[[g]]
+    }
+    if (has_dropout) {
+      dv <- if (is.list(drop_arg)) drop_arg[[g]] else drop_arg
+      if (drop_is_median) args$d.median <- dv else args$d.hazard <- dv
+      args$d.time <- arm_d_time(g)
+    }
+    dfg         <- do.call(simdata_fast, args)
+    dfg$group   <- g
+    blocks[[g]] <- dfg
+  }
+
+  out <- do.call(rbind, blocks)
+  # Group rows by simulation (then by arm) so the output matches the
+  # single-endpoint contract that the analysis path relies on for its skip-sort
+  # fast path.
+  out <- out[order(out$sim, out$group), , drop = FALSE]
+  rownames(out) <- NULL
+  out
 }

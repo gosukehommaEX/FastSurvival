@@ -8,9 +8,10 @@ articles:
   group-sequential-design: group-sequential-design.html
   investigate-freidlin-and-korn: investigate-freidlin-and-korn.html
   mrct-regional-consistency: mrct-regional-consistency.html
+  multi-arm-pairwise: multi-arm-pairwise.html
   speed-comparison: speed-comparison.html
   validation: validation.html
-last_built: 2026-06-22T12:03Z
+last_built: 2026-07-16T14:53Z
 urls:
   reference: https://gosukehommaEX.github.io/FastSurvival/reference
   article: https://gosukehommaEX.github.io/FastSurvival/articles

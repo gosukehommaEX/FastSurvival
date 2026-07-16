@@ -19,3 +19,6 @@
 - [Group-sequential design with correlated PFS and OS under the
   Fleischer
   model](https://gosukehommaEX.github.io/FastSurvival/articles/correlated-pfs-os-gsd.md):
+- [Multi-arm trials: K-arm generation and pairwise comparisons against a
+  shared
+  control](https://gosukehommaEX.github.io/FastSurvival/articles/multi-arm-pairwise.md):

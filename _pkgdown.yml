@@ -34,6 +34,7 @@ reference:
   contents:
   - simdata_fast
   - analysis_fast
+  - pairwise_fast
   - simsummary_fast
 
 - title: Design and visualization
@@ -67,3 +68,4 @@ articles:
   - mrct-regional-consistency
   - compare-logrank-rmst
   - correlated-pfs-os-gsd
+  - multi-arm-pairwise

@@ -47,8 +47,9 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 
 | Function | Description |
 |----------|-------------|
-| `simdata_fast()` | Individual patient data simulator for one- or two-group trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
+| `simdata_fast()` | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
 | `analysis_fast()` | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
+| `pairwise_fast()` | Pairwise comparison of each experimental arm against a shared control on multi-arm data, at fixed calendar looks or a primary contrast's event-driven cutoffs, with an optional Bonferroni adjustment. |
 | `simsummary_fast()` | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from `analysis_fast()` output and supplied boundaries. |
 
 ### Visualization
@@ -305,6 +306,15 @@ time sorting, and per-cell statistics are handled by a fused C++ kernel that
 reuses the same analysis cores as the standalone functions, so the same
 results are obtained without the per-iteration overhead of repeated wrapper
 calls. Statistics can also be reported within each subgroup.
+
+**pairwise_fast** compares each experimental arm against a shared control on
+multi-arm data by running `analysis_fast()` once per contrast and stacking the
+results with an `arm` column. With fixed calendar looks every contrast shares
+the same data cutoff. With an event-driven design a designated primary contrast
+fixes the per-simulation calendar cutoff at which all contrasts are analyzed,
+reproducing the standard rule that the primary analysis defines a single data
+cutoff. An optional Bonferroni adjustment controls the family-wise error rate
+across the contrasts at each look.
 
 **simsummary_fast** aggregates the per-simulation, per-look output of
 `analysis_fast()` into operating characteristics: the rejection rate, the
