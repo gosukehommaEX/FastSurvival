@@ -220,8 +220,8 @@ microbenchmark(
   times = 1000
 )
 #> Unit: microseconds
-#>        expr      min        lq       mean   median        uq      max neval cld
-#>  coxph_fast   46.807   56.9915   68.93673   71.593   74.9745  216.744  1000  a 
-#>       coxph 1502.192 1559.1380 1665.75449 1580.603 1608.5560 7605.747  1000   b
+#>        expr      min       lq       mean   median       uq      max neval cld
+#>  coxph_fast   44.884   55.088   66.24804   70.046   72.566  168.244  1000  a 
+#>       coxph 1503.685 1547.953 1632.47060 1567.459 1589.351 7333.472  1000   b
 # }
 ```

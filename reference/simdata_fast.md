@@ -54,8 +54,11 @@ simdata_fast(
 
 - n:
 
-  Either a single total sample size (split by `alloc`) or a length-two
-  vector of per-group sample sizes.
+  Either a single total sample size (split by `alloc`), a length-two
+  vector of per-group sample sizes, or, for a multi-arm trial, a vector
+  of length greater than two giving the per-arm sample sizes (which
+  requires a per-arm `e.hazard` or `e.median` list). When `n` is a
+  per-arm vector, `alloc` is ignored.
 
 - alloc:
 
@@ -241,6 +244,21 @@ distribution of correlated factors. Per-cell hazards may be supplied as
 a list with one element per cell. With `fixed.alloc = TRUE` the subgroup
 sizes are deterministic; otherwise subgroup membership is drawn from the
 prevalence distribution.
+
+When `n` is a vector of length greater than two together with a per-arm
+survival list, the simulation is a multi-arm trial. Each arm is
+generated in turn with the validated single-group kernel over a common
+accrual window, and the arms are stacked into one data frame with a
+`group` column labeled 1 to `length(n)` in the order of `n`. Per-arm
+survival is supplied as an `e.hazard` or `e.median` list with one
+element per arm, and optional dropout as a shared value or a per-arm
+list through `d.hazard` or `d.median`. The arms share the master `seed`,
+so the result is reproducible. A multi-arm design is analyzed as a set
+of pairwise contrasts by subsetting the output to the control arm and
+one other arm and calling
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+once per contrast. Multi-arm mode does not support subgroups or the
+illness-death model, which remain two-group.
 
 ## See also
 
@@ -472,4 +490,33 @@ head(dfsw)
 #> 4        1   0.6111453
 #> 5        0          NA
 #> 6        0          NA
+
+# Three-arm trial (one control and two treatment arms) analyzed as pairwise
+# contrasts against the shared control.
+dfk <- simdata_fast(
+  nsim     = 100,
+  n        = c(120, 120, 120),
+  a.time   = c(0, 12),
+  a.rate   = 360 / 12,
+  e.median = list(12, 16, 20),
+  seed     = 8
+)
+# Control arm (group 1) versus treatment arm 2, one-sided log-rank at month 24.
+sub12 <- dfk[dfk$group %in% c(1, 2), ]
+res12 <- analysis_fast(sub12, control = 1, time.looks = 24, side = 1)
+head(res12)
+#>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         24     24    TRUE        240     145         0         95
+#> 2   2    1         24     24    TRUE        240     137         0        103
+#> 3   3    1         24     24    TRUE        240     149         0         91
+#> 4   4    1         24     24    TRUE        240     149         0         91
+#> 5   5    1         24     24    TRUE        240     142         0         98
+#> 6   6    1         24     24    TRUE        240     137         0        103
+#>    logrank.z logrank.chisq  logrank.p
+#> 1 -1.4795251    2.18899443 0.06950002
+#> 2 -1.6694771    2.78715368 0.04751144
+#> 3 -0.9410187    0.88551621 0.17334764
+#> 4 -2.1927002    4.80793424 0.01416449
+#> 5  0.2683545    0.07201412 0.60578676
+#> 6 -1.9520367    3.81044737 0.02546692
 ```

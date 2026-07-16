@@ -26,6 +26,7 @@
     <li><a class="dropdown-item" href="../articles/mrct-regional-consistency.html">MRCT with complex survival analysis design</a></li>
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
+    <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -68,9 +69,11 @@
 <code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> gains weighted log-rank tests (Fleming-Harrington, modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified and stratified-weighted variants, all sharing the single-scan C++ backend.</li>
 <li>New simulation layer:
 <ul><li>
-<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> extended with optional subgroups defined by a prevalence specification and a flexible accrual specification: <code>a.rate</code> gives absolute accrual rates (with the end of an open final interval solved from the total when a trailing rate is supplied) and <code>a.prop</code> gives accrual proportions, with deterministic per-interval accrual counts. The entire generation pipeline runs in a single C++ kernel that materializes the output data frame once. It can also generate two correlated time-to-event endpoints (for example progression-free and overall survival) from an illness-death model with three transition hazards and optional treatment switching, reducing to the Fleischer maximal-independence model when the post-event hazard equals the direct terminal hazard.</li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> extended with optional subgroups defined by a prevalence specification and a flexible accrual specification: <code>a.rate</code> gives absolute accrual rates (with the end of an open final interval solved from the total when a trailing rate is supplied) and <code>a.prop</code> gives accrual proportions, with deterministic per-interval accrual counts. The entire generation pipeline runs in a single C++ kernel that materializes the output data frame once. It can also generate two correlated time-to-event endpoints (for example progression-free and overall survival) from an illness-death model with three transition hazards and optional treatment switching, reducing to the Fleischer maximal-independence model when the post-event hazard equals the direct terminal hazard. A vector <code>n</code> of length greater than two together with a per-arm survival list generates a multi-arm trial, each arm produced with the single-group kernel over a common accrual window and labeled 1 to <code>length(n)</code>, for analysis as pairwise contrasts against a shared control.</li>
 <li>
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>: interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times, computed by a fused C++ kernel that reuses the analysis cores of the standalone functions. Supports subgroup analyses.</li>
+<li>
+<code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code>: runs <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> for each experimental arm against a shared control on multi-arm data, at either fixed calendar looks or the per-simulation cutoffs of a designated primary contrast, and stacks the results with an optional Bonferroni adjustment across contrasts.</li>
 <li>
 <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>: operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> output and supplied group-sequential boundaries, with a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that lays the results out as a group-sequential design report.</li>
 </ul></li>
@@ -81,7 +84,7 @@
 <code><a href="../reference/kmcurve_fast.html">kmcurve_fast()</a></code>: builds the Kaplan-Meier curves of a single trial realization (for example one replicate of <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>) into a <code>kmcurve_fast</code> object, with a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method that draws the curves with optional restricted-mean shading and a smoothed time-varying hazard-ratio panel, and a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that summarizes the events and medians.</li>
 </ul></li>
 <li>Each estimation and testing function has a corresponding <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method, and the print methods share a unified display format.</li>
-<li>New vignettes accompany the analysis, simulation, and visualization layers: validation against established packages, a speed comparison, a group-sequential design reproduction, a log-rank versus RMST comparison under nonproportional hazards, the Freidlin-Korn strong-null investigation, a correlated PFS and OS group-sequential design under the Fleischer model, and a multiregional regional-consistency evaluation.</li>
+<li>New vignettes accompany the analysis, simulation, and visualization layers: validation against established packages, a speed comparison, a group-sequential design reproduction, a log-rank versus RMST comparison under nonproportional hazards, the Freidlin-Korn strong-null investigation, a correlated PFS and OS group-sequential design under the Fleischer model, a multiregional regional-consistency evaluation, and a multi-arm design analyzed as pairwise contrasts against a shared control.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="fastsurvival-010">FastSurvival 0.1.0<a class="anchor" aria-label="anchor" href="#fastsurvival-010"></a></h2><p class="text-muted">CRAN release: 2026-05-27</p>
@@ -105,7 +108,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
