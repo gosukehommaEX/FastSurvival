@@ -101,5 +101,5 @@ Display methods for the returned S3 objects.
 
 - [`FastSurvival`](https://gosukehommaEX.github.io/FastSurvival/reference/FastSurvival-package.md)
   [`FastSurvival-package`](https://gosukehommaEX.github.io/FastSurvival/reference/FastSurvival-package.md)
-  : FastSurvival: Fast Survival Analysis Functions for Simulation
-  Studies
+  : FastSurvival: Fast Survival Analysis and Simulation for Clinical
+  Trials

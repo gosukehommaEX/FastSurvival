@@ -376,17 +376,19 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  survdiff_fast <span class="op">=</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span></span>
-<span class="r-in"><span>                                <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  survdiff      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Speed comparison against survdiff()</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"microbenchmark"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    survdiff_fast <span class="op">=</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span></span>
+<span class="r-in"><span>                                  <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    survdiff      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    times <span class="op">=</span> <span class="fl">1000</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean   median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  41.768  49.5775   57.87941  60.6885  63.4380  156.893  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 924.355 970.6715 1016.96357 980.9500 996.1785 8825.385  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq     mean   median      uq       max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  36.975  41.632  50.5468  52.1225  57.250   172.355  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 778.473 829.754 894.8185 845.6175 869.663 11139.709  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

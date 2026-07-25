@@ -100,7 +100,7 @@ differences visible at a common sample size.</p>
 is set so that the proportional-hazards scenario, with a hazard ratio of
 0.75, has 90% power at a one-sided 0.025 level. The events are obtained
 from the Schoenfeld formula and inflated to a sample size with the
-Lachin-Foulkes method through <code><a href="https://keaven.github.io/gsDesign/reference/nSurv.html" class="external-link">gsDesign::nSurv</a></code>, given 12
+Lachin-Foulkes method through <code><a href="https://keaven.github.io/gsDesign//reference/nSurv.html" class="external-link">gsDesign::nSurv</a></code>, given 12
 months of accrual, 36 months of minimum follow-up, and a 5% annual
 dropout. The same sample size is then applied unchanged to all three
 scenarios.</p>
@@ -120,7 +120,7 @@ scenarios.</p>
 <span><span class="va">eta</span>            <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">dropout_annual</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span></span>
 <span><span class="va">tau</span>            <span class="op">&lt;-</span> <span class="fl">30</span></span>
 <span></span>
-<span><span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="fu"><a href="https://keaven.github.io/gsDesign/reference/nSurv.html" class="external-link">nSurv</a></span><span class="op">(</span></span>
+<span><span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="fu"><a href="https://keaven.github.io/gsDesign//reference/nSurv.html" class="external-link">nSurv</a></span><span class="op">(</span></span>
 <span>  lambdaC <span class="op">=</span> <span class="va">lam0</span>, hr <span class="op">=</span> <span class="va">hr_ph</span>, eta <span class="op">=</span> <span class="va">eta</span>,</span>
 <span>  T <span class="op">=</span> <span class="va">study_dur</span>, minfup <span class="op">=</span> <span class="va">minfup</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="va">alpha</span>, beta <span class="op">=</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">power_target</span>, sided <span class="op">=</span> <span class="fl">1</span>, ratio <span class="op">=</span> <span class="fl">1</span></span>

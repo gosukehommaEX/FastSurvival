@@ -213,15 +213,17 @@ coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #> group    0.5508     1.8155    0.1744    1.7399
 
 # \donttest{
-library(microbenchmark)
-microbenchmark(
-  coxph_fast = coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2),
-  coxph      = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
-  times = 1000
-)
+# Speed comparison against coxph()
+if (requireNamespace("microbenchmark", quietly = TRUE)) {
+  microbenchmark::microbenchmark(
+    coxph_fast = coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2),
+    coxph      = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
+    times = 1000
+  )
+}
 #> Unit: microseconds
 #>        expr      min       lq       mean   median       uq      max neval cld
-#>  coxph_fast   44.884   55.088   66.24804   70.046   72.566  168.244  1000  a 
-#>       coxph 1503.685 1547.953 1632.47060 1567.459 1589.351 7333.472  1000   b
+#>  coxph_fast   35.753   43.509   57.31153   62.217   67.870  206.216  1000  a 
+#>       coxph 1309.289 1374.111 1461.92226 1399.868 1432.557 8344.179  1000   b
 # }
 ```

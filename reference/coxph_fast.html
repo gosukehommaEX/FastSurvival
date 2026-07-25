@@ -255,16 +255,18 @@ estimator. Manuscript under review.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1744    1.7399</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  coxph_fast <span class="op">=</span> <span class="fu">coxph_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  coxph      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Speed comparison against coxph()</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"microbenchmark"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    coxph_fast <span class="op">=</span> <span class="fu">coxph_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    coxph      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    times <span class="op">=</span> <span class="fl">1000</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min       lq       mean   median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   44.884   55.088   66.24804   70.046   72.566  168.244  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1503.685 1547.953 1632.47060 1567.459 1589.351 7333.472  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   35.753   43.509   57.31153   62.217   67.870  206.216  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1309.289 1374.111 1461.92226 1399.868 1432.557 8344.179  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

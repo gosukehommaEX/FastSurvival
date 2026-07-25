@@ -329,16 +329,18 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # \donttest{
-library(microbenchmark)
-microbenchmark(
-  survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
-                                ovarian$rx, 2, side = 2),
-  survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-  times = 1000
-)
+# Speed comparison against survdiff()
+if (requireNamespace("microbenchmark", quietly = TRUE)) {
+  microbenchmark::microbenchmark(
+    survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
+                                  ovarian$rx, 2, side = 2),
+    survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
+    times = 1000
+  )
+}
 #> Unit: microseconds
-#>           expr     min       lq       mean   median       uq      max neval cld
-#>  survdiff_fast  41.768  49.5775   57.87941  60.6885  63.4380  156.893  1000  a 
-#>       survdiff 924.355 970.6715 1016.96357 980.9500 996.1785 8825.385  1000   b
+#>           expr     min      lq     mean   median      uq       max neval cld
+#>  survdiff_fast  36.975  41.632  50.5468  52.1225  57.250   172.355  1000  a 
+#>       survdiff 778.473 829.754 894.8185 845.6175 869.663 11139.709  1000   b
 # }
 ```
