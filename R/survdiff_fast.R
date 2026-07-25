@@ -173,13 +173,15 @@
 #'               weight = "fh", rho = 0, gamma = 1, strata = ovarian$resid.ds)
 #'
 #' \donttest{
-#' library(microbenchmark)
-#' microbenchmark(
-#'   survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
-#'                                 ovarian$rx, 2, side = 2),
-#'   survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-#'   times = 1000
-#' )
+#' # Speed comparison against survdiff()
+#' if (requireNamespace("microbenchmark", quietly = TRUE)) {
+#'   microbenchmark::microbenchmark(
+#'     survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
+#'                                   ovarian$rx, 2, side = 2),
+#'     survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
+#'     times = 1000
+#'   )
+#' }
 #' }
 #'
 #' @seealso

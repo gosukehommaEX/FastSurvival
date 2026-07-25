@@ -10,3 +10,11 @@
 ^docs$
 ^pkgdown$
 ^tools$
+^\.Rhistory$
+^\.RData$
+^\.Ruserdata$
+^\.gitignore$
+^\.git$
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$

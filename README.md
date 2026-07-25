@@ -486,4 +486,4 @@ Chapman and Hall/CRC.
 
 ## License
 
-MIT © 2025 Gosuke Homma
+MIT © 2026 Gosuke Homma

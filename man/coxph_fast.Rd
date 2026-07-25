@@ -136,12 +136,14 @@ coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
            control = 1, presorted = TRUE)
 
 \donttest{
-library(microbenchmark)
-microbenchmark(
-  coxph_fast = coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2),
-  coxph      = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
-  times = 1000
-)
+# Speed comparison against coxph()
+if (requireNamespace("microbenchmark", quietly = TRUE)) {
+  microbenchmark::microbenchmark(
+    coxph_fast = coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2),
+    coxph      = coxph(Surv(futime, fustat) ~ rx, data = ovarian),
+    times = 1000
+  )
+}
 }
 
 }
