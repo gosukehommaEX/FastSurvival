@@ -62,10 +62,11 @@ simdata_fast(
 
 - alloc:
 
-  A length-two allocation ratio, used when `n` is scalar. The total is
-  split in proportion to `alloc` and any rounding remainder goes to the
-  group with the larger fractional share, so the two group sizes always
-  add up to `n`.
+  A length-two allocation ratio (control, treatment), used when `n` is
+  scalar. Supplying it explicitly requests a two-group simulation (see
+  Details). The total is split in proportion to `alloc` and any rounding
+  remainder goes to the group with the larger fractional share, so the
+  two group sizes always add up to `n`.
 
 - a.time:
 
@@ -91,8 +92,11 @@ simdata_fast(
 
 - e.hazard:
 
-  Survival hazard(s). A scalar or vector for one group, or a two-element
-  list for two groups; per-cell lists are used with subgroups.
+  Survival hazard(s). A scalar or vector (piecewise, with `e.time`)
+  shared by all groups and cells, a two-element list for two groups, or,
+  with subgroups, a per-cell list (for one group, or as an element of
+  the two-element list). See Details for how the number of groups is
+  determined.
 
 - e.median:
 
@@ -246,11 +250,30 @@ When `prevalence` is supplied the trial has subgroups. A numeric vector
 defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
 distribution of correlated factors. Per-cell hazards may be supplied as
-a list with one element per cell. With `fixed.alloc = TRUE` the subgroup
-sizes are deterministic and the fixed labels are assigned to subjects in
-a random order within each simulated trial, so subgroup membership does
+a list with one element per cell (cells in column-major order, the first
+factor varying fastest). With `fixed.alloc = TRUE` the subgroup sizes
+are deterministic and the fixed labels are assigned to subjects in a
+random order within each simulated trial, so subgroup membership does
 not depend on the accrual time; otherwise subgroup membership is drawn
 from the prevalence distribution.
+
+The number of groups is determined as follows. A length-two `n` always
+gives two groups. A scalar `n` gives two groups, with the total split by
+`alloc`, in any of these cases: `alloc` is supplied explicitly; the
+prevalence is group-specific; without subgroups, any of `e.hazard`,
+`e.median`, `d.hazard`, and `d.median` is a list; with subgroups, one of
+them is a length-two list with a list element (per-cell values within a
+group, as in `list(list(0.10, 0.08, 0.06), 0.05)`). Otherwise a scalar
+`n` gives one group, and with subgroups a list is read as one element
+per cell of that group. So with subgroups and a scalar `n`,
+`e.hazard = list(0.10, 0.05)` means per-cell hazards of a single group
+unless `alloc` is supplied, in which case it means per-group hazards. In
+a two-group simulation each specification is either shared by both
+groups (not a list) or a list of length two (control first), and each
+group's element may be a per-cell list when there are subgroups. The
+breakpoints `e.time` and `d.time` follow the same structure (per group
+in a two-group simulation, per cell in a one-group simulation with
+subgroups).
 
 When `n` is a vector of length greater than two together with a per-arm
 survival list, the simulation is a multi-arm trial. Each arm is
@@ -373,6 +396,20 @@ head(df3)
 #> 4      13.55992
 #> 5      49.23827
 #> 6      20.57458
+
+# The same trial specified by the total sample size and the allocation ratio
+df3b <- simdata_fast(
+  nsim       = 100,
+  n          = 300,
+  alloc      = c(1, 1),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  e.hazard   = list(list(0.10, 0.08, 0.06), 0.05),
+  prevalence = c(0.5, 0.3, 0.2),
+  seed       = 3
+)
+identical(df3, df3b)
+#> [1] TRUE
 
 # Two independent factors (2 x 2): columns subgroup1 and subgroup2.
 # Four cells in column-major order: (1,1), (2,1), (1,2), (2,2).

@@ -48,6 +48,15 @@
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with subgroups failed when the sample size was given as a scalar <code>n</code> with <code>alloc</code> (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/2" class="external-link">#2</a>, reported by Isaac Gravestock), because a scalar <code>n</code> with a common prevalence was always treated as a single group. A scalar <code>n</code> now gives a two-group simulation when <code>alloc</code> is supplied explicitly or when a survival or dropout specification is a per-group list with per-cell elements (such as <code>list(list(0.10, 0.08, 0.06), 0.05)</code>), and the result is identical to the per-group <code>n</code> specification. Without either signal, a list with subgroups is still read as per-cell values of a single group. The rules are described in the Details of <code><a href="../reference/simdata_fast.html">?simdata_fast</a></code>. In the same area:
+<ul><li>a shared (non-list) survival or dropout specification is accepted in a two-group simulation with subgroups;</li>
+<li>lists of the wrong length are reported instead of being silently truncated or failing with “subscript out of bounds”;</li>
+<li>per-cell <code>e.time</code> and <code>d.time</code> lists are honored in a one-group simulation with subgroups;</li>
+<li>group-specific prevalence must use the same number of levels for each factor in both groups;</li>
+<li>the illness-death model also treats an explicit <code>alloc</code> as a two-group request;</li>
+<li>without subgroups, a scalar <code>n</code> with an explicit <code>alloc</code> and a shared (non-list) hazard now gives two groups sharing that hazard, where it previously gave one group of size <code>n</code> and ignored <code>alloc</code>.</li>
+</ul></li>
+<li>
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> with <code>stat = "milestone"</code>, <code>ms.method = "loglog"</code>, and <code>side = 1</code> returned the upper-tail p-value although the log-log statistic is negative under treatment benefit, so the one-sided p-value was approximately one minus the correct value. It now uses the lower tail, as <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> does.</li>
 <li>
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now reports the <code>"ahsw"</code> p-values according to <code>side</code>, as <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> does; they were always two-sided before.</li>

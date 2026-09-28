@@ -4,6 +4,33 @@
 
 ### Bug fixes
 
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  with subgroups failed when the sample size was given as a scalar `n`
+  with `alloc`
+  ([\#2](https://github.com/gosukehommaEX/FastSurvival/issues/2),
+  reported by Isaac Gravestock), because a scalar `n` with a common
+  prevalence was always treated as a single group. A scalar `n` now
+  gives a two-group simulation when `alloc` is supplied explicitly or
+  when a survival or dropout specification is a per-group list with
+  per-cell elements (such as `list(list(0.10, 0.08, 0.06), 0.05)`), and
+  the result is identical to the per-group `n` specification. Without
+  either signal, a list with subgroups is still read as per-cell values
+  of a single group. The rules are described in the Details of
+  [`?simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md).
+  In the same area:
+  - a shared (non-list) survival or dropout specification is accepted in
+    a two-group simulation with subgroups;
+  - lists of the wrong length are reported instead of being silently
+    truncated or failing with “subscript out of bounds”;
+  - per-cell `e.time` and `d.time` lists are honored in a one-group
+    simulation with subgroups;
+  - group-specific prevalence must use the same number of levels for
+    each factor in both groups;
+  - the illness-death model also treats an explicit `alloc` as a
+    two-group request;
+  - without subgroups, a scalar `n` with an explicit `alloc` and a
+    shared (non-list) hazard now gives two groups sharing that hazard,
+    where it previously gave one group of size `n` and ignored `alloc`.
 - [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
   with `stat = "milestone"`, `ms.method = "loglog"`, and `side = 1`
   returned the upper-tail p-value although the log-log statistic is

@@ -121,8 +121,9 @@ is a per-arm vector, <code>alloc</code> is ignored.</p></dd>
 
 
 <dt id="arg-alloc">alloc<a class="anchor" aria-label="anchor" href="#arg-alloc"></a></dt>
-<dd><p>A length-two allocation ratio, used when <code>n</code> is scalar.
-The total is split in proportion to <code>alloc</code> and any rounding
+<dd><p>A length-two allocation ratio (control, treatment), used when
+<code>n</code> is scalar. Supplying it explicitly requests a two-group
+simulation (see Details). The total is split in proportion to <code>alloc</code> and any rounding
 remainder goes to the group with the larger fractional share, so the two
 group sizes always add up to <code>n</code>.</p></dd>
 
@@ -150,8 +151,11 @@ period must be fully specified by <code>a.time</code>. Supply exactly one of
 
 
 <dt id="arg-e-hazard">e.hazard<a class="anchor" aria-label="anchor" href="#arg-e-hazard"></a></dt>
-<dd><p>Survival hazard(s). A scalar or vector for one group, or a
-two-element list for two groups; per-cell lists are used with subgroups.</p></dd>
+<dd><p>Survival hazard(s). A scalar or vector (piecewise, with
+<code>e.time</code>) shared by all groups and cells, a two-element list for two
+groups, or, with subgroups, a per-cell list (for one group, or as an
+element of the two-element list). See Details for how the number of
+groups is determined.</p></dd>
 
 
 <dt id="arg-e-median">e.median<a class="anchor" aria-label="anchor" href="#arg-e-median"></a></dt>
@@ -310,11 +314,29 @@ two-element list (control first, treatment second).</p>
 defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
 distribution of correlated factors. Per-cell hazards may be supplied as a
-list with one element per cell. With <code>fixed.alloc = TRUE</code> the subgroup
+list with one element per cell (cells in column-major order, the first
+factor varying fastest). With <code>fixed.alloc = TRUE</code> the subgroup
 sizes are deterministic and the fixed labels are assigned to subjects in a
 random order within each simulated trial, so subgroup membership does not
 depend on the accrual time; otherwise subgroup membership is drawn from the
 prevalence distribution.</p>
+<p>The number of groups is determined as follows. A length-two <code>n</code> always
+gives two groups. A scalar <code>n</code> gives two groups, with the total split
+by <code>alloc</code>, in any of these cases: <code>alloc</code> is supplied explicitly;
+the prevalence is group-specific; without subgroups, any of <code>e.hazard</code>,
+<code>e.median</code>, <code>d.hazard</code>, and <code>d.median</code> is a list; with
+subgroups, one of them is a length-two list with a list element (per-cell
+values within a group, as in <code>list(list(0.10, 0.08, 0.06), 0.05)</code>).
+Otherwise a scalar <code>n</code> gives one group, and with subgroups a list is
+read as one element per cell of that group. So with subgroups and a scalar
+<code>n</code>, <code>e.hazard = list(0.10, 0.05)</code> means per-cell hazards of a
+single group unless <code>alloc</code> is supplied, in which case it means
+per-group hazards. In a two-group simulation each specification is either
+shared by both groups (not a list) or a list of length two (control first),
+and each group's element may be a per-cell list when there are subgroups.
+The breakpoints <code>e.time</code> and <code>d.time</code> follow the same structure
+(per group in a two-group simulation, per cell in a one-group simulation with
+subgroups).</p>
 <p>When <code>n</code> is a vector of length greater than two together with a per-arm
 survival list, the simulation is a multi-arm trial. Each arm is generated in
 turn with the validated single-group kernel over a common accrual window, and
@@ -434,6 +456,20 @@ subgroups or the illness-death model, which remain two-group.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4      13.55992</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5      49.23827</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6      20.57458</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same trial specified by the total sample size and the allocation ratio</span></span></span>
+<span class="r-in"><span><span class="va">df3b</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  nsim       <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>  n          <span class="op">=</span> <span class="fl">300</span>,</span></span>
+<span class="r-in"><span>  alloc      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.time     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.rate     <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  e.hazard   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.10</span>, <span class="fl">0.08</span>, <span class="fl">0.06</span><span class="op">)</span>, <span class="fl">0.05</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  prevalence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.3</span>, <span class="fl">0.2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  seed       <span class="op">=</span> <span class="fl">3</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">df3</span>, <span class="va">df3b</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Two independent factors (2 x 2): columns subgroup1 and subgroup2.</span></span></span>
 <span class="r-in"><span><span class="co"># Four cells in column-major order: (1,1), (2,1), (1,2), (2,2).</span></span></span>
