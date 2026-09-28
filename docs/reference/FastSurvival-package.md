@@ -44,7 +44,8 @@ Estimation and testing:
   Closed-form hazard ratio estimator via the Pike-Halley Estimator
   method, with Wald confidence interval. The estimator anchors at the
   Pike estimate and applies a single analytic Halley correction to the
-  Cox partial likelihood score.
+  Cox partial likelihood score. A stratified version approximates the
+  stratified Cox model.
 
 - [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md):
 

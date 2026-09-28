@@ -75,7 +75,8 @@ accumulation in a single C++ pass without intermediate R-level vector copies.</p
 <span>  <span class="va">control</span>,</span>
 <span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  strata <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -119,8 +120,18 @@ level for the Wald interval. Defaults to 0.95.</p></dd>
 <dt id="arg-presorted">presorted<a class="anchor" aria-label="anchor" href="#arg-presorted"></a></dt>
 <dd><p>A logical value. If <code>TRUE</code>, <code>time</code>,
 <code>event</code>, and <code>group</code> are assumed to be already sorted in
-ascending order of <code>time</code>, and the internal <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> call is
-skipped. If <code>FALSE</code> (default), sorting is handled internally.</p></dd>
+ascending order of <code>time</code> (with <code>strata</code>, sorted by stratum
+and by time within stratum, so that the rows of each stratum are
+contiguous), and the internal <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> call is skipped. If
+<code>FALSE</code> (default), sorting is handled internally.</p></dd>
+
+
+<dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
+<dd><p>An optional vector of stratum labels aligned with
+<code>time</code>, without missing values. When supplied, the stratified
+estimator described in Details is computed. Several stratification
+factors can be combined with <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>. <code>NULL</code> (default)
+gives the unstratified estimator.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -147,7 +158,9 @@ skipped. If <code>FALSE</code> (default), sorting is handled internally.</p></dd
 <dd><p>Upper bound of the Wald confidence interval.</p></dd>
 
 
-</dl><p>Returns a vector of <code>NA_real_</code> values (still with class
+</dl><p>With <code>strata</code>, the number of strata is stored in the attribute
+<code>strata</code>.
+Returns a vector of <code>NA_real_</code> values (still with class
 <code>"coxph_fast"</code>) when the estimate cannot be computed (e.g., no
 events, all events in one group, or <code>I_0 = 0</code>).</p>
     </div>
@@ -182,6 +195,18 @@ the maximum likelihood estimate. Because the Pike anchor lies within
 O_p(n^{-1/2}) of the Cox maximum likelihood estimate, the difference
 between I_0 and the information at the maximum likelihood estimate is
 negligible for the purpose of interval construction.</p>
+<p>With <code>strata</code>, the estimator targets the stratified Cox model, in which
+each stratum has its own baseline hazard and the hazard ratio is common to
+all strata. The at-risk sets are formed within each stratum, the observed
+and expected totals O_T, O_C, E_T, and E_C are summed over strata to give
+the stratified Pike anchor, and U_0, I_0, and J_0 are those of the
+stratified Breslow partial likelihood (sums of the per-stratum terms). The
+Halley correction and the Wald interval are then applied unchanged, so the
+result approximates <code>coxph(Surv(time, event) ~ group + strata(s),
+ties = "breslow")</code>. With a fixed number of strata the approximation error
+shrinks at the same rate as in the unstratified case; it is larger when the
+strata are small and the hazard ratio is far from 1, because the stratified
+anchor is then further from the maximum likelihood estimate.</p>
 <p>The C++ core (<code>pihe_core</code>) accepts the pooled sorted data together
 with an integer group indicator and performs group splitting, at-risk
 counting, and per-distinct-event-time accumulation in a single left-to-right
@@ -237,6 +262,26 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"coxph      HR :"</span>, <span class="va">fit_cox</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="st">"exp(coef)"</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> coxph      HR : 0.5508019 </span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Stratified by residual disease, compared with coxph(... + strata())</span></span></span>
+<span class="r-in"><span><span class="fu">coxph_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>           strata <span class="op">=</span> <span class="va">ovarian</span><span class="op">$</span><span class="va">resid.ds</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stratified Pike-Halley estimator for the hazard ratio (two-group, 2 strata)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          coef exp(coef) se(coef)      z Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.6626    0.5155   0.5945 -1.115    0.265</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hazard ratio and 95% Wald confidence interval:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5155     1.9399    0.1608    1.6529</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">resid.ds</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span>,</span></span>
+<span class="r-in"><span>           ties <span class="op">=</span> <span class="st">"breslow"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        rx </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -0.662632 </span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># presorted = TRUE: sort once outside, reuse inside a loop</span></span></span>
 <span class="r-in"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">coxph_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>,</span></span>
@@ -264,9 +309,9 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq      mean    median        uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   34.001  120.3515  191.0488  159.8505  196.7005  12307.5  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1124.201 2842.3515 4000.6381 3251.6510 3833.2515 115955.2  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min     lq      mean  median      uq     max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   36.4  102.5  162.5023  140.75  184.35  2012.4  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1090.3 2350.1 3346.5489 2875.95 3559.30 34167.5  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

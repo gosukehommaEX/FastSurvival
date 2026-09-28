@@ -19,7 +19,8 @@ coxph_fast(
   control,
   side = 2,
   conf.level = 0.95,
-  presorted = FALSE
+  presorted = FALSE,
+  strata = NULL
 )
 ```
 
@@ -61,9 +62,19 @@ coxph_fast(
 - presorted:
 
   A logical value. If `TRUE`, `time`, `event`, and `group` are assumed
-  to be already sorted in ascending order of `time`, and the internal
+  to be already sorted in ascending order of `time` (with `strata`,
+  sorted by stratum and by time within stratum, so that the rows of each
+  stratum are contiguous), and the internal
   [`order()`](https://rdrr.io/r/base/order.html) call is skipped. If
   `FALSE` (default), sorting is handled internally.
+
+- strata:
+
+  An optional vector of stratum labels aligned with `time`, without
+  missing values. When supplied, the stratified estimator described in
+  Details is computed. Several stratification factors can be combined
+  with [`interaction()`](https://rdrr.io/r/base/interaction.html).
+  `NULL` (default) gives the unstratified estimator.
 
 ## Value
 
@@ -93,6 +104,7 @@ length 5 with elements matching the column names of
 
   Upper bound of the Wald confidence interval.
 
+With `strata`, the number of strata is stored in the attribute `strata`.
 Returns a vector of `NA_real_` values (still with class `"coxph_fast"`)
 when the estimate cannot be computed (e.g., no events, all events in one
 group, or `I_0 = 0`).
@@ -133,6 +145,20 @@ maximum likelihood estimate. Because the Pike anchor lies within
 O_p(n^{-1/2}) of the Cox maximum likelihood estimate, the difference
 between I_0 and the information at the maximum likelihood estimate is
 negligible for the purpose of interval construction.
+
+With `strata`, the estimator targets the stratified Cox model, in which
+each stratum has its own baseline hazard and the hazard ratio is common
+to all strata. The at-risk sets are formed within each stratum, the
+observed and expected totals O_T, O_C, E_T, and E_C are summed over
+strata to give the stratified Pike anchor, and U_0, I_0, and J_0 are
+those of the stratified Breslow partial likelihood (sums of the
+per-stratum terms). The Halley correction and the Wald interval are then
+applied unchanged, so the result approximates
+`coxph(Surv(time, event) ~ group + strata(s), ties = "breslow")`. With a
+fixed number of strata the approximation error shrinks at the same rate
+as in the unstratified case; it is larger when the strata are small and
+the hazard ratio is far from 1, because the stratified anchor is then
+further from the maximum likelihood estimate.
 
 The C++ core (`pihe_core`) accepts the pooled sorted data together with
 an integer group indicator and performs group splitting, at-risk
@@ -195,6 +221,26 @@ cat("coxph_fast HR :", fit_fast["exp(coef)"], "\n")
 cat("coxph      HR :", fit_cox$coefficients[, "exp(coef)"], "\n")
 #> coxph      HR : 0.5508019 
 
+# Stratified by residual disease, compared with coxph(... + strata())
+coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1,
+           strata = ovarian$resid.ds)
+#> Stratified Pike-Halley estimator for the hazard ratio (two-group, 2 strata)
+#> 
+#>   control = 1
+#>   alternative = two.sided
+#> 
+#> Coefficients:
+#>          coef exp(coef) se(coef)      z Pr(>|z|)
+#> group -0.6626    0.5155   0.5945 -1.115    0.265
+#> 
+#> Hazard ratio and 95% Wald confidence interval:
+#>       exp(coef) exp(-coef) lower .95 upper .95
+#> group    0.5155     1.9399    0.1608    1.6529
+coef(coxph(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian,
+           ties = "breslow"))
+#>        rx 
+#> -0.662632 
+
 # presorted = TRUE: sort once outside, reuse inside a loop
 ord <- order(ovarian$futime)
 coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
@@ -222,8 +268,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min        lq      mean    median        uq      max neval cld
-#>  coxph_fast   34.001  120.3515  191.0488  159.8505  196.7005  12307.5  1000  a 
-#>       coxph 1124.201 2842.3515 4000.6381 3251.6510 3833.2515 115955.2  1000   b
+#>        expr    min     lq      mean  median      uq     max neval cld
+#>  coxph_fast   36.4  102.5  162.5023  140.75  184.35  2012.4  1000  a 
+#>       coxph 1090.3 2350.1 3346.5489 2875.95 3559.30 34167.5  1000   b
 # }
 ```
