@@ -89,9 +89,13 @@ When `S(t_eval) = 0` (all subjects have experienced the event by
 collapses to `[0, 0]`, consistent with
 [`survfit`](https://rdrr.io/pkg/survival/man/survfit.html).
 
-When `presorted = TRUE` (default), `t_sorted` and `e_sorted` are assumed
-to be sorted in ascending order of time. When `presorted = FALSE`, the
-vectors are sorted internally before computation.
+When `presorted = TRUE` (default), `t_sorted` and `e_sorted` are
+expected to be sorted in ascending order of time; the order is checked
+(a linear-time test) and an error is raised for unsorted input. When
+`presorted = FALSE`, the vectors are sorted internally before
+computation. When the standard error is zero (for example `S(t) = 1`
+before the first event), the confidence interval collapses to the
+estimate.
 
 Three confidence interval types are supported via `conf.type`:
 
@@ -100,7 +104,8 @@ Three confidence interval types are supported via `conf.type`:
 
 - `"log"`: Interval on the log scale (default in
   [`survfit`](https://rdrr.io/pkg/survival/man/survfit.html)), S(t) \*
-  exp(+/- z \* SE / S(t)).
+  exp(+/- z \* SE / S(t)). The upper bound is capped at 1, as in
+  [`survfit`](https://rdrr.io/pkg/survival/man/survfit.html).
 
 - `"log-log"`: Interval on the complementary log-log scale, S(t)^exp(+/-
   z \* SE / (S(t) \* log(S(t)))).

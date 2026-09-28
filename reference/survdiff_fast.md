@@ -88,7 +88,7 @@ survdiff_fast(
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
   log-rank test of Magirr and Burman with weight
-  `1 / max(S(t-), S(t_star))`. `"gehan"` is the Gehan-Breslow test with
+  `1 / max(S(t-), S(t_star-))`. `"gehan"` is the Gehan-Breslow test with
   weight equal to the at-risk count, and `"tarone-ware"` uses the square
   root of the at-risk count. Here `S(t-)` is the left-continuous pooled
   Kaplan-Meier estimate just prior to each event time.
@@ -109,9 +109,10 @@ survdiff_fast(
 
   A single non-negative numeric value, the timepoint of the
   modestly-weighted log-rank test. Required only when
-  `weight = "mwlrt"`. The weight is capped at `1 / S(t_star)`, where
-  `S(t_star)` is the pooled Kaplan-Meier value at `t_star`. A value of 0
-  yields the ordinary log-rank test.
+  `weight = "mwlrt"`. The weight is capped at `1 / S(t_star-)`, where
+  `S(t_star-)` is the pooled Kaplan-Meier value just before `t_star`
+  (the product over event times strictly less than `t_star`, as in
+  nphRCT). A value of 0 yields the ordinary log-rank test.
 
 ## Value
 
@@ -339,8 +340,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min      lq      mean  median      uq       max neval cld
-#>  survdiff_fast  35.834  41.346  50.85778  52.398  57.631   178.766  1000  a 
-#>       survdiff 785.139 830.917 892.06028 846.325 870.135 10960.674  1000   b
+#>           expr     min       lq      mean   median       uq      max neval cld
+#>  survdiff_fast  27.134  39.0490  55.54236  52.7875  60.9855 5436.837  1000  a 
+#>       survdiff 611.380 654.3215 709.50790 671.4735 696.5715 9290.066  1000   b
 # }
 ```

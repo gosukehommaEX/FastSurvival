@@ -62,7 +62,10 @@ simdata_fast(
 
 - alloc:
 
-  A length-two allocation ratio, used when `n` is scalar.
+  A length-two allocation ratio, used when `n` is scalar. The total is
+  split in proportion to `alloc` and any rounding remainder goes to the
+  group with the larger fractional share, so the two group sizes always
+  add up to `n`.
 
 - a.time:
 
@@ -162,7 +165,9 @@ simdata_fast(
   Transition hazard(s) for the terminal event after an intermediate
   event (state 1 to state 2) for subjects who do not switch. Defaults to
   `h02.hazard`, which gives the Fleischer maximal-independence model
-  (Fleischer Theorem 1 when there is no switching).
+  (Fleischer Theorem 1 when there is no switching and the hazards are
+  constant; with a piecewise `h02.hazard` the clock-reset `h12` restarts
+  the piecewise profile at the intermediate event).
 
 - h12.median:
 
@@ -242,8 +247,10 @@ defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
 distribution of correlated factors. Per-cell hazards may be supplied as
 a list with one element per cell. With `fixed.alloc = TRUE` the subgroup
-sizes are deterministic; otherwise subgroup membership is drawn from the
-prevalence distribution.
+sizes are deterministic and the fixed labels are assigned to subjects in
+a random order within each simulated trial, so subgroup membership does
+not depend on the accrual time; otherwise subgroup membership is drawn
+from the prevalence distribution.
 
 When `n` is a vector of length greater than two together with a per-arm
 survival list, the simulation is a multi-arm trial. Each arm is

@@ -23,7 +23,7 @@ through the joint distribution."><meta property="og:image" content="https://gosu
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -217,13 +217,14 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Standard four-weight max-combo, one-sided</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                     side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">[</span><span class="st">"statistic"</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> statistic </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.298019 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -1.298019 </span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">[</span><span class="st">"p.value"</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   p.value </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3022772 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.1511405 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Two-sided test</span></span></span>
 <span class="r-in"><span><span class="fu">maxcombo_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>

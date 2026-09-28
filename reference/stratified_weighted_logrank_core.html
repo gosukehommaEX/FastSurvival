@@ -25,7 +25,7 @@ survdiff_fast() with both weight and strata instead."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -140,8 +140,9 @@ first and by ascending time within each stratum.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The scheme codes match <code>weighted_logrank_core</code>: 0 = Fleming-Harrington
-G(rho, gamma); 1 = modestly-weighted with cap <code>1 / S(t_star)</code> computed
-within each stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The left-continuous
+G(rho, gamma); 1 = modestly-weighted with cap <code>1 / S(t_star-)</code>, the
+pooled Kaplan-Meier value just before <code>t_star</code>, computed within each
+stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The left-continuous
 pooled Kaplan-Meier estimate is restarted at 1 at the beginning of every
 stratum, so the weights of each stratum depend only on that stratum's
 pooled data. For the modestly-weighted scheme the weight cap is determined

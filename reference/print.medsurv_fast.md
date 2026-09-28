@@ -52,11 +52,11 @@ print(medsurv_fast(time, status, group, control = 0))
 #>   method = km,  alternative = two.sided
 #> 
 #>            median std.err lower 95% upper 95%
-#> control    7.5518  1.3257    5.3533   10.6532
-#> treatment 11.6195  1.9604    8.3480   16.1732
+#> control    7.5861  1.3184    5.3961   10.6648
+#> treatment 11.6279  1.9602    8.3561   16.1806
 #> 
 #>                                     Est. lower 95% upper 95%     z Pr(>|z|)  
-#> difference (treatment - control)  4.0677   -0.5706    8.7061 1.719   0.0856 .
+#> difference (treatment - control)  4.0418   -0.5883    8.6720 1.711   0.0871 .
 #> ---
 #> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 ```

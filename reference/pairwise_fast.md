@@ -119,7 +119,9 @@ and caps it at one, controlling the family-wise error rate across the
 control-versus-arm comparisons at each look. Multiplicity across looks
 is a separate matter handled by group-sequential boundaries in
 [`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md),
-not by this adjustment.
+not by this adjustment. Because `simsummary_fast` expects one row per
+simulation and look, apply it to the rows of one arm at a time (for
+example `pw[pw$arm == 2, ]`).
 
 This is a single-endpoint helper: it reads the `tte` and `event` columns
 and does not support subgroups. Comparisons for a second endpoint are
@@ -168,17 +170,17 @@ pw2 <- pairwise_fast(dfk, control = 1, event.looks = 200, primary = 3,
                      stat = "logrank", side = 1, adjust = "bonferroni")
 head(pw2)
 #>   arm sim look look.value   cutoff reached n.enrolled n.event n.dropout
-#> 1   2   1    1        200 45.50440    TRUE        240     210        30
-#> 2   2   2    1        200 47.69751    TRUE        240     208        32
-#> 3   2   3    1        200 45.98303    TRUE        240     210        30
-#> 4   2   4    1        200 44.93080    TRUE        240     210        30
-#> 5   2   5    1        200 43.31435    TRUE        240     209        31
-#> 6   2   6    1        200 55.37777    TRUE        240     220        20
+#> 1   2   1    1        200 45.50440    TRUE        240     210         0
+#> 2   2   2    1        200 47.69751    TRUE        240     208         0
+#> 3   2   3    1        200 45.98303    TRUE        240     210         0
+#> 4   2   4    1        200 44.93080    TRUE        240     210         0
+#> 5   2   5    1        200 43.31435    TRUE        240     209         0
+#> 6   2   6    1        200 55.37777    TRUE        240     220         0
 #>   n.pipeline  logrank.z logrank.chisq  logrank.p      p.adj
-#> 1          0 -1.6385354     2.6847984 0.05065502 0.10131005
-#> 2          0 -2.5714433     6.6123205 0.00506378 0.01012756
-#> 3          0 -1.1258351     1.2675046 0.13011767 0.26023534
-#> 4          0 -1.7611765     3.1017428 0.03910426 0.07820853
-#> 5          0 -0.3822314     0.1461008 0.35114487 0.70228974
-#> 6          0 -1.3978726     1.9540478 0.08107566 0.16215132
+#> 1         30 -1.6385354     2.6847984 0.05065502 0.10131005
+#> 2         32 -2.5714433     6.6123205 0.00506378 0.01012756
+#> 3         30 -1.1258351     1.2675046 0.13011767 0.26023534
+#> 4         30 -1.7611765     3.1017428 0.03910426 0.07820853
+#> 5         31 -0.3822314     0.1461008 0.35114487 0.70228974
+#> 6         20 -1.3978726     1.9540478 0.08107566 0.16215132
 ```

@@ -19,7 +19,7 @@ computations are implemented in C++ via Rcpp."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,10 +69,12 @@ computations are implemented in C++ via <span class="pkg">Rcpp</span>.</p>
 
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The estimation and testing functions return S3-class objects that are
+    <p>Most estimation and testing functions return S3-class objects that are
 internally named numeric vectors, so a result can be used directly in
 arithmetic, subsetting, and aggregation after stripping the class with
-<code><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></code>. Each class has a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that
+<code><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></code>. The exceptions are <code><a href="milestone_fast.html">milestone_fast</a></code>
+and <code><a href="ahr_fast.html">ahr_fast</a></code>, which return named lists whose elements are
+extracted with <code>$</code>. Each class has a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that
 formats the result similarly to the corresponding <span class="pkg">survival</span> package
 output.</p>
 <p>Estimation and testing:</p><dl><dt><code><a href="survfit_fast.html">survfit_fast</a></code></dt>

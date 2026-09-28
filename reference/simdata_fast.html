@@ -21,7 +21,7 @@ reference implementation, so results are reproducible from seed."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,7 +121,10 @@ is a per-arm vector, <code>alloc</code> is ignored.</p></dd>
 
 
 <dt id="arg-alloc">alloc<a class="anchor" aria-label="anchor" href="#arg-alloc"></a></dt>
-<dd><p>A length-two allocation ratio, used when <code>n</code> is scalar.</p></dd>
+<dd><p>A length-two allocation ratio, used when <code>n</code> is scalar.
+The total is split in proportion to <code>alloc</code> and any rounding
+remainder goes to the group with the larger fractional share, so the two
+group sizes always add up to <code>n</code>.</p></dd>
 
 
 <dt id="arg-a-time">a.time<a class="anchor" aria-label="anchor" href="#arg-a-time"></a></dt>
@@ -225,7 +228,10 @@ conventions as <code>h01.hazard</code>.</p></dd>
 <dd><p>Transition hazard(s) for the terminal event after an
 intermediate event (state 1 to state 2) for subjects who do not switch.
 Defaults to <code>h02.hazard</code>, which gives the Fleischer
-maximal-independence model (Fleischer Theorem 1 when there is no switching).</p></dd>
+maximal-independence model (Fleischer Theorem 1 when there is no switching
+and the hazards are constant; with a piecewise <code>h02.hazard</code> the
+clock-reset <code>h12</code> restarts the piecewise profile at the intermediate
+event).</p></dd>
 
 
 <dt id="arg-h-median">h12.median<a class="anchor" aria-label="anchor" href="#arg-h-median"></a></dt>
@@ -305,7 +311,9 @@ defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
 distribution of correlated factors. Per-cell hazards may be supplied as a
 list with one element per cell. With <code>fixed.alloc = TRUE</code> the subgroup
-sizes are deterministic; otherwise subgroup membership is drawn from the
+sizes are deterministic and the fixed labels are assigned to subjects in a
+random order within each simulated trial, so subgroup membership does not
+depend on the accrual time; otherwise subgroup membership is drawn from the
 prevalence distribution.</p>
 <p>When <code>n</code> is a vector of length greater than two together with a per-arm
 survival list, the simulation is a multi-arm trial. Each arm is generated in

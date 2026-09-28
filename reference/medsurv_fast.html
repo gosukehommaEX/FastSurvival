@@ -17,7 +17,7 @@ C++."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSur
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -145,8 +145,12 @@ skip the internal sort. Defaults to <code>FALSE</code>.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The median in each group is the first event time at which the Kaplan-Meier
-estimate drops to 0.5 or below, matching the convention used by
-<code>survfit</code>. The point estimate is the same for both variance methods.</p>
+estimate drops to 0.5 or below. When the estimate equals 0.5 exactly over an
+interval, the midpoint of that interval is returned (the next event time, or
+the last observed time when no later event exists, closes the interval). This
+is the convention used by <code>survfit</code>, including its tolerance of
+<code>sqrt(.Machine$double.eps)</code> when comparing the estimate with 0.5. The
+point estimate is the same for both variance methods.</p>
 <p>Two variance methods are available through the <code>method</code> argument. With
 <code>method = "km"</code> the variance of the estimated median follows the
 counting process delta method, var(median) = greenwood_sum / hazard^2, where

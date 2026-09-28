@@ -10,12 +10,17 @@ clinical trials. Core computations are implemented in C++ via Rcpp.
 
 ## Details
 
-The estimation and testing functions return S3-class objects that are
+Most estimation and testing functions return S3-class objects that are
 internally named numeric vectors, so a result can be used directly in
 arithmetic, subsetting, and aggregation after stripping the class with
-[`unclass`](https://rdrr.io/r/base/class.html). Each class has a
-[`print()`](https://rdrr.io/r/base/print.html) method that formats the
-result similarly to the corresponding survival package output.
+[`unclass`](https://rdrr.io/r/base/class.html). The exceptions are
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+and
+[`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+which return named lists whose elements are extracted with `$`. Each
+class has a [`print()`](https://rdrr.io/r/base/print.html) method that
+formats the result similarly to the corresponding survival package
+output.
 
 Estimation and testing:
 

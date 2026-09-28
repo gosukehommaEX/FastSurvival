@@ -76,10 +76,10 @@ weighted numerator, and V is the summed weighted variance.
 ## Details
 
 The scheme codes match `weighted_logrank_core`: 0 = Fleming-Harrington
-G(rho, gamma); 1 = modestly-weighted with cap `1 / S(t_star)` computed
-within each stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The
-left-continuous pooled Kaplan-Meier estimate is restarted at 1 at the
-beginning of every stratum, so the weights of each stratum depend only
-on that stratum's pooled data. For the modestly-weighted scheme the
-weight cap is determined in a first pass within each stratum before
-accumulation.
+G(rho, gamma); 1 = modestly-weighted with cap `1 / S(t_star-)`, the
+pooled Kaplan-Meier value just before `t_star`, computed within each
+stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The left-continuous pooled
+Kaplan-Meier estimate is restarted at 1 at the beginning of every
+stratum, so the weights of each stratum depend only on that stratum's
+pooled data. For the modestly-weighted scheme the weight cap is
+determined in a first pass within each stratum before accumulation.

@@ -27,7 +27,7 @@ error and converge as the number of simulations grows."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -205,6 +205,12 @@ This is the stage-wise rejection contribution of a group-sequential design; the
 cumulative sum <code>cum.reject</code> is the cumulative power up to and including
 that look, and the total over all looks is <code>rejection.rate</code>. These are the
 same quantities that gsDesign and rpact report, estimated here by simulation.</p>
+<p>A simulation whose event target was not reached at a look (<code>reached =
+FALSE</code> in <code><a href="analysis_fast.html">analysis_fast</a></code> output) carries the statistics of its
+final data and an <code>NA</code> cutoff at that look. Its statistics are compared
+with the boundary like any other, and it is left out of <code>cutoff.mean</code>
+(the mean over the simulations with a finite cutoff) but not out of the
+count means.</p>
 <p>The rejection rate is the type I error under a null data-generating truth and
 the power under an alternative truth, but because the function does not know the
 truth used to generate <code>data</code> it is reported neutrally as the rejection

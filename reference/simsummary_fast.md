@@ -145,6 +145,14 @@ cumulative power up to and including that look, and the total over all
 looks is `rejection.rate`. These are the same quantities that gsDesign
 and rpact report, estimated here by simulation.
 
+A simulation whose event target was not reached at a look
+(`reached = FALSE` in
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+output) carries the statistics of its final data and an `NA` cutoff at
+that look. Its statistics are compared with the boundary like any other,
+and it is left out of `cutoff.mean` (the mean over the simulations with
+a finite cutoff) but not out of the count means.
+
 The rejection rate is the type I error under a null data-generating
 truth and the power under an alternative truth, but because the function
 does not know the truth used to generate `data` it is reported neutrally
