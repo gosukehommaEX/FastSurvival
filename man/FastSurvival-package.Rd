@@ -39,7 +39,8 @@ Estimation and testing:
   \item{\code{\link{coxph_fast}}}{Closed-form hazard ratio estimator via
     the Pike-Halley Estimator method, with Wald confidence interval. The
     estimator anchors at the Pike estimate and applies a single analytic
-    Halley correction to the Cox partial likelihood score.}
+    Halley correction to the Cox partial likelihood score. A stratified
+    version approximates the stratified Cox model.}
   \item{\code{\link{rmst_fast}}}{Restricted mean survival time for a single
     group or a two-group comparison, with difference and ratio contrasts.}
   \item{\code{\link{wmst_fast}}}{Window mean survival time over an

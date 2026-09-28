@@ -219,6 +219,35 @@ pihe_core <- function(time_sorted, event_sorted, j_sorted) {
     .Call(`_FastSurvival_pihe_core`, time_sorted, event_sorted, j_sorted)
 }
 
+#' Core stratified PiHE hazard ratio computation (C++ backend)
+#'
+#' @description
+#' Internal C++ function that computes the quantities of the stratified
+#' Pike-Halley Estimator. The at-risk sets are restarted in every stratum and
+#' the observed and expected event totals, the score, the information, and
+#' the curvature term are summed over strata, which gives the Pike anchor and
+#' its Halley correction for the stratified Breslow partial likelihood. Not
+#' intended to be called directly by users; use \code{coxph_fast()} with
+#' \code{strata} instead.
+#'
+#' @param time_sorted A numeric vector of pooled follow-up times, sorted by
+#'   stratum and in ascending order of time within stratum.
+#' @param event_sorted An integer vector of event indicators (1 = event,
+#'   0 = censored), aligned with \code{time_sorted}.
+#' @param j_sorted An integer vector of group indicators (1 = treatment,
+#'   0 = control), aligned with \code{time_sorted}.
+#' @param strata_sorted An integer vector of stratum codes aligned with
+#'   \code{time_sorted}; rows of the same stratum must be contiguous.
+#'
+#' @return A numeric vector of length 4: \code{c(theta_0, U_0, I_0, J_0)}.
+#'   Returns a length-4 vector of \code{NA_real_} when the estimate cannot
+#'   be computed.
+#'
+#' @keywords internal
+pihe_core_strat <- function(time_sorted, event_sorted, j_sorted, strata_sorted) {
+    .Call(`_FastSurvival_pihe_core_strat`, time_sorted, event_sorted, j_sorted, strata_sorted)
+}
+
 #' Core restricted mean survival time computation (C++ backend)
 #'
 #' @description

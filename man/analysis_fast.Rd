@@ -105,10 +105,11 @@ modestly-weighted log-rank test. Required only when \code{weight =
 
 \item{strata}{An optional character vector naming one or more subgroup
 columns of \code{data} to use as the stratification variable for the
-\code{"logrank"} statistic. \code{NULL} (default) gives the unstratified
-test. When several columns are named their interaction defines the strata.
-Stratification applies only to the \code{"logrank"} statistic; the other
-statistics ignore it.}
+\code{"logrank"} and \code{"coxph"} statistics. \code{NULL} (default)
+gives the unstratified analyses. When several columns are named their
+interaction defines the strata. The columns must not contain missing
+values. Stratification applies only to the \code{"logrank"} and
+\code{"coxph"} statistics; the other statistics ignore it.}
 
 \item{ms.method}{A character string naming the inference method for the
 \code{"milestone"} statistic, one of \code{"wald"} (default),
@@ -266,7 +267,10 @@ stratification variable. The stratification is determined on the whole cut
 data, independently of the \code{population} marginalization, so a stratified
 overall analysis is the canonical primary test; in a single-subgroup
 population the stratum is constant and the stratified test degenerates to the
-ordinary one within that subset.
+ordinary one within that subset. The same \code{strata} also stratify the
+\code{"coxph"} statistic, which is then the stratified Pike-Halley estimate
+of \code{\link{coxph_fast}} (a common hazard ratio with a separate baseline
+hazard in each stratum).
 
 The \code{"maxcombo"} statistic is the max-combo test of \code{mc.rho} and
 \code{mc.gamma} Fleming-Harrington weights. Its \code{maxcombo.stat} is the
@@ -366,9 +370,9 @@ df <- simdata_fast(
 res1 <- analysis_fast(df, control = 1, event.looks = c(80, 140))
 head(res1)
 
-# Stratified log-rank on the subgroup factor
+# Stratified log-rank and stratified Cox on the subgroup factor
 res2 <- analysis_fast(df, control = 1, time.looks = 24,
-                      stat = "logrank", strata = "subgroup")
+                      stat = c("logrank", "coxph"), strata = "subgroup")
 head(res2)
 
 # Fleming-Harrington G(0, 1) weighted log-rank for delayed effects

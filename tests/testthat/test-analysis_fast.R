@@ -387,3 +387,23 @@ test_that("analysis_fast handles factor and character subgroup columns", {
   expect_equal(res_c$n.enrolled, ref$n.enrolled)
   expect_equal(res_c$logrank.z, ref$logrank.z)
 })
+
+test_that("analysis_fast stratified coxph matches coxph_fast with strata", {
+  dat <- simdata_fast(nsim = 4, n = c(150, 150), a.time = c(0, 12),
+                      a.prop = 1,
+                      e.hazard = list(list(0.10, 0.05), list(0.07, 0.035)),
+                      prevalence = c(0.5, 0.5), seed = 707)
+  # A very late calendar look leaves the data uncut.
+  res <- analysis_fast(dat, control = 1, time.looks = 1e6,
+                       stat = c("logrank", "coxph"), strata = "subgroup")
+  for (s in 1:4) {
+    d  <- dat[dat$sim == s, ]
+    cx <- coxph_fast(d$tte, d$event, d$group, control = 1,
+                     strata = d$subgroup)
+    expect_equal(res$cox.coef[s], unname(cx["coef"]), tolerance = 1e-10)
+    expect_equal(res$cox.se[s], unname(cx["se(coef)"]), tolerance = 1e-10)
+    lr <- survdiff_fast(d$tte, d$event, d$group, control = 1, side = 1,
+                        strata = d$subgroup)
+    expect_equal(res$logrank.z[s], as.numeric(lr), tolerance = 1e-10)
+  }
+})

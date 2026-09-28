@@ -1,5 +1,15 @@
 # FastSurvival (development version)
 
+## New features
+
+* `coxph_fast()` gains a `strata` argument for a stratified Pike-Halley
+  estimate of a common hazard ratio with a separate baseline hazard in each
+  stratum (#1, suggested by Isaac Gravestock). The risk sets are formed within
+  each stratum, and the observed and expected totals, the score, the
+  information, and the curvature term are summed over strata, so the result
+  approximates `coxph(... + strata(s), ties = "breslow")`. The `strata`
+  argument of `analysis_fast()` now also stratifies `stat = "coxph"`.
+
 ## Bug fixes
 
 * `simdata_fast()` with subgroups failed when the sample size was given as a
