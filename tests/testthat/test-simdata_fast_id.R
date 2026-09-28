@@ -227,3 +227,11 @@ test_that("simdata_fast (illness-death): a per-group dropout list gives two grou
   expect_equal(sort(unique(dat$group)), c(1, 2))
   expect_equal(nrow(dat), 200)
 })
+
+test_that("simdata_fast (illness-death): scalar n with alloc gives two groups", {
+  dat <- simdata_fast(nsim = 2, n = 100, alloc = c(1, 1), a.time = c(0, 10),
+                      a.rate = 10, h01.hazard = 0.1, h02.hazard = 0.05,
+                      seed = 1)
+  expect_equal(sort(unique(dat$group)), c(1, 2))
+  expect_equal(sum(dat$group == 1 & dat$sim == 1), 50)
+})
