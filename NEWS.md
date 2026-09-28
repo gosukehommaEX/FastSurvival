@@ -47,9 +47,13 @@
   `survival::survfit()` does.
 * The print method of `survdiff_fast()` labels the unweighted stratified
   test as stratified.
-* `simsummary_fast()` stops with an error when `data` has more than one row
-  per simulation and look (for example the stacked arms of `pairwise_fast()`
-  output) instead of silently keeping the last row.
+* `simsummary_fast()` silently kept only the last row when `data` had more
+  than one row per simulation and look, such as the stacked arms of
+  `pairwise_fast()` output. It now summarizes each arm separately when `data`
+  has an `arm` column (the output gains an `arm` column and the print method a
+  heading per arm), and stops with an error for other duplicated rows.
+* The print method of `simsummary_fast()` no longer runs the label "Expected
+  analysis time at stop:" into its value.
 
 ## Input validation
 
@@ -75,6 +79,9 @@
 * The modestly-weighted weight cap is documented as `1 / S(t_star-)`, the
   pooled Kaplan-Meier value just before `t_star`, which is what the code
   computes (as in nphRCT).
+* The `ahr_fast()` documentation explains that, as in the `AHR` package, the
+  estimate is not symmetric in the groups when both groups have events at the
+  same time, so `control` should be the actual reference group.
 * The `ahsw_fast()` documentation states the actual condition for `NA`
   results (no events up to `tau` in a group).
 * The `analysis_fast()` documentation no longer lists a `look.type` column,

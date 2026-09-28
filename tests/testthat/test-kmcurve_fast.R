@@ -164,8 +164,8 @@ test_that("plot and print methods run for both single and two-group objects", {
   grDevices::pdf(tempfile(fileext = ".pdf"))
   on.exit(grDevices::dev.off(), add = TRUE)
 
-  expect_error(print(fit2), NA)
-  expect_error(print(fit1), NA)
+  expect_output(print(fit2), "two groups")
+  expect_output(print(fit1), "one group")
   expect_error(plot(fit2), NA)
   expect_error(
     plot(fit2, hr = TRUE, rmst = TRUE, tau = 18,

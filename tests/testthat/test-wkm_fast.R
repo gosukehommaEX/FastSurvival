@@ -78,7 +78,6 @@ test_that("wkm_fast returns the expected structure", {
 
 test_that("wkm_fast matches the survfit-based reference (PF weight)", {
   skip_if_not_installed("survival")
-  message("survival is available: comparing wkm_fast with a survfit reference")
   set.seed(11)
   n_per <- 200
   g <- rep(0:1, each = n_per)

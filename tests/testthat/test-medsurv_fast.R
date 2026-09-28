@@ -119,7 +119,6 @@ test_that("method changes the standard error but not the median", {
 
 test_that("method = 'nph' reproduces nph::nphparams median inference", {
   skip_if_not_installed("nph")
-  message("nph is available: comparing medsurv_fast with nph::nphparams")
   set.seed(101)
   n_per <- 300
   grp <- rep(0:1, each = n_per)

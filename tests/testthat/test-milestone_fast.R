@@ -172,7 +172,10 @@ test_that("print returns the object invisibly and produces output", {
   res <- milestone_fast(obs, status, group, control = 0L, tau = 8)
   expect_s3_class(res, "milestone_fast")
   expect_output(print(res), "Milestone survival")
-  expect_invisible(print(res))
+  # capture.output keeps the printed report out of the test log
+  utils::capture.output(vis <- withVisible(print(res)))
+  expect_false(vis$visible)
+  expect_identical(vis$value, res)
 })
 
 test_that("milestone_fast gives a zero standard error when a curve reaches zero", {

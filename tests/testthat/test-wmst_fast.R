@@ -47,7 +47,6 @@ test_that("wmst_fast returns the expected structure for two groups", {
 
 test_that("wmst_fast with tau1 = 0 matches survRM2::rmst2", {
   skip_if_not_installed("survRM2")
-  message("survRM2 is available: comparing wmst_fast with survRM2::rmst2")
   set.seed(21)
   n_per <- 250
   g <- rep(0:1, each = n_per)
@@ -71,7 +70,6 @@ test_that("wmst_fast with tau1 = 0 matches survRM2::rmst2", {
 
 test_that("wmst_fast matches the survfit-based reference over a window", {
   skip_if_not_installed("survival")
-  message("survival is available: comparing wmst_fast with a survfit reference")
   set.seed(31)
   n_per <- 250
   g <- rep(0:1, each = n_per)
