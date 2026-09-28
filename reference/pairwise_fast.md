@@ -119,9 +119,10 @@ and caps it at one, controlling the family-wise error rate across the
 control-versus-arm comparisons at each look. Multiplicity across looks
 is a separate matter handled by group-sequential boundaries in
 [`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md),
-not by this adjustment. Because `simsummary_fast` expects one row per
-simulation and look, apply it to the rows of one arm at a time (for
-example `pw[pw$arm == 2, ]`).
+not by this adjustment; given the output of this function,
+`simsummary_fast` summarizes each arm separately (the
+Bonferroni-adjusted p-values can be used there through
+`p.col = "p.adj"`).
 
 This is a single-endpoint helper: it reads the `tte` and `event` columns
 and does not support subgroups. Comparisons for a second endpoint are

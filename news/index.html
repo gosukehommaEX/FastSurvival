@@ -68,7 +68,8 @@
 <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code> caps the upper limit of the <code>"log"</code> interval at 1 and gives a degenerate interval when the standard error is zero, as <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survival::survfit()</a></code> does.</li>
 <li>The print method of <code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> labels the unweighted stratified test as stratified.</li>
 <li>
-<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> stops with an error when <code>data</code> has more than one row per simulation and look (for example the stacked arms of <code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> output) instead of silently keeping the last row.</li>
+<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> silently kept only the last row when <code>data</code> had more than one row per simulation and look, such as the stacked arms of <code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> output. It now summarizes each arm separately when <code>data</code> has an <code>arm</code> column (the output gains an <code>arm</code> column and the print method a heading per arm), and stops with an error for other duplicated rows.</li>
+<li>The print method of <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> no longer runs the label “Expected analysis time at stop:” into its value.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="input-validation-development-version">Input validation<a class="anchor" aria-label="anchor" href="#input-validation-development-version"></a></h3>
@@ -86,6 +87,7 @@
 <div class="section level3">
 <h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
 <ul><li>The modestly-weighted weight cap is documented as <code>1 / S(t_star-)</code>, the pooled Kaplan-Meier value just before <code>t_star</code>, which is what the code computes (as in nphRCT).</li>
+<li>The <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> documentation explains that, as in the <code>AHR</code> package, the estimate is not symmetric in the groups when both groups have events at the same time, so <code>control</code> should be the actual reference group.</li>
 <li>The <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> documentation states the actual condition for <code>NA</code> results (no events up to <code>tau</code> in a group).</li>
 <li>The <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> documentation no longer lists a <code>look.type</code> column, which the function does not return.</li>
 </ul></div>

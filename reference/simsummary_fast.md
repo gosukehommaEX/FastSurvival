@@ -85,20 +85,22 @@ simsummary_fast(
 
 An object of class `"simsummary_fast"`: a data frame with one row per
 population and look plus an `overall` summary row appended after each
-population's looks. The columns are `population`, `look` (the look
-index, or `"overall"` on the summary row), optionally `look.value`,
-`n.enrolled.mean` and `n.event.mean` (the mean enrolled and event counts
-at that look, or at the stopping look on the summary row),
-`n.dropout.mean` and `n.pipeline.mean` (the mean dropout count and
-pipeline count `n.enrolled - n.event - n.dropout`, when those columns
-are present in `data`), `cutoff.mean` (the mean calendar time,
-likewise), `prob.stop.efficacy`, `prob.stop.futility`, `prob.stop.any`,
-and `cum.reject`. On the `overall` row `prob.stop.efficacy` is the total
+population's looks. The columns are `arm` (only when `data` has an `arm`
+column), `population`, `look` (the look index, or `"overall"` on the
+summary row), optionally `look.value`, `n.enrolled.mean` and
+`n.event.mean` (the mean enrolled and event counts at that look, or at
+the stopping look on the summary row), `n.dropout.mean` and
+`n.pipeline.mean` (the mean dropout count and pipeline count
+`n.enrolled - n.event - n.dropout`, when those columns are present in
+`data`), `cutoff.mean` (the mean calendar time, likewise),
+`prob.stop.efficacy`, `prob.stop.futility`, `prob.stop.any`, and
+`cum.reject`. On the `overall` row `prob.stop.efficacy` is the total
 rejection rate, `prob.stop.futility` the total futility rate,
 `prob.stop.any` their sum, and `cum.reject` again the total rejection
 rate; its timing columns are the expected counts and calendar time at
 the stopping look. The number of simulations is stored in the attribute
-`nsim` and the boundary settings in the attribute `boundary`.
+`nsim` (one value per block when the blocks differ) and the boundary
+settings in the attribute `boundary`.
 
 ## Details
 
@@ -162,6 +164,12 @@ When `data` carries a `population` column (the long form produced by
 [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
 with `by.subgroup = TRUE`), the same boundaries are applied within each
 population and the output has one block of rows per population.
+Likewise, when `data` carries an `arm` column (the output of
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)),
+each experimental arm's contrast against the control is summarized
+separately, and the output gains an `arm` column with one block of rows
+per arm (and population). Within a block, `data` must have at most one
+row per simulation and look.
 
 ## See also
 
@@ -213,11 +221,11 @@ simsummary_fast(res,
 #>       0.4400      0.0000
 #> 
 #> Overall
-#>   Rejection rate (efficacy):    0.5700
-#>   Futility-stop rate:           0.0100
-#>   Expected events at stop:      143.2
-#>   Expected sample size at stop: 299.9
-#>   Expected analysis time at stop:21.90
+#>   Rejection rate (efficacy):      0.5700
+#>   Futility-stop rate:             0.0100
+#>   Expected events at stop:        143.2
+#>   Expected sample size at stop:   299.9
+#>   Expected analysis time at stop: 21.90
 
 # p-value boundaries instead
 simsummary_fast(res, p.col = "logrank.p",
@@ -243,8 +251,8 @@ simsummary_fast(res, p.col = "logrank.p",
 #>       0.2100
 #> 
 #> Overall
-#>   Rejection rate (efficacy):    0.5900
-#>   Expected events at stop:      130.4
-#>   Expected sample size at stop: 299.4
-#>   Expected analysis time at stop:20.16
+#>   Rejection rate (efficacy):      0.5900
+#>   Expected events at stop:        130.4
+#>   Expected sample size at stop:   299.4
+#>   Expected analysis time at stop: 20.16
 ```

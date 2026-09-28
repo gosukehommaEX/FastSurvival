@@ -165,9 +165,10 @@ contrast.</p>
 caps it at one, controlling the family-wise error rate across the
 control-versus-arm comparisons at each look. Multiplicity across looks is a
 separate matter handled by group-sequential boundaries in
-<code><a href="simsummary_fast.html">simsummary_fast</a></code>, not by this adjustment. Because
-<code>simsummary_fast</code> expects one row per simulation and look, apply it to
-the rows of one arm at a time (for example <code>pw[pw$arm == 2, ]</code>).</p>
+<code><a href="simsummary_fast.html">simsummary_fast</a></code>, not by this adjustment; given the output of
+this function, <code>simsummary_fast</code> summarizes each arm separately (the
+Bonferroni-adjusted p-values can be used there through
+<code>p.col = "p.adj"</code>).</p>
 <p>This is a single-endpoint helper: it reads the <code>tte</code> and <code>event</code>
 columns and does not support subgroups. Comparisons for a second endpoint are
 obtained by calling <code>pairwise_fast</code> again on that endpoint's columns.</p>

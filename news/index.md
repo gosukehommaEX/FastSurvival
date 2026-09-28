@@ -74,10 +74,16 @@
   [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
   labels the unweighted stratified test as stratified.
 - [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
-  stops with an error when `data` has more than one row per simulation
-  and look (for example the stacked arms of
+  silently kept only the last row when `data` had more than one row per
+  simulation and look, such as the stacked arms of
   [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
-  output) instead of silently keeping the last row.
+  output. It now summarizes each arm separately when `data` has an `arm`
+  column (the output gains an `arm` column and the print method a
+  heading per arm), and stops with an error for other duplicated rows.
+- The print method of
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  no longer runs the label “Expected analysis time at stop:” into its
+  value.
 
 ### Input validation
 
@@ -116,6 +122,11 @@
 - The modestly-weighted weight cap is documented as `1 / S(t_star-)`,
   the pooled Kaplan-Meier value just before `t_star`, which is what the
   code computes (as in nphRCT).
+- The
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  documentation explains that, as in the `AHR` package, the estimate is
+  not symmetric in the groups when both groups have events at the same
+  time, so `control` should be the actual reference group.
 - The
   [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
   documentation states the actual condition for `NA` results (no events

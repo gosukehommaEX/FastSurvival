@@ -357,11 +357,11 @@ oc_PFS
 #>       0.1098      0.0000
 #> 
 #> Overall
-#>   Rejection rate (efficacy):    0.9766
-#>   Futility-stop rate:           0.0030
-#>   Expected events at stop:      312.7
-#>   Expected sample size at stop: 599.6
-#>   Expected analysis time at stop:19.60
+#>   Rejection rate (efficacy):      0.9766
+#>   Futility-stop rate:             0.0030
+#>   Expected events at stop:        312.7
+#>   Expected sample size at stop:   599.6
+#>   Expected analysis time at stop: 19.60
 ```
 
 ``` r
@@ -389,9 +389,9 @@ oc_OS
 #>     3        1.00      250.4         24.01      0.1228
 #> 
 #> Overall
-#>   Rejection rate (efficacy):    0.4604
-#>   Expected events at stop:      224.7
-#>   Expected analysis time at stop:22.29
+#>   Rejection rate (efficacy):      0.4604
+#>   Expected events at stop:        224.7
+#>   Expected analysis time at stop: 22.29
 ```
 
 Under the alternative the PFS futility rule rarely stops the trial,
