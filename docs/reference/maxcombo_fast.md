@@ -166,13 +166,14 @@ for the single-scheme weighted log-rank test.
 library(survival)
 
 # Standard four-weight max-combo, one-sided
-fit <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+fit <- maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1,
+                     side = 1)
 fit["statistic"]
 #> statistic 
-#>  1.298019 
+#> -1.298019 
 fit["p.value"]
 #>   p.value 
-#> 0.3022772 
+#> 0.1511405 
 
 # Two-sided test
 maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1, side = 2)

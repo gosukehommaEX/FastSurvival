@@ -17,7 +17,7 @@ vectors."><meta property="og:image" content="https://gosukehommaEX.github.io/Fas
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -141,15 +141,18 @@ SE[S(t)] (the standard error on the survival scale).</p>
 <code>t_eval</code>), the standard error is zero and the confidence interval
 collapses to <code>[0, 0]</code>, consistent with <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>.</p>
 <p>When <code>presorted = TRUE</code> (default), <code>t_sorted</code> and <code>e_sorted</code>
-are assumed to be sorted in ascending order of time. When
+are expected to be sorted in ascending order of time; the order is checked
+(a linear-time test) and an error is raised for unsorted input. When
 <code>presorted = FALSE</code>, the vectors are sorted internally before
-computation.</p>
+computation. When the standard error is zero (for example <code>S(t) = 1</code>
+before the first event), the confidence interval collapses to the estimate.</p>
 <p>Three confidence interval types are supported via <code>conf.type</code>:</p>
 <ul><li><p><code>"plain"</code>: Linear interval on the survival scale,
     S(t) +/- z * SE. The bounds are clipped to [0, 1].</p></li>
 <li><p><code>"log"</code>: Interval on the log scale (default in
     <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>),
-    S(t) * exp(+/- z * SE / S(t)).</p></li>
+    S(t) * exp(+/- z * SE / S(t)). The upper bound is capped at 1, as in
+    <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>.</p></li>
 <li><p><code>"log-log"</code>: Interval on the complementary log-log scale,
     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).</p></li>
 </ul><p>The returned object has class <code>"survfit_fast"</code> and is a named numeric

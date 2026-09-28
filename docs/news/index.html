@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,65 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.0" id="fastsurvival-020">FastSurvival 0.2.0<a class="anchor" aria-label="anchor" href="#fastsurvival-020"></a></h2>
+<h2 class="pkg-version" data-toc-text="development version" id="fastsurvival-development-version">FastSurvival (development version)<a class="anchor" aria-label="anchor" href="#fastsurvival-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with subgroups failed when the sample size was given as a scalar <code>n</code> with <code>alloc</code> (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/2" class="external-link">#2</a>, reported by Isaac Gravestock), because a scalar <code>n</code> with a common prevalence was always treated as a single group. A scalar <code>n</code> now gives a two-group simulation when <code>alloc</code> is supplied explicitly or when a survival or dropout specification is a per-group list with per-cell elements (such as <code>list(list(0.10, 0.08, 0.06), 0.05)</code>), and the result is identical to the per-group <code>n</code> specification. Without either signal, a list with subgroups is still read as per-cell values of a single group. The rules are described in the Details of <code><a href="../reference/simdata_fast.html">?simdata_fast</a></code>. In the same area:
+<ul><li>a shared (non-list) survival or dropout specification is accepted in a two-group simulation with subgroups;</li>
+<li>lists of the wrong length are reported instead of being silently truncated or failing with “subscript out of bounds”;</li>
+<li>per-cell <code>e.time</code> and <code>d.time</code> lists are honored in a one-group simulation with subgroups;</li>
+<li>group-specific prevalence must use the same number of levels for each factor in both groups;</li>
+<li>the illness-death model also treats an explicit <code>alloc</code> as a two-group request;</li>
+<li>without subgroups, a scalar <code>n</code> with an explicit <code>alloc</code> and a shared (non-list) hazard now gives two groups sharing that hazard, where it previously gave one group of size <code>n</code> and ignored <code>alloc</code>.</li>
+</ul></li>
+<li>
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> with <code>stat = "milestone"</code>, <code>ms.method = "loglog"</code>, and <code>side = 1</code> returned the upper-tail p-value although the log-log statistic is negative under treatment benefit, so the one-sided p-value was approximately one minus the correct value. It now uses the lower tail, as <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> does.</li>
+<li>
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now reports the <code>"ahsw"</code> p-values according to <code>side</code>, as <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> does; they were always two-sided before.</li>
+<li>
+<code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> in event-driven mode reported every administratively censored subject as a dropout (<code>n.pipeline</code> was always 0). Dropout and pipeline counts are now computed at the per-simulation cutoff. The event-driven mode also keeps the other columns of <code>data</code>, so <code>strata</code> works there, and an ambiguous <code>p.col</code> (several statistics) is reported clearly.</li>
+<li>The log-rank family (<code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code>, <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code>, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code>, and the weighted and stratified variants) left out of the observed and expected counts an event at a time when only one subject was at risk. The test statistics were unaffected, but the printed counts differed from <code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survival::survdiff()</a></code>.</li>
+<li>
+<code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code> (and <code>stat = "medsurv"</code> in <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>) now follows the <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survival::survfit()</a></code> median convention: the comparison with 0.5 uses a tolerance, and a curve that equals 0.5 on a flat stretch gives the midpoint of that stretch. Before, floating-point rounding could move the median to the next event time. With <code>method = "km"</code> the kernel hazard is evaluated at the new median, so its standard error changes in the flat-stretch case as well. The printed median of <code><a href="../reference/kmcurve_fast.html">kmcurve_fast()</a></code> objects uses the same step-function rule instead of linear interpolation.</li>
+<li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with a scalar <code>n</code> split the total with <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">round()</a></code>, which could lose or add a subject (for example <code>n = 7</code> gave 4 + 4). The split now always adds up to <code>n</code>, and <code>alloc</code> is validated.</li>
+<li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with <code>fixed.alloc = TRUE</code> assigned the subgroup cells in contiguous blocks, so subgroup membership was tied to the accrual interval. The fixed labels are now randomly permuted within each simulation, which changes the generated data for <code>fixed.alloc = TRUE</code> (only) for a given seed. The fixed counts are also protected against floating-point shares such as <code>100 * 0.29</code>.</li>
+<li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> in the illness-death model now treats a per-group <code>d.hazard</code> or <code>d.median</code> list as a two-group request, as in the single-endpoint model.</li>
+<li>
+<code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> (and <code>stat = "milestone"</code>) returned a <code>NaN</code> standard error when a Kaplan-Meier curve reached zero by the milestone; it is now 0, as in <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code>.</li>
+<li>
+<code><a href="../reference/survfit_fast.html">survfit_fast()</a></code> caps the upper limit of the <code>"log"</code> interval at 1 and gives a degenerate interval when the standard error is zero, as <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survival::survfit()</a></code> does.</li>
+<li>The print method of <code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> labels the unweighted stratified test as stratified.</li>
+<li>
+<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> silently kept only the last row when <code>data</code> had more than one row per simulation and look, such as the stacked arms of <code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> output. It now summarizes each arm separately when <code>data</code> has an <code>arm</code> column (the output gains an <code>arm</code> column and the print method a heading per arm), and stops with an error for other duplicated rows.</li>
+<li>The print method of <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> no longer runs the label “Expected analysis time at stop:” into its value.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="input-validation-development-version">Input validation<a class="anchor" aria-label="anchor" href="#input-validation-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code>, <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>, <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>, <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code>, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code>, <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code>, <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code>, and <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now check that <code>event</code> is coded 0/1 without missing values and, for the two-group functions, that <code>group</code> has exactly two values without missing values and that <code>control</code> is one of them. Before, a mistyped <code>control</code> or a 1/2 event coding silently produced wrong or missing results.</li>
+<li>
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> requires whole-number <code>event.looks</code> and recodes factor and character subgroup columns consistently, so <code>by.subgroup = TRUE</code> labels the populations correctly for such columns.</li>
+<li>
+<code><a href="../reference/survfit_fast.html">survfit_fast()</a></code> checks that <code>t_sorted</code> and <code>e_sorted</code> have the same length and, with <code>presorted = TRUE</code>, that the times are sorted.</li>
+<li>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> checks that hazards are non-negative and that piecewise breakpoints start at 0 and increase, and that the output fits in an R vector.</li>
+<li>
+<code><a href="../reference/milestone_fast.html">milestone_fast()</a></code>, <code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code>, and <code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> reject missing times or groups.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li>The modestly-weighted weight cap is documented as <code>1 / S(t_star-)</code>, the pooled Kaplan-Meier value just before <code>t_star</code>, which is what the code computes (as in nphRCT).</li>
+<li>The <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> documentation explains that, as in the <code>AHR</code> package, the estimate is not symmetric in the groups when both groups have events at the same time, so <code>control</code> should be the actual reference group.</li>
+<li>The <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> documentation states the actual condition for <code>NA</code> results (no events up to <code>tau</code> in a group).</li>
+<li>The <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> documentation no longer lists a <code>look.type</code> column, which the function does not return.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="fastsurvival-020">FastSurvival 0.2.0<a class="anchor" aria-label="anchor" href="#fastsurvival-020"></a></h2><p class="text-muted">CRAN release: 2026-07-27</p>
 <ul><li>New estimation and testing functions:
 <ul><li>
 <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>: restricted mean survival time for a single group or a two-group comparison (difference and ratio contrasts), integrating the Kaplan-Meier survival step function in a single C++ scan.</li>

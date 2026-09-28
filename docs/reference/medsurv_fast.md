@@ -88,8 +88,12 @@ statistics for the difference.
 ## Details
 
 The median in each group is the first event time at which the
-Kaplan-Meier estimate drops to 0.5 or below, matching the convention
-used by `survfit`. The point estimate is the same for both variance
+Kaplan-Meier estimate drops to 0.5 or below. When the estimate equals
+0.5 exactly over an interval, the midpoint of that interval is returned
+(the next event time, or the last observed time when no later event
+exists, closes the interval). This is the convention used by `survfit`,
+including its tolerance of `sqrt(.Machine$double.eps)` when comparing
+the estimate with 0.5. The point estimate is the same for both variance
 methods.
 
 Two variance methods are available through the `method` argument. With

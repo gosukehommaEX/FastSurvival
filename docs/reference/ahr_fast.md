@@ -94,6 +94,17 @@ Dormuth et al. (2024, eq. 5): the comparison-group share is compared
 with its null value (0.5 when `null.ahr = 1`). An equivalent test and a
 confidence interval on the `log(ahr)` scale are also reported.
 
+The integral uses the right-continuous Kaplan-Meier estimate `S2` at
+each jump of `S1`, exactly as the `AHR` package does, and `theta2` is
+obtained as `1 - theta1` rather than by a separate integral. When both
+groups have events at the same time (tied event times, as with data
+recorded in whole days or months), the two shares computed this way are
+not symmetric in the groups, so exchanging `control` does not give
+exactly the reciprocal average hazard ratio. With continuous times there
+are no such ties and the estimate is symmetric. Specify `control` as the
+actual reference group so that the result matches the `AHR` package with
+that group as the reference.
+
 This is distinct from
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
 which estimates the Uno-Horiguchi average hazard with survival weight.

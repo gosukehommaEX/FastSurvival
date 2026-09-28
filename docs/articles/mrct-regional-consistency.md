@@ -348,11 +348,11 @@ gs
 #>       0.3278      0.1868
 #> 
 #> Overall
-#>   Rejection rate (efficacy):    0.7986
-#>   Futility-stop rate:           0.2014
-#>   Expected events at stop:      301.0
-#>   Expected sample size at stop: 491.1
-#>   Expected analysis time at stop:14.15
+#>   Rejection rate (efficacy):      0.7986
+#>   Futility-stop rate:             0.2014
+#>   Expected events at stop:        301.0
+#>   Expected sample size at stop:   491.1
+#>   Expected analysis time at stop: 14.15
 ```
 
 The per-look `prob.stop.efficacy` from

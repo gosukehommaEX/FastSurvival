@@ -17,7 +17,7 @@ use inside simulation loops."><meta property="og:image" content="https://gosukeh
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -155,6 +155,16 @@ scale, as in Kalbfleisch and Prentice (1981) and Dormuth et al. (2024,
 eq. 5): the comparison-group share is compared with its null value (0.5 when
 <code>null.ahr = 1</code>). An equivalent test and a confidence interval on the
 <code>log(ahr)</code> scale are also reported.</p>
+<p>The integral uses the right-continuous Kaplan-Meier estimate <code>S2</code> at
+each jump of <code>S1</code>, exactly as the <code>AHR</code> package does, and
+<code>theta2</code> is obtained as <code>1 - theta1</code> rather than by a separate
+integral. When both groups have events at the same time (tied event times,
+as with data recorded in whole days or months), the two shares computed this
+way are not symmetric in the groups, so exchanging <code>control</code> does not
+give exactly the reciprocal average hazard ratio. With continuous times
+there are no such ties and the estimate is symmetric. Specify
+<code>control</code> as the actual reference group so that the result matches the
+<code>AHR</code> package with that group as the reference.</p>
 <p>This is distinct from <code><a href="ahsw_fast.html">ahsw_fast</a></code>, which estimates the
 Uno-Horiguchi average hazard with survival weight.</p>
     </div>

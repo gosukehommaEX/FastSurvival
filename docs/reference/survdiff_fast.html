@@ -25,7 +25,7 @@ hazards."><meta property="og:image" content="https://gosukehommaEX.github.io/Fas
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,7 +148,7 @@ behavior of earlier versions of this function exactly. <code>"fh"</code> is the
 Fleming-Harrington G(rho, gamma) test with weight
 <code>S(t-)^rho (1 - S(t-))^gamma</code>. <code>"mwlrt"</code> is the modestly-weighted
 log-rank test of Magirr and Burman with weight
-<code>1 / max(S(t-), S(t_star))</code>. <code>"gehan"</code> is the Gehan-Breslow test
+<code>1 / max(S(t-), S(t_star-))</code>. <code>"gehan"</code> is the Gehan-Breslow test
 with weight equal to the at-risk count, and <code>"tarone-ware"</code> uses the
 square root of the at-risk count. Here <code>S(t-)</code> is the left-continuous
 pooled Kaplan-Meier estimate just prior to each event time.</p></dd>
@@ -169,8 +169,10 @@ Fleming-Harrington G(0, 1) test for delayed effects.</p></dd>
 <dt id="arg-t-star">t_star<a class="anchor" aria-label="anchor" href="#arg-t-star"></a></dt>
 <dd><p>A single non-negative numeric value, the timepoint of the
 modestly-weighted log-rank test. Required only when <code>weight =
-"mwlrt"</code>. The weight is capped at <code>1 / S(t_star)</code>, where
-<code>S(t_star)</code> is the pooled Kaplan-Meier value at <code>t_star</code>.
+"mwlrt"</code>. The weight is capped at <code>1 / S(t_star-)</code>, where
+<code>S(t_star-)</code> is the pooled Kaplan-Meier value just before
+<code>t_star</code> (the product over event times strictly less than
+<code>t_star</code>, as in nphRCT).
 A value of 0 yields the ordinary log-rank test.</p></dd>
 
 </dl></div>
@@ -376,17 +378,19 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/joshuaulrich/microbenchmark/" class="external-link">microbenchmark</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  survdiff_fast <span class="op">=</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span></span>
-<span class="r-in"><span>                                <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  survdiff      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  times <span class="op">=</span> <span class="fl">1000</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Speed comparison against survdiff()</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"microbenchmark"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu">microbenchmark</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    survdiff_fast <span class="op">=</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>,</span></span>
+<span class="r-in"><span>                                  <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, <span class="fl">2</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    survdiff      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    times <span class="op">=</span> <span class="fl">1000</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr   min      lq      mean  median     uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  24.1   66.55   99.9969   93.55  116.8  1024.0  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 686.0 1465.25 1987.0319 1852.90 2102.4 36144.3  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min        lq      mean   median       uq     max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  30.601   81.3005  122.9189  105.051  129.800 13018.7  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 722.801 1413.5510 1812.8689 1631.151 1893.151 47441.2  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

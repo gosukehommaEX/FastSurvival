@@ -51,7 +51,10 @@ printed to `digits` decimal places and counts and times to fewer.
 Because the summary is a Monte Carlo estimate under a single
 data-generating truth, it does not carry the separate null and
 alternative columns or the alpha and beta spending of an analytic design
-report. The underlying object is an ordinary data frame, so the
+report. When the summary has several blocks (arms of
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+output or subgroup populations), each block is printed under its own
+heading. The underlying object is an ordinary data frame, so the
 unrounded values remain available by subsetting it directly.
 
 ## See also

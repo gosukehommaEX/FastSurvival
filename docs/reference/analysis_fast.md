@@ -74,8 +74,8 @@ analysis_fast(
 
 - event.looks:
 
-  A numeric vector of target cumulative event counts, one per look.
-  Mutually exclusive with `time.looks`.
+  A vector of positive whole numbers, the target cumulative event
+  counts, one per look. Mutually exclusive with `time.looks`.
 
 - time.looks:
 
@@ -117,10 +117,10 @@ analysis_fast(
   the choice of `side` affects only the p-value columns. For log-rank
   and Cox the benefit direction is a negative Z (the one-sided p-value
   is the lower tail `pnorm(z)`); for RMST it is a positive Z (the upper
-  tail `pnorm(-z)`). The AHSW p-values are always two-sided. For
-  group-sequential boundary comparisons (for example with gsDesign or
-  rpact), align the sign of the reported Z with the boundary convention
-  before comparing.
+  tail `pnorm(-z)`). The other statistics follow the benefit directions
+  given in Details. For group-sequential boundary comparisons (for
+  example with gsDesign or rpact), align the sign of the reported Z with
+  the boundary convention before comparing.
 
 - by.subgroup:
 
@@ -240,24 +240,24 @@ A data frame. When `by.subgroup = FALSE`, it has `nsim * length(looks)`
 rows. When `by.subgroup = TRUE`, it has
 `nsim * length(looks) * (1 + total subgroup levels)` rows and an extra
 `population` column placed after `look.value`. The common columns are
-`sim`, `look` (1-based look index), `look.type` (`"event"` or `"time"`),
-`look.value` (the requested event count or calendar time), optionally
-`population`, `cutoff` (the calendar time used, `NA` when an event
-target was not reached), `reached`, `n.enrolled`, `n.event`, `n.dropout`
-(the number of enrolled subjects whose dropout occurred on or before the
-cutoff) and `n.pipeline` (`n.enrolled - n.event - n.dropout`, the
-subjects still in follow-up at the cutoff), followed by the columns of
-the requested statistics. A statistic that cannot be computed for a row
-(no events, or an empty group) is `NA`. The statistic columns are
-`logrank.z`, `logrank.chisq`, and `logrank.p` for `"logrank"`;
-`cox.coef`, `cox.hr`, `cox.se`, `cox.z`, `cox.p`, `cox.lower`, and
-`cox.upper` for `"coxph"`; `rmst.ctrl`, `rmst.trt`, `rmst.diff`,
-`rmst.diff.lower`, `rmst.diff.upper`, `rmst.z`, and `rmst.p` for
-`"rmst"`; `km.surv.ctrl` and `km.surv.trt` for `"km"`; `maxcombo.stat`
-and `maxcombo.p` for `"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`,
-`ahsw.rah`, `ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`,
-`ahsw.dah`, `ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for
-`"ahsw"`; `milestone.surv.ctrl`, `milestone.surv.trt`, `milestone.diff`,
+`sim`, `look` (1-based look index), `look.value` (the requested event
+count or calendar time), optionally `population`, `cutoff` (the calendar
+time used, `NA` when an event target was not reached), `reached`,
+`n.enrolled`, `n.event`, `n.dropout` (the number of enrolled subjects
+whose dropout occurred on or before the cutoff) and `n.pipeline`
+(`n.enrolled - n.event - n.dropout`, the subjects still in follow-up at
+the cutoff), followed by the columns of the requested statistics. A
+statistic that cannot be computed for a row (no events, or an empty
+group) is `NA`. The statistic columns are `logrank.z`, `logrank.chisq`,
+and `logrank.p` for `"logrank"`; `cox.coef`, `cox.hr`, `cox.se`,
+`cox.z`, `cox.p`, `cox.lower`, and `cox.upper` for `"coxph"`;
+`rmst.ctrl`, `rmst.trt`, `rmst.diff`, `rmst.diff.lower`,
+`rmst.diff.upper`, `rmst.z`, and `rmst.p` for `"rmst"`; `km.surv.ctrl`
+and `km.surv.trt` for `"km"`; `maxcombo.stat` and `maxcombo.p` for
+`"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`, `ahsw.rah`,
+`ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`, `ahsw.dah`,
+`ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for `"ahsw"`;
+`milestone.surv.ctrl`, `milestone.surv.trt`, `milestone.diff`,
 `milestone.diff.lower`, `milestone.diff.upper`, `milestone.z`, and
 `milestone.p` for `"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and
 `ahr.ahr`, `ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for
@@ -267,15 +267,18 @@ for `"medsurv"`; `wkm.wdiff`, `wkm.lower`, `wkm.upper`, `wkm.z`, and
 `wkm.p` for `"wkm"`; and `wmst.ctrl`, `wmst.trt`, `wmst.diff`,
 `wmst.diff.lower`, `wmst.diff.upper`, `wmst.z`, and `wmst.p` for
 `"wmst"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
-natural sign of each test, and the p-value columns follow `side` except
-for the AHSW p-values, which are two-sided.
+natural sign of each test, and the p-value columns follow `side`.
 
 ## Details
 
 The input `data` is the data frame returned by
 [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 for a two-group trial. The columns `sim`, `group`, `accrual_time`,
-`tte`, and `event` are required.
+`tte`, and `event` are required, must not contain missing values, and
+`group` must have exactly two distinct values, one of which is
+`control`. For a multi-arm trial, subset the data to two arms first or
+use
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md).
 
 For a look at calendar time `cutoff`, each subject with accrual time `a`
 contributes only if enrolled by then (`a <= cutoff`). The observed time
@@ -287,12 +290,12 @@ before `cutoff` (`a + tte <= cutoff`), and zero otherwise
 When `event.looks` is supplied, the calendar cutoff for a target of `d`
 events is the calendar time of the `d`-th event in that simulated trial,
 counted over the whole trial population. If a simulation contains fewer
-than `d` events, the target is never reached: the full data are used,
-`reached` is `FALSE`, and `cutoff` is `NA`. When `time.looks` is
-supplied, the cutoff is the specified calendar time and `reached` is
-always `TRUE`. In both cases the cutoff is determined once on the whole
-population and then used for the overall analysis and for every subgroup
-analysis at that look.
+than `d` events, the target is never reached: the full data are used, so
+the statistics are those of the final data, `reached` is `FALSE`, and
+`cutoff` is `NA`. When `time.looks` is supplied, the cutoff is the
+specified calendar time and `reached` is always `TRUE`. In both cases
+the cutoff is determined once on the whole population and then used for
+the overall analysis and for every subgroup analysis at that look.
 
 Exactly one of `event.looks` and `time.looks` must be supplied.
 
@@ -329,10 +332,12 @@ multivariate-normal p-value, which already follows `side`.
 The `"ahsw"` statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to `tau`. It reports the per-group
 average hazards, the ratio (RAH) and difference (DAH) contrasts with
-their confidence intervals, and two-sided p-values for both contrasts.
-The AHSW p-values are always two-sided and do not depend on `side`,
-matching
+their confidence intervals, and p-values for both contrasts that follow
+`side`, matching
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+The benefit direction is a ratio below 1 (a negative log ratio) and a
+negative difference, so the one-sided p-values are lower-tail
+probabilities.
 
 The `"milestone"` statistic compares the Kaplan-Meier survival
 probabilities of the two groups at the milestone timepoint `tau`. It
@@ -340,9 +345,13 @@ reports the per-group survival, the difference (treatment minus control)
 with its confidence interval, the test statistic, and the p-value. The
 inference method is selected with `ms.method` (`"wald"`, `"loglog"`, or
 `"mover"`), matching
-[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md);
-the benefit direction is a positive difference (higher treatment
-survival), so a positive Z favors treatment.
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+The benefit direction is a positive difference (higher treatment
+survival). For `"wald"` and `"mover"` a positive Z favors treatment; for
+`"loglog"` the statistic is the difference of the complementary log-log
+transforms, so a negative Z favors treatment, and the one-sided p-value
+is the lower tail as in
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
 
 The `"rmw"` statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a
@@ -541,18 +550,18 @@ head(res5)
 #> 4           0.1795688          0.4098869     0.23031806           0.11556461
 #> 5           0.2192132          0.4413683     0.22215515           0.10341390
 #> 6           0.2885018          0.3493613     0.06085952          -0.05387747
-#>   milestone.diff.upper milestone.z milestone.p  rmw.stat        rmw.p   ahr.ahr
-#> 1            0.2734819   -2.778169   0.9972667 -3.221206 8.381633e-04 0.6875365
-#> 2            0.3557723   -4.084347   0.9999779 -5.332615 7.139961e-08 0.4548326
-#> 3            0.4002439   -5.017927   0.9999997 -5.574249 1.855481e-08 0.4408430
-#> 4            0.3362999   -3.913444   0.9999545 -4.764203 1.359804e-06 0.5446814
-#> 5            0.3323191   -3.652509   0.9998702 -3.812917 9.333850e-05 0.5873300
-#> 6            0.1734329   -1.037737   0.8503039 -1.467686 8.350360e-02 0.8184949
-#>   ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p
-#> 1      0.5925798     0.4074202 -2.584198 4.880285e-03
-#> 2      0.6873643     0.3126357 -5.546342 1.458539e-08
-#> 3      0.6940381     0.3059619 -5.854461 2.392791e-09
-#> 4      0.6473827     0.3526173 -4.280992 9.303115e-06
-#> 5      0.6299887     0.3700113 -3.657652 1.272682e-04
-#> 6      0.5499053     0.4500947 -1.364031 8.627888e-02
+#>   milestone.diff.upper milestone.z  milestone.p  rmw.stat        rmw.p
+#> 1            0.2734819   -2.778169 2.733305e-03 -3.221206 8.381633e-04
+#> 2            0.3557723   -4.084347 2.210050e-05 -5.332615 7.139961e-08
+#> 3            0.4002439   -5.017927 2.611594e-07 -5.574249 1.855481e-08
+#> 4            0.3362999   -3.913444 4.549455e-05 -4.764203 1.359804e-06
+#> 5            0.3323191   -3.652509 1.298453e-04 -3.812917 9.333850e-05
+#> 6            0.1734329   -1.037737 1.496961e-01 -1.467686 8.350360e-02
+#>     ahr.ahr ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p
+#> 1 0.6875365      0.5925798     0.4074202 -2.584198 4.880285e-03
+#> 2 0.4548326      0.6873643     0.3126357 -5.546342 1.458539e-08
+#> 3 0.4408430      0.6940381     0.3059619 -5.854461 2.392791e-09
+#> 4 0.5446814      0.6473827     0.3526173 -4.280992 9.303115e-06
+#> 5 0.5873300      0.6299887     0.3700113 -3.657652 1.272682e-04
+#> 6 0.8184949      0.5499053     0.4500947 -1.364031 8.627888e-02
 ```

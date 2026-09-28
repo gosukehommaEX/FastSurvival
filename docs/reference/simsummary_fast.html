@@ -27,7 +27,7 @@ error and converge as the number of simulations grows."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,7 +150,8 @@ look. Entries may be <code>NA</code> to omit the test at a look. Required with
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"simsummary_fast"</code>: a data frame with one row
   per population and look plus an <code>overall</code> summary row appended after each
-  population's looks. The columns are <code>population</code>, <code>look</code> (the look
+  population's looks. The columns are <code>arm</code> (only when <code>data</code> has
+  an <code>arm</code> column), <code>population</code>, <code>look</code> (the look
   index, or <code>"overall"</code> on the summary row), optionally <code>look.value</code>,
   <code>n.enrolled.mean</code> and <code>n.event.mean</code> (the mean enrolled and event
   counts at that look, or at the stopping look on the summary row),
@@ -163,8 +164,9 @@ look. Entries may be <code>NA</code> to omit the test at a look. Required with
   <code>prob.stop.futility</code> the total futility rate, <code>prob.stop.any</code> their
   sum, and <code>cum.reject</code> again the total rejection rate; its timing columns
   are the expected counts and calendar time at the stopping look. The number of
-  simulations is stored in the attribute <code>nsim</code> and the boundary settings
-  in the attribute <code>boundary</code>.</p>
+  simulations is stored in the attribute <code>nsim</code> (one value per block when
+  the blocks differ) and the boundary settings in the attribute
+  <code>boundary</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -205,6 +207,12 @@ This is the stage-wise rejection contribution of a group-sequential design; the
 cumulative sum <code>cum.reject</code> is the cumulative power up to and including
 that look, and the total over all looks is <code>rejection.rate</code>. These are the
 same quantities that gsDesign and rpact report, estimated here by simulation.</p>
+<p>A simulation whose event target was not reached at a look (<code>reached =
+FALSE</code> in <code><a href="analysis_fast.html">analysis_fast</a></code> output) carries the statistics of its
+final data and an <code>NA</code> cutoff at that look. Its statistics are compared
+with the boundary like any other, and it is left out of <code>cutoff.mean</code>
+(the mean over the simulations with a finite cutoff) but not out of the
+count means.</p>
 <p>The rejection rate is the type I error under a null data-generating truth and
 the power under an alternative truth, but because the function does not know the
 truth used to generate <code>data</code> it is reported neutrally as the rejection
@@ -212,7 +220,11 @@ rate and its interpretation is left to the user.</p>
 <p>When <code>data</code> carries a <code>population</code> column (the long form produced by
 <code><a href="analysis_fast.html">analysis_fast</a></code> with <code>by.subgroup = TRUE</code>), the same
 boundaries are applied within each population and the output has one block of
-rows per population.</p>
+rows per population. Likewise, when <code>data</code> carries an <code>arm</code> column
+(the output of <code><a href="pairwise_fast.html">pairwise_fast</a></code>), each experimental arm's
+contrast against the control is summarized separately, and the output gains
+an <code>arm</code> column with one block of rows per arm (and population). Within
+a block, <code>data</code> must have at most one row per simulation and look.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -263,11 +275,11 @@ rows per population.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.4400      0.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):    0.5700</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Futility-stop rate:           0.0100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:      143.2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop: 299.9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop:21.90</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):      0.5700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Futility-stop rate:             0.0100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:        143.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop:   299.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop: 21.90</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># p-value boundaries instead</span></span></span>
 <span class="r-in"><span><span class="fu">simsummary_fast</span><span class="op">(</span><span class="va">res</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>,</span></span>
@@ -293,10 +305,10 @@ rows per population.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.2100</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):    0.5900</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:      130.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop: 299.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop:20.16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rejection rate (efficacy):      0.5900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected events at stop:        130.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected sample size at stop:   299.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Expected analysis time at stop: 20.16</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

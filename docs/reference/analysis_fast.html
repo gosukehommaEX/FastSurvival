@@ -35,7 +35,7 @@ presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,8 +138,8 @@ represents the control group.</p></dd>
 
 
 <dt id="arg-event-looks">event.looks<a class="anchor" aria-label="anchor" href="#arg-event-looks"></a></dt>
-<dd><p>A numeric vector of target cumulative event counts, one
-per look. Mutually exclusive with <code>time.looks</code>.</p></dd>
+<dd><p>A vector of positive whole numbers, the target cumulative
+event counts, one per look. Mutually exclusive with <code>time.looks</code>.</p></dd>
 
 
 <dt id="arg-time-looks">time.looks<a class="anchor" aria-label="anchor" href="#arg-time-looks"></a></dt>
@@ -183,7 +183,8 @@ test statistics themselves are always reported with their natural sign, so
 the choice of <code>side</code> affects only the p-value columns. For log-rank
 and Cox the benefit direction is a negative Z (the one-sided p-value is the
 lower tail <code>pnorm(z)</code>); for RMST it is a positive Z (the upper tail
-<code>pnorm(-z)</code>). The AHSW p-values are always two-sided. For
+<code>pnorm(-z)</code>). The other statistics follow the benefit directions
+given in Details. For
 group-sequential boundary comparisons (for example with gsDesign or
 rpact), align the sign of the reported Z with the boundary convention
 before comparing.</p></dd>
@@ -306,9 +307,8 @@ when <code>"wmst"</code> is requested.</p></dd>
   <code>nsim * length(looks)</code> rows. When <code>by.subgroup = TRUE</code>, it has
   <code>nsim * length(looks) * (1 + total subgroup levels)</code> rows and an
   extra <code>population</code> column placed after <code>look.value</code>. The common
-  columns are <code>sim</code>, <code>look</code> (1-based look index), <code>look.type</code>
-  (<code>"event"</code> or <code>"time"</code>), <code>look.value</code> (the requested event
-  count or calendar time), optionally <code>population</code>, <code>cutoff</code> (the
+  columns are <code>sim</code>, <code>look</code> (1-based look index),
+  <code>look.value</code> (the requested event count or calendar time), optionally <code>population</code>, <code>cutoff</code> (the
   calendar time used, <code>NA</code> when an event target was not reached),
   <code>reached</code>, <code>n.enrolled</code>, <code>n.event</code>, <code>n.dropout</code> (the
   number of enrolled subjects whose dropout occurred on or before the cutoff)
@@ -342,14 +342,17 @@ when <code>"wmst"</code> is requested.</p></dd>
   <code>wmst.p</code> for <code>"wmst"</code>. The Z columns
   <code>logrank.z</code>, <code>cox.z</code>, and
   <code>rmst.z</code> carry the natural sign of each test, and the p-value columns
-  follow <code>side</code> except for the AHSW p-values, which are two-sided.</p>
+  follow <code>side</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The input <code>data</code> is the data frame returned by
 <code><a href="simdata_fast.html">simdata_fast</a></code> for a two-group trial. The columns <code>sim</code>,
 <code>group</code>, <code>accrual_time</code>, <code>tte</code>, and <code>event</code> are
-required.</p>
+required, must not contain missing values, and <code>group</code> must have
+exactly two distinct values, one of which is <code>control</code>. For a
+multi-arm trial, subset the data to two arms first or use
+<code><a href="pairwise_fast.html">pairwise_fast</a></code>.</p>
 <p>For a look at calendar time <code>cutoff</code>, each subject with accrual time
 <code>a</code> contributes only if enrolled by then (<code>a &lt;= cutoff</code>). The
 observed time at the look is <code>min(tte, cutoff - a)</code> and the observed
@@ -360,8 +363,8 @@ zero otherwise (administrative censoring at the look).</p>
 <code>d</code> events is the calendar time of the <code>d</code>-th event in that
 simulated trial, counted over the whole trial population. If a simulation
 contains fewer than <code>d</code> events, the target is never reached: the full
-data are used, <code>reached</code> is <code>FALSE</code>, and <code>cutoff</code> is
-<code>NA</code>. When <code>time.looks</code> is supplied, the cutoff is the specified
+data are used, so the statistics are those of the final data, <code>reached</code>
+is <code>FALSE</code>, and <code>cutoff</code> is <code>NA</code>. When <code>time.looks</code> is supplied, the cutoff is the specified
 calendar time and <code>reached</code> is always <code>TRUE</code>. In both cases the
 cutoff is determined once on the whole population and then used for the
 overall analysis and for every subgroup analysis at that look.</p>
@@ -397,17 +400,21 @@ multivariate-normal p-value, which already follows <code>side</code>.</p>
 <p>The <code>"ahsw"</code> statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to <code>tau</code>. It reports the per-group
 average hazards, the ratio (RAH) and difference (DAH) contrasts with their
-confidence intervals, and two-sided p-values for both contrasts. The AHSW
-p-values are always two-sided and do not depend on <code>side</code>, matching
-<code><a href="ahsw_fast.html">ahsw_fast</a></code>.</p>
+confidence intervals, and p-values for both contrasts that follow
+<code>side</code>, matching <code><a href="ahsw_fast.html">ahsw_fast</a></code>. The benefit direction is a
+ratio below 1 (a negative log ratio) and a negative difference, so the
+one-sided p-values are lower-tail probabilities.</p>
 <p>The <code>"milestone"</code> statistic compares the Kaplan-Meier survival
 probabilities of the two groups at the milestone timepoint <code>tau</code>. It
 reports the per-group survival, the difference (treatment minus control) with
 its confidence interval, the test statistic, and the p-value. The inference
 method is selected with <code>ms.method</code> (<code>"wald"</code>, <code>"loglog"</code>, or
-<code>"mover"</code>), matching <code><a href="milestone_fast.html">milestone_fast</a></code>; the benefit direction
-is a positive difference (higher treatment survival), so a positive Z favors
-treatment.</p>
+<code>"mover"</code>), matching <code><a href="milestone_fast.html">milestone_fast</a></code>. The benefit direction
+is a positive difference (higher treatment survival). For <code>"wald"</code> and
+<code>"mover"</code> a positive Z favors treatment; for <code>"loglog"</code> the
+statistic is the difference of the complementary log-log transforms, so a
+negative Z favors treatment, and the one-sided p-value is the lower tail as
+in <code><a href="milestone_fast.html">milestone_fast</a></code>.</p>
 <p>The <code>"rmw"</code> statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a single
 modestly-weighted component with survival-threshold <code>s_star</code>. Its
@@ -590,20 +597,20 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4           0.1795688          0.4098869     0.23031806           0.11556461</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5           0.2192132          0.4413683     0.22215515           0.10341390</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6           0.2885018          0.3493613     0.06085952          -0.05387747</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   milestone.diff.upper milestone.z milestone.p  rmw.stat        rmw.p   ahr.ahr</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.2734819   -2.778169   0.9972667 -3.221206 8.381633e-04 0.6875365</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.3557723   -4.084347   0.9999779 -5.332615 7.139961e-08 0.4548326</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4002439   -5.017927   0.9999997 -5.574249 1.855481e-08 0.4408430</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.3362999   -3.913444   0.9999545 -4.764203 1.359804e-06 0.5446814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.3323191   -3.652509   0.9998702 -3.812917 9.333850e-05 0.5873300</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.1734329   -1.037737   0.8503039 -1.467686 8.350360e-02 0.8184949</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      0.5925798     0.4074202 -2.584198 4.880285e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      0.6873643     0.3126357 -5.546342 1.458539e-08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      0.6940381     0.3059619 -5.854461 2.392791e-09</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      0.6473827     0.3526173 -4.280992 9.303115e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      0.6299887     0.3700113 -3.657652 1.272682e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      0.5499053     0.4500947 -1.364031 8.627888e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   milestone.diff.upper milestone.z  milestone.p  rmw.stat        rmw.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.2734819   -2.778169 2.733305e-03 -3.221206 8.381633e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.3557723   -4.084347 2.210050e-05 -5.332615 7.139961e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4002439   -5.017927 2.611594e-07 -5.574249 1.855481e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.3362999   -3.913444 4.549455e-05 -4.764203 1.359804e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.3323191   -3.652509 1.298453e-04 -3.812917 9.333850e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.1734329   -1.037737 1.496961e-01 -1.467686 8.350360e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ahr.ahr ahr.theta.ctrl ahr.theta.trt     ahr.z        ahr.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.6875365      0.5925798     0.4074202 -2.584198 4.880285e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.4548326      0.6873643     0.3126357 -5.546342 1.458539e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.4408430      0.6940381     0.3059619 -5.854461 2.392791e-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.5446814      0.6473827     0.3526173 -4.280992 9.303115e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.5873300      0.6299887     0.3700113 -3.657652 1.272682e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.8184949      0.5499053     0.4500947 -1.364031 8.627888e-02</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -93,8 +93,8 @@ print(fit)
 #> A kmcurve_fast object (two groups)
 #> 
 #>  Group      Role   N Events Median
-#>      0   control 150     81  13.13
-#>      1 treatment 150     58  19.10
+#>      0   control 150     81  13.19
+#>      1 treatment 150     58  19.14
 #> 
 #> Cox PH hazard ratio (treatment vs control): 0.609
 plot(fit)

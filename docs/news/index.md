@@ -1,6 +1,171 @@
 # Changelog
 
+## FastSurvival (development version)
+
+### Bug fixes
+
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  with subgroups failed when the sample size was given as a scalar `n`
+  with `alloc`
+  ([\#2](https://github.com/gosukehommaEX/FastSurvival/issues/2),
+  reported by Isaac Gravestock), because a scalar `n` with a common
+  prevalence was always treated as a single group. A scalar `n` now
+  gives a two-group simulation when `alloc` is supplied explicitly or
+  when a survival or dropout specification is a per-group list with
+  per-cell elements (such as `list(list(0.10, 0.08, 0.06), 0.05)`), and
+  the result is identical to the per-group `n` specification. Without
+  either signal, a list with subgroups is still read as per-cell values
+  of a single group. The rules are described in the Details of
+  [`?simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md).
+  In the same area:
+  - a shared (non-list) survival or dropout specification is accepted in
+    a two-group simulation with subgroups;
+  - lists of the wrong length are reported instead of being silently
+    truncated or failing with “subscript out of bounds”;
+  - per-cell `e.time` and `d.time` lists are honored in a one-group
+    simulation with subgroups;
+  - group-specific prevalence must use the same number of levels for
+    each factor in both groups;
+  - the illness-death model also treats an explicit `alloc` as a
+    two-group request;
+  - without subgroups, a scalar `n` with an explicit `alloc` and a
+    shared (non-list) hazard now gives two groups sharing that hazard,
+    where it previously gave one group of size `n` and ignored `alloc`.
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  with `stat = "milestone"`, `ms.method = "loglog"`, and `side = 1`
+  returned the upper-tail p-value although the log-log statistic is
+  negative under treatment benefit, so the one-sided p-value was
+  approximately one minus the correct value. It now uses the lower tail,
+  as
+  [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+  does.
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  now reports the `"ahsw"` p-values according to `side`, as
+  [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
+  does; they were always two-sided before.
+- [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  in event-driven mode reported every administratively censored subject
+  as a dropout (`n.pipeline` was always 0). Dropout and pipeline counts
+  are now computed at the per-simulation cutoff. The event-driven mode
+  also keeps the other columns of `data`, so `strata` works there, and
+  an ambiguous `p.col` (several statistics) is reported clearly.
+- The log-rank family
+  ([`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
+  [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+  [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
+  and the weighted and stratified variants) left out of the observed and
+  expected counts an event at a time when only one subject was at risk.
+  The test statistics were unaffected, but the printed counts differed
+  from
+  [`survival::survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html).
+- [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  (and `stat = "medsurv"` in
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md))
+  now follows the
+  [`survival::survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
+  median convention: the comparison with 0.5 uses a tolerance, and a
+  curve that equals 0.5 on a flat stretch gives the midpoint of that
+  stretch. Before, floating-point rounding could move the median to the
+  next event time. With `method = "km"` the kernel hazard is evaluated
+  at the new median, so its standard error changes in the flat-stretch
+  case as well. The printed median of
+  [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  objects uses the same step-function rule instead of linear
+  interpolation.
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  with a scalar `n` split the total with
+  [`round()`](https://rdrr.io/r/base/Round.html), which could lose or
+  add a subject (for example `n = 7` gave 4 + 4). The split now always
+  adds up to `n`, and `alloc` is validated.
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  with `fixed.alloc = TRUE` assigned the subgroup cells in contiguous
+  blocks, so subgroup membership was tied to the accrual interval. The
+  fixed labels are now randomly permuted within each simulation, which
+  changes the generated data for `fixed.alloc = TRUE` (only) for a given
+  seed. The fixed counts are also protected against floating-point
+  shares such as `100 * 0.29`.
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  in the illness-death model now treats a per-group `d.hazard` or
+  `d.median` list as a two-group request, as in the single-endpoint
+  model.
+- [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+  (and `stat = "milestone"`) returned a `NaN` standard error when a
+  Kaplan-Meier curve reached zero by the milestone; it is now 0, as in
+  [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md).
+- [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md)
+  caps the upper limit of the `"log"` interval at 1 and gives a
+  degenerate interval when the standard error is zero, as
+  [`survival::survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
+  does.
+- The print method of
+  [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
+  labels the unweighted stratified test as stratified.
+- [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  silently kept only the last row when `data` had more than one row per
+  simulation and look, such as the stacked arms of
+  [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  output. It now summarizes each arm separately when `data` has an `arm`
+  column (the output gains an `arm` column and the print method a
+  heading per arm), and stops with an error for other duplicated rows.
+- The print method of
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  no longer runs the label “Expected analysis time at stop:” into its
+  value.
+
+### Input validation
+
+- [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
+  [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
+  [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+  [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md),
+  [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+  [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
+  and
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  now check that `event` is coded 0/1 without missing values and, for
+  the two-group functions, that `group` has exactly two values without
+  missing values and that `control` is one of them. Before, a mistyped
+  `control` or a 1/2 event coding silently produced wrong or missing
+  results.
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  requires whole-number `event.looks` and recodes factor and character
+  subgroup columns consistently, so `by.subgroup = TRUE` labels the
+  populations correctly for such columns.
+- [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md)
+  checks that `t_sorted` and `e_sorted` have the same length and, with
+  `presorted = TRUE`, that the times are sorted.
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  checks that hazards are non-negative and that piecewise breakpoints
+  start at 0 and increase, and that the output fits in an R vector.
+- [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+  and
+  [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
+  reject missing times or groups.
+
+### Documentation
+
+- The modestly-weighted weight cap is documented as `1 / S(t_star-)`,
+  the pooled Kaplan-Meier value just before `t_star`, which is what the
+  code computes (as in nphRCT).
+- The
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  documentation explains that, as in the `AHR` package, the estimate is
+  not symmetric in the groups when both groups have events at the same
+  time, so `control` should be the actual reference group.
+- The
+  [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)
+  documentation states the actual condition for `NA` results (no events
+  up to `tau` in a group).
+- The
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  documentation no longer lists a `look.type` column, which the function
+  does not return.
+
 ## FastSurvival 0.2.0
+
+CRAN release: 2026-07-27
 
 - New estimation and testing functions:
   - [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md):

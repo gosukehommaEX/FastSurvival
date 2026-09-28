@@ -88,7 +88,7 @@ survdiff_fast(
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
   log-rank test of Magirr and Burman with weight
-  `1 / max(S(t-), S(t_star))`. `"gehan"` is the Gehan-Breslow test with
+  `1 / max(S(t-), S(t_star-))`. `"gehan"` is the Gehan-Breslow test with
   weight equal to the at-risk count, and `"tarone-ware"` uses the square
   root of the at-risk count. Here `S(t-)` is the left-continuous pooled
   Kaplan-Meier estimate just prior to each event time.
@@ -109,9 +109,10 @@ survdiff_fast(
 
   A single non-negative numeric value, the timepoint of the
   modestly-weighted log-rank test. Required only when
-  `weight = "mwlrt"`. The weight is capped at `1 / S(t_star)`, where
-  `S(t_star)` is the pooled Kaplan-Meier value at `t_star`. A value of 0
-  yields the ordinary log-rank test.
+  `weight = "mwlrt"`. The weight is capped at `1 / S(t_star-)`, where
+  `S(t_star-)` is the pooled Kaplan-Meier value just before `t_star`
+  (the product over event times strictly less than `t_star`, as in
+  nphRCT). A value of 0 yields the ordinary log-rank test.
 
 ## Value
 
@@ -329,16 +330,18 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # \donttest{
-library(microbenchmark)
-microbenchmark(
-  survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
-                                ovarian$rx, 2, side = 2),
-  survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
-  times = 1000
-)
+# Speed comparison against survdiff()
+if (requireNamespace("microbenchmark", quietly = TRUE)) {
+  microbenchmark::microbenchmark(
+    survdiff_fast = survdiff_fast(ovarian$futime, ovarian$fustat,
+                                  ovarian$rx, 2, side = 2),
+    survdiff      = survdiff(Surv(futime, fustat) ~ rx, data = ovarian),
+    times = 1000
+  )
+}
 #> Unit: microseconds
-#>           expr   min      lq      mean  median     uq     max neval cld
-#>  survdiff_fast  24.1   66.55   99.9969   93.55  116.8  1024.0  1000  a 
-#>       survdiff 686.0 1465.25 1987.0319 1852.90 2102.4 36144.3  1000   b
+#>           expr     min        lq      mean   median       uq     max neval cld
+#>  survdiff_fast  30.601   81.3005  122.9189  105.051  129.800 13018.7  1000  a 
+#>       survdiff 722.801 1413.5510 1812.8689 1631.151 1893.151 47441.2  1000   b
 # }
 ```

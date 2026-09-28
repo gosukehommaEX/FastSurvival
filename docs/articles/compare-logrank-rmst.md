@@ -25,7 +25,7 @@ set so that the proportional-hazards scenario, with a hazard ratio of
 0.75, has 90% power at a one-sided 0.025 level. The events are obtained
 from the Schoenfeld formula and inflated to a sample size with the
 Lachin-Foulkes method through
-[`gsDesign::nSurv`](https://keaven.github.io/gsDesign/reference/nSurv.html),
+[`gsDesign::nSurv`](https://keaven.github.io/gsDesign//reference/nSurv.html),
 given 12 months of accrual, 36 months of minimum follow-up, and a 5%
 annual dropout. The same sample size is then applied unchanged to all
 three scenarios.

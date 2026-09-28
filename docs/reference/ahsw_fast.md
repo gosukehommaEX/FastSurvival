@@ -81,8 +81,8 @@ per-group average hazards (`ah.ctrl`, `ah.trt`), the ratio contrast
 (`dah`, `dah.lower`, `dah.upper`, `p.dah`). The truncation time and
 confidence level are stored as attributes `tau` and `conf.level`, and
 the `control` label is also stored. Returns `NA` values (still with
-class `"ahsw_fast"`) when either group has zero survival at `tau` or a
-non-finite variance.
+class `"ahsw_fast"`) when either group has no events up to `tau` (a zero
+average hazard) or a non-finite variance.
 
 ## Details
 
