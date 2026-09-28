@@ -52,8 +52,8 @@ An object of class \code{"ahsw_fast"}, a named numeric vector
   \code{dah.upper}, \code{p.dah}). The truncation time and confidence level
   are stored as attributes \code{tau} and \code{conf.level}, and the
   \code{control} label is also stored. Returns \code{NA} values (still with
-  class \code{"ahsw_fast"}) when either group has zero survival at \code{tau}
-  or a non-finite variance.
+  class \code{"ahsw_fast"}) when either group has no events up to \code{tau}
+  (a zero average hazard) or a non-finite variance.
 }
 \description{
 Computes the average hazard with survival weight (AHSW) of Uno and Horiguchi

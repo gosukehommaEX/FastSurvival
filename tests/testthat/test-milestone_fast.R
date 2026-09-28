@@ -174,3 +174,20 @@ test_that("print returns the object invisibly and produces output", {
   expect_output(print(res), "Milestone survival")
   expect_invisible(print(res))
 })
+
+test_that("milestone_fast gives a zero standard error when a curve reaches zero", {
+  # Control times 1, 2, 3 are all events, so S0(5) = 0; treatment has one
+  # event at 4 with three at risk, so S1(5) = 2/3.
+  res <- milestone_fast(c(1, 2, 3, 4, 5, 6), c(1, 1, 1, 1, 0, 0),
+                        c(0, 0, 0, 1, 1, 1), control = 0, tau = 5)
+  expect_equal(unname(res$surv["control"]), 0)
+  expect_equal(unname(res$std.err["control"]), 0)
+  expect_equal(unname(res$surv["treatment"]), 2 / 3, tolerance = 1e-12)
+})
+
+test_that("milestone_fast rejects missing times and groups", {
+  expect_error(milestone_fast(c(1, NA, 3, 4), c(1, 1, 0, 1), c(0, 0, 1, 1),
+                              control = 0, tau = 2), "missing")
+  expect_error(milestone_fast(c(1, 2, 3, 4), c(1, 1, 0, 1), c(0, NA, 1, 1),
+                              control = 0, tau = 2), "missing")
+})

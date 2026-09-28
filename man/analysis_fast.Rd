@@ -41,8 +41,8 @@ trial, containing at least \code{sim}, \code{group}, \code{accrual_time},
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group.}
 
-\item{event.looks}{A numeric vector of target cumulative event counts, one
-per look. Mutually exclusive with \code{time.looks}.}
+\item{event.looks}{A vector of positive whole numbers, the target cumulative
+event counts, one per look. Mutually exclusive with \code{time.looks}.}
 
 \item{time.looks}{A numeric vector of calendar times, one per look.
 Mutually exclusive with \code{event.looks}.}
@@ -74,7 +74,8 @@ test statistics themselves are always reported with their natural sign, so
 the choice of \code{side} affects only the p-value columns. For log-rank
 and Cox the benefit direction is a negative Z (the one-sided p-value is the
 lower tail \code{pnorm(z)}); for RMST it is a positive Z (the upper tail
-\code{pnorm(-z)}). The AHSW p-values are always two-sided. For
+\code{pnorm(-z)}). The other statistics follow the benefit directions
+given in Details. For
 group-sequential boundary comparisons (for example with gsDesign or
 rpact), align the sign of the reported Z with the boundary convention
 before comparing.}
@@ -161,9 +162,8 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{nsim * length(looks)} rows. When \code{by.subgroup = TRUE}, it has
   \code{nsim * length(looks) * (1 + total subgroup levels)} rows and an
   extra \code{population} column placed after \code{look.value}. The common
-  columns are \code{sim}, \code{look} (1-based look index), \code{look.type}
-  (\code{"event"} or \code{"time"}), \code{look.value} (the requested event
-  count or calendar time), optionally \code{population}, \code{cutoff} (the
+  columns are \code{sim}, \code{look} (1-based look index),
+  \code{look.value} (the requested event count or calendar time), optionally \code{population}, \code{cutoff} (the
   calendar time used, \code{NA} when an event target was not reached),
   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
   number of enrolled subjects whose dropout occurred on or before the cutoff)
@@ -197,7 +197,7 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{wmst.p} for \code{"wmst"}. The Z columns
   \code{logrank.z}, \code{cox.z}, and
   \code{rmst.z} carry the natural sign of each test, and the p-value columns
-  follow \code{side} except for the AHSW p-values, which are two-sided.
+  follow \code{side}.
 }
 \description{
 Performs interim or sequential analyses of simulated two-group
@@ -220,7 +220,10 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 The input \code{data} is the data frame returned by
 \code{\link{simdata_fast}} for a two-group trial. The columns \code{sim},
 \code{group}, \code{accrual_time}, \code{tte}, and \code{event} are
-required.
+required, must not contain missing values, and \code{group} must have
+exactly two distinct values, one of which is \code{control}. For a
+multi-arm trial, subset the data to two arms first or use
+\code{\link{pairwise_fast}}.
 
 For a look at calendar time \code{cutoff}, each subject with accrual time
 \code{a} contributes only if enrolled by then (\code{a <= cutoff}). The
@@ -233,8 +236,8 @@ When \code{event.looks} is supplied, the calendar cutoff for a target of
 \code{d} events is the calendar time of the \code{d}-th event in that
 simulated trial, counted over the whole trial population. If a simulation
 contains fewer than \code{d} events, the target is never reached: the full
-data are used, \code{reached} is \code{FALSE}, and \code{cutoff} is
-\code{NA}. When \code{time.looks} is supplied, the cutoff is the specified
+data are used, so the statistics are those of the final data, \code{reached}
+is \code{FALSE}, and \code{cutoff} is \code{NA}. When \code{time.looks} is supplied, the cutoff is the specified
 calendar time and \code{reached} is always \code{TRUE}. In both cases the
 cutoff is determined once on the whole population and then used for the
 overall analysis and for every subgroup analysis at that look.
@@ -275,18 +278,22 @@ multivariate-normal p-value, which already follows \code{side}.
 The \code{"ahsw"} statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to \code{tau}. It reports the per-group
 average hazards, the ratio (RAH) and difference (DAH) contrasts with their
-confidence intervals, and two-sided p-values for both contrasts. The AHSW
-p-values are always two-sided and do not depend on \code{side}, matching
-\code{\link{ahsw_fast}}.
+confidence intervals, and p-values for both contrasts that follow
+\code{side}, matching \code{\link{ahsw_fast}}. The benefit direction is a
+ratio below 1 (a negative log ratio) and a negative difference, so the
+one-sided p-values are lower-tail probabilities.
 
 The \code{"milestone"} statistic compares the Kaplan-Meier survival
 probabilities of the two groups at the milestone timepoint \code{tau}. It
 reports the per-group survival, the difference (treatment minus control) with
 its confidence interval, the test statistic, and the p-value. The inference
 method is selected with \code{ms.method} (\code{"wald"}, \code{"loglog"}, or
-\code{"mover"}), matching \code{\link{milestone_fast}}; the benefit direction
-is a positive difference (higher treatment survival), so a positive Z favors
-treatment.
+\code{"mover"}), matching \code{\link{milestone_fast}}. The benefit direction
+is a positive difference (higher treatment survival). For \code{"wald"} and
+\code{"mover"} a positive Z favors treatment; for \code{"loglog"} the
+statistic is the difference of the complementary log-log transforms, so a
+negative Z favors treatment, and the one-sided p-value is the lower tail as
+in \code{\link{milestone_fast}}.
 
 The \code{"rmw"} statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a single

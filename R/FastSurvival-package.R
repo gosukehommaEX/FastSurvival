@@ -8,10 +8,12 @@
 #' computations are implemented in C++ via \pkg{Rcpp}.
 #'
 #' @details
-#' The estimation and testing functions return S3-class objects that are
+#' Most estimation and testing functions return S3-class objects that are
 #' internally named numeric vectors, so a result can be used directly in
 #' arithmetic, subsetting, and aggregation after stripping the class with
-#' \code{\link[base]{unclass}}. Each class has a \code{print()} method that
+#' \code{\link[base]{unclass}}. The exceptions are \code{\link{milestone_fast}}
+#' and \code{\link{ahr_fast}}, which return named lists whose elements are
+#' extracted with \code{$}. Each class has a \code{print()} method that
 #' formats the result similarly to the corresponding \pkg{survival} package
 #' output.
 #'

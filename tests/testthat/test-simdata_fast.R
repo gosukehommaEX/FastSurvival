@@ -289,3 +289,55 @@ test_that("simdata_fast: accrual specification validation", {
                  e.median = 18),
     "a.prop")
 })
+
+test_that("simdata_fast: a scalar n is split without losing subjects", {
+  df <- simdata_fast(nsim = 2, n = 7, a.time = c(0, 7), a.rate = 1,
+                     e.hazard = list(0.1, 0.08), seed = 1)
+  expect_equal(nrow(df), 14)
+  expect_equal(as.vector(table(df$group[df$sim == 1])), c(4, 3))
+  df2 <- simdata_fast(nsim = 2, n = 301, a.time = c(0, 12), a.prop = 1,
+                      e.hazard = list(0.1, 0.08), seed = 1)
+  expect_equal(nrow(df2), 602)
+  expect_error(simdata_fast(nsim = 2, n = 100, alloc = c(1, 1, 1),
+                            a.time = c(0, 12), a.prop = 1,
+                            e.hazard = list(0.1, 0.08)), "alloc")
+  expect_error(simdata_fast(nsim = 2, n = 100, alloc = c(1, -1),
+                            a.time = c(0, 12), a.prop = 1,
+                            e.hazard = list(0.1, 0.08)), "alloc")
+})
+
+test_that("simdata_fast: hazards and piecewise breakpoints are validated", {
+  expect_error(simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.prop = 1,
+                            e.hazard = c(0.05, 0.2), e.time = c(3, 6, Inf)),
+               "start at 0")
+  expect_error(simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.prop = 1,
+                            e.hazard = c(0.05, 0.2, 0.1),
+                            e.time = c(0, 12, 6, Inf)),
+               "strictly increasing")
+  expect_error(simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.prop = 1,
+                            e.hazard = -0.1), "non-negative")
+  expect_error(simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.prop = 1,
+                            e.median = -5), "non-negative")
+})
+
+test_that("simdata_fast: fixed.alloc subgroups are not tied to the accrual order", {
+  df <- simdata_fast(nsim = 200, n = 150, a.time = c(0, 6, 12),
+                     a.rate = c(5, 20), e.hazard = 0.05,
+                     prevalence = c(0.2, 0.8), fixed.alloc = TRUE, seed = 11)
+  # Fixed counts: 30 and 120 subjects in every simulation.
+  cnt <- tapply(df$subgroup == 1L, df$sim, sum)
+  expect_true(all(cnt == 30))
+  # The 30 subjects enrolled in [0, 6] are a random draw from the 150, so on
+  # average 20% of them are in subgroup 1 (it was 100% before the fix).
+  early <- df$accrual_time < 6
+  expect_lt(abs(mean(df$subgroup[early] == 1L) - 0.2), 0.03)
+})
+
+test_that("simdata_fast: fixed.alloc counts are robust to floating-point shares", {
+  # Hand calculation: 100 * 0.29 is 28.999... in floating point but the
+  # intended count is 29.
+  df <- simdata_fast(nsim = 1, n = 100, a.time = c(0, 12), a.prop = 1,
+                     e.hazard = 0.05, prevalence = c(0.71, 0.29),
+                     fixed.alloc = TRUE, seed = 12)
+  expect_equal(as.vector(table(df$subgroup)), c(71, 29))
+})

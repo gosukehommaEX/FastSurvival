@@ -113,3 +113,11 @@ test_that("rmst_fast single-group returns NA with class when n = 0", {
   expect_s3_class(res, "rmst_fast")
   expect_true(all(is.na(res)))
 })
+
+test_that("rmst_fast validates event coding and the control label", {
+  tt <- c(1, 2, 3, 4, 5, 6)
+  gg <- c(0, 0, 0, 1, 1, 1)
+  expect_error(rmst_fast(tt, c(1, 2, 1, 2, 1, 2), tau = 4), "coded as 0")
+  expect_error(rmst_fast(tt, rep(1, 6), group = gg, control = 7, tau = 4),
+               "control")
+})

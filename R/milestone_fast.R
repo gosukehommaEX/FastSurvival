@@ -65,6 +65,9 @@ milestone_fast <- function(time, event, group, control, side = 2,
   if (length(event) != length(time) || length(group) != length(time)) {
     stop("'time', 'event', and 'group' must have the same length.")
   }
+  if (anyNA(time) || anyNA(group)) {
+    stop("'time' and 'group' must not contain missing values.")
+  }
   event <- as.integer(event)
   if (any(is.na(event)) || any(!event %in% c(0L, 1L))) {
     stop("'event' must contain only 0 (censored) and 1 (event).")

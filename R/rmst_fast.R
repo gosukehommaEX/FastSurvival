@@ -132,6 +132,7 @@ rmst_fast <- function(time, event, group = NULL, control = NULL, side = 2,
   if (conf.level <= 0 || conf.level >= 1) {
     stop("'conf.level' must be in (0, 1)")
   }
+  check_time_event(time, event)
 
   z <- qnorm(1 - (1 - conf.level) / 2)
 
@@ -172,8 +173,7 @@ rmst_fast <- function(time, event, group = NULL, control = NULL, side = 2,
   }
 
   # Treatment indicator: 1 = treatment, 0 = control
-  if (is.factor(group)) group <- as.character(group)
-  j <- as.integer(group != control)
+  j <- two_group_indicator(group, control)
 
   # Sort pooled data by time when not presorted (group split preserves order)
   if (!presorted) {

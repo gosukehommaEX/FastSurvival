@@ -148,6 +148,10 @@ coxph_fast <- function(time, event, group, control, side = 2,
   if (!side %in% c(1L, 2L)) {
     stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
   }
+  if (length(conf.level) != 1L || !is.finite(conf.level) ||
+      conf.level <= 0 || conf.level >= 1) {
+    stop("'conf.level' must be in (0, 1)")
+  }
 
   # Prepare NA output with coxph-compatible names
   ci_lab <- conf.level * 100
@@ -163,14 +167,19 @@ coxph_fast <- function(time, event, group, control, side = 2,
   if (length(event) != n || length(group) != n) {
     stop("'time', 'event', and 'group' must have the same length")
   }
-  if (n == 0L || sum(event) == 0L) {
+  if (n == 0L) {
     return(structure(na_out, conf.level = conf.level, side = side,
                      control = control, class = "coxph_fast"))
   }
+  check_time_event(time, event)
 
   # Treatment indicator: 1 = treatment, 0 = control
-  if (is.factor(group)) group <- as.character(group)
-  j <- as.integer(group != control)
+  j <- two_group_indicator(group, control)
+
+  if (sum(event) == 0L) {
+    return(structure(na_out, conf.level = conf.level, side = side,
+                     control = control, class = "coxph_fast"))
+  }
 
   # Sort by time when not presorted
   if (!presorted) {

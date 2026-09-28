@@ -19,3 +19,8 @@ inst/doc
 
 # Validation/benchmark script outputs
 tools/benchmarks/
+
+# Compiled objects
+src/*.o
+src/*.so
+src/*.dll

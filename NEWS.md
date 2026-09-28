@@ -1,3 +1,85 @@
+# FastSurvival (development version)
+
+## Bug fixes
+
+* `analysis_fast()` with `stat = "milestone"`, `ms.method = "loglog"`, and
+  `side = 1` returned the upper-tail p-value although the log-log statistic
+  is negative under treatment benefit, so the one-sided p-value was
+  approximately one minus the correct value. It now uses the lower tail, as
+  `milestone_fast()` does.
+* `analysis_fast()` now reports the `"ahsw"` p-values according to `side`, as
+  `ahsw_fast()` does; they were always two-sided before.
+* `pairwise_fast()` in event-driven mode reported every administratively
+  censored subject as a dropout (`n.pipeline` was always 0). Dropout and
+  pipeline counts are now computed at the per-simulation cutoff. The
+  event-driven mode also keeps the other columns of `data`, so `strata` works
+  there, and an ambiguous `p.col` (several statistics) is reported clearly.
+* The log-rank family (`survdiff_fast()`, `maxcombo_fast()`, `rmw_fast()`, and
+  the weighted and stratified variants) left out of the observed and expected
+  counts an event at a time when only one subject was at risk. The test
+  statistics were unaffected, but the printed counts differed from
+  `survival::survdiff()`.
+* `medsurv_fast()` (and `stat = "medsurv"` in `analysis_fast()`) now follows
+  the `survival::survfit()` median convention: the comparison with 0.5 uses a
+  tolerance, and a curve that equals 0.5 on a flat stretch gives the midpoint
+  of that stretch. Before, floating-point rounding could move the median to
+  the next event time. With `method = "km"` the kernel hazard is evaluated at
+  the new median, so its standard error changes in the flat-stretch case as
+  well. The printed median of `kmcurve_fast()` objects uses the
+  same step-function rule instead of linear interpolation.
+* `simdata_fast()` with a scalar `n` split the total with `round()`, which
+  could lose or add a subject (for example `n = 7` gave 4 + 4). The split now
+  always adds up to `n`, and `alloc` is validated.
+* `simdata_fast()` with `fixed.alloc = TRUE` assigned the subgroup cells in
+  contiguous blocks, so subgroup membership was tied to the accrual interval.
+  The fixed labels are now randomly permuted within each simulation, which
+  changes the generated data for `fixed.alloc = TRUE` (only) for a given seed.
+  The fixed counts are also protected against floating-point shares such as
+  `100 * 0.29`.
+* `simdata_fast()` in the illness-death model now treats a per-group
+  `d.hazard` or `d.median` list as a two-group request, as in the
+  single-endpoint model.
+* `milestone_fast()` (and `stat = "milestone"`) returned a `NaN` standard
+  error when a Kaplan-Meier curve reached zero by the milestone; it is now 0,
+  as in `survfit_fast()`.
+* `survfit_fast()` caps the upper limit of the `"log"` interval at 1 and gives
+  a degenerate interval when the standard error is zero, as
+  `survival::survfit()` does.
+* The print method of `survdiff_fast()` labels the unweighted stratified
+  test as stratified.
+* `simsummary_fast()` stops with an error when `data` has more than one row
+  per simulation and look (for example the stacked arms of `pairwise_fast()`
+  output) instead of silently keeping the last row.
+
+## Input validation
+
+* `survdiff_fast()`, `coxph_fast()`, `rmst_fast()`, `maxcombo_fast()`,
+  `rmw_fast()`, `ahsw_fast()`, `survfit_fast()`, and `analysis_fast()` now
+  check that `event` is coded 0/1 without missing values and, for the
+  two-group functions, that `group` has exactly two values without missing
+  values and that `control` is one of them. Before, a mistyped `control` or a
+  1/2 event coding silently produced wrong or missing results.
+* `analysis_fast()` requires whole-number `event.looks` and recodes factor and
+  character subgroup columns consistently, so `by.subgroup = TRUE` labels the
+  populations correctly for such columns.
+* `survfit_fast()` checks that `t_sorted` and `e_sorted` have the same length
+  and, with `presorted = TRUE`, that the times are sorted.
+* `simdata_fast()` checks that hazards are non-negative and that piecewise
+  breakpoints start at 0 and increase, and that the output fits in an R
+  vector.
+* `milestone_fast()`, `medsurv_fast()`, and `wmst_fast()` reject missing
+  times or groups.
+
+## Documentation
+
+* The modestly-weighted weight cap is documented as `1 / S(t_star-)`, the
+  pooled Kaplan-Meier value just before `t_star`, which is what the code
+  computes (as in nphRCT).
+* The `ahsw_fast()` documentation states the actual condition for `NA`
+  results (no events up to `tau` in a group).
+* The `analysis_fast()` documentation no longer lists a `look.type` column,
+  which the function does not return.
+
 # FastSurvival 0.2.0
 
 * New estimation and testing functions:

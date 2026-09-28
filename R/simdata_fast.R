@@ -36,7 +36,9 @@
 #' independent factors; a multi-dimensional array defines the joint
 #' distribution of correlated factors. Per-cell hazards may be supplied as a
 #' list with one element per cell. With \code{fixed.alloc = TRUE} the subgroup
-#' sizes are deterministic; otherwise subgroup membership is drawn from the
+#' sizes are deterministic and the fixed labels are assigned to subjects in a
+#' random order within each simulated trial, so subgroup membership does not
+#' depend on the accrual time; otherwise subgroup membership is drawn from the
 #' prevalence distribution.
 #'
 #' When \code{n} is a vector of length greater than two together with a per-arm
@@ -59,6 +61,9 @@
 #'   requires a per-arm \code{e.hazard} or \code{e.median} list). When \code{n}
 #'   is a per-arm vector, \code{alloc} is ignored.
 #' @param alloc A length-two allocation ratio, used when \code{n} is scalar.
+#'   The total is split in proportion to \code{alloc} and any rounding
+#'   remainder goes to the group with the larger fractional share, so the two
+#'   group sizes always add up to \code{n}.
 #' @param a.time A numeric vector of accrual-interval breakpoints.
 #' @param a.rate Absolute accrual rates (subjects per unit time), interpreted in
 #'   one of two ways. With length \code{length(a.time) - 1} the accrual period is
@@ -105,7 +110,10 @@
 #' @param h12.hazard Transition hazard(s) for the terminal event after an
 #'   intermediate event (state 1 to state 2) for subjects who do not switch.
 #'   Defaults to \code{h02.hazard}, which gives the Fleischer
-#'   maximal-independence model (Fleischer Theorem 1 when there is no switching).
+#'   maximal-independence model (Fleischer Theorem 1 when there is no switching
+#'   and the hazards are constant; with a piecewise \code{h02.hazard} the
+#'   clock-reset \code{h12} restarts the piecewise profile at the intermediate
+#'   event).
 #' @param h12.median Median(s) for the post-event terminal event; an alternative
 #'   to \code{h12.hazard}.
 #' @param h12.time Breakpoints for a piecewise \code{h12.hazard}, measured from
@@ -368,7 +376,7 @@ simdata_fast <- function(nsim       = 1000,
   }
 
   if (length(n) == 1L) {
-    n_grp    <- round(n * alloc / sum(alloc))
+    n_grp    <- split_total(n, alloc)
     n_groups <- 2L
   } else if (length(n) == 2L) {
     n_grp    <- n
@@ -558,6 +566,7 @@ simdata_fast <- function(nsim       = 1000,
   }
 
   n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
+  check_output_size(nsim, n_grp_int)
 
   # Deterministic per-interval accrual counts for each group. Each group's
   # counts sum to its size exactly (largest-remainder rounding), and the kernel
@@ -591,6 +600,11 @@ simdata_fast <- function(nsim       = 1000,
 # cumulative hazard at those breakpoints, matching rpiece_exp_r. For a single
 # hazard the breakpoint / cumulative entries are empty.
 piecewise_precompute <- function(hazard, e.time) {
+  if (!is.numeric(hazard) || length(hazard) < 1L || anyNA(hazard) ||
+      any(hazard < 0) || any(is.infinite(hazard))) {
+    stop("Hazards must be finite and non-negative, and medians must be ",
+         "positive")
+  }
   if (length(hazard) == 1L) {
     return(list(hazard = as.numeric(hazard),
                 fin_time = numeric(0), cum_haz = numeric(0)))
@@ -603,6 +617,10 @@ piecewise_precompute <- function(hazard, e.time) {
   }
   if (!is.infinite(e.time[length(e.time)])) {
     stop("Last element of 'e.time' must be Inf")
+  }
+  if (anyNA(e.time) || e.time[1L] != 0 || any(diff(e.time) <= 0)) {
+    stop("Piecewise breakpoints ('e.time', 'd.time', and so on) must start ",
+         "at 0 and be strictly increasing")
   }
   n_int    <- length(hazard)
   fin_time <- e.time[seq_len(n_int)]
@@ -677,9 +695,10 @@ build_prevalence_spec <- function(prev) {
 # ------------------------------------------------------------------ #
 # Each cell receives floor(n * p) patients; the remaining patients (n minus
 # the sum of the floors) are added one at a time starting from the first
-# cell, so the last cells absorb the rounding shortfall.
+# cell, so the last cells absorb the rounding shortfall. A small tolerance in
+# the floor keeps an exact share such as 100 * 0.29 = 28.999... at 29.
 fixed_cell_counts <- function(n, p) {
-  base <- floor(n * p)
+  base <- floor(n * p + 1e-8)
   rem  <- n - sum(base)
   if (rem > 0L) base[seq_len(rem)] <- base[seq_len(rem)] + 1L
   as.integer(base)
@@ -848,14 +867,14 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
   if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
 
   # A two-group simulation is signalled by a length-two 'n' or any group-specific
-  # (length-two list) hazard / switch argument.
+  # (length-two list) hazard, switch, or dropout argument.
   is_two_group <- (length(n) == 2L) ||
     is.list(h01.hazard) || is.list(h02.hazard) ||
     is.list(h12.hazard) || is.list(h12.switch.hazard) ||
-    is.list(switch.prop)
+    is.list(switch.prop) || is.list(d.hazard)
 
   if (length(n) == 1L) {
-    n_grp <- if (is_two_group) round(n * alloc / sum(alloc)) else n
+    n_grp <- if (is_two_group) split_total(n, alloc) else n
   } else if (length(n) == 2L) {
     n_grp <- n
   } else {
@@ -863,6 +882,7 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
   }
   n_groups  <- if (is_two_group) 2L else 1L
   n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
+  check_output_size(nsim, n_grp_int)
   g2        <- (n_groups == 2L)
 
   # Resolve a possibly group-specific argument for group g (1 = control,

@@ -121,3 +121,15 @@ test_that("coxph_fast stops when input lengths differ", {
     "same length"
   )
 })
+
+test_that("coxph_fast validates event coding, group levels, and conf.level", {
+  tt <- c(1, 2, 3, 4, 5, 6)
+  gg <- c(1, 1, 1, 2, 2, 2)
+  expect_error(coxph_fast(tt, c(1, 2, 1, 2, 1, 2), gg, control = 1),
+               "coded as 0")
+  expect_error(coxph_fast(tt, rep(1, 6), c(1, 1, 2, 2, 3, 3), control = 1),
+               "two distinct")
+  expect_error(coxph_fast(tt, rep(1, 6), gg, control = 3), "control")
+  expect_error(coxph_fast(tt, rep(1, 6), gg, control = 1, conf.level = 95),
+               "conf.level")
+})

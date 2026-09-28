@@ -1,7 +1,7 @@
 Package: FastSurvival
 Type: Package
 Title: Fast Survival Analysis and Simulation for Clinical Trials
-Version: 0.2.0
+Version: 0.2.0.9000
 Authors@R: person(
     given  = "Gosuke",
     family = "Homma",

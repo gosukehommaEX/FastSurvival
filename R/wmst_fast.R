@@ -92,6 +92,9 @@ wmst_fast <- function(time, event, group = NULL, control = NULL,
     if (length(group) != n_obs) {
       stop("group must have the same length as time.")
     }
+    if (anyNA(group)) {
+      stop("group must not contain NA.")
+    }
     levels_g <- sort(unique(group))
     if (length(levels_g) != 2L) {
       stop("group must have exactly two distinct levels for a comparison.")

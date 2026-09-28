@@ -362,3 +362,15 @@ test_that("simsummary_fast consumes gsDesign boundaries with correct logic", {
   expect_equal(cell(ss, "overall", "prob.stop.efficacy"), ref_cum[2L],
                tolerance = 1e-12)
 })
+
+test_that("simsummary_fast rejects duplicate (sim, look) rows", {
+  dfk <- simdata_fast(nsim = 20, n = c(100, 100, 100), a.time = c(0, 12),
+                      a.rate = 300 / 12, e.median = list(12, 16, 20),
+                      seed = 606)
+  pw <- pairwise_fast(dfk, control = 1, time.looks = 30, stat = "logrank",
+                      side = 1)
+  expect_error(simsummary_fast(pw, p.col = "logrank.p", alpha = 0.025),
+               "more than one row")
+  expect_error(simsummary_fast(pw[pw$arm == 2, ], p.col = "logrank.p",
+                               alpha = 0.025), NA)
+})

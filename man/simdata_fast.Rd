@@ -45,7 +45,10 @@ vector of length greater than two giving the per-arm sample sizes (which
 requires a per-arm \code{e.hazard} or \code{e.median} list). When \code{n}
 is a per-arm vector, \code{alloc} is ignored.}
 
-\item{alloc}{A length-two allocation ratio, used when \code{n} is scalar.}
+\item{alloc}{A length-two allocation ratio, used when \code{n} is scalar.
+The total is split in proportion to \code{alloc} and any rounding
+remainder goes to the group with the larger fractional share, so the two
+group sizes always add up to \code{n}.}
 
 \item{a.time}{A numeric vector of accrual-interval breakpoints.}
 
@@ -111,7 +114,10 @@ conventions as \code{h01.hazard}.}
 \item{h12.hazard}{Transition hazard(s) for the terminal event after an
 intermediate event (state 1 to state 2) for subjects who do not switch.
 Defaults to \code{h02.hazard}, which gives the Fleischer
-maximal-independence model (Fleischer Theorem 1 when there is no switching).}
+maximal-independence model (Fleischer Theorem 1 when there is no switching
+and the hazards are constant; with a piecewise \code{h02.hazard} the
+clock-reset \code{h12} restarts the piecewise profile at the intermediate
+event).}
 
 \item{h12.median}{Median(s) for the post-event terminal event; an alternative
 to \code{h12.hazard}.}
@@ -187,7 +193,9 @@ defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
 distribution of correlated factors. Per-cell hazards may be supplied as a
 list with one element per cell. With \code{fixed.alloc = TRUE} the subgroup
-sizes are deterministic; otherwise subgroup membership is drawn from the
+sizes are deterministic and the fixed labels are assigned to subjects in a
+random order within each simulated trial, so subgroup membership does not
+depend on the accrual time; otherwise subgroup membership is drawn from the
 prevalence distribution.
 
 When \code{n} is a vector of length greater than two together with a per-arm
