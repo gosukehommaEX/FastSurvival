@@ -226,10 +226,11 @@ modestly-weighted log-rank test. Required only when <code>weight =
 <dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
 <dd><p>An optional character vector naming one or more subgroup
 columns of <code>data</code> to use as the stratification variable for the
-<code>"logrank"</code> statistic. <code>NULL</code> (default) gives the unstratified
-test. When several columns are named their interaction defines the strata.
-Stratification applies only to the <code>"logrank"</code> statistic; the other
-statistics ignore it.</p></dd>
+<code>"logrank"</code> and <code>"coxph"</code> statistics. <code>NULL</code> (default)
+gives the unstratified analyses. When several columns are named their
+interaction defines the strata. The columns must not contain missing
+values. Stratification applies only to the <code>"logrank"</code> and
+<code>"coxph"</code> statistics; the other statistics ignore it.</p></dd>
 
 
 <dt id="arg-ms-method">ms.method<a class="anchor" aria-label="anchor" href="#arg-ms-method"></a></dt>
@@ -390,7 +391,10 @@ stratification variable. The stratification is determined on the whole cut
 data, independently of the <code>population</code> marginalization, so a stratified
 overall analysis is the canonical primary test; in a single-subgroup
 population the stratum is constant and the stratified test degenerates to the
-ordinary one within that subset.</p>
+ordinary one within that subset. The same <code>strata</code> also stratify the
+<code>"coxph"</code> statistic, which is then the stratified Pike-Halley estimate
+of <code><a href="coxph_fast.html">coxph_fast</a></code> (a common hazard ratio with a separate baseline
+hazard in each stratum).</p>
 <p>The <code>"maxcombo"</code> statistic is the max-combo test of <code>mc.rho</code> and
 <code>mc.gamma</code> Fleming-Harrington weights. Its <code>maxcombo.stat</code> is the
 most extreme component (<code>min</code> of the component Z-scores when
@@ -507,9 +511,9 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.631606     13.188562 2.816629e-04</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 -5.043861     25.440534 4.562306e-07</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Stratified log-rank on the subgroup factor</span></span></span>
+<span class="r-in"><span><span class="co"># Stratified log-rank and stratified Cox on the subgroup factor</span></span></span>
 <span class="r-in"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>
-<span class="r-in"><span>                      stat <span class="op">=</span> <span class="st">"logrank"</span>, strata <span class="op">=</span> <span class="st">"subgroup"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                      stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>, strata <span class="op">=</span> <span class="st">"subgroup"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         24     24    TRUE        300     208         0         92</span>
@@ -518,13 +522,20 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         24     24    TRUE        300     206         0         94</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.059687      9.361684 2.215684e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -5.125810     26.273925 2.962617e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -5.532218     30.605431 3.162074e-08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.736340     22.432915 2.176126e-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.741408     13.998135 1.829920e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.584396      2.510311 1.131036e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p   cox.coef    cox.hr    cox.se     cox.z</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.059687      9.361684 2.215684e-03 -0.4286952 0.6513584 0.1410554 -3.039197</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -5.125810     26.273925 2.962617e-07 -0.7470592 0.4737577 0.1487554 -5.022065</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -5.532218     30.605431 3.162074e-08 -0.8010695 0.4488486 0.1482634 -5.403014</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.736340     22.432915 2.176126e-06 -0.6711369 0.5111272 0.1438130 -4.666733</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1461903 -3.699654</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410111 -1.581234</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          cox.p cox.lower cox.upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.372098e-03 0.4940301 0.8587893</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 5.111897e-07 0.3539448 0.6341283</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 6.553017e-08 0.3356587 0.6002083</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 3.060273e-06 0.3855805 0.6775523</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2.158937e-04 0.4371926 0.7754391</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1.138246e-01 0.6069262 1.0548570</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fleming-Harrington G(0, 1) weighted log-rank for delayed effects</span></span></span>
 <span class="r-in"><span><span class="va">res3</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>

@@ -46,6 +46,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="fastsurvival-development-version">FastSurvival (development version)<a class="anchor" aria-label="anchor" href="#fastsurvival-development-version"></a></h2>
 <div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> gains a <code>strata</code> argument for a stratified Pike-Halley estimate of a common hazard ratio with a separate baseline hazard in each stratum (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/1" class="external-link">#1</a>, suggested by Isaac Gravestock). The risk sets are formed within each stratum, and the observed and expected totals, the score, the information, and the curvature term are summed over strata, so the result approximates <code>coxph(... + strata(s), ties = "breslow")</code>. The <code>strata</code> argument of <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now also stratifies <code>stat = "coxph"</code>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>
 <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with subgroups failed when the sample size was given as a scalar <code>n</code> with <code>alloc</code> (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/2" class="external-link">#2</a>, reported by Isaac Gravestock), because a scalar <code>n</code> with a common prevalence was always treated as a single group. A scalar <code>n</code> now gives a two-group simulation when <code>alloc</code> is supplied explicitly or when a survival or dropout specification is a per-group list with per-cell elements (such as <code>list(list(0.10, 0.08, 0.06), 0.05)</code>), and the result is identical to the per-group <code>n</code> specification. Without either signal, a list with subgroups is still read as per-cell values of a single group. The rules are described in the Details of <code><a href="../reference/simdata_fast.html">?simdata_fast</a></code>. In the same area:

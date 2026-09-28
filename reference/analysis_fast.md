@@ -158,11 +158,12 @@ analysis_fast(
 - strata:
 
   An optional character vector naming one or more subgroup columns of
-  `data` to use as the stratification variable for the `"logrank"`
-  statistic. `NULL` (default) gives the unstratified test. When several
-  columns are named their interaction defines the strata. Stratification
-  applies only to the `"logrank"` statistic; the other statistics ignore
-  it.
+  `data` to use as the stratification variable for the `"logrank"` and
+  `"coxph"` statistics. `NULL` (default) gives the unstratified
+  analyses. When several columns are named their interaction defines the
+  strata. The columns must not contain missing values. Stratification
+  applies only to the `"logrank"` and `"coxph"` statistics; the other
+  statistics ignore it.
 
 - ms.method:
 
@@ -320,7 +321,11 @@ variable. The stratification is determined on the whole cut data,
 independently of the `population` marginalization, so a stratified
 overall analysis is the canonical primary test; in a single-subgroup
 population the stratum is constant and the stratified test degenerates
-to the ordinary one within that subset.
+to the ordinary one within that subset. The same `strata` also stratify
+the `"coxph"` statistic, which is then the stratified Pike-Halley
+estimate of
+[`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+(a common hazard ratio with a separate baseline hazard in each stratum).
 
 The `"maxcombo"` statistic is the max-combo test of `mc.rho` and
 `mc.gamma` Fleming-Harrington weights. Its `maxcombo.stat` is the most
@@ -460,9 +465,9 @@ head(res1)
 #> 5 -3.631606     13.188562 2.816629e-04
 #> 6 -5.043861     25.440534 4.562306e-07
 
-# Stratified log-rank on the subgroup factor
+# Stratified log-rank and stratified Cox on the subgroup factor
 res2 <- analysis_fast(df, control = 1, time.looks = 24,
-                      stat = "logrank", strata = "subgroup")
+                      stat = c("logrank", "coxph"), strata = "subgroup")
 head(res2)
 #>   sim look look.value cutoff reached n.enrolled n.event n.dropout n.pipeline
 #> 1   1    1         24     24    TRUE        300     208         0         92
@@ -471,13 +476,20 @@ head(res2)
 #> 4   4    1         24     24    TRUE        300     206         0         94
 #> 5   5    1         24     24    TRUE        300     194         0        106
 #> 6   6    1         24     24    TRUE        300     203         0         97
-#>   logrank.z logrank.chisq    logrank.p
-#> 1 -3.059687      9.361684 2.215684e-03
-#> 2 -5.125810     26.273925 2.962617e-07
-#> 3 -5.532218     30.605431 3.162074e-08
-#> 4 -4.736340     22.432915 2.176126e-06
-#> 5 -3.741408     13.998135 1.829920e-04
-#> 6 -1.584396      2.510311 1.131036e-01
+#>   logrank.z logrank.chisq    logrank.p   cox.coef    cox.hr    cox.se     cox.z
+#> 1 -3.059687      9.361684 2.215684e-03 -0.4286952 0.6513584 0.1410554 -3.039197
+#> 2 -5.125810     26.273925 2.962617e-07 -0.7470592 0.4737577 0.1487554 -5.022065
+#> 3 -5.532218     30.605431 3.162074e-08 -0.8010695 0.4488486 0.1482634 -5.403014
+#> 4 -4.736340     22.432915 2.176126e-06 -0.6711369 0.5111272 0.1438130 -4.666733
+#> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1461903 -3.699654
+#> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410111 -1.581234
+#>          cox.p cox.lower cox.upper
+#> 1 2.372098e-03 0.4940301 0.8587893
+#> 2 5.111897e-07 0.3539448 0.6341283
+#> 3 6.553017e-08 0.3356587 0.6002083
+#> 4 3.060273e-06 0.3855805 0.6775523
+#> 5 2.158937e-04 0.4371926 0.7754391
+#> 6 1.138246e-01 0.6069262 1.0548570
 
 # Fleming-Harrington G(0, 1) weighted log-rank for delayed effects
 res3 <- analysis_fast(df, control = 1, time.looks = 24,
