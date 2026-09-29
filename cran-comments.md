@@ -12,10 +12,10 @@ full list of changes.
 
 ## Notes for the reviewer
 
-The incoming check may report possibly misspelled words in the DESCRIPTION,
-"Kalbfleisch" and "Pepe". Both are author surnames, used to name the
-Kalbfleisch-Prentice average hazard ratio and the Pepe-Fleming weighted
-Kaplan-Meier test. The spelling is correct.
+The checks below reported no NOTE. If the incoming check reports possibly
+misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe", both are author
+surnames, used to name the Kalbfleisch-Prentice average hazard ratio and the
+Pepe-Fleming weighted Kaplan-Meier test. The spelling is correct.
 
 As in the previous release, no example uses \dontrun{}. Examples that exceed
 the 5-second limit are wrapped in \donttest{}, and examples that use Suggests
@@ -25,7 +25,7 @@ requireNamespace(). The package was checked with --run-donttest.
 ## Test environments
 
 * Local: Windows 11 x64 (build 26200), R 4.6.0
-* win-builder: R-devel and R-release
+* win-builder: R-release (R 4.6.1)
 * GitHub Actions (R-CMD-check workflow):
   - ubuntu-latest (R release)
   - ubuntu-latest (R devel)
@@ -34,9 +34,7 @@ requireNamespace(). The package was checked with --run-donttest.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
-
-The NOTE is the DESCRIPTION spelling note described above.
+0 errors | 0 warnings | 0 notes
 
 ## Downstream dependencies
 
