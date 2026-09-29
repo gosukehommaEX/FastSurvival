@@ -63,8 +63,9 @@ ahsw_fast(
 - tau:
 
   A single positive numeric value, the truncation time point for the
-  average hazard. Both groups must have positive Kaplan-Meier survival
-  at `tau`.
+  average hazard. A warning is given when it exceeds the largest
+  observed time of either group, because the Kaplan-Meier curve is not
+  estimated beyond that time.
 
 - presorted:
 

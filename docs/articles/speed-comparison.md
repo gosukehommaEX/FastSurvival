@@ -266,17 +266,17 @@ but the order of magnitude of the speedup is stable.
 | Function | Replaces | Approximate speed gain |
 |----|----|----|
 | [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md) | [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) + [`summary()`](https://rdrr.io/r/base/summary.html) at one time point | ~40x |
-| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~40x |
-| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~30x |
-| [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~40x |
-| `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | ~350x |
-| [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md) | [`survWMST::wmst()`](https://rdrr.io/pkg/survWMST/man/wmst.html) | ~560x |
+| [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html) | ~25x |
+| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) (point estimate + Wald CI) | ~35x |
+| [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) | ~35x |
+| `survdiff_fast(weight = "fh")` | [`nph::logrank.test()`](https://rdrr.io/pkg/nph/man/logrank.test.html) | ~300x |
+| [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md) | [`survWMST::wmst()`](https://rdrr.io/pkg/survWMST/man/wmst.html) | ~900x |
 | [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md) | [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) + [`summary()`](https://rdrr.io/r/base/summary.html) at a milestone | ~20x |
-| [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md) | [`nph::nphparams()`](https://rdrr.io/pkg/nph/man/nphparams.html) | ~30x |
-| [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md) | [`nph::logrank.maxtest()`](https://rdrr.io/pkg/nph/man/logrank.maxtest.html) | ~320x |
-| [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md) | [`nphRCT::wlrt()`](https://rdrr.io/pkg/nphRCT/man/wlrt.html) (two components) | ~80x |
-| [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md) | [`survAH::ah2()`](https://rdrr.io/pkg/survAH/man/ah2.html) | ~410x |
-| [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md) | [`AHR::ahrKM()`](https://rdrr.io/pkg/AHR/man/ahrKM.html) | ~130x |
+| [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md) | [`nph::nphparams()`](https://rdrr.io/pkg/nph/man/nphparams.html) | ~35x |
+| [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md) | [`nph::logrank.maxtest()`](https://rdrr.io/pkg/nph/man/logrank.maxtest.html) | ~350x |
+| [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md) | [`nphRCT::wlrt()`](https://rdrr.io/pkg/nphRCT/man/wlrt.html) (two components) | ~75x |
+| [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md) | [`survAH::ah2()`](https://rdrr.io/pkg/survAH/man/ah2.html) | ~450x |
+| [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md) | [`AHR::ahrKM()`](https://rdrr.io/pkg/AHR/man/ahrKM.html) | ~200x |
 
 ## Why it is faster
 

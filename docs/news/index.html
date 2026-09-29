@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,14 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="fastsurvival-development-version">FastSurvival (development version)<a class="anchor" aria-label="anchor" href="#fastsurvival-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="fastsurvival-100">FastSurvival 1.0.0<a class="anchor" aria-label="anchor" href="#fastsurvival-100"></a></h2>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-1-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> gains a <code>strata</code> argument for a stratified Pike-Halley estimate of a common hazard ratio with a separate baseline hazard in each stratum (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/1" class="external-link">#1</a>, suggested by Isaac Gravestock). The risk sets are formed within each stratum, and the observed and expected totals, the score, the information, and the curvature term are summed over strata, so the result approximates <code>coxph(... + strata(s), ties = "breslow")</code>. The <code>strata</code> argument of <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now also stratifies <code>stat = "coxph"</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-1-0-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with subgroups failed when the sample size was given as a scalar <code>n</code> with <code>alloc</code> (<a href="https://github.com/gosukehommaEX/FastSurvival/issues/2" class="external-link">#2</a>, reported by Isaac Gravestock), because a scalar <code>n</code> with a common prevalence was always treated as a single group. A scalar <code>n</code> now gives a two-group simulation when <code>alloc</code> is supplied explicitly or when a survival or dropout specification is a per-group list with per-cell elements (such as <code>list(list(0.10, 0.08, 0.06), 0.05)</code>), and the result is identical to the per-group <code>n</code> specification. Without either signal, a list with subgroups is still read as per-cell values of a single group. The rules are described in the Details of <code><a href="../reference/simdata_fast.html">?simdata_fast</a></code>. In the same area:
 <ul><li>a shared (non-list) survival or dropout specification is accepted in a two-group simulation with subgroups;</li>
@@ -86,9 +86,11 @@
 <li>The print method of <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> no longer runs the label “Expected analysis time at stop:” into its value.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="input-validation-development-version">Input validation<a class="anchor" aria-label="anchor" href="#input-validation-development-version"></a></h3>
+<h3 id="input-validation-1-0-0">Input validation<a class="anchor" aria-label="anchor" href="#input-validation-1-0-0"></a></h3>
 <ul><li>
-<code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code>, <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>, <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>, <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code>, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code>, <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code>, <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code>, and <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now check that <code>event</code> is coded 0/1 without missing values and, for the two-group functions, that <code>group</code> has exactly two values without missing values and that <code>control</code> is one of them. Before, a mistyped <code>control</code> or a 1/2 event coding silently produced wrong or missing results.</li>
+<code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>, <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code>, <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code>, <code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> (a supplied <code>tau2</code>), and <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> (a supplied <code>tau</code>) warn when the truncation time or milestone exceeds the largest observed time of a group, where the Kaplan-Meier curve is not estimated and is carried forward flat.</li>
+<li>
+<code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code>, <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>, <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code>, <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code>, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code>, <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code>, <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code>, and <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now check that <code>event</code> is coded 0/1 without missing values and, for the two-group functions, that <code>group</code> has exactly two values without missing values and that <code>control</code> is one of them. Before, a wrong <code>control</code> label or a 1/2 event coding silently produced wrong or missing results.</li>
 <li>
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> requires whole-number <code>event.looks</code> and recodes factor and character subgroup columns consistently, so <code>by.subgroup = TRUE</code> labels the populations correctly for such columns.</li>
 <li>
@@ -99,8 +101,10 @@
 <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code>, <code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code>, and <code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> reject missing times or groups.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<h3 id="documentation-1-0-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-0-0"></a></h3>
 <ul><li>The modestly-weighted weight cap is documented as <code>1 / S(t_star-)</code>, the pooled Kaplan-Meier value just before <code>t_star</code>, which is what the code computes (as in nphRCT).</li>
+<li>The speed-comparison vignette reports speed gains re-measured for this release.</li>
+<li>The validation vignette compares the stratified <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> with <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> using <code><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata()</a></code>.</li>
 <li>The <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> documentation explains that, as in the <code>AHR</code> package, the estimate is not symmetric in the groups when both groups have events at the same time, so <code>control</code> should be the actual reference group.</li>
 <li>The <code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code> documentation states the actual condition for <code>NA</code> results (no events up to <code>tau</code> in a group).</li>
 <li>The <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> documentation no longer lists a <code>look.type</code> column, which the function does not return.</li>

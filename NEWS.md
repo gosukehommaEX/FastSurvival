@@ -115,6 +115,8 @@
 * The modestly-weighted weight cap is documented as `1 / S(t_star-)`, the
   pooled Kaplan-Meier value just before `t_star`, which is what the code
   computes (as in nphRCT).
+* The speed-comparison vignette reports speed gains re-measured for this
+  release.
 * The validation vignette compares the stratified `coxph_fast()` with
   `coxph()` using `strata()`.
 * The `ahr_fast()` documentation explains that, as in the `AHR` package, the

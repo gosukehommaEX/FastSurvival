@@ -61,7 +61,10 @@ rmst_fast(
 
 - tau:
 
-  A single positive numeric value specifying the restriction horizon.
+  A single positive numeric value specifying the restriction horizon. A
+  warning is given when it exceeds the largest observed time (of either
+  group in the two-group case), because the Kaplan-Meier curve is not
+  estimated beyond that time.
 
 - presorted:
 
