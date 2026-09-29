@@ -1,33 +1,31 @@
 ## Update
 
-This is an update from version 0.1.0 to 0.2.0. It adds several survival
-analysis functions (`rmst_fast()`, `wmst_fast()`, `milestone_fast()`,
-`medsurv_fast()`, `maxcombo_fast()`, `rmw_fast()`, `wkm_fast()`, `ahsw_fast()`,
-`ahr_fast()`), extends `survdiff_fast()` with weighted and stratified log-rank
-tests, adds a simulation and sequential-analysis layer (`simdata_fast()`
-subgroups and correlated two-endpoint illness-death simulation,
-`analysis_fast()`, `pairwise_fast()`, `simsummary_fast()`), and adds a
-visualization layer (`gen_scenario_fast()`, `kmcurve_fast()`). See NEWS.md for
-the full list of changes.
+This is an update from version 0.2.0 to 1.0.0. The release fixes several
+bugs found in a review of the whole package (among them a wrong one-sided
+p-value tail for the log-log milestone test in `analysis_fast()`, incorrect
+dropout and pipeline counts in the event-driven mode of `pairwise_fast()`,
+and a sample-size split in `simdata_fast()` that could lose a subject),
+adds input validation to the analysis functions, and adds a stratified
+version of the closed-form hazard ratio estimator in `coxph_fast()`. It also
+resolves the two issues reported on GitHub (#1 and #2). See NEWS.md for the
+full list of changes.
 
 ## Notes for the reviewer
 
-The incoming check reports one NOTE on possibly misspelled words in the
-DESCRIPTION, "Kalbfleisch" and "Pepe". Both are author surnames, used to name
-the Kalbfleisch-Prentice average hazard ratio and the Pepe-Fleming weighted
+The incoming check may report possibly misspelled words in the DESCRIPTION,
+"Kalbfleisch" and "Pepe". Both are author surnames, used to name the
+Kalbfleisch-Prentice average hazard ratio and the Pepe-Fleming weighted
 Kaplan-Meier test. The spelling is correct.
 
-Following the feedback on the 0.1.0 submission, software names in the title
-and description are wrapped in single quotes ('C++', 'Rcpp', 'survival'), and
-no example uses \dontrun{}. Examples that exceed the 5-second limit or rely on
-Suggests packages are wrapped in \donttest{} and guarded with
-requireNamespace(), so they do not fail when those packages are absent. The
-package was checked with --run-donttest to confirm this.
+As in the previous release, no example uses \dontrun{}. Examples that exceed
+the 5-second limit are wrapped in \donttest{}, and examples that use Suggests
+packages other than the recommended package 'survival' are guarded with
+requireNamespace(). The package was checked with --run-donttest.
 
 ## Test environments
 
 * Local: Windows 11 x64 (build 26200), R 4.6.0
-* win-builder: R Under development (unstable) (2026-07-24 r90297 ucrt)
+* win-builder: R-devel and R-release
 * GitHub Actions (R-CMD-check workflow):
   - ubuntu-latest (R release)
   - ubuntu-latest (R devel)
