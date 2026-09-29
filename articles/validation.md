@@ -156,6 +156,28 @@ are not expected to be identical. They differ slightly, here in the
 fourth decimal place, which reflects the approximation and is not a sign
 of error.
 
+With `strata`,
+[`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+approximates the stratified Cox model, in which each stratum has its own
+baseline hazard. Stratifying by tumor grade, the estimate is compared
+with [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) using
+[`strata()`](https://rdrr.io/pkg/survival/man/strata.html) and the
+Breslow method for ties, which is the partial likelihood that the
+Pike-Halley Estimator targets.
+
+``` r
+
+fast_hr_s <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
+                        control = 0, strata = gbsg$grade)
+
+ref_cox_s <- coxph(Surv(rfstime, status) ~ hormon + strata(grade),
+                   data = gbsg, ties = "breslow")
+
+c(fast = unclass(fast_hr_s)["coef"], cox = unname(coef(ref_cox_s)))
+#>  fast.coef        cox 
+#> -0.3396679 -0.3396679
+```
+
 ## Restricted mean survival time
 
 [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
@@ -245,8 +267,12 @@ tmax <- max(gbsg$rfstime)
 fast_wk <- wkm_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                     control = 0, side = 1, weight = "constant")
 
-ref_rm  <- rmst_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
-                     control = 0, tau = tmax, side = 1)
+# tau = tmax extends past the shorter group's follow-up on purpose, to cover
+# the whole observed range as the constant-weight test does; rmst_fast()
+# warns about this, so the warning is suppressed here.
+ref_rm  <- suppressWarnings(
+  rmst_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
+            control = 0, tau = tmax, side = 1))
 
 c(wkm.constant = unclass(fast_wk)["wdiff"], rmst = unclass(ref_rm)["diff"])
 #> wkm.constant.wdiff          rmst.diff 
@@ -536,9 +562,9 @@ log-rank, RMST, milestone, median, and average-hazard quantities; the
 window mean survival time matches a Kaplan-Meier integral and the
 weighted Kaplan-Meier statistic matches the RMST identity; the average
 hazard ratio matches a survival-based reference; and the closed-form Cox
-hazard ratio agrees with the partial-likelihood maximizer to the order
-expected for the Pike-Halley approximation. This agreement is verified
-continuously by the package test suite.
+hazard ratio, with or without strata, agrees with the partial-likelihood
+maximizer to the order expected for the Pike-Halley approximation. This
+agreement is verified continuously by the package test suite.
 
 ## References
 

@@ -55,7 +55,8 @@ ahr_fast(
 
   upper limit of the interval over which the average hazard ratio is
   computed. If `NULL` (default) the largest time observed in both groups
-  is used.
+  is used. A supplied value larger than that gives a warning, because
+  the Kaplan-Meier curves are not estimated beyond it.
 
 - null.ahr:
 

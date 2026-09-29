@@ -25,7 +25,7 @@ is suitable for simulation loops with presorted = TRUE."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,8 +126,9 @@ level. Defaults to 0.95.</p></dd>
 
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
 <dd><p>A single positive numeric value, the truncation time point for the
-average hazard. Both groups must have positive Kaplan-Meier survival at
-<code>tau</code>.</p></dd>
+average hazard. A warning is given when it exceeds the largest observed
+time of either group, because the Kaplan-Meier curve is not estimated
+beyond that time.</p></dd>
 
 
 <dt id="arg-presorted">presorted<a class="anchor" aria-label="anchor" href="#arg-presorted"></a></dt>

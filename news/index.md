@@ -1,6 +1,6 @@
 # Changelog
 
-## FastSurvival (development version)
+## FastSurvival 1.0.0
 
 ### New features
 
@@ -128,6 +128,15 @@
 
 ### Input validation
 
+- [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
+  [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md),
+  [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+  [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
+  (a supplied `tau2`), and
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  (a supplied `tau`) warn when the truncation time or milestone exceeds
+  the largest observed time of a group, where the Kaplan-Meier curve is
+  not estimated and is carried forward flat.
 - [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
   [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
   [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
@@ -139,9 +148,9 @@
   [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
   now check that `event` is coded 0/1 without missing values and, for
   the two-group functions, that `group` has exactly two values without
-  missing values and that `control` is one of them. Before, a mistyped
-  `control` or a 1/2 event coding silently produced wrong or missing
-  results.
+  missing values and that `control` is one of them. Before, a wrong
+  `control` label or a 1/2 event coding silently produced wrong or
+  missing results.
 - [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
   requires whole-number `event.looks` and recodes factor and character
   subgroup columns consistently, so `by.subgroup = TRUE` labels the
@@ -163,6 +172,10 @@
 - The modestly-weighted weight cap is documented as `1 / S(t_star-)`,
   the pooled Kaplan-Meier value just before `t_star`, which is what the
   code computes (as in nphRCT).
+- The validation vignette compares the stratified
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+  with [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) using
+  [`strata()`](https://rdrr.io/pkg/survival/man/strata.html).
 - The
   [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
   documentation explains that, as in the `AHR` package, the estimate is

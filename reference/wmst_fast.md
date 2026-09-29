@@ -54,7 +54,9 @@ wmst_fast(
 
   Upper limit of the window. If omitted, the largest time common to both
   groups is used (the minimum over groups of the maximum observed time),
-  or the maximum observed time for a single group.
+  or the maximum observed time for a single group. A supplied value
+  larger than that gives a warning, because the Kaplan-Meier curve is
+  not estimated beyond it.
 
 - side:
 
