@@ -1,5 +1,7 @@
 # Changelog
 
+## FastSurvival (development version)
+
 ## FastSurvival 1.0.0
 
 ### New features
