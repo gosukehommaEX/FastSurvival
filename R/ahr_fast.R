@@ -47,7 +47,8 @@
 #' @param conf.level confidence level for the confidence interval (default 0.95)
 #' @param tau upper limit of the interval over which the average hazard ratio is
 #'   computed. If \code{NULL} (default) the largest time observed in both groups
-#'   is used.
+#'   is used. A supplied value larger than that gives a warning, because the
+#'   Kaplan-Meier curves are not estimated beyond it.
 #' @param null.ahr value of the average hazard ratio under the null hypothesis
 #'   used for the Z statistic and p-value (default 1)
 #' @param presorted if \code{TRUE}, assume \code{time} is already sorted in
@@ -141,6 +142,10 @@ ahr_fast <- function(time, event, group, control, side = 2,
   } else {
     if (!is.numeric(tau) || length(tau) != 1 || tau <= 0) {
       stop("'tau' must be a single positive number or NULL.")
+    }
+    if (tau > min(max(time1), max(time2))) {
+      check_tau_follow_up(c(time1, time2),
+                          rep(0:1, c(length(time1), length(time2))), tau)
     }
   }
 

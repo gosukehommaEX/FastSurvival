@@ -293,3 +293,13 @@ test_that("without ties, exchanging the reference gives the reciprocal", {
   a2 <- ahr_fast(tt, ee, gg, control = 1, tau = 10)$ahr
   expect_equal(a1 * a2, 1, tolerance = 1e-10)
 })
+
+test_that("ahr_fast warns when a supplied tau exceeds the observed follow-up", {
+  set.seed(74)
+  tt <- c(rexp(50, 0.10), rexp(50, 0.07))
+  ee <- rep(1L, 100)
+  gg <- rep(0:1, each = 50)
+  lim <- min(max(tt[gg == 0]), max(tt[gg == 1]))
+  expect_warning(ahr_fast(tt, ee, gg, control = 0, tau = lim + 1), "exceeds")
+  expect_warning(ahr_fast(tt, ee, gg, control = 0), NA)
+})

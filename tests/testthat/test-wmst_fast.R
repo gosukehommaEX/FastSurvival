@@ -171,3 +171,14 @@ test_that("type I error is approximately controlled under the null", {
   }
   expect_lt(reject / nsim, 0.12)
 })
+
+test_that("wmst_fast warns when a supplied tau2 exceeds the observed follow-up", {
+  set.seed(73)
+  tt <- c(rexp(50, 0.10), rexp(50, 0.07))
+  ee <- rep(1L, 100)
+  gg <- rep(0:1, each = 50)
+  lim <- min(max(tt[gg == 0]), max(tt[gg == 1]))
+  expect_warning(wmst_fast(tt, ee, group = gg, control = 0, tau2 = lim + 1),
+                 "exceeds")
+  expect_warning(wmst_fast(tt, ee, group = gg, control = 0), NA)
+})

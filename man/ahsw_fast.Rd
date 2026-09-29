@@ -36,8 +36,9 @@ at \code{conf.level}.}
 level. Defaults to 0.95.}
 
 \item{tau}{A single positive numeric value, the truncation time point for the
-average hazard. Both groups must have positive Kaplan-Meier survival at
-\code{tau}.}
+average hazard. A warning is given when it exceeds the largest observed
+time of either group, because the Kaplan-Meier curve is not estimated
+beyond that time.}
 
 \item{presorted}{A logical value. If \code{TRUE}, \code{time}, \code{event},
 and \code{group} are assumed to be sorted in ascending order of

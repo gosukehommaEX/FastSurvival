@@ -1,4 +1,4 @@
-# FastSurvival (development version)
+# FastSurvival 1.0.0
 
 ## New features
 
@@ -89,11 +89,15 @@
 
 ## Input validation
 
+* `rmst_fast()`, `ahsw_fast()`, `milestone_fast()`, `wmst_fast()` (a supplied
+  `tau2`), and `ahr_fast()` (a supplied `tau`) warn when the truncation time
+  or milestone exceeds the largest observed time of a group, where the
+  Kaplan-Meier curve is not estimated and is carried forward flat.
 * `survdiff_fast()`, `coxph_fast()`, `rmst_fast()`, `maxcombo_fast()`,
   `rmw_fast()`, `ahsw_fast()`, `survfit_fast()`, and `analysis_fast()` now
   check that `event` is coded 0/1 without missing values and, for the
   two-group functions, that `group` has exactly two values without missing
-  values and that `control` is one of them. Before, a mistyped `control` or a
+  values and that `control` is one of them. Before, a wrong `control` label or a
   1/2 event coding silently produced wrong or missing results.
 * `analysis_fast()` requires whole-number `event.looks` and recodes factor and
   character subgroup columns consistently, so `by.subgroup = TRUE` labels the
@@ -111,6 +115,8 @@
 * The modestly-weighted weight cap is documented as `1 / S(t_star-)`, the
   pooled Kaplan-Meier value just before `t_star`, which is what the code
   computes (as in nphRCT).
+* The validation vignette compares the stratified `coxph_fast()` with
+  `coxph()` using `strata()`.
 * The `ahr_fast()` documentation explains that, as in the `AHR` package, the
   estimate is not symmetric in the groups when both groups have events at the
   same time, so `control` should be the actual reference group.

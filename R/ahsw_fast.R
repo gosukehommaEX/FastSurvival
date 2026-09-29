@@ -53,8 +53,9 @@
 #' @param conf.level A single numeric value in (0, 1) specifying the confidence
 #'   level. Defaults to 0.95.
 #' @param tau A single positive numeric value, the truncation time point for the
-#'   average hazard. Both groups must have positive Kaplan-Meier survival at
-#'   \code{tau}.
+#'   average hazard. A warning is given when it exceeds the largest observed
+#'   time of either group, because the Kaplan-Meier curve is not estimated
+#'   beyond that time.
 #' @param presorted A logical value. If \code{TRUE}, \code{time}, \code{event},
 #'   and \code{group} are assumed to be sorted in ascending order of
 #'   \code{time}, and the internal \code{order()} call is skipped. If
@@ -123,6 +124,7 @@ ahsw_fast <- function(time, event, group, control, side = 2,
 
   # Treatment indicator: 1 = treatment, 0 = control
   j <- two_group_indicator(group, control)
+  check_tau_follow_up(time, j, tau)
 
   # Sort pooled data by time when not presorted (group split preserves order)
   if (!presorted) {

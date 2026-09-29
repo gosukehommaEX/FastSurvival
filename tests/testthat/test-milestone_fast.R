@@ -181,8 +181,12 @@ test_that("print returns the object invisibly and produces output", {
 test_that("milestone_fast gives a zero standard error when a curve reaches zero", {
   # Control times 1, 2, 3 are all events, so S0(5) = 0; treatment has one
   # event at 4 with three at risk, so S1(5) = 2/3.
-  res <- milestone_fast(c(1, 2, 3, 4, 5, 6), c(1, 1, 1, 1, 0, 0),
-                        c(0, 0, 0, 1, 1, 1), control = 0, tau = 5)
+  # tau = 5 is beyond the control follow-up (largest time 3), so a warning
+  # is expected as well.
+  expect_warning(
+    res <- milestone_fast(c(1, 2, 3, 4, 5, 6), c(1, 1, 1, 1, 0, 0),
+                          c(0, 0, 0, 1, 1, 1), control = 0, tau = 5),
+    "exceeds")
   expect_equal(unname(res$surv["control"]), 0)
   expect_equal(unname(res$std.err["control"]), 0)
   expect_equal(unname(res$surv["treatment"]), 2 / 3, tolerance = 1e-12)

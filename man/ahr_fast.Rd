@@ -35,7 +35,8 @@ it.}
 
 \item{tau}{upper limit of the interval over which the average hazard ratio is
 computed. If \code{NULL} (default) the largest time observed in both groups
-is used.}
+is used. A supplied value larger than that gives a warning, because the
+Kaplan-Meier curves are not estimated beyond it.}
 
 \item{null.ahr}{value of the average hazard ratio under the null hypothesis
 used for the Z statistic and p-value (default 1)}
