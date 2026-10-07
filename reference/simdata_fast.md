@@ -320,7 +320,12 @@ simulation identifiers start at 1 in every batch, so they are renumbered
 before the batch results are combined. Functions that draw further
 random numbers, such as
 [`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
-continue the same stream within a batch.
+continue the same stream within a batch. The max-combo p-values of
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+with four or more weights (or a two-sided test) are computed with R's
+own random-number generator, so a batch should also call
+[`set.seed()`](https://rdrr.io/r/base/Random.html) before the analysis
+for p-values that are identical across runs.
 
 ## See also
 

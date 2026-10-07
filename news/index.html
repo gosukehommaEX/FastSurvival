@@ -55,6 +55,11 @@
 <li><p><code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> gains a <code>stream</code> argument that selects an independent <code>dqrng</code> random-number stream for the given <code>seed</code>, so that a large simulation can be generated in reproducible batches, sequentially or in parallel. Without <code>stream</code> the results are unchanged.</p></li>
 </ul></div>
 <div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> with <code>stat = "maxcombo"</code>, <code>side = 2</code>, and two or three weights failed with “TVPACK either needs all(lower == -Inf) or all(upper == Inf)”, because the two-sided rectangle was passed to the TVPACK algorithm, which handles only half-spaces. It now uses the GenzBretz algorithm in that case, as <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> does.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
 <ul><li><p>New vignette “Treatment switching and crossover after an interim analysis” simulates crossover after a positive PFS analysis and switching at progression, and checks the switching model with the RPSFT estimator of the rpsftm package.</p></li>
 <li><p>The correlated PFS and OS vignette now analyzes OS at the PFS-driven cutoffs with <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> and <code>cutoff.looks</code>.</p></li>

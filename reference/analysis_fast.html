@@ -433,7 +433,12 @@ hazard in each stratum).</p>
 most extreme component (<code>min</code> of the component Z-scores when
 <code>side = 1</code>, so that a negative value favors treatment, and the maximum
 absolute component when <code>side = 2</code>), and <code>maxcombo.p</code> is the joint
-multivariate-normal p-value, which already follows <code>side</code>.</p>
+multivariate-normal p-value, which already follows <code>side</code>. As in
+<code><a href="maxcombo_fast.html">maxcombo_fast</a></code>, the p-value of a one-sided test with two or
+three weights is computed by the deterministic TVPACK algorithm, and
+otherwise by the randomized quasi-Monte-Carlo GenzBretz algorithm of
+mvtnorm, which uses R's random-number generator; call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>
+beforehand for p-values that are reproducible to the last digit.</p>
 <p>The <code>"ahsw"</code> statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to <code>tau</code>. It reports the per-group
 average hazards, the ratio (RAH) and difference (DAH) contrasts with their

@@ -362,7 +362,14 @@ The `"maxcombo"` statistic is the max-combo test of `mc.rho` and
 extreme component (`min` of the component Z-scores when `side = 1`, so
 that a negative value favors treatment, and the maximum absolute
 component when `side = 2`), and `maxcombo.p` is the joint
-multivariate-normal p-value, which already follows `side`.
+multivariate-normal p-value, which already follows `side`. As in
+[`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+the p-value of a one-sided test with two or three weights is computed by
+the deterministic TVPACK algorithm, and otherwise by the randomized
+quasi-Monte-Carlo GenzBretz algorithm of mvtnorm, which uses R's
+random-number generator; call
+[`set.seed()`](https://rdrr.io/r/base/Random.html) beforehand for
+p-values that are reproducible to the last digit.
 
 The `"ahsw"` statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to `tau`. It reports the per-group

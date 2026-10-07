@@ -379,7 +379,11 @@ the batches are run one after another or distributed over parallel workers
 whatever the number of workers. The simulation identifiers start at 1 in
 every batch, so they are renumbered before the batch results are combined.
 Functions that draw further random numbers, such as <code><a href="switch_fast.html">switch_fast</a></code>,
-continue the same stream within a batch.</p>
+continue the same stream within a batch. The max-combo p-values of
+<code><a href="analysis_fast.html">analysis_fast</a></code> with four or more weights (or a two-sided test)
+are computed with R's own random-number generator, so a batch should also
+call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the analysis for p-values that are identical
+across runs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
