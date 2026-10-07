@@ -3,8 +3,10 @@
 #' @description
 #' Performs interim or sequential analyses of simulated two-group
 #' time-to-event data at one or more analysis times ("looks"). Each look is
-#' defined either by a target cumulative number of events
-#' (information-based timing) or by a calendar time (calendar-based timing).
+#' defined by a target cumulative number of events (information-based timing),
+#' by a calendar time (calendar-based timing), or by a calendar cutoff given
+#' separately for every simulated trial (for example by
+#' \code{\link{cutoff_fast}}).
 #' At every look the data are administratively censored at the corresponding
 #' calendar cutoff, and the requested statistics are computed for each
 #' simulated trial by reusing \code{\link{survdiff_fast}},
@@ -43,7 +45,18 @@
 #' cutoff is determined once on the whole population and then used for the
 #' overall analysis and for every subgroup analysis at that look.
 #'
-#' Exactly one of \code{event.looks} and \code{time.looks} must be supplied.
+#' When \code{cutoff.looks} is supplied, the calendar cutoff of each look is
+#' given separately for every simulated trial, typically by
+#' \code{\link{cutoff_fast}}. This analyzes an endpoint at cutoffs determined
+#' by another endpoint (for example overall survival at the event-driven looks
+#' of progression-free survival), by a subset of the subjects, or by a
+#' combination of event and calendar-time rules. A missing or infinite entry
+#' marks a look whose trigger was not met in that simulation: as for an
+#' unreached \code{event.looks} target, the full data are used, \code{reached}
+#' is \code{FALSE}, and \code{cutoff} is \code{NA}.
+#'
+#' Exactly one of \code{event.looks}, \code{time.looks}, and
+#' \code{cutoff.looks} must be supplied.
 #'
 #' The statistics are selected with \code{stat}, which may name one or more of
 #' \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
@@ -161,9 +174,20 @@
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
 #' @param event.looks A vector of positive whole numbers, the target cumulative
-#'   event counts, one per look. Mutually exclusive with \code{time.looks}.
+#'   event counts, one per look. Mutually exclusive with \code{time.looks} and
+#'   \code{cutoff.looks}.
 #' @param time.looks A numeric vector of calendar times, one per look.
-#'   Mutually exclusive with \code{event.looks}.
+#'   Mutually exclusive with \code{event.looks} and \code{cutoff.looks}.
+#' @param cutoff.looks A numeric matrix of per-simulation calendar cutoffs with
+#'   one row per simulated trial and one column per look, such as the output of
+#'   \code{\link{cutoff_fast}}. When the matrix has row names they are matched
+#'   to the values of \code{data$sim}; otherwise the rows are taken in the
+#'   order of the sorted distinct values of \code{data$sim}. A numeric vector
+#'   is treated as a single look. \code{NA} or \code{Inf} marks a look that is
+#'   not reached. The \code{look.value} column of the output is taken from the
+#'   \code{"look.value"} attribute of the matrix when it is present, and is
+#'   \code{NA} otherwise. Mutually exclusive with \code{event.looks} and
+#'   \code{time.looks}.
 #' @param stat A character vector naming the statistics to compute. Any subset
 #'   of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
 #'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
@@ -259,7 +283,8 @@
 #'   \code{nsim * length(looks) * (1 + total subgroup levels)} rows and an
 #'   extra \code{population} column placed after \code{look.value}. The common
 #'   columns are \code{sim}, \code{look} (1-based look index),
-#'   \code{look.value} (the requested event count or calendar time), optionally \code{population}, \code{cutoff} (the
+#'   \code{look.value} (the requested event count or calendar time, or the
+#'   \code{"look.value"} attribute of \code{cutoff.looks}), optionally \code{population}, \code{cutoff} (the
 #'   calendar time used, \code{NA} when an event target was not reached),
 #'   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
 #'   number of enrolled subjects whose dropout occurred on or before the cutoff)
@@ -358,7 +383,8 @@ analysis_fast <- function(data, control,
                           abseps = 1e-5, maxpts = 25000,
                           medsurv.method = c("km", "nph"), medsurv.bw = NULL,
                           wkm.weight = c("PF", "sqrtPF", "constant"),
-                          wmst.tau1 = 0, wmst.tau2 = NULL) {
+                          wmst.tau1 = 0, wmst.tau2 = NULL,
+                          cutoff.looks = NULL) {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
@@ -371,15 +397,40 @@ analysis_fast <- function(data, control,
     stop("'data' must be a data frame with columns: ",
          paste(req_cols, collapse = ", "))
   }
-  has_event <- !is.null(event.looks)
-  has_time  <- !is.null(time.looks)
-  if (has_event == has_time) {
-    stop("supply exactly one of 'event.looks' or 'time.looks'")
+  has_event  <- !is.null(event.looks)
+  has_time   <- !is.null(time.looks)
+  has_cutoff <- !is.null(cutoff.looks)
+  if (has_event + has_time + has_cutoff != 1L) {
+    stop("supply exactly one of 'event.looks', 'time.looks', or ",
+         "'cutoff.looks'")
   }
-  looks     <- if (has_event) event.looks else time.looks
-  look_type <- if (has_event) 0L else 1L
-  if (length(looks) < 1L || any(!is.finite(looks)) || any(looks <= 0)) {
-    stop("'looks' must be positive and finite")
+  if (has_cutoff) {
+    if (!is.matrix(cutoff.looks)) {
+      lv_attr <- attr(cutoff.looks, "look.value")
+      cutoff.looks <- matrix(as.numeric(cutoff.looks), ncol = 1L,
+                             dimnames = list(names(cutoff.looks), NULL))
+      if (!is.null(lv_attr)) attr(cutoff.looks, "look.value") <- lv_attr
+    }
+    if (!is.numeric(cutoff.looks) || ncol(cutoff.looks) < 1L) {
+      stop("'cutoff.looks' must be a numeric matrix with one column per look")
+    }
+    cut_vals <- as.numeric(cutoff.looks)
+    if (any(!is.na(cut_vals) & cut_vals < 0)) {
+      stop("'cutoff.looks' must not contain negative values")
+    }
+    lv_attr <- attr(cutoff.looks, "look.value")
+    looks <- if (!is.null(lv_attr) && length(lv_attr) == ncol(cutoff.looks)) {
+      as.numeric(lv_attr)
+    } else {
+      rep(NA_real_, ncol(cutoff.looks))
+    }
+    look_type <- 2L
+  } else {
+    looks     <- if (has_event) event.looks else time.looks
+    look_type <- if (has_event) 0L else 1L
+    if (length(looks) < 1L || any(!is.finite(looks)) || any(looks <= 0)) {
+      stop("'looks' must be positive and finite")
+    }
   }
   if (has_event && any(abs(looks - round(looks)) > 1e-8 | looks < 1)) {
     stop("'event.looks' must be positive whole numbers")
@@ -527,6 +578,29 @@ analysis_fast <- function(data, control,
   counts  <- tabulate(match(sim_s, sim_ids), nbins = nsim)
   sim_ptr <- as.integer(c(0L, cumsum(counts)))
 
+  # Per-simulation cutoffs aligned to the ordered simulation identifiers.
+  if (has_cutoff) {
+    rn <- rownames(cutoff.looks)
+    if (!is.null(rn)) {
+      idx <- match(sim_key(sim_ids), rn)
+      if (anyNA(idx)) {
+        stop("the row names of 'cutoff.looks' do not cover every value of ",
+             "'data$sim'")
+      }
+    } else {
+      if (nrow(cutoff.looks) != nsim) {
+        stop("'cutoff.looks' must have one row per simulated trial (", nsim,
+             ") or row names matching 'data$sim'")
+      }
+      idx <- seq_len(nsim)
+    }
+    cut_mat <- matrix(as.numeric(cutoff.looks[idx, , drop = FALSE]),
+                      nrow = nsim)
+    cut_mat[is.na(cut_mat)] <- Inf
+  } else {
+    cut_mat <- matrix(0, nrow = 0L, ncol = 0L)
+  }
+
   accrual <- reidx(as.numeric(data$accrual_time))
   tte     <- reidx(as.numeric(data$tte))
   event   <- reidx(as.integer(data$event))
@@ -590,7 +664,7 @@ analysis_fast <- function(data, control,
   # ---- Call the fused kernel ---------------------------------------------
   core <- analysis_loop_core(
     sim_ptr, accrual, tte, event, j_all,
-    look_type, as.numeric(looks),
+    look_type, as.numeric(looks), cut_mat,
     pop_col, pop_level, sub_mat,
     if (use_strata) strata_int else integer(0), use_strata,
     do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw,

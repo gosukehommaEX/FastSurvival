@@ -68,8 +68,8 @@ ahsw_core <- function(time_sorted, event_sorted, tau) {
     .Call(`_FastSurvival_ahsw_core`, time_sorted, event_sorted, tau)
 }
 
-analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw) {
-    .Call(`_FastSurvival_analysis_loop_core`, sim_ptr, accrual, tte, event, j, look_type, look_values, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw)
+analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw) {
+    .Call(`_FastSurvival_analysis_loop_core`, sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw)
 }
 
 #' Core max-combo weighted log-rank computation on pooled sorted vectors (C++ backend)
@@ -118,6 +118,10 @@ analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_
 #' @keywords internal
 combo_logrank_core <- function(time_sorted, event_sorted, j_sorted, rho_vec, gamma_vec) {
     .Call(`_FastSurvival_combo_logrank_core`, time_sorted, event_sorted, j_sorted, rho_vec, gamma_vec)
+}
+
+cutoff_core <- function(sim_ptr, accrual, tte, event, count_event, time_looks, target, max_time, min_gap, min_enrolled, min_followup) {
+    .Call(`_FastSurvival_cutoff_core`, sim_ptr, accrual, tte, event, count_event, time_looks, target, max_time, min_gap, min_enrolled, min_followup)
 }
 
 #' Core Kaplan-Meier computation (C++ backend)

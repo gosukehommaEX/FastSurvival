@@ -30,7 +30,8 @@ analysis_fast(
   medsurv.bw = NULL,
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
-  wmst.tau2 = NULL
+  wmst.tau2 = NULL,
+  cutoff.looks = NULL
 )
 }
 \arguments{
@@ -42,10 +43,11 @@ trial, containing at least \code{sim}, \code{group}, \code{accrual_time},
 represents the control group.}
 
 \item{event.looks}{A vector of positive whole numbers, the target cumulative
-event counts, one per look. Mutually exclusive with \code{time.looks}.}
+event counts, one per look. Mutually exclusive with \code{time.looks} and
+\code{cutoff.looks}.}
 
 \item{time.looks}{A numeric vector of calendar times, one per look.
-Mutually exclusive with \code{event.looks}.}
+Mutually exclusive with \code{event.looks} and \code{cutoff.looks}.}
 
 \item{stat}{A character vector naming the statistics to compute. Any subset
 of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
@@ -157,6 +159,17 @@ for the \code{"wmst"} statistic. Defaults to 0.}
 the \code{"wmst"} statistic, which must exceed \code{wmst.tau1}. \code{NULL}
 (default) falls back to \code{tau}. Required (through either argument) only
 when \code{"wmst"} is requested.}
+
+\item{cutoff.looks}{A numeric matrix of per-simulation calendar cutoffs with
+one row per simulated trial and one column per look, such as the output of
+\code{\link{cutoff_fast}}. When the matrix has row names they are matched
+to the values of \code{data$sim}; otherwise the rows are taken in the
+order of the sorted distinct values of \code{data$sim}. A numeric vector
+is treated as a single look. \code{NA} or \code{Inf} marks a look that is
+not reached. The \code{look.value} column of the output is taken from the
+\code{"look.value"} attribute of the matrix when it is present, and is
+\code{NA} otherwise. Mutually exclusive with \code{event.looks} and
+\code{time.looks}.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -164,7 +177,8 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{nsim * length(looks) * (1 + total subgroup levels)} rows and an
   extra \code{population} column placed after \code{look.value}. The common
   columns are \code{sim}, \code{look} (1-based look index),
-  \code{look.value} (the requested event count or calendar time), optionally \code{population}, \code{cutoff} (the
+  \code{look.value} (the requested event count or calendar time, or the
+  \code{"look.value"} attribute of \code{cutoff.looks}), optionally \code{population}, \code{cutoff} (the
   calendar time used, \code{NA} when an event target was not reached),
   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
   number of enrolled subjects whose dropout occurred on or before the cutoff)
@@ -203,8 +217,10 @@ A data frame. When \code{by.subgroup = FALSE}, it has
 \description{
 Performs interim or sequential analyses of simulated two-group
 time-to-event data at one or more analysis times ("looks"). Each look is
-defined either by a target cumulative number of events
-(information-based timing) or by a calendar time (calendar-based timing).
+defined by a target cumulative number of events (information-based timing),
+by a calendar time (calendar-based timing), or by a calendar cutoff given
+separately for every simulated trial (for example by
+\code{\link{cutoff_fast}}).
 At every look the data are administratively censored at the corresponding
 calendar cutoff, and the requested statistics are computed for each
 simulated trial by reusing \code{\link{survdiff_fast}},
@@ -243,7 +259,18 @@ calendar time and \code{reached} is always \code{TRUE}. In both cases the
 cutoff is determined once on the whole population and then used for the
 overall analysis and for every subgroup analysis at that look.
 
-Exactly one of \code{event.looks} and \code{time.looks} must be supplied.
+When \code{cutoff.looks} is supplied, the calendar cutoff of each look is
+given separately for every simulated trial, typically by
+\code{\link{cutoff_fast}}. This analyzes an endpoint at cutoffs determined
+by another endpoint (for example overall survival at the event-driven looks
+of progression-free survival), by a subset of the subjects, or by a
+combination of event and calendar-time rules. A missing or infinite entry
+marks a look whose trigger was not met in that simulation: as for an
+unreached \code{event.looks} target, the full data are used, \code{reached}
+is \code{FALSE}, and \code{cutoff} is \code{NA}.
+
+Exactly one of \code{event.looks}, \code{time.looks}, and
+\code{cutoff.looks} must be supplied.
 
 The statistics are selected with \code{stat}, which may name one or more of
 \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},

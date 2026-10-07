@@ -407,3 +407,68 @@ test_that("analysis_fast stratified coxph matches coxph_fast with strata", {
     expect_equal(res$logrank.z[s], as.numeric(lr), tolerance = 1e-10)
   }
 })
+
+test_that("analysis_fast cutoff.looks matches per-cell wrappers at per-simulation cutoffs", {
+  dat <- simdata_fast(nsim = 10, n = c(100, 100), a.time = c(0, 10),
+                      a.prop = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 14),
+                      d.median = list(30, 30), seed = 303)
+  # Simulation-specific cutoffs, with one look that is not reached.
+  cut <- cbind(seq(11, 20, length.out = 10), seq(25, 16, length.out = 10))
+  cut[3, 2] <- NA
+  res <- analysis_fast(dat, control = 1, cutoff.looks = cut,
+                       stat = c("logrank", "coxph"))
+  expect_equal(nrow(res), 20L)
+  expect_true(all(is.na(res$look.value)))
+
+  row <- 0L
+  for (s in 1:10) {
+    for (l in 1:2) {
+      row <- row + 1L
+      cv  <- cut[s, l]
+      if (is.na(cv)) {
+        # Not reached: the statistics of the full (uncut) data.
+        expect_false(res$reached[row])
+        expect_true(is.na(res$cutoff[row]))
+        cc <- cut_one(dat, s, Inf)
+      } else {
+        expect_true(res$reached[row])
+        expect_equal(res$cutoff[row], cv)
+        cc <- cut_one(dat, s, cv)
+      }
+      z_ref <- as.numeric(survdiff_fast(cc$time, cc$event, cc$group,
+                                        control = 1, side = 1,
+                                        presorted = TRUE))
+      expect_equal(res$logrank.z[row], z_ref, tolerance = 1e-10)
+      cx <- coxph_fast(cc$time, cc$event, cc$group, control = 1,
+                       presorted = TRUE)
+      expect_equal(res$cox.coef[row], unname(cx[1]), tolerance = 1e-10)
+      expect_equal(res$n.event[row], sum(cc$event))
+      expect_equal(res$n.enrolled[row], length(cc$time))
+    }
+  }
+})
+
+test_that("analysis_fast cutoff.looks matches rows by name and validates input", {
+  dat <- simdata_fast(nsim = 5, n = c(60, 60), a.time = c(0, 6), a.prop = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 12), seed = 404)
+  cut <- matrix(c(10, 12, 14, 16, 18), ncol = 1,
+                dimnames = list(as.character(5:1), NULL))
+  res <- analysis_fast(dat, control = 1, cutoff.looks = cut)
+  expect_equal(res$cutoff, c(18, 16, 14, 12, 10))
+  vec <- analysis_fast(dat, control = 1, cutoff.looks = c(18, 16, 14, 12, 10))
+  expect_equal(vec$logrank.z, res$logrank.z)
+  tim <- analysis_fast(dat[dat$sim == 2, ], control = 1, time.looks = 16)
+  expect_equal(res$logrank.z[2], tim$logrank.z)
+
+  expect_error(analysis_fast(dat, control = 1, cutoff.looks = matrix(10, 4, 1)),
+               "one row per")
+  expect_error(analysis_fast(dat, control = 1, cutoff.looks = matrix(-1, 5, 1)),
+               "negative")
+  expect_error(analysis_fast(dat, control = 1, event.looks = 10,
+                             cutoff.looks = matrix(10, 5, 1)),
+               "exactly one of")
+  bad <- matrix(10, 5, 1, dimnames = list(as.character(2:6), NULL))
+  expect_error(analysis_fast(dat, control = 1, cutoff.looks = bad),
+               "row names")
+})

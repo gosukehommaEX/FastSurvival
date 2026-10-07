@@ -33,7 +33,8 @@ simdata_fast(
   h12.switch.hazard = NULL,
   h12.switch.median = NULL,
   h12.switch.time = NULL,
-  switch.clock = "reset"
+  switch.clock = "reset",
+  stream = NULL
 )
 }
 \arguments{
@@ -145,6 +146,16 @@ measured from the switch (intermediate-event) time (clock-reset).}
 
 \item{switch.clock}{Time origin for the post-event hazards. Currently only
 \code{"reset"} (measured from the intermediate event) is implemented.}
+
+\item{stream}{Optional non-negative whole number selecting an independent
+\code{dqrng} random-number stream for the given \code{seed}; requires
+\code{seed}. A large simulation can be split into batches that are
+generated with the same \code{seed} and \code{stream = 1, 2, ...},
+sequentially or in parallel, and the result of each batch does not depend
+on how the batches are distributed. With the default Xoroshiro128++
+generator of \code{dqrng}, stream \code{k} starts \code{k} jumps of
+\eqn{2^{64}} draws ahead of the seeded state, so \code{stream = 0} gives
+the same numbers as no stream. See the section on batches.}
 }
 \value{
 A \code{data.frame} with \code{nsim * sum(n)} rows. The columns are
@@ -234,7 +245,36 @@ subsetting the output to the control arm and one other arm and calling
 \code{\link{analysis_fast}} once per contrast. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.
 }
+\section{Batches and parallel execution}{
+
+The output has \code{nsim * sum(n)} rows, so memory rather than time limits
+the number of simulated trials in one call. A large study can be run in
+batches: each batch is generated with the same \code{seed} and its own
+\code{stream}, analyzed with \code{\link{analysis_fast}}, and only the
+analysis results are kept. Because each stream is an independent sequence of
+the \code{dqrng} generator, the data of batch \code{b} are the same whether
+the batches are run one after another or distributed over parallel workers
+(for example with \code{parallel::mclapply()} or the future framework), and
+whatever the number of workers. The simulation identifiers start at 1 in
+every batch, so they are renumbered before the batch results are combined.
+Functions that draw further random numbers, such as \code{\link{switch_fast}},
+continue the same stream within a batch.
+}
+
 \examples{
+# Batches from independent random-number streams: the simulations of each
+# batch are renumbered before the analysis results are combined.
+run_batch <- function(b, nsim = 20) {
+  d <- simdata_fast(nsim = nsim, n = c(100, 100), a.time = c(0, 12),
+                    a.rate = 200 / 12, e.median = list(12, 16),
+                    seed = 2026, stream = b)
+  r <- analysis_fast(d, control = 1, event.looks = 120)
+  r$sim <- r$sim + (b - 1) * nsim
+  r
+}
+res <- do.call(rbind, lapply(1:3, run_batch))
+range(res$sim)
+
 # One-group simulation, simple exponential, no dropout
 df1 <- simdata_fast(
   nsim     = 100,

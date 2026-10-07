@@ -21,8 +21,11 @@ Description: Provides fast alternatives to standard survival analysis functions
     (rmw_fast()), the weighted Kaplan-Meier (Pepe-Fleming) test (wkm_fast()),
     the average hazard with survival weight (ahsw_fast()), and the
     Kalbfleisch-Prentice average hazard ratio (ahr_fast()). The simulation
-    layer generates individual patient data (simdata_fast()), performs interim
-    or sequential analyses (analysis_fast()), and aggregates operating
+    layer generates individual patient data (simdata_fast()), determines the
+    calendar time of each analysis from combined event and calendar-time
+    rules (cutoff_fast()), performs interim or sequential analyses
+    (analysis_fast()), applies treatment switching at progression or after an
+    interim analysis (switch_fast()), and aggregates operating
     characteristics (simsummary_fast()). A visualization layer assembles
     design-stage scenarios (gen_scenario_fast()) and builds analysis-stage
     Kaplan-Meier curves (kmcurve_fast()), each with plot and print methods.
@@ -59,6 +62,7 @@ Suggests:
     rpact,
     nph,
     nphRCT,
+    rpsftm,
     microbenchmark,
     testthat (>= 3.0.0),
     knitr,

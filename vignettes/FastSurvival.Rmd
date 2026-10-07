@@ -47,11 +47,14 @@ Kalbfleisch-Prentice average hazard ratio.
 
 The simulation functions support a full simulation study. `simdata_fast()`
 generates individual patient data for one- or two-group trials.
+`cutoff_fast()` determines the calendar time of every analysis look in every
+simulated trial from combined event and calendar-time rules.
 `analysis_fast()` performs interim or sequential analyses of the simulated
 data at one or more looks, and can compute any of the estimation and testing
-statistics above, optionally within subgroups. `simsummary_fast()` aggregates
-the operating characteristics from the analysis output against supplied
-boundaries.
+statistics above, optionally within subgroups. `switch_fast()` applies
+treatment switching to the simulated data, at progression or after an interim
+analysis. `simsummary_fast()` aggregates the operating characteristics from
+the analysis output against supplied boundaries.
 
 # A minimal example
 
@@ -83,8 +86,8 @@ clinical-trial dataset. *Speed comparison* quantifies the performance gain.
 *Group sequential design with the simulation trio* demonstrates
 `simdata_fast()`, `analysis_fast()`, and `simsummary_fast()` against a gsDesign
 reference. Further applied vignettes work the simulation trio through
-nonproportional-hazards, correlated multiple-endpoint, and multiregional
-settings.
+nonproportional-hazards, correlated multiple-endpoint, multiregional, and
+treatment-switching settings.
 
 # References
 

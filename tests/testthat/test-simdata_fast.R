@@ -419,3 +419,36 @@ test_that("simdata_fast: group-specific prevalence must have matching factor lev
                                    treatment = list(c(0.3, 0.3, 0.4), c(0.5, 0.5)))),
     "levels per factor")
 })
+
+test_that("simdata_fast: stream gives reproducible and distinct batches", {
+  args <- list(nsim = 5, n = c(50, 50), a.time = c(0, 6), a.rate = 100 / 6,
+               e.median = list(10, 12), seed = 77)
+  b1  <- do.call(simdata_fast, c(args, list(stream = 1)))
+  b2  <- do.call(simdata_fast, c(args, list(stream = 2)))
+  b1b <- do.call(simdata_fast, c(args, list(stream = 1)))
+  # Same stream, same data, whatever was generated in between.
+  expect_identical(b1b, b1)
+  expect_false(isTRUE(all.equal(b1$surv_time, b2$surv_time)))
+  # Without 'stream' the historical seeding is unchanged.
+  expect_identical(do.call(simdata_fast, args),
+                   do.call(simdata_fast, c(args, list(stream = NULL))))
+  # The illness-death and multi-arm modes use the same stream mechanism.
+  id_args <- list(nsim = 3, n = c(40, 40), a.time = c(0, 6), a.rate = 80 / 6,
+                  h01.hazard = list(0.10, 0.07), h02.hazard = list(0.05, 0.04),
+                  seed = 5)
+  expect_identical(do.call(simdata_fast, c(id_args, list(stream = 3))),
+                   do.call(simdata_fast, c(id_args, list(stream = 3))))
+  k_args <- list(nsim = 3, n = c(40, 40, 40), a.time = c(0, 6),
+                 a.rate = 120 / 6, e.median = list(10, 12, 14), seed = 6)
+  k1 <- do.call(simdata_fast, c(k_args, list(stream = 1)))
+  k2 <- do.call(simdata_fast, c(k_args, list(stream = 2)))
+  expect_false(isTRUE(all.equal(k1$surv_time, k2$surv_time)))
+
+  expect_error(simdata_fast(nsim = 2, n = 20, a.time = c(0, 6),
+                            a.rate = 20 / 6, e.median = 10, stream = 1),
+               "requires 'seed'")
+  expect_error(do.call(simdata_fast, c(args, list(stream = -1))),
+               "non-negative whole number")
+  expect_error(do.call(simdata_fast, c(args, list(stream = 1.5))),
+               "non-negative whole number")
+})

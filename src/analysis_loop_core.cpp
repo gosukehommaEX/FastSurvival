@@ -160,8 +160,9 @@ List analysis_loop_core(
     const NumericVector& tte,
     const IntegerVector& event,
     const IntegerVector& j,
-    int look_type,                  // 0 = event-driven, 1 = calendar time
+    int look_type,                  // 0 = events, 1 = calendar, 2 = per-sim cutoffs
     const NumericVector& look_values,
+    const NumericMatrix& cut_mat,   // nsim x n_looks, used when look_type == 2
     const IntegerVector& pop_col,   // -1 = overall, else 0-based column in sub_mat
     const IntegerVector& pop_level,
     const IntegerMatrix& sub_mat,   // N x n_subcols (subgroup labels)
@@ -285,6 +286,17 @@ List analysis_loop_core(
                            cal_ev_tmp.end());
           cut_cutoff = cal_ev_tmp[target - 1];
           reached    = true;
+        }
+      } else if (look_type == 2) {
+        // Per-simulation cutoff supplied by the caller; a non-finite value
+        // marks a look whose trigger was not met (full data, not reached).
+        const double c = cut_mat(si, l);
+        if (std::isfinite(c)) {
+          cut_cutoff = c;
+          reached    = true;
+        } else {
+          cut_cutoff = R_PosInf;
+          reached    = false;
         }
       } else {
         cut_cutoff = look_values[l];

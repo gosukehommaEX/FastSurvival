@@ -59,9 +59,11 @@ Peto
 PiHE
 Pocock
 RMST
+RPSFT
 Ramlau
 Rauch
 Rcpp
+Robins
 Roychoudhury
 Royston
 Schoenfeld
@@ -72,6 +74,8 @@ Tarone
 Teng
 Tian
 Tisotumab
+TrialSimulator
+Tsiatis
 Uno
 Vergote
 WKM
@@ -124,8 +128,10 @@ rMW
 rmst
 rmw
 rpact
+rpsftm
 simdata
 simsummary
+simtrial
 struct
 subsetting
 surv

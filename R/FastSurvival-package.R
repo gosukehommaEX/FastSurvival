@@ -67,9 +67,16 @@
 #'     piecewise uniform accrual, piecewise exponential survival and dropout
 #'     times, subgroups, and correlated two-endpoint illness-death
 #'     generation. Random number generation uses \pkg{dqrng}.}
+#'   \item{\code{\link{cutoff_fast}}}{Per-simulation calendar cutoffs of
+#'     the analysis looks from combined event, calendar-time, and enrollment
+#'     trigger rules.}
 #'   \item{\code{\link{analysis_fast}}}{Interim and final analyses of
-#'     simulated trials at a set of information times or calendar cutoffs,
-#'     returning one row of test statistics per replicate and look.}
+#'     simulated trials at a set of information times, calendar cutoffs, or
+#'     per-simulation cutoffs, returning one row of test statistics per
+#'     replicate and look.}
+#'   \item{\code{\link{switch_fast}}}{Treatment switching in simulated
+#'     data, at an intermediate event or after an interim analysis, changing
+#'     only the outcomes after the switch.}
 #'   \item{\code{\link{pairwise_fast}}}{Pairwise comparisons of each
 #'     experimental arm against a shared control in a multi-arm trial.}
 #'   \item{\code{\link{simsummary_fast}}}{Aggregation of replicate-level

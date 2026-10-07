@@ -33,8 +33,10 @@ reference:
     characteristics.
   contents:
   - simdata_fast
+  - cutoff_fast
   - analysis_fast
   - pairwise_fast
+  - switch_fast
   - simsummary_fast
 
 - title: Design and visualization
@@ -69,3 +71,4 @@ articles:
   - compare-logrank-rmst
   - correlated-pfs-os-gsd
   - multi-arm-pairwise
+  - treatment-switching
