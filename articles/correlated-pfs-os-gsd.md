@@ -160,24 +160,25 @@ os_dat <- data.frame(
 
 ## Primary endpoint analysis (PFS)
 
-PFS is analyzed at the three event-driven looks. With `event.looks` the
-calendar cutoff at look `l` is the time of the `d_PFS[l]`-th PFS event
-over the whole trial, and `analysis_fast` returns that cutoff per
-simulation. These cutoffs are exactly the analysis times of the design,
-and the OS analysis below reuses them.
+PFS is analyzed at the three event-driven looks. `cutoff_fast` returns,
+for every simulated trial, the calendar time of the `d_PFS[l]`-th PFS
+event, which is the analysis time of look `l`. These cutoffs are exactly
+the analysis times of the design, and both endpoints are analyzed at
+them through the `cutoff.looks` argument of `analysis_fast`.
 
 ``` r
 
+# Per-simulation calendar cutoffs A_l (rows = simulation, columns = look),
+# triggered by the PFS events.
+A_mat <- cutoff_fast(pfs_dat, event.looks = d_PFS)
+
 pfs_res <- analysis_fast(
   pfs_dat,
-  control     = 1,
-  event.looks = d_PFS,
-  stat        = "logrank",
-  side        = 1
+  control      = 1,
+  cutoff.looks = A_mat,
+  stat         = "logrank",
+  side         = 1
 )
-
-# Per-simulation calendar cutoffs A_l (rows = simulation, columns = look)
-A_mat <- matrix(pfs_res$cutoff, nrow = nsim, ncol = L, byrow = TRUE)
 
 # With this sample size and these event targets the looks are reached in
 # essentially every simulation; warn if any target is not reached.
@@ -189,54 +190,35 @@ if (!all(pfs_res$reached)) {
 Z_PFS <- matrix(pfs_res$logrank.z, nrow = nsim, ncol = L, byrow = TRUE)
 ```
 
+The same analysis is obtained with `event.looks = d_PFS`, which
+determines the cutoffs and analyzes PFS in one call; computing the
+cutoffs separately lets the OS analysis reuse them.
+
 ## Key secondary endpoint analysis (OS)
 
-OS is analyzed at the same per-simulation cutoffs `A_l`. For each look
-the OS times are administratively censored at `A_l`, and the one-sided
-log-rank statistic is computed with `analysis_fast` at a single,
-deliberately large calendar time so that no further censoring is applied
-to the already-cut data. This reproduces the design rule that the OS
-analysis at a look uses the PFS-driven analysis time.
+OS is analyzed at the same per-simulation cutoffs `A_l`. At each look
+the OS times are administratively censored at `A_l`, which reproduces
+the design rule that the OS analysis at a look uses the PFS-driven
+analysis time.
 
 ``` r
 
-big <- max(A_mat, na.rm = TRUE) + 1
-
-os_blocks <- vector("list", L)
-for (l in seq_len(L)) {
-  A_l    <- A_mat[os_dat$sim, l]                        # per-row cutoff at look l
-  follow <- pmax(0, A_l - os_dat$accrual_time)          # administrative follow-up
-  obs_t  <- pmin(os_dat$os_tte, follow)                 # observed OS time at the look
-  obs_e  <- os_dat$os_event *
-    as.integer(os_dat$accrual_time + os_dat$os_tte <= A_l)
-
-  cut_l <- data.frame(
+os_res <- analysis_fast(
+  data.frame(
     sim          = os_dat$sim,
     group        = os_dat$group,
-    accrual_time = 0,
-    tte          = obs_t,
-    event        = obs_e
-  )
-  res_l <- analysis_fast(
-    cut_l, control = 1, time.looks = big, stat = "logrank", side = 1
-  )
-
-  # Relabel as look l and report the PFS-driven cutoff for the timing summary;
-  # keep only the columns that are meaningful for the censored OS data.
-  res_l$look       <- l
-  res_l$look.value <- d_PFS[l]
-  res_l$cutoff     <- A_mat[, l]
-  os_blocks[[l]] <- res_l[, c("sim", "look", "look.value", "cutoff",
-                              "n.event", "logrank.z", "logrank.chisq",
-                              "logrank.p")]
-}
-
-os_res <- do.call(rbind, os_blocks)
-os_res <- os_res[order(os_res$sim, os_res$look), ]
+    accrual_time = os_dat$accrual_time,
+    tte          = os_dat$os_tte,
+    event        = os_dat$os_event
+  ),
+  control      = 1,
+  cutoff.looks = A_mat,
+  stat         = "logrank",
+  side         = 1
+)
 
 # Standardized OS log-rank statistics
-Z_OS <- matrix(NA_real_, nsim, L)
-for (l in seq_len(L)) Z_OS[, l] <- os_blocks[[l]]$logrank.z
+Z_OS <- matrix(os_res$logrank.z, nrow = nsim, ncol = L, byrow = TRUE)
 ```
 
 The mean PFS and OS event counts at each look summarize the information
@@ -248,7 +230,7 @@ events at the same analysis times.
 
 d_PFS_emp <- colMeans(matrix(pfs_res$n.event, nrow = nsim, ncol = L, byrow = TRUE))
 d_OS_emp  <- colMeans(matrix(os_res$n.event,  nrow = nsim, ncol = L, byrow = TRUE))
-A_mean    <- colMeans(A_mat)
+A_mean    <- unname(colMeans(A_mat))
 
 data.frame(
   look          = seq_len(L),
@@ -377,20 +359,25 @@ oc_OS
 #>   Boundaries: efficacy on 'logrank.z' (direction = lower)
 #> 
 #> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Efficacy Z Cum. Cross. Eff.
-#>     1        0.45      111.7         NA           0.0000
-#>     2        0.70      174.7    -2.0599           0.3376
-#>     3        1.00      250.4    -2.2516           0.4604
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
+#>     1        0.45      111.7      490.9         NA           0.0000
+#>     2        0.70      174.7      599.9    -2.0599           0.3376
+#>     3        1.00      250.4      600.0    -2.2516           0.4604
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
-#>  Look Info. Frac. Events (s) Analysis Time Cross. Eff.
-#>     1        0.45      111.7         15.26      0.0000
-#>     2        0.70      174.7         18.97      0.3376
-#>     3        1.00      250.4         24.01      0.1228
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.45      490.9      111.7         22.4    356.8         15.26
+#>     2        0.70      599.9      174.7         35.1    390.1         18.97
+#>     3        1.00      600.0      250.4         50.2    299.4         24.01
+#>  Cross. Eff.
+#>       0.0000
+#>       0.3376
+#>       0.1228
 #> 
 #> Overall
 #>   Rejection rate (efficacy):      0.4604
 #>   Expected events at stop:        224.7
+#>   Expected sample size at stop:   600.0
 #>   Expected analysis time at stop: 22.29
 ```
 

@@ -51,10 +51,16 @@ the Kalbfleisch-Prentice average hazard ratio.
 The simulation functions support a full simulation study.
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 generates individual patient data for one- or two-group trials.
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+determines the calendar time of every analysis look in every simulated
+trial from combined event and calendar-time rules.
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
 performs interim or sequential analyses of the simulated data at one or
 more looks, and can compute any of the estimation and testing statistics
 above, optionally within subgroups.
+[`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
+applies treatment switching to the simulated data, at progression or
+after an interim analysis.
 [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
 aggregates the operating characteristics from the analysis output
 against supplied boundaries.
@@ -124,7 +130,7 @@ and
 [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
 against a gsDesign reference. Further applied vignettes work the
 simulation trio through nonproportional-hazards, correlated
-multiple-endpoint, and multiregional settings.
+multiple-endpoint, multiregional, and treatment-switching settings.
 
 ## References
 

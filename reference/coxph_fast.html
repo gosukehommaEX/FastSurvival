@@ -39,6 +39,7 @@ accumulation in a single C++ pass without intermediate R-level vector copies."><
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -309,9 +310,9 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min       lq       mean    median        uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   59.952   70.086   82.27366   86.3315   90.6345  201.166  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1505.662 1548.763 1601.58503 1567.4225 1589.3485 6688.473  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq       mean   median       uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   59.671   70.3265   83.20064   86.827   91.606  204.461  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1520.066 1565.8210 1631.08814 1584.772 1608.712 7052.097  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

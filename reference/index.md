@@ -40,11 +40,15 @@ operating characteristics.
 
 - [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
   : Fast Simulation of Two-Group Time-to-Event Trial Data
+- [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+  : Fast Per-Simulation Analysis Cutoffs from Combined Trigger Rules
 - [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
   : Fast Sequential Analysis of Simulated Trial Data
 - [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
   : Pairwise comparisons of each experimental arm against a shared
   control
+- [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
+  : Fast Treatment Switching in Simulated Trial Data
 - [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
   : Summarize Operating Characteristics from Sequential Analysis Output
 

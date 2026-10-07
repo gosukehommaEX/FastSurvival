@@ -27,6 +27,7 @@
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -45,9 +46,23 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="fastsurvival-development-version">FastSurvival (development version)<a class="anchor" aria-label="anchor" href="#fastsurvival-development-version"></a></h2>
+<div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li><p>New <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> computes the calendar time of each analysis look in every simulated trial in a single C++ pass, from a target number of events, a planned calendar time, a maximum calendar time, a minimum time after the previous look, and a minimum follow-up after a given number of enrolled subjects, combined as <code>min(max(...), maximum time)</code> as in <code><a href="https://merck.github.io/simtrial/reference/get_analysis_date.html" class="external-link">simtrial::get_analysis_date()</a></code>. Events can be counted on a subset of the subjects (for example the control group) or on another endpoint (for example the PFS columns of an illness-death simulation), and the event targets can be given per simulated trial.</p></li>
+<li><p><code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> gains a <code>cutoff.looks</code> argument, a matrix of per-simulation calendar cutoffs (such as the output of <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code>), as an alternative to <code>event.looks</code> and <code>time.looks</code>. This analyzes an endpoint at cutoffs determined by another endpoint, by a subset of the subjects, or by combined trigger rules, within the same fused C++ loop.</p></li>
+<li><p><code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> gains a <code>cutoff.looks</code> argument, and its event-driven mode now computes the shared cutoffs with <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> and analyzes every contrast through <code>cutoff.looks</code> instead of re-cutting the data in R. The results are unchanged.</p></li>
+<li><p>New <code><a href="../reference/switch_fast.html">switch_fast()</a></code> applies treatment switching to simulated data, changing only the outcomes after each subject’s switch: at the intermediate event of an illness-death simulation (for example progression), at an opening time after an interim analysis (crossover at a milestone, optionally only in the simulated trials selected by an interim decision), or at the later of the two. The remaining time to the terminal event is multiplied by an acceleration factor (the causal model of the RPSFT method) or redrawn from a new (piecewise) exponential hazard. Outcomes observed before the opening time are unchanged, so an interim analysis is unaffected by the switching.</p></li>
+<li><p><code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> gains a <code>stream</code> argument that selects an independent <code>dqrng</code> random-number stream for the given <code>seed</code>, so that a large simulation can be generated in reproducible batches, sequentially or in parallel. Without <code>stream</code> the results are unchanged.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li><p>New vignette “Treatment switching and crossover after an interim analysis” simulates crossover after a positive PFS analysis and switching at progression, and checks the switching model with the RPSFT estimator of the rpsftm package.</p></li>
+<li><p>The correlated PFS and OS vignette now analyzes OS at the PFS-driven cutoffs with <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> and <code>cutoff.looks</code>.</p></li>
+<li><p>The validation vignette compares <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> with <code><a href="https://merck.github.io/simtrial/reference/get_analysis_date.html" class="external-link">simtrial::get_analysis_date()</a></code> and the survival times generated by <code><a href="../reference/switch_fast.html">switch_fast()</a></code> with their analytic distribution.</p></li>
+</ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.0" id="fastsurvival-100">FastSurvival 1.0.0<a class="anchor" aria-label="anchor" href="#fastsurvival-100"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="fastsurvival-100">FastSurvival 1.0.0<a class="anchor" aria-label="anchor" href="#fastsurvival-100"></a></h2><p class="text-muted">CRAN release: 2026-09-29</p>
 <div class="section level3">
 <h3 id="new-features-1-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
 <ul><li>

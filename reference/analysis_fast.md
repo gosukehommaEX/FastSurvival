@@ -2,9 +2,11 @@
 
 Performs interim or sequential analyses of simulated two-group
 time-to-event data at one or more analysis times ("looks"). Each look is
-defined either by a target cumulative number of events
-(information-based timing) or by a calendar time (calendar-based
-timing). At every look the data are administratively censored at the
+defined by a target cumulative number of events (information-based
+timing), by a calendar time (calendar-based timing), or by a calendar
+cutoff given separately for every simulated trial (for example by
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)).
+At every look the data are administratively censored at the
 corresponding calendar cutoff, and the requested statistics are computed
 for each simulated trial by reusing
 [`survdiff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
@@ -54,7 +56,8 @@ analysis_fast(
   medsurv.bw = NULL,
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
-  wmst.tau2 = NULL
+  wmst.tau2 = NULL,
+  cutoff.looks = NULL
 )
 ```
 
@@ -75,12 +78,13 @@ analysis_fast(
 - event.looks:
 
   A vector of positive whole numbers, the target cumulative event
-  counts, one per look. Mutually exclusive with `time.looks`.
+  counts, one per look. Mutually exclusive with `time.looks` and
+  `cutoff.looks`.
 
 - time.looks:
 
   A numeric vector of calendar times, one per look. Mutually exclusive
-  with `event.looks`.
+  with `event.looks` and `cutoff.looks`.
 
 - stat:
 
@@ -235,6 +239,19 @@ analysis_fast(
   falls back to `tau`. Required (through either argument) only when
   `"wmst"` is requested.
 
+- cutoff.looks:
+
+  A numeric matrix of per-simulation calendar cutoffs with one row per
+  simulated trial and one column per look, such as the output of
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+  When the matrix has row names they are matched to the values of
+  `data$sim`; otherwise the rows are taken in the order of the sorted
+  distinct values of `data$sim`. A numeric vector is treated as a single
+  look. `NA` or `Inf` marks a look that is not reached. The `look.value`
+  column of the output is taken from the `"look.value"` attribute of the
+  matrix when it is present, and is `NA` otherwise. Mutually exclusive
+  with `event.looks` and `time.looks`.
+
 ## Value
 
 A data frame. When `by.subgroup = FALSE`, it has `nsim * length(looks)`
@@ -242,8 +259,9 @@ rows. When `by.subgroup = TRUE`, it has
 `nsim * length(looks) * (1 + total subgroup levels)` rows and an extra
 `population` column placed after `look.value`. The common columns are
 `sim`, `look` (1-based look index), `look.value` (the requested event
-count or calendar time), optionally `population`, `cutoff` (the calendar
-time used, `NA` when an event target was not reached), `reached`,
+count or calendar time, or the `"look.value"` attribute of
+`cutoff.looks`), optionally `population`, `cutoff` (the calendar time
+used, `NA` when an event target was not reached), `reached`,
 `n.enrolled`, `n.event`, `n.dropout` (the number of enrolled subjects
 whose dropout occurred on or before the cutoff) and `n.pipeline`
 (`n.enrolled - n.event - n.dropout`, the subjects still in follow-up at
@@ -298,7 +316,19 @@ specified calendar time and `reached` is always `TRUE`. In both cases
 the cutoff is determined once on the whole population and then used for
 the overall analysis and for every subgroup analysis at that look.
 
-Exactly one of `event.looks` and `time.looks` must be supplied.
+When `cutoff.looks` is supplied, the calendar cutoff of each look is
+given separately for every simulated trial, typically by
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+This analyzes an endpoint at cutoffs determined by another endpoint (for
+example overall survival at the event-driven looks of progression-free
+survival), by a subset of the subjects, or by a combination of event and
+calendar-time rules. A missing or infinite entry marks a look whose
+trigger was not met in that simulation: as for an unreached
+`event.looks` target, the full data are used, `reached` is `FALSE`, and
+`cutoff` is `NA`.
+
+Exactly one of `event.looks`, `time.looks`, and `cutoff.looks` must be
+supplied.
 
 The statistics are selected with `stat`, which may name one or more of
 `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,

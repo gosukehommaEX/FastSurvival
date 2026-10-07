@@ -553,6 +553,94 @@ reproduces the published one-sided p-values of 0.0028 for the log-rank
 test, 0.0009 for the modestly-weighted test, and 0.0012 for the rMW
 test, with a component correlation of 0.97.
 
+## Analysis cutoffs
+
+The simulation layer determines the calendar time of each analysis with
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md),
+which combines a target number of events, a planned calendar time, a
+maximum calendar time, a minimum time after the previous look, and a
+minimum follow-up after a given number of enrolled subjects. The same
+rule is implemented one simulated trial at a time by
+`get_analysis_date()` of the
+[simtrial](https://cran.r-project.org/package=simtrial) package. We
+compare the two on 50 simulated trials for a look at “150 events, but
+not before month 18 and not before 6 months after the 250th enrolled
+subject, and in any case by month 30”.
+
+``` r
+
+sim_c <- simdata_fast(nsim = 50, n = c(150, 150), a.time = c(0, 12),
+                      a.rate = 300 / 12, e.median = list(12, 16),
+                      d.hazard = 0.01, seed = 2026)
+cut_c <- cutoff_fast(sim_c, event.looks = 150, time.looks = 18,
+                     max.time = 30, min.enrolled = 250, min.followup = 6)
+ref_c <- vapply(seq_len(50), function(s) {
+  d <- sim_c[sim_c$sim == s, ]
+  x <- data.frame(enroll_time = d$accrual_time,
+                  cte = d$accrual_time + d$tte,
+                  fail = d$event, stratum = "All")
+  simtrial::get_analysis_date(x, planned_calendar_time = 18,
+                              target_event_overall = 150,
+                              max_extension_for_target_event = 30,
+                              min_n_overall = 250, min_followup = 6)
+}, numeric(1))
+c(max_abs_difference = max(abs(cut_c[, 1] - ref_c)))
+#> max_abs_difference 
+#>                  0
+```
+
+The cutoffs agree exactly. The two functions differ only when an event
+target is never met in the simulated data, which
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+reports as an unreached look rather than as the time of the last
+observed event.
+
+## Treatment switching
+
+[`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
+changes only the outcomes after each subject’s switch. For an
+exponential survival time with hazard `lambda`, a switch at time `s`
+after accrual that multiplies the remaining time by `f` gives the
+survival function `exp(-lambda t)` for `t <= s` and
+`exp(-lambda s - lambda (t - s) / f)` for `t > s`. We let every control
+subject still alive at calendar month 12 switch with `f = 2`, so that
+`s = 12 - a` for a subject accrued at time `a`, and compare the
+empirical survival of the control group with the average of this
+survival function over the accrual times.
+
+``` r
+
+lam   <- log(2) / 12
+sim_s <- simdata_fast(nsim = 200, n = c(250, 250), a.time = c(0, 6),
+                      a.prop = 1, e.hazard = list(lam, lam / 1.5),
+                      seed = 2027)
+sw    <- switch_fast(sim_s, group = 1, when = "cutoff",
+                     cutoff = rep(12, 200), aft.factor = 2)
+ctl   <- sw$group == 1
+s_sw  <- 12 - sw$accrual_time[ctl]
+t_grid <- c(6, 12, 18, 24, 36)
+data.frame(
+  t         = t_grid,
+  empirical = round(sapply(t_grid, function(t) mean(sw$surv_time[ctl] > t)), 4),
+  analytic  = round(sapply(t_grid, function(t) {
+    mean(ifelse(t <= s_sw, exp(-lam * t),
+                exp(-lam * s_sw - lam * (t - s_sw) / 2)))
+  }), 4)
+)
+#>    t empirical analytic
+#> 1  6    0.7052   0.7071
+#> 2 12    0.5456   0.5460
+#> 3 18    0.4594   0.4591
+#> 4 24    0.3860   0.3861
+#> 5 36    0.2728   0.2730
+```
+
+The empirical survival matches the analytic survival function to Monte
+Carlo error (the standard error is at most about 0.002 with 50,000
+control subjects). The vignette on treatment switching also checks the
+switching model with the rank-preserving structural failure time
+estimator of the rpsftm package.
+
 ## Summary
 
 Across all functions the FastSurvival results reproduce the reference
@@ -563,7 +651,9 @@ window mean survival time matches a Kaplan-Meier integral and the
 weighted Kaplan-Meier statistic matches the RMST identity; the average
 hazard ratio matches a survival-based reference; and the closed-form Cox
 hazard ratio, with or without strata, agrees with the partial-likelihood
-maximizer to the order expected for the Pike-Halley approximation. This
+maximizer to the order expected for the Pike-Halley approximation. In
+the simulation layer, the analysis cutoffs agree with simtrial and the
+switched survival times follow their analytic distribution. This
 agreement is verified continuously by the package test suite.
 
 ## References
