@@ -38,6 +38,14 @@
   simulation can be generated in reproducible batches, sequentially or in
   parallel. Without `stream` the results are unchanged.
 
+## Bug fixes
+
+* `analysis_fast()` with `stat = "maxcombo"`, `side = 2`, and two or three
+  weights failed with "TVPACK either needs all(lower == -Inf) or all(upper ==
+  Inf)", because the two-sided rectangle was passed to the TVPACK algorithm,
+  which handles only half-spaces. It now uses the GenzBretz algorithm in that
+  case, as `maxcombo_fast()` does.
+
 ## Documentation
 
 * New vignette "Treatment switching and crossover after an interim analysis"

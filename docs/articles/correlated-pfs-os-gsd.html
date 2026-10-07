@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,6 +47,7 @@
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -240,23 +241,25 @@ both PFS and OS at the same time.</p>
 <div class="section level2">
 <h2 id="primary-endpoint-analysis-pfs">Primary endpoint analysis (PFS)<a class="anchor" aria-label="anchor" href="#primary-endpoint-analysis-pfs"></a>
 </h2>
-<p>PFS is analyzed at the three event-driven looks. With
-<code>event.looks</code> the calendar cutoff at look <code>l</code> is
-the time of the <code>d_PFS[l]</code>-th PFS event over the whole trial,
-and <code>analysis_fast</code> returns that cutoff per simulation. These
-cutoffs are exactly the analysis times of the design, and the OS
-analysis below reuses them.</p>
+<p>PFS is analyzed at the three event-driven looks.
+<code>cutoff_fast</code> returns, for every simulated trial, the
+calendar time of the <code>d_PFS[l]</code>-th PFS event, which is the
+analysis time of look <code>l</code>. These cutoffs are exactly the
+analysis times of the design, and both endpoints are analyzed at them
+through the <code>cutoff.looks</code> argument of
+<code>analysis_fast</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pfs_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">pfs_dat</span>,</span>
-<span>  control     <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">d_PFS</span>,</span>
-<span>  stat        <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>  side        <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Per-simulation calendar cutoffs A_l (rows = simulation, columns = look),</span></span>
+<span><span class="co"># triggered by the PFS events.</span></span>
+<span><span class="va">A_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cutoff_fast.html">cutoff_fast</a></span><span class="op">(</span><span class="va">pfs_dat</span>, event.looks <span class="op">=</span> <span class="va">d_PFS</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Per-simulation calendar cutoffs A_l (rows = simulation, columns = look)</span></span>
-<span><span class="va">A_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">pfs_res</span><span class="op">$</span><span class="va">cutoff</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">pfs_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>  <span class="va">pfs_dat</span>,</span>
+<span>  control      <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
+<span>  stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>  side         <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># With this sample size and these event targets the looks are reached in</span></span>
 <span><span class="co"># essentially every simulation; warn if any target is not reached.</span></span>
@@ -266,55 +269,34 @@ analysis below reuses them.</p>
 <span></span>
 <span><span class="co"># Standardized PFS log-rank statistics (natural sign: benefit is negative)</span></span>
 <span><span class="va">Z_PFS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">pfs_res</span><span class="op">$</span><span class="va">logrank.z</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>The same analysis is obtained with <code>event.looks = d_PFS</code>,
+which determines the cutoffs and analyzes PFS in one call; computing the
+cutoffs separately lets the OS analysis reuse them.</p>
 </div>
 <div class="section level2">
 <h2 id="key-secondary-endpoint-analysis-os">Key secondary endpoint analysis (OS)<a class="anchor" aria-label="anchor" href="#key-secondary-endpoint-analysis-os"></a>
 </h2>
 <p>OS is analyzed at the same per-simulation cutoffs <code>A_l</code>.
-For each look the OS times are administratively censored at
-<code>A_l</code>, and the one-sided log-rank statistic is computed with
-<code>analysis_fast</code> at a single, deliberately large calendar time
-so that no further censoring is applied to the already-cut data. This
-reproduces the design rule that the OS analysis at a look uses the
-PFS-driven analysis time.</p>
+At each look the OS times are administratively censored at
+<code>A_l</code>, which reproduces the design rule that the OS analysis
+at a look uses the PFS-driven analysis time.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">big</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">A_mat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span></span>
-<span></span>
-<span><span class="va">os_blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="va">L</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">l</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">A_l</span>    <span class="op">&lt;-</span> <span class="va">A_mat</span><span class="op">[</span><span class="va">os_dat</span><span class="op">$</span><span class="va">sim</span>, <span class="va">l</span><span class="op">]</span>                        <span class="co"># per-row cutoff at look l</span></span>
-<span>  <span class="va">follow</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">A_l</span> <span class="op">-</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">accrual_time</span><span class="op">)</span>          <span class="co"># administrative follow-up</span></span>
-<span>  <span class="va">obs_t</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="va">os_dat</span><span class="op">$</span><span class="va">os_tte</span>, <span class="va">follow</span><span class="op">)</span>                 <span class="co"># observed OS time at the look</span></span>
-<span>  <span class="va">obs_e</span>  <span class="op">&lt;-</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">os_event</span> <span class="op">*</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">os_dat</span><span class="op">$</span><span class="va">accrual_time</span> <span class="op">+</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">os_tte</span> <span class="op">&lt;=</span> <span class="va">A_l</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">cut_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">os_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    sim          <span class="op">=</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">sim</span>,</span>
 <span>    group        <span class="op">=</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">group</span>,</span>
-<span>    accrual_time <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    tte          <span class="op">=</span> <span class="va">obs_t</span>,</span>
-<span>    event        <span class="op">=</span> <span class="va">obs_e</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="va">res_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>    <span class="va">cut_l</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="va">big</span>, stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Relabel as look l and report the PFS-driven cutoff for the timing summary;</span></span>
-<span>  <span class="co"># keep only the columns that are meaningful for the censored OS data.</span></span>
-<span>  <span class="va">res_l</span><span class="op">$</span><span class="va">look</span>       <span class="op">&lt;-</span> <span class="va">l</span></span>
-<span>  <span class="va">res_l</span><span class="op">$</span><span class="va">look.value</span> <span class="op">&lt;-</span> <span class="va">d_PFS</span><span class="op">[</span><span class="va">l</span><span class="op">]</span></span>
-<span>  <span class="va">res_l</span><span class="op">$</span><span class="va">cutoff</span>     <span class="op">&lt;-</span> <span class="va">A_mat</span><span class="op">[</span>, <span class="va">l</span><span class="op">]</span></span>
-<span>  <span class="va">os_blocks</span><span class="op">[[</span><span class="va">l</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">res_l</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sim"</span>, <span class="st">"look"</span>, <span class="st">"look.value"</span>, <span class="st">"cutoff"</span>,</span>
-<span>                              <span class="st">"n.event"</span>, <span class="st">"logrank.z"</span>, <span class="st">"logrank.chisq"</span>,</span>
-<span>                              <span class="st">"logrank.p"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">os_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">os_blocks</span><span class="op">)</span></span>
-<span><span class="va">os_res</span> <span class="op">&lt;-</span> <span class="va">os_res</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">os_res</span><span class="op">$</span><span class="va">sim</span>, <span class="va">os_res</span><span class="op">$</span><span class="va">look</span><span class="op">)</span>, <span class="op">]</span></span>
+<span>    accrual_time <span class="op">=</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">accrual_time</span>,</span>
+<span>    tte          <span class="op">=</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">os_tte</span>,</span>
+<span>    event        <span class="op">=</span> <span class="va">os_dat</span><span class="op">$</span><span class="va">os_event</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  control      <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
+<span>  stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>  side         <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Standardized OS log-rank statistics</span></span>
-<span><span class="va">Z_OS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="cn">NA_real_</span>, <span class="va">nsim</span>, <span class="va">L</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">l</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span><span class="op">)</span> <span class="va">Z_OS</span><span class="op">[</span>, <span class="va">l</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">os_blocks</span><span class="op">[[</span><span class="va">l</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">logrank.z</span></span></code></pre></div>
+<span><span class="va">Z_OS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">os_res</span><span class="op">$</span><span class="va">logrank.z</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>The mean PFS and OS event counts at each look summarize the
 information available to each endpoint. PFS reaches its event targets by
 construction, while OS, being the slower endpoint, accrues far fewer
@@ -322,7 +304,7 @@ events at the same analysis times.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_PFS_emp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">pfs_res</span><span class="op">$</span><span class="va">n.event</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">d_OS_emp</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">os_res</span><span class="op">$</span><span class="va">n.event</span>,  nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">A_mean</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">A_mat</span><span class="op">)</span></span>
+<span><span class="va">A_mean</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">A_mat</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  look          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span>,</span>
@@ -444,20 +426,25 @@ overall row is the power of that endpoint considered on its own.</p>
 <span><span class="co">#&gt;   Boundaries: efficacy on 'logrank.z' (direction = lower)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Efficacy Z Cum. Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.45      111.7         NA           0.0000</span></span>
-<span><span class="co">#&gt;     2        0.70      174.7    -2.0599           0.3376</span></span>
-<span><span class="co">#&gt;     3        1.00      250.4    -2.2516           0.4604</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.</span></span>
+<span><span class="co">#&gt;     1        0.45      111.7      490.9         NA           0.0000</span></span>
+<span><span class="co">#&gt;     2        0.70      174.7      599.9    -2.0599           0.3376</span></span>
+<span><span class="co">#&gt;     3        1.00      250.4      600.0    -2.2516           0.4604</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Analysis Time Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.45      111.7         15.26      0.0000</span></span>
-<span><span class="co">#&gt;     2        0.70      174.7         18.97      0.3376</span></span>
-<span><span class="co">#&gt;     3        1.00      250.4         24.01      0.1228</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
+<span><span class="co">#&gt;     1        0.45      490.9      111.7         22.4    356.8         15.26</span></span>
+<span><span class="co">#&gt;     2        0.70      599.9      174.7         35.1    390.1         18.97</span></span>
+<span><span class="co">#&gt;     3        1.00      600.0      250.4         50.2    299.4         24.01</span></span>
+<span><span class="co">#&gt;  Cross. Eff.</span></span>
+<span><span class="co">#&gt;       0.0000</span></span>
+<span><span class="co">#&gt;       0.3376</span></span>
+<span><span class="co">#&gt;       0.1228</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall</span></span>
 <span><span class="co">#&gt;   Rejection rate (efficacy):      0.4604</span></span>
 <span><span class="co">#&gt;   Expected events at stop:        224.7</span></span>
+<span><span class="co">#&gt;   Expected sample size at stop:   600.0</span></span>
 <span><span class="co">#&gt;   Expected analysis time at stop: 22.29</span></span></code></pre></div>
 <p>Under the alternative the PFS futility rule rarely stops the trial,
 which is the intended behavior: a futility look is meant to protect
@@ -658,7 +645,7 @@ analysis of clinical trials. <em>Biometrika</em>, 64(2), 191-199.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

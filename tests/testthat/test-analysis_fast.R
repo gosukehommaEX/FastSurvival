@@ -472,3 +472,32 @@ test_that("analysis_fast cutoff.looks matches rows by name and validates input",
   expect_error(analysis_fast(dat, control = 1, cutoff.looks = bad),
                "row names")
 })
+
+test_that("analysis_fast max-combo with two or three weights matches maxcombo_fast on both sides", {
+  dat <- simdata_fast(nsim = 6, n = c(120, 120), a.time = c(0, 12),
+                      a.prop = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
+                      e.time = list(NULL, c(0, 6, Inf)), seed = 405)
+  cut <- 1e6
+  for (w in list(list(rho = c(0, 0), gamma = c(0, 1)),
+                 list(rho = c(0, 0, 1), gamma = c(0, 1, 0)))) {
+    for (sd in c(1, 2)) {
+      set.seed(1)
+      res <- analysis_fast(dat, control = 1, time.looks = cut,
+                           stat = "maxcombo", side = sd,
+                           mc.rho = w$rho, mc.gamma = w$gamma)
+      for (s in 1:6) {
+        cc <- cut_one(dat, s, cut)
+        mc <- maxcombo_fast(cc$time, cc$event, cc$group, control = 1,
+                            side = sd, rho = w$rho, gamma = w$gamma,
+                            presorted = TRUE)
+        expect_equal(res$maxcombo.stat[s], unname(mc["statistic"]),
+                     tolerance = 1e-8)
+        # TVPACK (one-sided) is deterministic; GenzBretz (two-sided) is
+        # accurate to about abseps = 1e-5.
+        tol <- if (sd == 1) 1e-8 else 1e-3
+        expect_lt(abs(res$maxcombo.p[s] - unname(mc["p.value"])), tol)
+      }
+    }
+  }
+})

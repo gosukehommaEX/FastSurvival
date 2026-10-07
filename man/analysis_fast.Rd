@@ -304,7 +304,12 @@ The \code{"maxcombo"} statistic is the max-combo test of \code{mc.rho} and
 most extreme component (\code{min} of the component Z-scores when
 \code{side = 1}, so that a negative value favors treatment, and the maximum
 absolute component when \code{side = 2}), and \code{maxcombo.p} is the joint
-multivariate-normal p-value, which already follows \code{side}.
+multivariate-normal p-value, which already follows \code{side}. As in
+\code{\link{maxcombo_fast}}, the p-value of a one-sided test with two or
+three weights is computed by the deterministic TVPACK algorithm, and
+otherwise by the randomized quasi-Monte-Carlo GenzBretz algorithm of
+mvtnorm, which uses R's random-number generator; call \code{set.seed()}
+beforehand for p-values that are reproducible to the last digit.
 
 The \code{"ahsw"} statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to \code{tau}. It reports the per-group

@@ -132,6 +132,7 @@ for the Kaplan-Meier estimate at a time point.
 
 ``` r
 library(survival)
+#> Warning: package 'survival' was built under R version 4.6.1
 
 # Average hazard contrasts on the ovarian data
 ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1, tau = 600)

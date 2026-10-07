@@ -19,7 +19,7 @@ accumulation in a single C++ pass without intermediate R-level vector copies."><
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,7 @@ accumulation in a single C++ pass without intermediate R-level vector copies."><
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -309,9 +310,9 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min      lq      mean  median     uq     max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   31.6   83.65  139.2656  110.35  136.2 12881.3  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1056.7 2010.70 2431.5994 2335.40 2604.8 35301.6  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr    min      lq      mean median      uq     max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   34.7  104.55  146.0996  135.4  167.80  1573.6  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1085.5 2442.40 3075.7785 2805.1 3207.85 58809.1  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -325,7 +326,7 @@ estimator. Manuscript under review.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

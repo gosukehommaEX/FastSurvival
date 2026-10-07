@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,6 +47,7 @@
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -112,10 +113,14 @@ weight, and <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> the
 hazard ratio.</p>
 <p>The simulation functions support a full simulation study.
 <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates individual patient data for one-
-or two-group trials. <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs interim or
-sequential analyses of the simulated data at one or more looks, and can
-compute any of the estimation and testing statistics above, optionally
-within subgroups. <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the
+or two-group trials. <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> determines the calendar
+time of every analysis look in every simulated trial from combined event
+and calendar-time rules. <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs interim
+or sequential analyses of the simulated data at one or more looks, and
+can compute any of the estimation and testing statistics above,
+optionally within subgroups. <code><a href="../reference/switch_fast.html">switch_fast()</a></code> applies
+treatment switching to the simulated data, at progression or after an
+interim analysis. <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the
 operating characteristics from the analysis output against supplied
 boundaries.</p>
 </div>
@@ -127,6 +132,7 @@ survival package, with a one-sided test of treatment benefit
 (<code>side = 1</code>).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'survival' was built under R version 4.6.1</span></span>
 <span></span>
 <span><span class="co"># Single-time-point Kaplan-Meier estimate</span></span>
 <span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span>
@@ -180,8 +186,8 @@ quantifies the performance gain. <em>Group sequential design with the
 simulation trio</em> demonstrates <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>,
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>, and <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> against
 a gsDesign reference. Further applied vignettes work the simulation trio
-through nonproportional-hazards, correlated multiple-endpoint, and
-multiregional settings.</p>
+through nonproportional-hazards, correlated multiple-endpoint,
+multiregional, and treatment-switching settings.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -202,7 +208,7 @@ Research</em> (3rd ed.). Chapman and Hall/CRC.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

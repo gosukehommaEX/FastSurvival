@@ -258,7 +258,11 @@ the batches are run one after another or distributed over parallel workers
 whatever the number of workers. The simulation identifiers start at 1 in
 every batch, so they are renumbered before the batch results are combined.
 Functions that draw further random numbers, such as \code{\link{switch_fast}},
-continue the same stream within a batch.
+continue the same stream within a batch. The max-combo p-values of
+\code{\link{analysis_fast}} with four or more weights (or a two-sided test)
+are computed with R's own random-number generator, so a batch should also
+call \code{set.seed()} before the analysis for p-values that are identical
+across runs.
 }
 
 \examples{

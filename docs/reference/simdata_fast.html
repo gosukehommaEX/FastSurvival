@@ -21,7 +21,7 @@ reference implementation, so results are reproducible from seed."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@ reference implementation, so results are reproducible from seed."><meta property
     <li><a class="dropdown-item" href="../articles/compare-logrank-rmst.html">Comparing the log-rank test and RMST under nonproportional hazards</a></li>
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
+    <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -100,7 +101,8 @@ reference implementation, so results are reproducible from <code>seed</code>.</p
 <span>  h12.switch.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  h12.switch.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  h12.switch.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  switch.clock <span class="op">=</span> <span class="st">"reset"</span></span>
+<span>  switch.clock <span class="op">=</span> <span class="st">"reset"</span>,</span>
+<span>  stream <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -274,6 +276,18 @@ measured from the switch (intermediate-event) time (clock-reset).</p></dd>
 <dd><p>Time origin for the post-event hazards. Currently only
 <code>"reset"</code> (measured from the intermediate event) is implemented.</p></dd>
 
+
+<dt id="arg-stream">stream<a class="anchor" aria-label="anchor" href="#arg-stream"></a></dt>
+<dd><p>Optional non-negative whole number selecting an independent
+<code>dqrng</code> random-number stream for the given <code>seed</code>; requires
+<code>seed</code>. A large simulation can be split into batches that are
+generated with the same <code>seed</code> and <code>stream = 1, 2, ...</code>,
+sequentially or in parallel, and the result of each batch does not depend
+on how the batches are distributed. With the default Xoroshiro128++
+generator of <code>dqrng</code>, stream <code>k</code> starts <code>k</code> jumps of
+\(2^{64}\) draws ahead of the seeded state, so <code>stream = 0</code> gives
+the same numbers as no stream. See the section on batches.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -351,13 +365,48 @@ subsetting the output to the control arm and one other arm and calling
 subgroups or the illness-death model, which remain two-group.</p>
     </div>
     <div class="section level2">
+    <h2 id="batches-and-parallel-execution">Batches and parallel execution<a class="anchor" aria-label="anchor" href="#batches-and-parallel-execution"></a></h2>
+
+
+<p>The output has <code>nsim * sum(n)</code> rows, so memory rather than time limits
+the number of simulated trials in one call. A large study can be run in
+batches: each batch is generated with the same <code>seed</code> and its own
+<code>stream</code>, analyzed with <code><a href="analysis_fast.html">analysis_fast</a></code>, and only the
+analysis results are kept. Because each stream is an independent sequence of
+the <code>dqrng</code> generator, the data of batch <code>b</code> are the same whether
+the batches are run one after another or distributed over parallel workers
+(for example with <code><a href="https://rdrr.io/r/parallel/mcdummies.html" class="external-link">parallel::mclapply()</a></code> or the future framework), and
+whatever the number of workers. The simulation identifiers start at 1 in
+every batch, so they are renumbered before the batch results are combined.
+Functions that draw further random numbers, such as <code><a href="switch_fast.html">switch_fast</a></code>,
+continue the same stream within a batch. The max-combo p-values of
+<code><a href="analysis_fast.html">analysis_fast</a></code> with four or more weights (or a two-sided test)
+are computed with R's own random-number generator, so a batch should also
+call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the analysis for p-values that are identical
+across runs.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="analysis_fast.html">analysis_fast</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># One-group simulation, simple exponential, no dropout</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Batches from independent random-number streams: the simulations of each</span></span></span>
+<span class="r-in"><span><span class="co"># batch are renumbered before the analysis results are combined.</span></span></span>
+<span class="r-in"><span><span class="va">run_batch</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">b</span>, <span class="va">nsim</span> <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span>nsim <span class="op">=</span> <span class="va">nsim</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    a.rate <span class="op">=</span> <span class="fl">200</span> <span class="op">/</span> <span class="fl">12</span>, e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">16</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    seed <span class="op">=</span> <span class="fl">2026</span>, stream <span class="op">=</span> <span class="va">b</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="analysis_fast.html">analysis_fast</a></span><span class="op">(</span><span class="va">d</span>, control <span class="op">=</span> <span class="fl">1</span>, event.looks <span class="op">=</span> <span class="fl">120</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span><span class="op">$</span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="va">r</span><span class="op">$</span><span class="va">sim</span> <span class="op">+</span> <span class="op">(</span><span class="va">b</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">nsim</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="va">run_batch</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">sim</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1 60</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One-group simulation, simple exponential, no dropout</span></span></span>
 <span class="r-in"><span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  nsim     <span class="op">=</span> <span class="fl">100</span>,</span></span>
 <span class="r-in"><span>  n        <span class="op">=</span> <span class="fl">50</span>,</span></span>
@@ -635,7 +684,7 @@ subgroups or the illness-death model, which remain two-group.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

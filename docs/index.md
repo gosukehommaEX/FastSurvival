@@ -42,8 +42,10 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | Function | Description |
 |----|----|
 | [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
-| [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts or calendar times. |
-| [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | Pairwise comparison of each experimental arm against a shared control on multi-arm data, at fixed calendar looks or a primary contrast’s event-driven cutoffs, with an optional Bonferroni adjustment. |
+| [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md) | Per-simulation calendar cutoffs of the analysis looks from combined trigger rules (target events, planned and maximum calendar times, minimum time after the previous look, minimum follow-up after a number of enrolled subjects). |
+| [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts, calendar times, or per-simulation cutoffs from [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md). |
+| [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md) | Treatment switching in simulated data: switching at an intermediate event (such as progression), at an opening time after an interim analysis, or at the later of the two, optionally only in the trials selected by an interim decision, with an accelerated-failure-time or new-hazard effect after the switch. |
+| [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | Pairwise comparison of each experimental arm against a shared control on multi-arm data, at fixed calendar looks, a primary contrast’s event-driven cutoffs, or supplied per-simulation cutoffs, with an optional Bonferroni adjustment. |
 | [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries. |
 
 ### Visualization
@@ -307,18 +309,37 @@ terminal event, and with optional treatment switching. The entire
 generation pipeline runs in a single C++ kernel that materializes the
 output data frame once, avoiding intermediate R-level vector operations
 and copies, and random-number generation uses
-[dqrng](https://cran.r-project.org/package=dqrng) for speed.
+[dqrng](https://cran.r-project.org/package=dqrng) for speed. With the
+`stream` argument a large study can be generated in batches from
+independent random-number streams, sequentially or in parallel, with
+results that do not depend on how the batches are distributed.
+
+**cutoff_fast** determines the calendar time of every analysis look in
+every simulated trial in a single C++ pass, from a target number of
+events (on the whole trial, a subset of subjects, or another endpoint),
+a planned calendar time, a maximum calendar time, a minimum time after
+the previous look, and a minimum follow-up after a given number of
+enrolled subjects, combined as in `get_analysis_date()` of the
+[simtrial](https://cran.r-project.org/package=simtrial) package. The
+resulting cutoffs are passed to
+[`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+[`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md),
+and
+[`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
+so that the same analysis times can drive several endpoints, several
+contrasts, and a modification of the data after an interim analysis.
 
 **analysis_fast** performs interim or sequential analyses of simulated
-two-group data at one or more looks, defined either by a target
-cumulative number of events or by a calendar time. At every look the
-data are administratively censored at the corresponding calendar cutoff,
-and the requested statistics are computed for each simulated trial. The
-censoring, time sorting, and per-cell statistics are handled by a fused
-C++ kernel that reuses the same analysis cores as the standalone
-functions, so the same results are obtained without the per-iteration
-overhead of repeated wrapper calls. Statistics can also be reported
-within each subgroup.
+two-group data at one or more looks, defined by a target cumulative
+number of events, by a calendar time, or by per-simulation cutoffs from
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+At every look the data are administratively censored at the
+corresponding calendar cutoff, and the requested statistics are computed
+for each simulated trial. The censoring, time sorting, and per-cell
+statistics are handled by a fused C++ kernel that reuses the same
+analysis cores as the standalone functions, so the same results are
+obtained without the per-iteration overhead of repeated wrapper calls.
+Statistics can also be reported within each subgroup.
 
 **pairwise_fast** compares each experimental arm against a shared
 control on multi-arm data by running
@@ -330,6 +351,17 @@ per-simulation calendar cutoff at which all contrasts are analyzed,
 reproducing the standard rule that the primary analysis defines a single
 data cutoff. An optional Bonferroni adjustment controls the family-wise
 error rate across the contrasts at each look.
+
+**switch_fast** applies a treatment-switching rule to simulated data by
+changing only the outcomes after each subject’s switch: switching at the
+intermediate event of an illness-death simulation (for example at
+progression), at an opening time after an interim analysis (crossover at
+a milestone), or at the later of the two, with the remaining time to the
+terminal event multiplied by an acceleration factor or redrawn from a
+new hazard. Because the history before the switch is kept, an interim
+analysis is unaffected, so a crossover decided by an interim result is
+simulated for all trials at once: analyze the interim, select the
+trials, switch, and analyze the later looks.
 
 **simsummary_fast** aggregates the per-simulation, per-look output of
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)

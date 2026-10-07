@@ -1,5 +1,5 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   compare-logrank-rmst: compare-logrank-rmst.html
@@ -10,8 +10,9 @@ articles:
   mrct-regional-consistency: mrct-regional-consistency.html
   multi-arm-pairwise: multi-arm-pairwise.html
   speed-comparison: speed-comparison.html
+  treatment-switching: treatment-switching.html
   validation: validation.html
-last_built: 2026-09-29T00:45Z
+last_built: 2026-10-07T06:53Z
 urls:
   reference: https://gosukehommaEX.github.io/FastSurvival/reference
   article: https://gosukehommaEX.github.io/FastSurvival/articles

@@ -42,7 +42,8 @@ simdata_fast(
   h12.switch.hazard = NULL,
   h12.switch.median = NULL,
   h12.switch.time = NULL,
-  switch.clock = "reset"
+  switch.clock = "reset",
+  stream = NULL
 )
 ```
 
@@ -210,6 +211,18 @@ simdata_fast(
   Time origin for the post-event hazards. Currently only `"reset"`
   (measured from the intermediate event) is implemented.
 
+- stream:
+
+  Optional non-negative whole number selecting an independent `dqrng`
+  random-number stream for the given `seed`; requires `seed`. A large
+  simulation can be split into batches that are generated with the same
+  `seed` and `stream = 1, 2, ...`, sequentially or in parallel, and the
+  result of each batch does not depend on how the batches are
+  distributed. With the default Xoroshiro128++ generator of `dqrng`,
+  stream `k` starts `k` jumps of \\2^{64}\\ draws ahead of the seeded
+  state, so `stream = 0` gives the same numbers as no stream. See the
+  section on batches.
+
 ## Value
 
 A `data.frame` with `nsim * sum(n)` rows. The columns are `sim`,
@@ -290,6 +303,30 @@ one other arm and calling
 once per contrast. Multi-arm mode does not support subgroups or the
 illness-death model, which remain two-group.
 
+## Batches and parallel execution
+
+The output has `nsim * sum(n)` rows, so memory rather than time limits
+the number of simulated trials in one call. A large study can be run in
+batches: each batch is generated with the same `seed` and its own
+`stream`, analyzed with
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+and only the analysis results are kept. Because each stream is an
+independent sequence of the `dqrng` generator, the data of batch `b` are
+the same whether the batches are run one after another or distributed
+over parallel workers (for example with
+[`parallel::mclapply()`](https://rdrr.io/r/parallel/mcdummies.html) or
+the future framework), and whatever the number of workers. The
+simulation identifiers start at 1 in every batch, so they are renumbered
+before the batch results are combined. Functions that draw further
+random numbers, such as
+[`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
+continue the same stream within a batch. The max-combo p-values of
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+with four or more weights (or a two-sided test) are computed with R's
+own random-number generator, so a batch should also call
+[`set.seed()`](https://rdrr.io/r/base/Random.html) before the analysis
+for p-values that are identical across runs.
+
 ## See also
 
 [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
@@ -297,6 +334,20 @@ illness-death model, which remain two-group.
 ## Examples
 
 ``` r
+# Batches from independent random-number streams: the simulations of each
+# batch are renumbered before the analysis results are combined.
+run_batch <- function(b, nsim = 20) {
+  d <- simdata_fast(nsim = nsim, n = c(100, 100), a.time = c(0, 12),
+                    a.rate = 200 / 12, e.median = list(12, 16),
+                    seed = 2026, stream = b)
+  r <- analysis_fast(d, control = 1, event.looks = 120)
+  r$sim <- r$sim + (b - 1) * nsim
+  r
+}
+res <- do.call(rbind, lapply(1:3, run_batch))
+range(res$sim)
+#> [1]  1 60
+
 # One-group simulation, simple exponential, no dropout
 df1 <- simdata_fast(
   nsim     = 100,

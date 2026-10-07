@@ -106,11 +106,22 @@ Simulation and sequential analysis:
   two-endpoint illness-death generation. Random number generation uses
   dqrng.
 
+- [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md):
+
+  Per-simulation calendar cutoffs of the analysis looks from combined
+  event, calendar-time, and enrollment trigger rules.
+
 - [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md):
 
   Interim and final analyses of simulated trials at a set of information
-  times or calendar cutoffs, returning one row of test statistics per
-  replicate and look.
+  times, calendar cutoffs, or per-simulation cutoffs, returning one row
+  of test statistics per replicate and look.
+
+- [`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md):
+
+  Treatment switching in simulated data, at an intermediate event or
+  after an interim analysis, changing only the outcomes after the
+  switch.
 
 - [`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md):
 

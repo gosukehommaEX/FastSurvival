@@ -22,3 +22,5 @@
 - [Multi-arm trials: K-arm generation and pairwise comparisons against a
   shared
   control](https://gosukehommaEX.github.io/FastSurvival/articles/multi-arm-pairwise.md):
+- [Treatment switching and crossover after an interim
+  analysis](https://gosukehommaEX.github.io/FastSurvival/articles/treatment-switching.md):

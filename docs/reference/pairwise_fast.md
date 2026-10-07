@@ -23,6 +23,7 @@ pairwise_fast(
   stat = "logrank",
   adjust = c("none", "bonferroni"),
   p.col = NULL,
+  cutoff.looks = NULL,
   ...
 )
 ```
@@ -42,19 +43,19 @@ pairwise_fast(
 - event.looks:
 
   A numeric vector of target cumulative event counts for the primary
-  contrast, one per look. Mutually exclusive with `time.looks`; requires
-  `primary`.
+  contrast, one per look. Mutually exclusive with `time.looks` and
+  `cutoff.looks`; requires `primary`.
 
 - time.looks:
 
   A numeric vector of calendar times, one per look. Mutually exclusive
-  with `event.looks`.
+  with `event.looks` and `cutoff.looks`.
 
 - primary:
 
   The group label of the experimental arm whose control-versus-arm
   comparison defines the shared calendar cutoff. Required with
-  `event.looks` and ignored with `time.looks`.
+  `event.looks` and ignored with `time.looks` and `cutoff.looks`.
 
 - arms:
 
@@ -77,6 +78,15 @@ pairwise_fast(
   The name of the p-value column to adjust. By default it is the column
   matching the chosen `stat` (for example `"logrank.p"`).
 
+- cutoff.looks:
+
+  A numeric matrix of per-simulation calendar cutoffs with one row per
+  simulated trial and one column per look, as returned by
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+  Mutually exclusive with `event.looks` and `time.looks`. See
+  [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  for how the rows are matched to the simulations.
+
 - ...:
 
   Further arguments passed to
@@ -96,7 +106,7 @@ event counts, and the statistic columns for the chosen `stat`. When
 
 ## Details
 
-Two timing regimes are supported, exactly one of which must be
+Three timing regimes are supported, exactly one of which must be
 requested.
 
 With `time.looks`, every contrast is analyzed at the same fixed calendar
@@ -112,7 +122,17 @@ cutoffs. This reproduces the standard design in which the primary
 event-driven analysis fixes a single data cutoff at which all
 comparisons are performed. For a simulation in which the primary event
 target is not reached at a look, that look is marked with
-`reached = FALSE` and `NA` statistics for every contrast.
+`reached = FALSE` and `NA` statistics for every contrast. The shared
+cutoffs are computed by
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+on the events of the control and primary arms.
+
+With `cutoff.looks`, every contrast is analyzed at the supplied
+per-simulation calendar cutoffs, for example those returned by
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+for a combination of event and calendar-time rules. A look that is not
+reached in a simulation (`NA` cutoff) is marked with `reached = FALSE`
+and `NA` statistics, as in the event-driven regime.
 
 The Bonferroni option multiplies each p-value by the number of contrasts
 and caps it at one, controlling the family-wise error rate across the
