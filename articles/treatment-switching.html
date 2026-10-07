@@ -272,7 +272,7 @@ scenario, runs in a few seconds.</p>
 <span>  <span class="va">r1</span>  <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">d1</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.426   0.031   0.457</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.417   0.027   0.444</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="a-check-with-the-rank-preserving-structural-failure-time-model">A check with the rank-preserving structural failure time model<a class="anchor" aria-label="anchor" href="#a-check-with-the-rank-preserving-structural-failure-time-model"></a>
@@ -283,53 +283,59 @@ Robins and Tsiatis (1991). If the experimental treatment multiplies the
 time spent on it by a factor <code>f</code>, both from randomization in
 the experimental group and after the switch in the control group, the
 RPSFT estimate of <code>psi = -log(f)</code> should be close to the true
-value. The check below simulates one large trial in which the
+value. The check below simulates 10 large trials in which the
 experimental group has all transition hazards divided by <code>f</code>
 (an accelerated failure time effect of <code>f</code>), lets 60 percent
 of the control patients who progress switch with the same factor, and
-estimates <code>psi</code> with the rpsftm package, ignoring
-censoring.</p>
+estimates <code>psi</code> in each trial with the rpsftm package,
+ignoring censoring.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f</span>   <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
 <span><span class="va">h01</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fl">8</span></span>
 <span><span class="va">h02</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fl">30</span></span>
 <span><span class="va">h12</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span></span>
-<span><span class="va">one</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim <span class="op">=</span> <span class="fl">1</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">2000</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>, a.rate <span class="op">=</span> <span class="fl">4000</span> <span class="op">/</span> <span class="fl">12</span>,</span>
+<span><span class="va">n_rep</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">big</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<span>  nsim <span class="op">=</span> <span class="va">n_rep</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2000</span>, <span class="fl">2000</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>, a.rate <span class="op">=</span> <span class="fl">4000</span> <span class="op">/</span> <span class="fl">12</span>,</span>
 <span>  h01.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">h01</span>, <span class="va">h01</span> <span class="op">/</span> <span class="va">f</span><span class="op">)</span>, h02.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">h02</span>, <span class="va">h02</span> <span class="op">/</span> <span class="va">f</span><span class="op">)</span>,</span>
 <span>  h12.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">h12</span>, <span class="va">h12</span> <span class="op">/</span> <span class="va">f</span><span class="op">)</span>, seed <span class="op">=</span> <span class="fl">7</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">one</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/switch_fast.html">switch_fast</a></span><span class="op">(</span><span class="va">one</span>, group <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">0.6</span>, when <span class="op">=</span> <span class="st">"intermediate"</span>,</span>
+<span><span class="va">big</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/switch_fast.html">switch_fast</a></span><span class="op">(</span><span class="va">big</span>, group <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">0.6</span>, when <span class="op">=</span> <span class="st">"intermediate"</span>,</span>
 <span>                   aft.factor <span class="op">=</span> <span class="va">f</span>, seed <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">rp_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  time   <span class="op">=</span> <span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span>,</span>
-<span>  status <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  arm    <span class="op">=</span> <span class="va">one</span><span class="op">$</span><span class="va">group</span> <span class="op">-</span> <span class="fl">1</span>,</span>
-<span>  cens   <span class="op">=</span> <span class="fl">1e6</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Proportion of the observed time spent on the experimental treatment.</span></span>
-<span><span class="va">rp_dat</span><span class="op">$</span><span class="va">rx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">rp_dat</span><span class="op">$</span><span class="va">arm</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fl">1</span>,</span>
-<span>                    <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">switched</span> <span class="op">==</span> <span class="fl">1</span>,</span>
-<span>                           <span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span> <span class="op">-</span> <span class="va">one</span><span class="op">$</span><span class="va">switch_time</span><span class="op">)</span> <span class="op">/</span></span>
-<span>                             <span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">rpsftm</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/rpsftm/man/rpsftm.html" class="external-link">rpsftm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/pkg/rpsftm/man/rand.html" class="external-link">rand</a></span><span class="op">(</span><span class="va">arm</span>, <span class="va">rx</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">rp_dat</span>,</span>
-<span>         censor_time <span class="op">=</span> <span class="va">cens</span><span class="op">)</span>,</span>
-<span>  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="st">"rpsftm could not be run"</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>true_psi <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span>, estimated_psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">psi</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="co">#&gt;      true_psi estimated_psi </span></span>
-<span><span class="co">#&gt;    -0.4054651    -0.3261248</span></span></code></pre></div>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">psi_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_rep</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">one</span> <span class="op">&lt;-</span> <span class="va">big</span><span class="op">[</span><span class="va">big</span><span class="op">$</span><span class="va">sim</span> <span class="op">==</span> <span class="va">s</span>, <span class="op">]</span></span>
+<span>  <span class="va">rp_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    time   <span class="op">=</span> <span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span>,</span>
+<span>    status <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    arm    <span class="op">=</span> <span class="va">one</span><span class="op">$</span><span class="va">group</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>    cens   <span class="op">=</span> <span class="fl">1e6</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="co"># Proportion of the observed time spent on the experimental treatment.</span></span>
+<span>  <span class="va">rp_dat</span><span class="op">$</span><span class="va">rx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">rp_dat</span><span class="op">$</span><span class="va">arm</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fl">1</span>,</span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">switched</span> <span class="op">==</span> <span class="fl">1</span>,</span>
+<span>                             <span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span> <span class="op">-</span> <span class="va">one</span><span class="op">$</span><span class="va">switch_time</span><span class="op">)</span> <span class="op">/</span></span>
+<span>                               <span class="va">one</span><span class="op">$</span><span class="va">e2_surv_time</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/rpsftm/man/rpsftm.html" class="external-link">rpsftm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/pkg/rpsftm/man/rand.html" class="external-link">rand</a></span><span class="op">(</span><span class="va">arm</span>, <span class="va">rx</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">rp_dat</span>,</span>
+<span>           censor_time <span class="op">=</span> <span class="va">cens</span><span class="op">)</span>,</span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NULL</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span> <span class="cn">NA_real_</span> <span class="kw">else</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">psi</span><span class="op">)</span></span>
+<span><span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>true_psi <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span>, mean_estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">psi_hat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        sd_estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">psi_hat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        se_of_mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">psi_hat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">psi_hat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      true_psi mean_estimate   sd_estimate    se_of_mean </span></span>
+<span><span class="co">#&gt;       -0.4055       -0.3929        0.0326        0.0103</span></span></code></pre></div>
+<p>The mean of the estimates is close to the true value relative to its
+standard error, so the RPSFT method recovers the acceleration factor
+used to generate the switched survival times.</p>
 </div>
 <div class="section level2">
 <h2 id="remarks">Remarks<a class="anchor" aria-label="anchor" href="#remarks"></a>
