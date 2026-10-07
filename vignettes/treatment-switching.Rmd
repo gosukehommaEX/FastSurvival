@@ -201,52 +201,59 @@ rank-preserving structural failure time (RPSFT) method of Robins and Tsiatis
 (1991). If the experimental treatment multiplies the time spent on it by a
 factor `f`, both from randomization in the experimental group and after the
 switch in the control group, the RPSFT estimate of `psi = -log(f)` should be
-close to the true value. The check below simulates one large trial in which the
+close to the true value. The check below simulates 10 large trials in which the
 experimental group has all transition hazards divided by `f` (an accelerated
 failure time effect of `f`), lets 60 percent of the control patients who
-progress switch with the same factor, and estimates `psi` with the rpsftm
-package, ignoring censoring.
+progress switch with the same factor, and estimates `psi` in each trial with
+the rpsftm package, ignoring censoring.
 
 ```{r rpsft, eval = has_rpsftm}
 f   <- 1.5
 h01 <- log(2) / 8
 h02 <- log(2) / 30
 h12 <- log(2) / 12
-one <- simdata_fast(
-  nsim = 1, n = c(2000, 2000), a.time = c(0, 12), a.rate = 4000 / 12,
+n_rep <- 10
+big <- simdata_fast(
+  nsim = n_rep, n = c(2000, 2000), a.time = c(0, 12), a.rate = 4000 / 12,
   h01.hazard = list(h01, h01 / f), h02.hazard = list(h02, h02 / f),
   h12.hazard = list(h12, h12 / f), seed = 7
 )
-one <- switch_fast(one, group = 1, prob = 0.6, when = "intermediate",
+big <- switch_fast(big, group = 1, prob = 0.6, when = "intermediate",
                    aft.factor = f, seed = 8)
 
-rp_dat <- data.frame(
-  time   = one$e2_surv_time,
-  status = 1,
-  arm    = one$group - 1,
-  cens   = 1e6
-)
-# Proportion of the observed time spent on the experimental treatment.
-rp_dat$rx <- ifelse(rp_dat$arm == 1, 1,
-                    ifelse(one$switched == 1,
-                           (one$e2_surv_time - one$switch_time) /
-                             one$e2_surv_time, 0))
-
-suppressPackageStartupMessages({
+suppressWarnings(suppressPackageStartupMessages({
   library(survival)
   library(rpsftm)
-})
-fit <- tryCatch(
-  rpsftm(Surv(time, status) ~ rand(arm, rx), data = rp_dat,
-         censor_time = cens),
-  error = function(e) NULL
-)
-if (is.null(fit)) {
-  "rpsftm could not be run"
-} else {
-  c(true_psi = -log(f), estimated_psi = unname(fit$psi))
-}
+}))
+psi_hat <- vapply(seq_len(n_rep), function(s) {
+  one <- big[big$sim == s, ]
+  rp_dat <- data.frame(
+    time   = one$e2_surv_time,
+    status = 1,
+    arm    = one$group - 1,
+    cens   = 1e6
+  )
+  # Proportion of the observed time spent on the experimental treatment.
+  rp_dat$rx <- ifelse(rp_dat$arm == 1, 1,
+                      ifelse(one$switched == 1,
+                             (one$e2_surv_time - one$switch_time) /
+                               one$e2_surv_time, 0))
+  fit <- tryCatch(
+    rpsftm(Surv(time, status) ~ rand(arm, rx), data = rp_dat,
+           censor_time = cens),
+    error = function(e) NULL
+  )
+  if (is.null(fit)) NA_real_ else unname(fit$psi)
+}, numeric(1))
+
+round(c(true_psi = -log(f), mean_estimate = mean(psi_hat, na.rm = TRUE),
+        sd_estimate = sd(psi_hat, na.rm = TRUE),
+        se_of_mean = sd(psi_hat, na.rm = TRUE) / sqrt(sum(!is.na(psi_hat)))), 4)
 ```
+
+The mean of the estimates is close to the true value relative to its standard
+error, so the RPSFT method recovers the acceleration factor used to generate
+the switched survival times.
 
 ## Remarks
 
