@@ -276,8 +276,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr    min       lq      mean   median       uq      max neval cld
-#>  coxph_fast  26.69  31.3965  46.91932  40.0095  44.9770 4196.311  1000  a 
-#>       coxph 710.66 739.3485 774.15252 748.3465 763.1985 5377.644  1000   b
+#>        expr      min       lq       mean   median       uq      max neval cld
+#>  coxph_fast   60.753   69.936   90.44333   85.995   88.641 4808.779  1000  a 
+#>       coxph 1509.749 1541.669 1596.52503 1557.409 1576.204 7048.401  1000   b
 # }
 ```
