@@ -179,8 +179,8 @@ tab
 ```
 
 Switching pulls the intention-to-treat hazard ratio for OS toward one
-and lowers the power of the OS test. The first two scenarios differ only
-in the trials where PFS was not significant, in which crossover is
+and lowers the power of the OS test. The two crossover scenarios differ
+only in the trials where PFS was not significant, in which crossover is
 opened in the second scenario but not in the first, so opening crossover
 in every trial dilutes the OS comparison more.
 
@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.411   0.030   0.441
+#>   0.408   0.030   0.438
 ```
 
 ## A check with the rank-preserving structural failure time model

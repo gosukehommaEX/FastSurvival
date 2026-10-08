@@ -39,6 +39,7 @@ afterwards. The analysis is at 5 years.
 
 e_time <- c(0, 0.1, Inf)         # change point at 0.1 year
 cut    <- 5                      # analysis at 5 years
+N_HALF <- 1000L                  # subjects per arm
 
 scenarios <- list(
   equal = list(
@@ -58,11 +59,26 @@ lets them catch up. The hazard ratio, however, falls below one after the
 first 0.1 year, and it is this late region that late-emphasis tests
 reward.
 
+``` r
+
+scn_strong <- gen_scenario_fast(
+  list("Strong null" = list(
+    e.hazard = list(scenarios$strong$haz_c, scenarios$strong$haz_e),
+    e.time   = e_time)),
+  shared = list(n = c(N_HALF, N_HALF), a.time = c(0, 1e-4), a.prop = 1)
+)
+plot(scn_strong, tmax = cut, hr_max = 2, xlab = "Time (years)")
+```
+
 ![](investigate-freidlin-and-korn_files/figure-html/scenario-figure-1.png)
 
-The experimental arm is worse at every time point on the survival scale,
-even though its hazard is lower than the control hazard after the first
-0.1 year.
+The design-stage plot of
+[`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md)
+draws the two survival curves and the hazard ratio (dashed, right axis);
+the hazard ratio of 16 during the first 0.1 year lies above the plotted
+range. The experimental arm is worse at every time point on the survival
+scale, even though its hazard is lower than the control hazard after the
+first 0.1 year.
 
 ## Methods compared
 
@@ -80,12 +96,16 @@ A single simulated data set is reused across the methods. The weighted
 log-rank tests each occupy the `logrank.*` columns, so they are obtained
 from separate `analysis_fast` calls; the analysis is a calendar-time cut
 at 5 years and testing is one-sided in the direction of experimental
-benefit.
+benefit. Only the decision at the 2.5% level is needed from the MaxCombo
+test, so `mc.alpha = ALPHA` evaluates the multivariate normal integral
+only for the p-values that the Bonferroni bounds do not place on one
+side of that level; the decisions are the same as with every p-value
+integrated.
 
 ``` r
 
 NSIM    <- 2000L     # raise (e.g. 5000) for tighter Monte Carlo error
-N_TOTAL <- 2000L
+N_TOTAL <- 2L * N_HALF
 ALPHA   <- 0.025
 SIDE    <- 1L
 T_STAR  <- 0.5       # modestly-weighted log-rank delay (years)
@@ -94,7 +114,7 @@ SEED    <- 20240601L
 run_one_scenario <- function(scn) {
   dataset <- simdata_fast(
     nsim     = NSIM,
-    n        = rep(N_TOTAL %/% 2L, 2L),
+    n        = c(N_HALF, N_HALF),
     a.time   = c(0, 1e-4),       # near-instantaneous enrollment
     a.prop   = 1,
     e.hazard = list(scn$haz_c, scn$haz_e),
@@ -110,10 +130,11 @@ run_one_scenario <- function(scn) {
   res_mb   <- analysis_fast(dataset, control = 1, time.looks = cut,
                             stat = "logrank", weight = "mwlrt",
                             t_star = T_STAR, side = SIDE)
+  set.seed(SEED)
   res_mc   <- analysis_fast(dataset, control = 1, time.looks = cut,
                             stat = "maxcombo",
                             mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
-                            side = SIDE)
+                            side = SIDE, mc.alpha = ALPHA)
 
   reject_in_favor <- function(res, pcol) {
     ok <- res$reached
@@ -140,17 +161,6 @@ declaring a harmful treatment beneficial.
 
 rates <- vapply(scenarios, run_one_scenario, numeric(4L))
 colnames(rates) <- vapply(scenarios, function(s) s$label, character(1L))
-round(rates, 3)
-#>                   Equal survival (weak null)
-#> Log-rank                               0.028
-#> FH(0,1)                                0.026
-#> Modestly weighted                      0.028
-#> MaxCombo                               0.024
-#>                   Experimental uniformly worse (strong null)
-#> Log-rank                                               0.000
-#> FH(0,1)                                                0.610
-#> Modestly weighted                                      0.000
-#> MaxCombo                                               0.516
 ```
 
 |  | Equal survival (weak null) | Experimental uniformly worse (strong null) |

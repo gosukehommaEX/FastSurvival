@@ -24,3 +24,5 @@
   control](https://gosukehommaEX.github.io/FastSurvival/articles/multi-arm-pairwise.md):
 - [Treatment switching and crossover after an interim
   analysis](https://gosukehommaEX.github.io/FastSurvival/articles/treatment-switching.md):
+- [Using your own data
+  generator](https://gosukehommaEX.github.io/FastSurvival/articles/external-data.md):

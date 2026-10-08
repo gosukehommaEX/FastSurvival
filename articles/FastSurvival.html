@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -112,17 +113,19 @@ compares survival at a milestone timepoint, and
 weight, and <code><a href="../reference/ahr_fast.html">ahr_fast()</a></code> the Kalbfleisch-Prentice average
 hazard ratio.</p>
 <p>The simulation functions support a full simulation study.
-<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates individual patient data for one-
-or two-group trials. <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> determines the calendar
-time of every analysis look in every simulated trial from combined event
-and calendar-time rules. <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs interim
-or sequential analyses of the simulated data at one or more looks, and
-can compute any of the estimation and testing statistics above,
-optionally within subgroups. <code><a href="../reference/switch_fast.html">switch_fast()</a></code> applies
-treatment switching to the simulated data, at progression or after an
-interim analysis. <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the
-operating characteristics from the analysis output against supplied
-boundaries.</p>
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates individual patient data for
+one-group, two-group, or multi-arm trials. <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code>
+determines the calendar time of every analysis look in every simulated
+trial from combined event and calendar-time rules.
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs interim or sequential analyses of
+the simulated data at one or more looks, and can compute any of the
+estimation and testing statistics above, optionally within subgroups.
+<code><a href="../reference/switch_fast.html">switch_fast()</a></code> applies treatment switching to the simulated
+data, at progression or after an interim analysis.
+<code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code> compares each experimental arm of a
+multi-arm trial with a shared control. <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>
+aggregates the operating characteristics from the analysis output
+against supplied boundaries.</p>
 </div>
 <div class="section level2">
 <h2 id="a-minimal-example">A minimal example<a class="anchor" aria-label="anchor" href="#a-minimal-example"></a>
@@ -184,9 +187,11 @@ packages on a real clinical-trial dataset. <em>Speed comparison</em>
 quantifies the performance gain. <em>Group sequential design with the
 simulation trio</em> demonstrates <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>,
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>, and <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> against
-a gsDesign reference. Further applied vignettes work the simulation trio
-through nonproportional-hazards, correlated multiple-endpoint,
-multiregional, and treatment-switching settings.</p>
+a gsDesign reference. Further applied vignettes work the simulation
+functions through nonproportional-hazards, correlated multiple-endpoint,
+multi-arm, multiregional, and treatment-switching settings, and
+<em>Using your own data generator</em> analyzes data generated outside
+the package with the same functions.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

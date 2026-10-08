@@ -17,10 +17,11 @@ accrual window, and the arms are stacked into one data frame with a
 two-group contract, so a multi-arm design is analyzed as a set of
 pairwise contrasts. Each experimental arm is compared against the
 control by subsetting the generated data to those two arms and calling
-`analysis_fast` once per contrast. Because every contrast reuses the
-same control arm, the pairwise statistics are positively correlated, and
-that correlation is what a Dunnett-type adjustment exploits to be less
-conservative than a Bonferroni correction.
+`analysis_fast` once per contrast, which `pairwise_fast` does in a
+single call. Because every contrast reuses the same control arm, the
+pairwise statistics are positively correlated, and that correlation is
+what a Dunnett-type adjustment exploits to be less conservative than a
+Bonferroni correction.
 
 This vignette generates a three-arm trial (one control and two
 experimental arms), runs the two pairwise log-rank tests, and reports
@@ -268,8 +269,8 @@ data.frame(
 
 The two pairwise log-rank statistics share the control arm, so they are
 positively correlated. This correlation is the reason a Dunnett
-adjustment is less conservative than Bonferroni, since Bonferroni
-ignores it and treats the comparisons as if they were independent.
+adjustment is less conservative than Bonferroni, which does not use the
+correlation and is valid under any dependence between the comparisons.
 
 ``` r
 
@@ -301,13 +302,10 @@ df0 <- simdata_fast(
   seed     = seed + 1
 )
 
-P0 <- matrix(NA_real_, nrow = nsim, ncol = n_contrast)
-for (k in seq_along(exp_arms)) {
-  sub0 <- df0[df0$group %in% c(control_arm, exp_arms[k]), ]
-  res0 <- analysis_fast(sub0, control = control_arm,
-                        time.looks = analysis_month, stat = "logrank", side = 1)
-  P0[, k] <- res0$logrank.p
-}
+pw0 <- pairwise_fast(df0, control = control_arm,
+                     time.looks = analysis_month, stat = "logrank", side = 1)
+# One column per contrast; the rows of each arm are ordered by simulation.
+P0 <- sapply(exp_arms, function(k) pw0$logrank.p[pw0$arm == k])
 
 data.frame(
   quantity = c("Per-contrast type I error (nominal)",

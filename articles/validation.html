@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -266,7 +267,8 @@ per-group windowed area directly against a Kaplan-Meier step-function
 integral computed from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> over the same window. A
 full comparison against the <code>survWMST</code> package, which is
 distributed on GitHub, is provided in
-<code>tools/compare_wmst_survwmst.R</code>.</p>
+<code>tools/compare_wmst_survwmst.R</code> of the package’s GitHub
+repository.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tau1</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
 <span><span class="va">tau2</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
@@ -477,10 +479,10 @@ group shares of the total hazard.</p>
 precision. The average hazard ratio was additionally cross-checked
 against the archived AHR package, the reference implementation used by
 Dormuth et al. (2024): the two group shares, the average hazard ratio,
-the variances, and both test statistics agree to within the order of
-1e-15. That external comparison is reproducible with the
-<code>tools/compare_ahr_ahrKM.R</code> script shipped in the package
-sources.</p>
+the variances, and both test statistics agree to within about 1e-14.
+That external comparison is reproducible with the
+<code>tools/compare_ahr_ahrKM.R</code> script of the package’s GitHub
+repository.</p>
 </div>
 <div class="section level2">
 <h2 id="max-combo-test">Max-combo test<a class="anchor" aria-label="anchor" href="#max-combo-test"></a>
@@ -516,10 +518,9 @@ signs are mirrored, so we compare absolute values.</p>
 <span><span class="co">#&gt; 3 FH(1,0) 2.951913 2.951913</span></span></code></pre></div>
 <p>The component statistics agree in absolute value. The final max-combo
 statistic is the largest of these, which for the one-sided test is the
-most extreme component Z. The p-values from the two packages are close
-but not identical, since they use different numerical methods for the
-joint distribution (a multivariate normal integral here, a
-Bonferroni-style combination in <code>nph</code>).</p>
+most extreme component Z. The p-values are not compared here, because
+<code><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">nph::logrank.maxtest()</a></code> reports two-sided p-values and the
+call above is one-sided.</p>
 </div>
 <div class="section level2">
 <h2 id="robust-modestly-weighted-log-rank-test">Robust modestly-weighted log-rank test<a class="anchor" aria-label="anchor" href="#robust-modestly-weighted-log-rank-test"></a>
@@ -563,15 +564,10 @@ absolute values.</p>
 <span><span class="co">#&gt; 2 modestly-weighted (s_star = 0.5) 2.773749 2.773749</span></span></code></pre></div>
 <p>The component statistics agree in absolute value. The null
 correlation of the two components, reported in the <code>corr</code>
-attribute, matches the covariance computed by the authors’
-<code>find_cor</code> routine to numerical precision. The combined
-statistic and one-sided p-value then follow from the bivariate normal
-distribution of the two components, evaluated with
-<code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>. On the POPLAR overall-survival data
-analyzed in the original article, <code><a href="../reference/rmw_fast.html">rmw_fast()</a></code> reproduces the
-published one-sided p-values of 0.0028 for the log-rank test, 0.0009 for
-the modestly-weighted test, and 0.0012 for the rMW test, with a
-component correlation of 0.97.</p>
+attribute, is checked against an independent implementation in the
+package test suite. The combined statistic and one-sided p-value then
+follow from the bivariate normal distribution of the two components,
+evaluated with <code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="analysis-cutoffs">Analysis cutoffs<a class="anchor" aria-label="anchor" href="#analysis-cutoffs"></a>

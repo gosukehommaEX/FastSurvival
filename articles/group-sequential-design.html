@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -86,16 +87,15 @@ together on a real phase 3 trial: <code><a href="../reference/simdata_fast.html"
 the trial data, <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> performs the interim and
 final analyses, and <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> aggregates the
 operating characteristics. We reproduce the group sequential design of
-the innovaTV 301 trial and check that the simulated operating
-characteristics match the closed-form values from <a href="https://cran.r-project.org/package=gsDesign" class="external-link">gsDesign</a> and <a href="https://cran.r-project.org/package=rpact" class="external-link">rpact</a>.</p>
+the innovaTV 301 trial and compare the simulated operating
+characteristics with the closed-form values computed with <a href="https://cran.r-project.org/package=gsDesign" class="external-link">gsDesign</a>.</p>
 <p>The point is not that simulation replaces the closed-form calculation
-under proportional hazards, where gsDesign and rpact are exact, but that
-once the simulation agrees on a case they can handle, the same machinery
-can be trusted for cases they cannot, such as non-proportional hazards
-or data-dependent analysis timing. The benchmark code is shown but not
-executed when the vignette is built, because the simulation uses many
-replicates; the printed results are those obtained from an interactive
-run.</p>
+under proportional hazards, where gsDesign and similar packages are
+accurate, but that once the simulation agrees on a case they can handle,
+the same machinery can be trusted for cases they cannot, such as
+non-proportional hazards or data-dependent analysis timing. The whole
+vignette, with 10,000 simulated trials for the main design, runs in a
+few seconds.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -123,15 +123,18 @@ dropout rate in each group.</p>
 <p><code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> generates the survival, censoring, and
 entry times for all replicates in one fused C++ pass. We specify the two
 group sizes, the accrual window, the per-group event medians, and a
-per-group dropout hazard corresponding to 5% per 12 months.</p>
+per-group dropout hazard corresponding to 5% per 12 months. Group 1 is
+the tisotumab vedotin group and group 2 the chemotherapy group.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim     <span class="op">=</span> <span class="fl">10000</span>,</span>
+<code class="sourceCode R"><span><span class="va">nsim</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
+<span><span class="va">eta</span>  <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<span>  nsim     <span class="op">=</span> <span class="va">nsim</span>,</span>
 <span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">241</span>, <span class="fl">241</span><span class="op">)</span>,</span>
 <span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
 <span>  a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">12.9</span>, <span class="fl">9.0</span><span class="op">)</span>,</span>
-<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">eta</span>, <span class="va">eta</span><span class="op">)</span>,</span>
 <span>  seed     <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -158,19 +161,18 @@ gsDesign and convert the upper Z boundaries to two-sided nominal p-value
 boundaries, which is the scale <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> consumes
 through its <code>p.col</code> argument.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://keaven.github.io/gsDesign/" class="external-link">gsDesign</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">gsd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://keaven.github.io/gsDesign//reference/gsDesign.html" class="external-link">gsDesign</a></span><span class="op">(</span></span>
-<span>  k      <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  timing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span> <span class="op">/</span> <span class="fl">336</span>,</span>
-<span>  alpha  <span class="op">=</span> <span class="fl">0.025</span>,</span>
-<span>  beta   <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  sfu    <span class="op">=</span> <span class="va">sfLDOF</span>,</span>
+<code class="sourceCode R"><span><span class="va">gsd</span> <span class="op">&lt;-</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="fu"><a href="https://keaven.github.io/gsDesign//reference/gsDesign.html" class="external-link">gsDesign</a></span><span class="op">(</span></span>
+<span>  k         <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  timing    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span> <span class="op">/</span> <span class="fl">336</span>,</span>
+<span>  alpha     <span class="op">=</span> <span class="fl">0.025</span>,</span>
+<span>  beta      <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  sfu       <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign//reference/sfLDOF.html" class="external-link">sfLDOF</a></span>,</span>
 <span>  test.type <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">spend_alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="va">gsd</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span>, lower.tail <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">spend_alpha</span></span></code></pre></div>
+<span><span class="va">spend_alpha</span></span>
+<span><span class="co">#&gt; [1] 0.01929865 0.04424346</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="operating-characteristics">Operating characteristics<a class="anchor" aria-label="anchor" href="#operating-characteristics"></a>
@@ -180,104 +182,139 @@ to the simulated log-rank p-values and aggregates the crossing
 probabilities, expected events, expected sample size, and expected
 analysis time across the looks.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">res</span>,</span>
-<span>  p.col     <span class="op">=</span> <span class="st">"logrank.p"</span>,</span>
-<span>  alpha     <span class="op">=</span> <span class="va">spend_alpha</span>,</span>
-<span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The interactive run produces the following output.</p>
-<pre><code>Group-Sequential Operating Characteristics (simsummary_fast)
-  Simulations: 10000
-  Boundaries: nominal p-value on 'logrank.p'
-
-Stopping Boundaries: Look by Look
- Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.
-    1        0.75      252.0      482.0    0.0193           0.6881
-    2        1.00      336.0      482.0    0.0442           0.9000
-
-Overall
-  Rejection rate (efficacy):    0.9000
-  Expected events at stop:      278.2
-  Expected sample size at stop: 482.0
-  Expected analysis time at stop:27.31</code></pre>
+<code class="sourceCode R"><span><span class="va">oc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<span><span class="va">oc</span></span>
+<span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
+<span><span class="co">#&gt;   Simulations: 10000</span></span>
+<span><span class="co">#&gt;   Boundaries: nominal p-value on 'logrank.p'</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.</span></span>
+<span><span class="co">#&gt;     1        0.75      252.0      482.0    0.0193           0.6881</span></span>
+<span><span class="co">#&gt;     2        1.00      336.0      482.0    0.0442           0.9000</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
+<span><span class="co">#&gt;     1        0.75      482.0      252.0         16.7    213.3         24.83</span></span>
+<span><span class="co">#&gt;     2        1.00      482.0      336.0         22.3    123.7         32.86</span></span>
+<span><span class="co">#&gt;  Cross. Eff.</span></span>
+<span><span class="co">#&gt;       0.6881</span></span>
+<span><span class="co">#&gt;       0.2119</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overall</span></span>
+<span><span class="co">#&gt;   Rejection rate (efficacy):      0.9000</span></span>
+<span><span class="co">#&gt;   Expected events at stop:        278.2</span></span>
+<span><span class="co">#&gt;   Expected sample size at stop:   482.0</span></span>
+<span><span class="co">#&gt;   Expected analysis time at stop: 27.31</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparison-with-the-closed-form-design">Comparison with the closed-form design<a class="anchor" aria-label="anchor" href="#comparison-with-the-closed-form-design"></a>
 </h2>
-<p>For an independent closed-form reference we recompute the same design
-with rpact and read off the operating characteristics. The full rpact
-output is long, so we extract only the quantities needed for the
-comparison.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.rpact.org" class="external-link">rpact</a></span><span class="op">)</span></span>
+<p>The closed-form reference uses the usual large-sample approximation
+for the log-rank statistic (Schoenfeld, 1983): with 1:1 allocation and
+<code>d</code> events, the standardized statistic is approximately
+normal with mean <code>log(HR) * sqrt(d) / 2</code> in absolute value
+and unit variance, and the statistics at the two looks have correlation
+<code>sqrt(252 / 336)</code>. <code><a href="https://keaven.github.io/gsDesign//reference/gsProbability.html" class="external-link">gsDesign::gsProbability()</a></code>
+gives the crossing probabilities for this drift. The expected calendar
+time of each look is the time at which the expected number of deaths,
+under uniform accrual, exponential survival, and exponential dropout,
+reaches the event target.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">looks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span></span>
+<span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">12.9</span> <span class="op">/</span> <span class="fl">9.0</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
+<span><span class="va">gp</span> <span class="op">&lt;-</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="fu"><a href="https://keaven.github.io/gsDesign//reference/gsProbability.html" class="external-link">gsProbability</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">2</span>, theta <span class="op">=</span> <span class="va">theta</span>, n.I <span class="op">=</span> <span class="va">looks</span>,</span>
+<span>                              a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="op">-</span><span class="fl">20</span>, <span class="fl">2</span><span class="op">)</span>, b <span class="op">=</span> <span class="va">gsd</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span><span class="op">)</span></span>
+<span><span class="va">p_cross</span> <span class="op">&lt;-</span> <span class="va">gp</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">prob</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://docs.rpact.org/reference/getDesignGroupSequential.html" class="external-link">getDesignGroupSequential</a></span><span class="op">(</span></span>
-<span>  kMax <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  beta  <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  sided <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  typeOfDesign <span class="op">=</span> <span class="st">"asOF"</span>,</span>
-<span>  informationRates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span> <span class="op">/</span> <span class="fl">336</span></span>
+<span><span class="co"># Expected number of deaths by calendar time t: uniform accrual of 482</span></span>
+<span><span class="co"># subjects over 23 months, exponential survival and dropout in each group.</span></span>
+<span><span class="va">lam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12.9</span>, <span class="fl">9.0</span><span class="op">)</span></span>
+<span><span class="va">exp_events</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">t</span>, <span class="va">n_tot</span> <span class="op">=</span> <span class="fl">482</span>, <span class="va">r_acc</span> <span class="op">=</span> <span class="fl">23</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">a_end</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">r_acc</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">lam</span>, <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">cc</span> <span class="op">&lt;-</span> <span class="va">l</span> <span class="op">+</span> <span class="va">eta</span></span>
+<span>    <span class="op">(</span><span class="va">n_tot</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="va">r_acc</span> <span class="op">*</span> <span class="va">l</span> <span class="op">/</span> <span class="va">cc</span> <span class="op">*</span></span>
+<span>      <span class="op">(</span><span class="va">a_end</span> <span class="op">-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">cc</span> <span class="op">*</span> <span class="op">(</span><span class="va">t</span> <span class="op">-</span> <span class="va">a_end</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">cc</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="va">cc</span><span class="op">)</span></span>
+<span>  <span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">t_look</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">looks</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/uniroot.html" class="external-link">uniroot</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="fu">exp_events</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">-</span> <span class="va">d</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">200</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">root</span></span>
+<span><span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sim_val</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">lk</span>, <span class="va">col</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">oc</span><span class="op">[</span><span class="va">oc</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="va">lk</span>, <span class="va">col</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">z1</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="va">res</span><span class="op">$</span><span class="va">logrank.z</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Mean log-rank Z at the interim"</span>,</span>
+<span>               <span class="st">"Probability of crossing at the interim"</span>,</span>
+<span>               <span class="st">"Overall power"</span>,</span>
+<span>               <span class="st">"Expected number of events at stop"</span>,</span>
+<span>               <span class="st">"Expected analysis time at stop (months)"</span><span class="op">)</span>,</span>
+<span>  simulation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">z1</span><span class="op">)</span>,</span>
+<span>                 <span class="fu">sim_val</span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"prob.stop.efficacy"</span><span class="op">)</span>,</span>
+<span>                 <span class="fu">sim_val</span><span class="op">(</span><span class="st">"overall"</span>, <span class="st">"cum.reject"</span><span class="op">)</span>,</span>
+<span>                 <span class="fu">sim_val</span><span class="op">(</span><span class="st">"overall"</span>, <span class="st">"n.event.mean"</span><span class="op">)</span>,</span>
+<span>                 <span class="fu">sim_val</span><span class="op">(</span><span class="st">"overall"</span>, <span class="st">"cutoff.mean"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  closed_form <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">theta</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">looks</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>                  <span class="va">p_cross</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">p_cross</span><span class="op">)</span>,</span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">looks</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p_cross</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">p_cross</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">t_look</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p_cross</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">p_cross</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://docs.rpact.org/reference/getPowerSurvival.html" class="external-link">getPowerSurvival</a></span><span class="op">(</span></span>
-<span>  <span class="va">design</span>,</span>
-<span>  maxNumberOfEvents   <span class="op">=</span> <span class="fl">336</span>,</span>
-<span>  median1             <span class="op">=</span> <span class="fl">12.9</span>,</span>
-<span>  median2             <span class="op">=</span> <span class="fl">9.0</span>,</span>
-<span>  maxNumberOfSubjects <span class="op">=</span> <span class="fl">482</span>,</span>
-<span>  accrualTime         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
-<span>  dropoutRate1        <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>  dropoutRate2        <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>  allocationRatioPlanned <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The simulated and closed-form operating characteristics agree
-closely. The efficacy boundaries are the spending boundaries fed into
-the simulation, so they match by construction; the crossing
-probabilities, expected events, and expected timing are estimated
-independently by simulation and line up with the analytic values.</p>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">cmp</span>, digits <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>             col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantity"</span>,</span>
+<span>                           <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"FastSurvival ("</span>, <span class="va">nsim</span>, <span class="st">" trials)"</span><span class="op">)</span>,</span>
+<span>                           <span class="st">"Closed form"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="50%">
+<col width="35%">
+<col width="15%">
+</colgroup>
 <thead><tr class="header">
-<th>Quantity</th>
-<th>FastSurvival (10,000 sims)</th>
-<th>gsDesign / rpact</th>
+<th align="left">Quantity</th>
+<th align="right">FastSurvival (10000 trials)</th>
+<th align="right">Closed form</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Interim efficacy boundary (two-sided nominal p)</td>
-<td>0.0193</td>
-<td>0.0193</td>
+<td align="left">Mean log-rank Z at the interim</td>
+<td align="right">2.844</td>
+<td align="right">2.857</td>
 </tr>
 <tr class="even">
-<td>Final efficacy boundary (two-sided nominal p)</td>
-<td>0.0442</td>
-<td>0.0442</td>
+<td align="left">Probability of crossing at the interim</td>
+<td align="right">0.688</td>
+<td align="right">0.698</td>
 </tr>
 <tr class="odd">
-<td>Probability of crossing at the interim</td>
-<td>0.688</td>
-<td>0.698</td>
+<td align="left">Overall power</td>
+<td align="right">0.900</td>
+<td align="right">0.905</td>
 </tr>
 <tr class="even">
-<td>Overall power</td>
-<td>0.900</td>
-<td>0.905</td>
+<td align="left">Expected number of events at stop</td>
+<td align="right">278.200</td>
+<td align="right">277.395</td>
 </tr>
 <tr class="odd">
-<td>Expected number of events at stop</td>
-<td>278</td>
-<td>277</td>
-</tr>
-<tr class="even">
-<td>Expected analysis time at stop (months)</td>
-<td>27.3</td>
-<td>27.3</td>
+<td align="left">Expected analysis time at stop (months)</td>
+<td align="right">27.314</td>
+<td align="right">27.286</td>
 </tr>
 </tbody>
 </table>
-<p>Remaining differences are Monte Carlo error and shrink as
-<code>nsim</code> increases.</p>
+<p>The efficacy boundaries are the spending boundaries fed into the
+simulation, so they match by construction. The crossing probabilities,
+expected events, and expected timing are estimated independently by
+simulation. The Monte Carlo standard error of a probability near 0.7
+from 10,000 trials is about 0.005. The first row shows a second,
+systematic source of difference: the simulated mean of the interim
+log-rank statistic is slightly smaller than the large-sample drift, so
+the closed form slightly overstates the crossing probabilities. The
+expected analysis time of the closed form is evaluated at the expected
+number of events, whereas the simulation averages the realized analysis
+times.</p>
 </div>
 <div class="section level2">
 <h2 id="beyond-proportional-hazards">Beyond proportional hazards<a class="anchor" aria-label="anchor" href="#beyond-proportional-hazards"></a>
@@ -287,27 +324,54 @@ assumes proportional hazards. To study a delayed treatment effect,
 replace the constant event hazard with a piecewise specification through
 <code>e.hazard</code> and <code>e.time</code> and keep everything else
 the same. The log-rank statistic loses power under a delayed effect, and
-a weighted or max-combo statistic can be substituted at the
-<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> step to recover it. Because gsDesign and
-rpact cannot evaluate these cases in closed form, the validated
-simulation machinery becomes the tool of choice.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
-<span>  nsim     <span class="op">=</span> <span class="fl">10000</span>,</span>
+a weighted or max-combo statistic (Lin et al., 2020) can be substituted
+at the <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> step. Because gsDesign cannot
+evaluate these cases in closed form, the simulation machinery becomes
+the tool of choice.</p>
+<p>The max-combo p-value requires a multivariate normal integral for
+every simulated trial and look, which dominates the computing time. When
+only the decisions at the nominal levels are needed,
+<code>mc.alpha</code> computes the integral only for the p-values that
+the Bonferroni bounds do not already place on one side of the level; the
+decisions are the same as with every p-value integrated. The nominal
+levels below are those of the log-rank design and are used for
+illustration only: the correlation between the max-combo statistics at
+the two looks differs from that of the log-rank statistic, so a formal
+design would derive its boundaries for the max-combo statistic
+itself.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nsim_nph</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
+<span><span class="va">df_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<span>  nsim     <span class="op">=</span> <span class="va">nsim_nph</span>,</span>
 <span>  n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">241</span>, <span class="fl">241</span><span class="op">)</span>,</span>
 <span>  a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">23</span><span class="op">)</span>,</span>
 <span>  a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.077</span>, <span class="fl">0.045</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.077</span>, <span class="fl">0.077</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  e.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  d.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">eta</span>, <span class="va">eta</span><span class="op">)</span>,</span>
 <span>  seed     <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">res_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
 <span>  <span class="va">df_delay</span>, control <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span>,</span>
-<span>  stat <span class="op">=</span> <span class="st">"maxcombo"</span>, side <span class="op">=</span> <span class="fl">2</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  event.looks <span class="op">=</span> <span class="va">looks</span>,</span>
+<span>  stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"maxcombo"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  mc.alpha <span class="op">=</span> <span class="va">spend_alpha</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">oc_lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res_delay</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>,  alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<span><span class="va">oc_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res_delay</span>, p.col <span class="op">=</span> <span class="st">"maxcombo.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  test  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Log-rank"</span>, <span class="st">"Max-combo"</span><span class="op">)</span>,</span>
+<span>  power <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">oc_lr</span><span class="op">[</span><span class="va">oc_lr</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="st">"cum.reject"</span><span class="op">]</span>,</span>
+<span>                  <span class="va">oc_mc</span><span class="op">[</span><span class="va">oc_mc</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="st">"cum.reject"</span><span class="op">]</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;        test power</span></span>
+<span><span class="co">#&gt; 1  Log-rank 0.924</span></span>
+<span><span class="co">#&gt; 2 Max-combo 0.959</span></span></code></pre></div>
+<p>Of the 4,000 max-combo p-values (two looks per simulated trial), 10%
+required the multivariate normal integral.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -320,6 +384,9 @@ cervical cancer. <em>New England Journal of Medicine</em>, 391(1),
 procedure for clinical trials. <em>Biometrics</em>, 35(3), 549-556.</p>
 <p>Lan, K. K. G., &amp; DeMets, D. L. (1983). Discrete sequential
 boundaries for clinical trials. <em>Biometrika</em>, 70(3), 659-663.</p>
+<p>Schoenfeld, D. A. (1983). Sample-size formula for the
+proportional-hazards regression model. <em>Biometrics</em>, 39(2),
+499-503.</p>
 <p>Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative
 analysis methods for time to event endpoints under nonproportional
 hazards: a comparative analysis. <em>Statistics in Biopharmaceutical

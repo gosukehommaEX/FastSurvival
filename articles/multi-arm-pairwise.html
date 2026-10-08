@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -96,7 +97,8 @@ to <code>length(n)</code>. The analysis path keeps its two-group
 contract, so a multi-arm design is analyzed as a set of pairwise
 contrasts. Each experimental arm is compared against the control by
 subsetting the generated data to those two arms and calling
-<code>analysis_fast</code> once per contrast. Because every contrast
+<code>analysis_fast</code> once per contrast, which
+<code>pairwise_fast</code> does in a single call. Because every contrast
 reuses the same control arm, the pairwise statistics are positively
 correlated, and that correlation is what a Dunnett-type adjustment
 exploits to be less conservative than a Bonferroni correction.</p>
@@ -327,8 +329,9 @@ rejected arms.</p>
 </h2>
 <p>The two pairwise log-rank statistics share the control arm, so they
 are positively correlated. This correlation is the reason a Dunnett
-adjustment is less conservative than Bonferroni, since Bonferroni
-ignores it and treats the comparisons as if they were independent.</p>
+adjustment is less conservative than Bonferroni, which does not use the
+correlation and is valid under any dependence between the
+comparisons.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">Z</span>, use <span class="op">=</span> <span class="st">"complete.obs"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              arm2_vs_ctrl arm3_vs_ctrl</span></span>
@@ -356,13 +359,10 @@ the nominal family-wise level.</p>
 <span>  seed     <span class="op">=</span> <span class="va">seed</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">P0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="cn">NA_real_</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">n_contrast</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">exp_arms</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">sub0</span> <span class="op">&lt;-</span> <span class="va">df0</span><span class="op">[</span><span class="va">df0</span><span class="op">$</span><span class="va">group</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">control_arm</span>, <span class="va">exp_arms</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span>, <span class="op">]</span></span>
-<span>  <span class="va">res0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span><span class="va">sub0</span>, control <span class="op">=</span> <span class="va">control_arm</span>,</span>
-<span>                        time.looks <span class="op">=</span> <span class="va">analysis_month</span>, stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">P0</span><span class="op">[</span>, <span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">res0</span><span class="op">$</span><span class="va">logrank.p</span></span>
-<span><span class="op">}</span></span>
+<span><span class="va">pw0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span><span class="va">df0</span>, control <span class="op">=</span> <span class="va">control_arm</span>,</span>
+<span>                     time.looks <span class="op">=</span> <span class="va">analysis_month</span>, stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co"># One column per contrast; the rows of each arm are ordered by simulation.</span></span>
+<span><span class="va">P0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">exp_arms</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="va">pw0</span><span class="op">$</span><span class="va">logrank.p</span><span class="op">[</span><span class="va">pw0</span><span class="op">$</span><span class="va">arm</span> <span class="op">==</span> <span class="va">k</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Per-contrast type I error (nominal)"</span>,</span>

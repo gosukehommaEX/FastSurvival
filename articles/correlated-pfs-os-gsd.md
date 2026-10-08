@@ -16,11 +16,10 @@ correlated PFS and OS times from the Fleischer maximal-independence
 model, runs an event-driven group-sequential design with one futility
 analysis followed by two efficacy analyses, evaluates the power of each
 endpoint under the alternative, and estimates the correlation of the
-standardized log-rank statistics `Corr(Z_PFS, Z_OS)`. The empirical
-correlation reported here is the quantity for which a closed-form
-expression is derived in a companion methodological note; the simulation
-provides an independent check of that derivation and of the design’s
-operating characteristics.
+standardized log-rank statistics `Corr(Z_PFS, Z_OS)`. This correlation
+is the input that a closed-form evaluation of the sequential procedure
+would need, and the simulation gives the operating characteristics of
+the procedure directly.
 
 ### The Fleischer model
 
@@ -139,38 +138,37 @@ df <- simdata_fast(
   seed       = seed
 )
 
-# Observed PFS endpoint (e1).
-pfs_dat <- data.frame(
-  sim          = df$sim,
-  group        = df$group,
-  accrual_time = df$accrual_time,
-  tte          = df$e1_tte,
-  event        = df$e1_event
-)
-
-# Observed OS endpoint (e2).
-os_dat <- data.frame(
-  sim          = df$sim,
-  group        = df$group,
-  accrual_time = df$accrual_time,
-  os_tte       = df$e2_tte,
-  os_event     = df$e2_event
-)
+# Single-endpoint view of PFS (k = 1) or OS (k = 2), in the columns that
+# analysis_fast() reads.
+ep <- function(d, k) {
+  data.frame(
+    sim          = d$sim,
+    group        = d$group,
+    accrual_time = d$accrual_time,
+    tte          = d[[paste0("e", k, "_tte")]],
+    event        = d[[paste0("e", k, "_event")]]
+  )
+}
+pfs_dat <- ep(df, 1)
+os_dat  <- ep(df, 2)
 ```
 
 ## Primary endpoint analysis (PFS)
 
 PFS is analyzed at the three event-driven looks. `cutoff_fast` returns,
 for every simulated trial, the calendar time of the `d_PFS[l]`-th PFS
-event, which is the analysis time of look `l`. These cutoffs are exactly
-the analysis times of the design, and both endpoints are analyzed at
-them through the `cutoff.looks` argument of `analysis_fast`.
+event, which is the analysis time of look `l`. It counts the events in
+the PFS columns `e1_tte` and `e1_event` of the illness-death data. These
+cutoffs are exactly the analysis times of the design, and both endpoints
+are analyzed at them through the `cutoff.looks` argument of
+`analysis_fast`.
 
 ``` r
 
 # Per-simulation calendar cutoffs A_l (rows = simulation, columns = look),
 # triggered by the PFS events.
-A_mat <- cutoff_fast(pfs_dat, event.looks = d_PFS)
+A_mat <- cutoff_fast(df, event.looks = d_PFS,
+                     tte.col = "e1_tte", event.col = "e1_event")
 
 pfs_res <- analysis_fast(
   pfs_dat,
@@ -204,13 +202,7 @@ analysis time.
 ``` r
 
 os_res <- analysis_fast(
-  data.frame(
-    sim          = os_dat$sim,
-    group        = os_dat$group,
-    accrual_time = os_dat$accrual_time,
-    tte          = os_dat$os_tte,
-    event        = os_dat$os_event
-  ),
+  os_dat,
   control      = 1,
   cutoff.looks = A_mat,
   stat         = "logrank",
@@ -390,9 +382,15 @@ genuinely effective one.
 
 The procedure tests OS only after PFS has been declared significant, and
 OS may be claimed only at the same look as, or a later look than, the
-PFS claim. The per-simulation rejection looks are recovered from the
-boundary-crossing logic, and the joint power is the probability of
-declaring both endpoints under this gatekeeping rule.
+PFS claim. After a PFS claim the trial continues to the later looks for
+OS, and OS is claimed at the first look, from the PFS claim onward, at
+which its statistic crosses the OS boundary of that look (Glimm, Maurer,
+and Bretz, 2010). An OS crossing before the PFS claim therefore does not
+prevent an OS claim at a later look. The per-simulation PFS rejection
+looks are recovered from the boundary-crossing logic, and the power of
+the hierarchical procedure for OS, which is also the probability of
+declaring both endpoints, follows from the OS crossings at the looks
+after the PFS claim.
 
 ``` r
 
@@ -424,34 +422,32 @@ os_look  <- reject_look(Z_OS,  eff_OS)
 pfs_reject <- !is.na(pfs_look)
 os_reject  <- !is.na(os_look)
 
-# Hierarchical gatekeeping: OS is claimed only if PFS is claimed at the same or
-# an earlier look.
-joint_reject <- pfs_reject & os_reject & (os_look >= pfs_look)
+# Hierarchical testing: OS is claimed at look l when PFS has been claimed at
+# look l or earlier and the OS statistic crosses its look-l boundary.
+os_cross <- Z_OS <= matrix(eff_OS, nrow = nsim, ncol = L, byrow = TRUE)
+os_cross[is.na(os_cross)] <- FALSE
+hier_reject <- Reduce(`|`, lapply(seq_len(L), function(l) {
+  pfs_reject & pfs_look <= l & os_cross[, l]
+}))
 
 power_table <- data.frame(
   quantity = c("PFS power (marginal)",
                "OS power (marginal)",
-               "OS power (after PFS, hierarchical)",
-               "Joint power (both endpoints)"),
-  value = c(mean(pfs_reject),
-            mean(os_reject),
-            mean(joint_reject),
-            mean(joint_reject))
+               "OS power within the hierarchical procedure"),
+  value = round(c(mean(pfs_reject), mean(os_reject), mean(hier_reject)), 3)
 )
-power_table$value <- round(power_table$value, 3)
 power_table
-#>                             quantity value
-#> 1               PFS power (marginal) 0.977
-#> 2                OS power (marginal) 0.460
-#> 3 OS power (after PFS, hierarchical) 0.452
-#> 4       Joint power (both endpoints) 0.452
+#>                                     quantity value
+#> 1                       PFS power (marginal) 0.977
+#> 2                        OS power (marginal) 0.460
+#> 3 OS power within the hierarchical procedure 0.458
 ```
 
 The marginal OS power is the probability of crossing the OS efficacy
 boundary ignoring the gatekeeping, and the hierarchical OS power is the
-probability of claiming OS within the procedure. The latter cannot
-exceed the PFS power, since OS is reachable only through a PFS
-rejection.
+probability of claiming OS within the procedure, which is also the
+probability of claiming both endpoints. The latter cannot exceed the PFS
+power, since OS is reachable only through a PFS rejection.
 
 ## Correlation of the log-rank statistics
 
@@ -560,11 +556,10 @@ The cross-endpoint correlation at matching looks is moderate, around
 0.6, and is largest at the first look, easing slightly as the trial
 matures. This cross-endpoint correlation is the input a sequential
 PFS-then-OS procedure needs to characterize its joint operating
-characteristics, and the value estimated here by simulation matches the
-closed-form expression derived for the Fleischer model in the companion
-methodological note. The within-endpoint correlations match the
-canonical group-sequential form to simulation error, which serves as a
-check on the event-driven timing and the shared-cutoff OS analysis.
+characteristics, and the simulation estimates it together with the power
+of the procedure. The within-endpoint correlations match the canonical
+group-sequential form to simulation error, which serves as a check on
+the event-driven timing and the shared-cutoff OS analysis.
 
 The simulation uses the validated Rcpp primitives behind `analysis_fast`
 for every log-rank computation, so the entire study of 5,000 trials with
@@ -576,6 +571,10 @@ the correlation and power estimates at a proportional cost.
 Fleischer, F., Gaschler-Markefski, B., and Bluhmki, E. (2009). A
 statistical model for the dependence between progression-free survival
 and overall survival. *Statistics in Medicine*, 28(21), 2669-2686.
+
+Glimm, E., Maurer, W., and Bretz, F. (2010). Hierarchical testing of
+multiple endpoints in group-sequential trials. *Statistics in Medicine*,
+29(2), 219-228.
 
 Lan, K. K. G. and DeMets, D. L. (1983). Discrete sequential boundaries
 for clinical trials. *Biometrika*, 70(3), 659-663.

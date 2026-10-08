@@ -57,7 +57,8 @@ analysis_fast(
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
   wmst.tau2 = NULL,
-  cutoff.looks = NULL
+  cutoff.looks = NULL,
+  mc.alpha = NULL
 )
 ```
 
@@ -253,6 +254,15 @@ analysis_fast(
   matrix when it is present, and is `NA` otherwise. Mutually exclusive
   with `event.looks` and `time.looks`.
 
+- mc.alpha:
+
+  An optional numeric vector of nominal levels in (0, 1), one per look
+  or a single value for all looks, at which the `"maxcombo"` p-value is
+  compared. When supplied, the p-value is computed by integration only
+  when the Bonferroni bounds do not decide the comparison (see Details),
+  and the output gains a logical column `maxcombo.p.exact`. `NULL`
+  (default) computes every p-value.
+
 ## Value
 
 A data frame. When `by.subgroup = FALSE`, it has `nsim * length(looks)`
@@ -273,21 +283,22 @@ and `logrank.p` for `"logrank"`; `cox.coef`, `cox.hr`, `cox.se`,
 `cox.z`, `cox.p`, `cox.lower`, and `cox.upper` for `"coxph"`;
 `rmst.ctrl`, `rmst.trt`, `rmst.diff`, `rmst.diff.lower`,
 `rmst.diff.upper`, `rmst.z`, and `rmst.p` for `"rmst"`; `km.surv.ctrl`
-and `km.surv.trt` for `"km"`; `maxcombo.stat` and `maxcombo.p` for
-`"maxcombo"`; and `ahsw.ah.ctrl`, `ahsw.ah.trt`, `ahsw.rah`,
-`ahsw.rah.lower`, `ahsw.rah.upper`, `ahsw.p.rah`, `ahsw.dah`,
-`ahsw.dah.lower`, `ahsw.dah.upper`, and `ahsw.p.dah` for `"ahsw"`;
-`milestone.surv.ctrl`, `milestone.surv.trt`, `milestone.diff`,
-`milestone.diff.lower`, `milestone.diff.upper`, `milestone.z`, and
-`milestone.p` for `"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and
-`ahr.ahr`, `ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for
-`"ahr"`; `medsurv.ctrl`, `medsurv.trt`, `medsurv.diff`,
-`medsurv.diff.lower`, `medsurv.diff.upper`, `medsurv.z`, and `medsurv.p`
-for `"medsurv"`; `wkm.wdiff`, `wkm.lower`, `wkm.upper`, `wkm.z`, and
-`wkm.p` for `"wkm"`; and `wmst.ctrl`, `wmst.trt`, `wmst.diff`,
-`wmst.diff.lower`, `wmst.diff.upper`, `wmst.z`, and `wmst.p` for
-`"wmst"`. The Z columns `logrank.z`, `cox.z`, and `rmst.z` carry the
-natural sign of each test, and the p-value columns follow `side`.
+and `km.surv.trt` for `"km"`; `maxcombo.stat` and `maxcombo.p` (and
+`maxcombo.p.exact` when `mc.alpha` is supplied) for `"maxcombo"`; and
+`ahsw.ah.ctrl`, `ahsw.ah.trt`, `ahsw.rah`, `ahsw.rah.lower`,
+`ahsw.rah.upper`, `ahsw.p.rah`, `ahsw.dah`, `ahsw.dah.lower`,
+`ahsw.dah.upper`, and `ahsw.p.dah` for `"ahsw"`; `milestone.surv.ctrl`,
+`milestone.surv.trt`, `milestone.diff`, `milestone.diff.lower`,
+`milestone.diff.upper`, `milestone.z`, and `milestone.p` for
+`"milestone"`; `rmw.stat` and `rmw.p` for `"rmw"`; and `ahr.ahr`,
+`ahr.theta.ctrl`, `ahr.theta.trt`, `ahr.z`, and `ahr.p` for `"ahr"`;
+`medsurv.ctrl`, `medsurv.trt`, `medsurv.diff`, `medsurv.diff.lower`,
+`medsurv.diff.upper`, `medsurv.z`, and `medsurv.p` for `"medsurv"`;
+`wkm.wdiff`, `wkm.lower`, `wkm.upper`, `wkm.z`, and `wkm.p` for `"wkm"`;
+and `wmst.ctrl`, `wmst.trt`, `wmst.diff`, `wmst.diff.lower`,
+`wmst.diff.upper`, `wmst.z`, and `wmst.p` for `"wmst"`. The Z columns
+`logrank.z`, `cox.z`, and `rmst.z` carry the natural sign of each test,
+and the p-value columns follow `side`.
 
 ## Details
 
@@ -371,6 +382,25 @@ quasi-Monte-Carlo GenzBretz algorithm of mvtnorm, which uses R's
 random-number generator; call
 [`set.seed()`](https://rdrr.io/r/base/Random.html) beforehand for
 p-values that are reproducible to the last digit.
+
+The multivariate normal integration dominates the computing time of the
+`"maxcombo"` statistic in a large simulation. When only the decision at
+a nominal level matters, `mc.alpha` avoids most of these integrals. With
+`K` weights and `p_min` the smallest component p-value (`pnorm(m)` for
+`side = 1` and `2 * pnorm(-m)` for `side = 2`, where `m` is
+`maxcombo.stat`), the max-combo p-value satisfies
+`p_min <= p <= min(1, K * p_min)` (the Bonferroni inequality). When
+`p_min > mc.alpha`, `p_min` is reported; when `K * p_min <= mc.alpha`,
+`K * p_min` is reported; otherwise the p-value is computed by
+integration. The reported value is therefore on the same side of
+`mc.alpha` as the exact p-value, so the rejection decision
+`maxcombo.p <= mc.alpha` (as in
+[`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+with `alpha = mc.alpha`) is the same as with exact p-values, but the
+reported value is a bound unless `maxcombo.p.exact` is `TRUE`. Use exact
+p-values (the default `mc.alpha = NULL`) when the p-values themselves,
+or decisions at other levels such as Bonferroni-adjusted levels, are
+needed.
 
 The `"ahsw"` statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to `tau`. It reports the per-group

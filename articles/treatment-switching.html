@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -246,8 +247,8 @@ since switching delays deaths and therefore the analysis.</p>
 <span><span class="co">#&gt; 3          35.7</span></span>
 <span><span class="co">#&gt; 4          35.9</span></span></code></pre></div>
 <p>Switching pulls the intention-to-treat hazard ratio for OS toward one
-and lowers the power of the OS test. The first two scenarios differ only
-in the trials where PFS was not significant, in which crossover is
+and lowers the power of the OS test. The two crossover scenarios differ
+only in the trials where PFS was not significant, in which crossover is
 opened in the second scenario but not in the first, so opening crossover
 in every trial dilutes the OS comparison more.</p>
 </div>
@@ -272,7 +273,7 @@ scenario, runs in a few seconds.</p>
 <span>  <span class="va">r1</span>  <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">d1</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.411   0.030   0.441</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.408   0.030   0.438</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="a-check-with-the-rank-preserving-structural-failure-time-model">A check with the rank-preserving structural failure time model<a class="anchor" aria-label="anchor" href="#a-check-with-the-rank-preserving-structural-failure-time-model"></a>

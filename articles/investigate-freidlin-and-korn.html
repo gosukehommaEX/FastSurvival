@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -114,6 +115,7 @@ followed by 0.76 afterwards. The analysis is at 5 years.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">e_time</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span><span class="op">)</span>         <span class="co"># change point at 0.1 year</span></span>
 <span><span class="va">cut</span>    <span class="op">&lt;-</span> <span class="fl">5</span>                      <span class="co"># analysis at 5 years</span></span>
+<span><span class="va">N_HALF</span> <span class="op">&lt;-</span> <span class="fl">1000L</span>                  <span class="co"># subjects per arm</span></span>
 <span></span>
 <span><span class="va">scenarios</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  equal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -130,8 +132,19 @@ survivors far enough that the modestly lower hazard afterwards never
 lets them catch up. The hazard ratio, however, falls below one after the
 first 0.1 year, and it is this late region that late-emphasis tests
 reward.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scn_strong</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gen_scenario_fast.html">gen_scenario_fast</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"Strong null"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">$</span><span class="va">strong</span><span class="op">$</span><span class="va">haz_c</span>, <span class="va">scenarios</span><span class="op">$</span><span class="va">strong</span><span class="op">$</span><span class="va">haz_e</span><span class="op">)</span>,</span>
+<span>    e.time   <span class="op">=</span> <span class="va">e_time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  shared <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_HALF</span>, <span class="va">N_HALF</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1e-4</span><span class="op">)</span>, a.prop <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scn_strong</span>, tmax <span class="op">=</span> <span class="va">cut</span>, hr_max <span class="op">=</span> <span class="fl">2</span>, xlab <span class="op">=</span> <span class="st">"Time (years)"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="investigate-freidlin-and-korn_files/figure-html/scenario-figure-1.png" class="r-plt" alt="" width="550"></p>
-<p>The experimental arm is worse at every time point on the survival
+<p>The design-stage plot of <code><a href="../reference/gen_scenario_fast.html">gen_scenario_fast()</a></code> draws the
+two survival curves and the hazard ratio (dashed, right axis); the
+hazard ratio of 16 during the first 0.1 year lies above the plotted
+range. The experimental arm is worse at every time point on the survival
 scale, even though its hazard is lower than the control hazard after the
 first 0.1 year.</p>
 </div>
@@ -151,10 +164,14 @@ the kind of spurious rejection at issue here.</p>
 weighted log-rank tests each occupy the <code>logrank.*</code> columns,
 so they are obtained from separate <code>analysis_fast</code> calls; the
 analysis is a calendar-time cut at 5 years and testing is one-sided in
-the direction of experimental benefit.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+the direction of experimental benefit. Only the decision at the 2.5%
+level is needed from the MaxCombo test, so <code>mc.alpha = ALPHA</code>
+evaluates the multivariate normal integral only for the p-values that
+the Bonferroni bounds do not place on one side of that level; the
+decisions are the same as with every p-value integrated.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">NSIM</span>    <span class="op">&lt;-</span> <span class="fl">2000L</span>     <span class="co"># raise (e.g. 5000) for tighter Monte Carlo error</span></span>
-<span><span class="va">N_TOTAL</span> <span class="op">&lt;-</span> <span class="fl">2000L</span></span>
+<span><span class="va">N_TOTAL</span> <span class="op">&lt;-</span> <span class="fl">2L</span> <span class="op">*</span> <span class="va">N_HALF</span></span>
 <span><span class="va">ALPHA</span>   <span class="op">&lt;-</span> <span class="fl">0.025</span></span>
 <span><span class="va">SIDE</span>    <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span><span class="va">T_STAR</span>  <span class="op">&lt;-</span> <span class="fl">0.5</span>       <span class="co"># modestly-weighted log-rank delay (years)</span></span>
@@ -163,7 +180,7 @@ the direction of experimental benefit.</p>
 <span><span class="va">run_one_scenario</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">scn</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
 <span>    nsim     <span class="op">=</span> <span class="va">NSIM</span>,</span>
-<span>    n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">N_TOTAL</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">2L</span>, <span class="fl">2L</span><span class="op">)</span>,</span>
+<span>    n        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">N_HALF</span>, <span class="va">N_HALF</span><span class="op">)</span>,</span>
 <span>    a.time   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1e-4</span><span class="op">)</span>,       <span class="co"># near-instantaneous enrollment</span></span>
 <span>    a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    e.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">scn</span><span class="op">$</span><span class="va">haz_c</span>, <span class="va">scn</span><span class="op">$</span><span class="va">haz_e</span><span class="op">)</span>,</span>
@@ -179,10 +196,11 @@ the direction of experimental benefit.</p>
 <span>  <span class="va">res_mb</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span><span class="va">dataset</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="va">cut</span>,</span>
 <span>                            stat <span class="op">=</span> <span class="st">"logrank"</span>, weight <span class="op">=</span> <span class="st">"mwlrt"</span>,</span>
 <span>                            t_star <span class="op">=</span> <span class="va">T_STAR</span>, side <span class="op">=</span> <span class="va">SIDE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">SEED</span><span class="op">)</span></span>
 <span>  <span class="va">res_mc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span><span class="va">dataset</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="va">cut</span>,</span>
 <span>                            stat <span class="op">=</span> <span class="st">"maxcombo"</span>,</span>
 <span>                            mc.rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, mc.gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                            side <span class="op">=</span> <span class="va">SIDE</span><span class="op">)</span></span>
+<span>                            side <span class="op">=</span> <span class="va">SIDE</span>, mc.alpha <span class="op">=</span> <span class="va">ALPHA</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="va">reject_in_favor</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">res</span>, <span class="va">pcol</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">ok</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">reached</span></span>
@@ -204,20 +222,9 @@ should be near 2.5%. Under the strong null the experimental arm is
 uniformly worse, so a test that respects the survival ordering should
 keep the rate at or below 2.5%; a rate well above 2.5% means the test is
 declaring a harmful treatment beneficial.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">scenarios</span>, <span class="va">run_one_scenario</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rates</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">scenarios</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="va">s</span><span class="op">$</span><span class="va">label</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">rates</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                   Equal survival (weak null)</span></span>
-<span><span class="co">#&gt; Log-rank                               0.028</span></span>
-<span><span class="co">#&gt; FH(0,1)                                0.026</span></span>
-<span><span class="co">#&gt; Modestly weighted                      0.028</span></span>
-<span><span class="co">#&gt; MaxCombo                               0.024</span></span>
-<span><span class="co">#&gt;                   Experimental uniformly worse (strong null)</span></span>
-<span><span class="co">#&gt; Log-rank                                               0.000</span></span>
-<span><span class="co">#&gt; FH(0,1)                                                0.610</span></span>
-<span><span class="co">#&gt; Modestly weighted                                      0.000</span></span>
-<span><span class="co">#&gt; MaxCombo                                               0.516</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rates</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">scenarios</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="va">s</span><span class="op">$</span><span class="va">label</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>One-sided rejection rate in favor of the experimental arm (2000
 simulated trials, n = 2000). Under the weak null every valid test is

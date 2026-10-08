@@ -19,8 +19,9 @@ conditional on the overall test being significant.
 
 Closed-form formulas for these probabilities exist for continuous
 endpoints and have been extended to other endpoint types under a normal
-approximation of the treatment effect. Those formulas are convenient but
-they assume a fixed design, a single final analysis, and balanced,
+approximation of the treatment effect (Teng et al., 2018; see Homma,
+2024, for binary outcomes). Those formulas are convenient but they
+assume a fixed design, a single final analysis, and balanced,
 simultaneous accrual across regions. Real oncology MRCTs routinely break
 those assumptions: the design is group-sequential with interim looks,
 and one region (here, Japan) starts enrolling later than the others, so
@@ -108,10 +109,11 @@ The accrual specification in
 applies to the whole call, so a region-specific delay is expressed by
 generating each region with its own accrual window and stacking the
 results. Region 1 accrues uniformly over `[a_delay, a]`; the other
-regions over `[0, a]`. Each region is generated from an independent
-stream (`seed + k`), which is the right model for independent regional
-subpopulations. A `subgroup` column tags the region, and the shared
-`sim` index links the regional blocks into one trial per simulation.
+regions over `[0, a]`. Each region is generated from its own `dqrng`
+stream (`seed = SEED, stream = k`), which is the right model for
+independent regional subpopulations. A `subgroup` column tags the
+region, and the shared `sim` index links the regional blocks into one
+trial per simulation.
 
 ``` r
 
@@ -124,7 +126,8 @@ blocks <- lapply(seq_len(K), function(k) {
     a.time   = a.time_k,
     a.prop   = 1,
     e.median = list(mst.C, mst.T),
-    seed     = SEED + k
+    seed     = SEED,
+    stream   = k
   )
   dat$subgroup <- k
   dat
@@ -132,12 +135,12 @@ blocks <- lapply(seq_len(K), function(k) {
 data_all <- do.call(rbind, blocks)
 head(data_all)
 #>   sim group accrual_time surv_time dropout_time       tte event calendar_time
-#> 1   1     1     8.314255  1.589398          Inf  1.589398     1      9.903652
-#> 2   1     1    10.349985  1.604216          Inf  1.604216     1     11.954201
-#> 3   1     1     5.726526  3.582047          Inf  3.582047     1      9.308573
-#> 4   1     1     7.179403  3.952740          Inf  3.952740     1     11.132143
-#> 5   1     1     5.562820  1.644677          Inf  1.644677     1      7.207497
-#> 6   1     1     9.503599 15.446380          Inf 15.446380     1     24.949980
+#> 1   1     1     7.415786 1.4732658          Inf 1.4732658     1      8.889052
+#> 2   1     1     5.068686 2.5622552          Inf 2.5622552     1      7.630941
+#> 3   1     1     9.505610 1.9087414          Inf 1.9087414     1     11.414352
+#> 4   1     1     5.947479 3.4319259          Inf 3.4319259     1      9.379405
+#> 5   1     1     5.850993 0.5569163          Inf 0.5569163     1      6.407910
+#> 6   1     1     5.822094 0.9798946          Inf 0.9798946     1      6.801988
 #>   subgroup
 #> 1        1
 #> 2        1
@@ -169,13 +172,13 @@ res <- analysis_fast(
   by.subgroup = TRUE
 )
 head(res[, c("sim", "look", "population", "n.event", "logrank.z", "cox.hr")])
-#>   sim look population n.event  logrank.z    cox.hr
-#> 1   1    1    overall     142 -3.0436565 0.5972385
-#> 2   1    1 subgroup_1       8 -0.4331669 0.7349631
-#> 3   1    1 subgroup_2      67 -3.1712365 0.4562756
-#> 4   1    1 subgroup_3      67 -1.1504671 0.7525491
-#> 5   1    2    overall     248 -3.2091304 0.6647287
-#> 6   1    2 subgroup_1      23 -1.0162204 0.6336266
+#>   sim look population n.event logrank.z    cox.hr
+#> 1   1    1    overall     142 -3.032779 0.5984187
+#> 2   1    1 subgroup_1       7 -2.071416 0.1455994
+#> 3   1    1 subgroup_2      77 -2.026667 0.6272952
+#> 4   1    1 subgroup_3      58 -1.549859 0.6640957
+#> 5   1    2    overall     248 -3.678632 0.6250666
+#> 6   1    2 subgroup_1      22 -2.766921 0.2995078
 ```
 
 The output is in long form: for each `(sim, look)` there is one
@@ -282,13 +285,13 @@ consistency <- data.frame(
 )
 consistency
 #>   look Info.Fraction Events Analysis_time Efficacy cum.power    CON_M1 JOI_M1
-#> 1    1     0.4011299    142      8.725212   0.0000    0.0000        NA 0.0000
-#> 2    2     0.7005650    248     12.163791   0.4708    0.4708 0.6973237 0.3283
-#> 3    3     1.0000000    354     16.139324   0.3278    0.7986 0.6751068 0.2213
+#> 1    1     0.4011299    142       8.72734   0.0000    0.0000        NA 0.0000
+#> 2    2     0.7005650    248      12.16650   0.4711    0.4711 0.7115262 0.3352
+#> 3    3     1.0000000    354      16.14337   0.3300    0.8011 0.6954545 0.2295
 #>      CON_M2 JOI_M2
 #> 1        NA 0.0000
-#> 2 0.8166950 0.3845
-#> 3 0.7757779 0.2543
+#> 2 0.8240289 0.3882
+#> 3 0.7948485 0.2623
 ```
 
 The first look is futility-only (`eff.bound[1] = NA`), so no trial can
@@ -334,25 +337,25 @@ gs
 #> Stopping Boundaries: Look by Look
 #>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.
 #>     1        0.40      142.0      344.8         NA     0.3810           0.0000
-#>     2        0.70      248.0      485.5    -2.4370         NA           0.4708
-#>     3        1.00      354.0      500.0    -2.0000    -2.0000           0.7986
+#>     2        0.70      248.0      485.5    -2.4370         NA           0.4711
+#>     3        1.00      354.0      500.0    -2.0000    -2.0000           0.8011
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
 #>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
 #>     1        0.40      344.8      142.0          0.0    202.8          8.73
-#>     2        0.70      485.5      248.0          0.0    237.5         12.16
+#>     2        0.70      485.5      248.0          0.0    237.5         12.17
 #>     3        1.00      500.0      354.0          0.0    146.0         16.14
 #>  Cross. Eff. Cross. Fut.
-#>       0.0000      0.0146
-#>       0.4708      0.0000
-#>       0.3278      0.1868
+#>       0.0000      0.0134
+#>       0.4711      0.0000
+#>       0.3300      0.1855
 #> 
 #> Overall
-#>   Rejection rate (efficacy):      0.7986
-#>   Futility-stop rate:             0.2014
-#>   Expected events at stop:        301.0
-#>   Expected sample size at stop:   491.1
-#>   Expected analysis time at stop: 14.15
+#>   Rejection rate (efficacy):      0.8011
+#>   Futility-stop rate:             0.1989
+#>   Expected events at stop:        301.2
+#>   Expected sample size at stop:   491.3
+#>   Expected analysis time at stop: 14.16
 ```
 
 The per-look `prob.stop.efficacy` from

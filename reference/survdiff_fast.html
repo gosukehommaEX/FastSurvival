@@ -46,6 +46,7 @@ hazards."><meta property="og:image" content="https://gosukehommaEX.github.io/Fas
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -250,7 +251,7 @@ groups.</p>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
-single-censored samples. <em>Biometrika</em>, <em>52</em>, 203-223.</p>
+singly-censored samples. <em>Biometrika</em>, <em>52</em>, 203-223.</p>
 <p>Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. <em>Cancer Chemotherapy
 Reports</em>, <em>50</em>(3), 163-170.</p>
@@ -389,9 +390,9 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean    median       uq      max neval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  55.203  64.2855   73.90602   76.8035   79.909  173.864  1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 955.324 992.0920 1036.59533 1004.9360 1022.544 5923.036  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean   median        uq      max neval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  54.321  63.5685   72.85849   76.272   79.5335  154.659  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 962.084 995.6665 1042.12490 1004.558 1022.0305 8269.012  1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  cld</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   a </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    b</span>

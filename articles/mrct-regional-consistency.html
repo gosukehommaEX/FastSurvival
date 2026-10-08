@@ -48,6 +48,7 @@
     <li><a class="dropdown-item" href="../articles/correlated-pfs-os-gsd.html">Group-sequential design with correlated PFS and OS under the Fleischer model</a></li>
     <li><a class="dropdown-item" href="../articles/multi-arm-pairwise.html">Multi-arm trials: K-arm generation and pairwise comparisons against a shared control</a></li>
     <li><a class="dropdown-item" href="../articles/treatment-switching.html">Treatment switching and crossover after an interim analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/external-data.html">Using your own data generator</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -94,8 +95,9 @@ probability</em>: the chance that the regional criterion is met, often
 evaluated conditional on the overall test being significant.</p>
 <p>Closed-form formulas for these probabilities exist for continuous
 endpoints and have been extended to other endpoint types under a normal
-approximation of the treatment effect. Those formulas are convenient but
-they assume a fixed design, a single final analysis, and balanced,
+approximation of the treatment effect (Teng et al., 2018; see Homma,
+2024, for binary outcomes). Those formulas are convenient but they
+assume a fixed design, a single final analysis, and balanced,
 simultaneous accrual across regions. Real oncology MRCTs routinely break
 those assumptions: the design is group-sequential with interim looks,
 and one region (here, Japan) starts enrolling later than the others, so
@@ -175,11 +177,12 @@ a negative <code>Z</code>; in practice they would come from
 the whole call, so a region-specific delay is expressed by generating
 each region with its own accrual window and stacking the results. Region
 1 accrues uniformly over <code>[a_delay, a]</code>; the other regions
-over <code>[0, a]</code>. Each region is generated from an independent
-stream (<code>seed + k</code>), which is the right model for independent
-regional subpopulations. A <code>subgroup</code> column tags the region,
-and the shared <code>sim</code> index links the regional blocks into one
-trial per simulation.</p>
+over <code>[0, a]</code>. Each region is generated from its own
+<code>dqrng</code> stream (<code>seed = SEED, stream = k</code>), which
+is the right model for independent regional subpopulations. A
+<code>subgroup</code> column tags the region, and the shared
+<code>sim</code> index links the regional blocks into one trial per
+simulation.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">K</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">N.T</span><span class="op">)</span></span>
 <span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">K</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
@@ -190,7 +193,8 @@ trial per simulation.</p>
 <span>    a.time   <span class="op">=</span> <span class="va">a.time_k</span>,</span>
 <span>    a.prop   <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">mst.C</span>, <span class="va">mst.T</span><span class="op">)</span>,</span>
-<span>    seed     <span class="op">=</span> <span class="va">SEED</span> <span class="op">+</span> <span class="va">k</span></span>
+<span>    seed     <span class="op">=</span> <span class="va">SEED</span>,</span>
+<span>    stream   <span class="op">=</span> <span class="va">k</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">dat</span><span class="op">$</span><span class="va">subgroup</span> <span class="op">&lt;-</span> <span class="va">k</span></span>
 <span>  <span class="va">dat</span></span>
@@ -198,12 +202,12 @@ trial per simulation.</p>
 <span><span class="va">data_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">blocks</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data_all</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   sim group accrual_time surv_time dropout_time       tte event calendar_time</span></span>
-<span><span class="co">#&gt; 1   1     1     8.314255  1.589398          Inf  1.589398     1      9.903652</span></span>
-<span><span class="co">#&gt; 2   1     1    10.349985  1.604216          Inf  1.604216     1     11.954201</span></span>
-<span><span class="co">#&gt; 3   1     1     5.726526  3.582047          Inf  3.582047     1      9.308573</span></span>
-<span><span class="co">#&gt; 4   1     1     7.179403  3.952740          Inf  3.952740     1     11.132143</span></span>
-<span><span class="co">#&gt; 5   1     1     5.562820  1.644677          Inf  1.644677     1      7.207497</span></span>
-<span><span class="co">#&gt; 6   1     1     9.503599 15.446380          Inf 15.446380     1     24.949980</span></span>
+<span><span class="co">#&gt; 1   1     1     7.415786 1.4732658          Inf 1.4732658     1      8.889052</span></span>
+<span><span class="co">#&gt; 2   1     1     5.068686 2.5622552          Inf 2.5622552     1      7.630941</span></span>
+<span><span class="co">#&gt; 3   1     1     9.505610 1.9087414          Inf 1.9087414     1     11.414352</span></span>
+<span><span class="co">#&gt; 4   1     1     5.947479 3.4319259          Inf 3.4319259     1      9.379405</span></span>
+<span><span class="co">#&gt; 5   1     1     5.850993 0.5569163          Inf 0.5569163     1      6.407910</span></span>
+<span><span class="co">#&gt; 6   1     1     5.822094 0.9798946          Inf 0.9798946     1      6.801988</span></span>
 <span><span class="co">#&gt;   subgroup</span></span>
 <span><span class="co">#&gt; 1        1</span></span>
 <span><span class="co">#&gt; 2        1</span></span>
@@ -233,13 +237,13 @@ ratio for the consistency criteria.</p>
 <span>  by.subgroup <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sim"</span>, <span class="st">"look"</span>, <span class="st">"population"</span>, <span class="st">"n.event"</span>, <span class="st">"logrank.z"</span>, <span class="st">"cox.hr"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   sim look population n.event  logrank.z    cox.hr</span></span>
-<span><span class="co">#&gt; 1   1    1    overall     142 -3.0436565 0.5972385</span></span>
-<span><span class="co">#&gt; 2   1    1 subgroup_1       8 -0.4331669 0.7349631</span></span>
-<span><span class="co">#&gt; 3   1    1 subgroup_2      67 -3.1712365 0.4562756</span></span>
-<span><span class="co">#&gt; 4   1    1 subgroup_3      67 -1.1504671 0.7525491</span></span>
-<span><span class="co">#&gt; 5   1    2    overall     248 -3.2091304 0.6647287</span></span>
-<span><span class="co">#&gt; 6   1    2 subgroup_1      23 -1.0162204 0.6336266</span></span></code></pre></div>
+<span><span class="co">#&gt;   sim look population n.event logrank.z    cox.hr</span></span>
+<span><span class="co">#&gt; 1   1    1    overall     142 -3.032779 0.5984187</span></span>
+<span><span class="co">#&gt; 2   1    1 subgroup_1       7 -2.071416 0.1455994</span></span>
+<span><span class="co">#&gt; 3   1    1 subgroup_2      77 -2.026667 0.6272952</span></span>
+<span><span class="co">#&gt; 4   1    1 subgroup_3      58 -1.549859 0.6640957</span></span>
+<span><span class="co">#&gt; 5   1    2    overall     248 -3.678632 0.6250666</span></span>
+<span><span class="co">#&gt; 6   1    2 subgroup_1      22 -2.766921 0.2995078</span></span></code></pre></div>
 <p>The output is in long form: for each <code>(sim, look)</code> there
 is one <code>overall</code> row and one row per region
 (<code>subgroup_1</code>, <code>subgroup_2</code>,
@@ -343,13 +347,13 @@ of an efficacy stop together with consistency.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">consistency</span></span>
 <span><span class="co">#&gt;   look Info.Fraction Events Analysis_time Efficacy cum.power    CON_M1 JOI_M1</span></span>
-<span><span class="co">#&gt; 1    1     0.4011299    142      8.725212   0.0000    0.0000        NA 0.0000</span></span>
-<span><span class="co">#&gt; 2    2     0.7005650    248     12.163791   0.4708    0.4708 0.6973237 0.3283</span></span>
-<span><span class="co">#&gt; 3    3     1.0000000    354     16.139324   0.3278    0.7986 0.6751068 0.2213</span></span>
+<span><span class="co">#&gt; 1    1     0.4011299    142       8.72734   0.0000    0.0000        NA 0.0000</span></span>
+<span><span class="co">#&gt; 2    2     0.7005650    248      12.16650   0.4711    0.4711 0.7115262 0.3352</span></span>
+<span><span class="co">#&gt; 3    3     1.0000000    354      16.14337   0.3300    0.8011 0.6954545 0.2295</span></span>
 <span><span class="co">#&gt;      CON_M2 JOI_M2</span></span>
 <span><span class="co">#&gt; 1        NA 0.0000</span></span>
-<span><span class="co">#&gt; 2 0.8166950 0.3845</span></span>
-<span><span class="co">#&gt; 3 0.7757779 0.2543</span></span></code></pre></div>
+<span><span class="co">#&gt; 2 0.8240289 0.3882</span></span>
+<span><span class="co">#&gt; 3 0.7948485 0.2623</span></span></code></pre></div>
 <p>The first look is futility-only (<code>eff.bound[1] = NA</code>), so
 no trial can stop for efficacy there. The efficacy-conditional
 quantities are therefore degenerate at look 1: the joint probabilities
@@ -393,25 +397,25 @@ on the efficacy column above.</p>
 <span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
 <span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.</span></span>
 <span><span class="co">#&gt;     1        0.40      142.0      344.8         NA     0.3810           0.0000</span></span>
-<span><span class="co">#&gt;     2        0.70      248.0      485.5    -2.4370         NA           0.4708</span></span>
-<span><span class="co">#&gt;     3        1.00      354.0      500.0    -2.0000    -2.0000           0.7986</span></span>
+<span><span class="co">#&gt;     2        0.70      248.0      485.5    -2.4370         NA           0.4711</span></span>
+<span><span class="co">#&gt;     3        1.00      354.0      500.0    -2.0000    -2.0000           0.8011</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
 <span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
 <span><span class="co">#&gt;     1        0.40      344.8      142.0          0.0    202.8          8.73</span></span>
-<span><span class="co">#&gt;     2        0.70      485.5      248.0          0.0    237.5         12.16</span></span>
+<span><span class="co">#&gt;     2        0.70      485.5      248.0          0.0    237.5         12.17</span></span>
 <span><span class="co">#&gt;     3        1.00      500.0      354.0          0.0    146.0         16.14</span></span>
 <span><span class="co">#&gt;  Cross. Eff. Cross. Fut.</span></span>
-<span><span class="co">#&gt;       0.0000      0.0146</span></span>
-<span><span class="co">#&gt;       0.4708      0.0000</span></span>
-<span><span class="co">#&gt;       0.3278      0.1868</span></span>
+<span><span class="co">#&gt;       0.0000      0.0134</span></span>
+<span><span class="co">#&gt;       0.4711      0.0000</span></span>
+<span><span class="co">#&gt;       0.3300      0.1855</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall</span></span>
-<span><span class="co">#&gt;   Rejection rate (efficacy):      0.7986</span></span>
-<span><span class="co">#&gt;   Futility-stop rate:             0.2014</span></span>
-<span><span class="co">#&gt;   Expected events at stop:        301.0</span></span>
-<span><span class="co">#&gt;   Expected sample size at stop:   491.1</span></span>
-<span><span class="co">#&gt;   Expected analysis time at stop: 14.15</span></span></code></pre></div>
+<span><span class="co">#&gt;   Rejection rate (efficacy):      0.8011</span></span>
+<span><span class="co">#&gt;   Futility-stop rate:             0.1989</span></span>
+<span><span class="co">#&gt;   Expected events at stop:        301.2</span></span>
+<span><span class="co">#&gt;   Expected sample size at stop:   491.3</span></span>
+<span><span class="co">#&gt;   Expected analysis time at stop: 14.16</span></span></code></pre></div>
 <p>The per-look <code>prob.stop.efficacy</code> from
 <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> matches the <code>Efficacy</code> column
 computed by hand, and its <code>overall</code> row gives the cumulative
