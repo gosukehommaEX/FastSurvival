@@ -101,9 +101,9 @@ Three scenarios are compared with the trial without switching.
 - Crossover after a positive PFS analysis: in the trials with a
   significant PFS result, control patients who are alive and on study
   switch at progression, but not before the PFS analysis
-  (`when = "later"`, the rule of the worked example of TrialSimulator’s
-  milestone crossover). Their remaining survival time is multiplied by
-  1.3.
+  (`when = "later"`, the rule of the worked example of the milestone
+  crossover in TrialSimulator). Their remaining survival time is
+  multiplied by 1.3.
 - The same crossover opened in every trial, regardless of the PFS
   result.
 - Switching at progression from the start of the trial
@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.428   0.025   0.453
+#>   0.411   0.030   0.441
 ```
 
 ## A check with the rank-preserving structural failure time model
