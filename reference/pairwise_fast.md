@@ -122,8 +122,8 @@ cutoffs. This reproduces the standard design in which the primary
 event-driven analysis fixes a single data cutoff at which all
 comparisons are performed. For a simulation in which the primary event
 target is not reached at a look, that look is marked with
-`reached = FALSE` and `NA` statistics for every contrast. The shared
-cutoffs are computed by
+`reached = FALSE`, and its counts and statistics are `NA` for every
+contrast. The shared cutoffs are computed by
 [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
 on the events of the control and primary arms.
 
@@ -132,7 +132,7 @@ per-simulation calendar cutoffs, for example those returned by
 [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
 for a combination of event and calendar-time rules. A look that is not
 reached in a simulation (`NA` cutoff) is marked with `reached = FALSE`
-and `NA` statistics, as in the event-driven regime.
+and `NA` counts and statistics, as in the event-driven regime.
 
 The Bonferroni option multiplies each p-value by the number of contrasts
 and caps it at one, controlling the family-wise error rate across the
@@ -151,7 +151,8 @@ obtained by calling `pairwise_fast` again on that endpoint's columns.
 ## See also
 
 [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
-[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
 
 ## Examples
 

@@ -17,7 +17,7 @@ a Bonferroni-adjusted p-value across the contrasts."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -170,15 +170,15 @@ contrast, including the primary one, is analyzed at those same cutoffs. This
 reproduces the standard design in which the primary event-driven analysis
 fixes a single data cutoff at which all comparisons are performed. For a
 simulation in which the primary event target is not reached at a look, that
-look is marked with <code>reached = FALSE</code> and <code>NA</code> statistics for every
-contrast. The shared cutoffs are computed by <code><a href="cutoff_fast.html">cutoff_fast</a></code> on the
+look is marked with <code>reached = FALSE</code>, and its counts and statistics are
+<code>NA</code> for every contrast. The shared cutoffs are computed by <code><a href="cutoff_fast.html">cutoff_fast</a></code> on the
 events of the control and primary arms.</p>
 <p>With <code>cutoff.looks</code>, every contrast is analyzed at the supplied
 per-simulation calendar cutoffs, for example those returned by
 <code><a href="cutoff_fast.html">cutoff_fast</a></code> for a combination of event and calendar-time rules.
 A look that is not reached in a simulation (<code>NA</code> cutoff) is marked with
-<code>reached = FALSE</code> and <code>NA</code> statistics, as in the event-driven
-regime.</p>
+<code>reached = FALSE</code> and <code>NA</code> counts and statistics, as in the
+event-driven regime.</p>
 <p>The Bonferroni option multiplies each p-value by the number of contrasts and
 caps it at one, controlling the family-wise error rate across the
 control-versus-arm comparisons at each look. Multiplicity across looks is a
@@ -193,7 +193,8 @@ obtained by calling <code>pairwise_fast</code> again on that endpoint's columns.
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="simdata_fast.html">simdata_fast</a></code>, <code><a href="analysis_fast.html">analysis_fast</a></code></p></div>
+    <div class="dont-index"><p><code><a href="simdata_fast.html">simdata_fast</a></code>, <code><a href="analysis_fast.html">analysis_fast</a></code>,
+  <code><a href="cutoff_fast.html">cutoff_fast</a></code></p></div>
     </div>
 
     <div class="section level2">

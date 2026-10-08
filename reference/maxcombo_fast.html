@@ -23,7 +23,7 @@ through the joint distribution."><meta property="og:image" content="https://gosu
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -141,14 +141,14 @@ and <code>group</code> are assumed to be sorted in ascending order of
 <dt id="arg-abseps">abseps<a class="anchor" aria-label="anchor" href="#arg-abseps"></a></dt>
 <dd><p>A single positive numeric value, the absolute error tolerance
 passed to the multivariate normal integration. Defaults to 1e-5. Larger
-values speed up the four-or-more-weight case at the cost of p-value
-precision.</p></dd>
+values speed up the quasi-Monte-Carlo integration (four or more weights,
+or a two-sided test) at the cost of p-value precision.</p></dd>
 
 
 <dt id="arg-maxpts">maxpts<a class="anchor" aria-label="anchor" href="#arg-maxpts"></a></dt>
 <dd><p>A single positive integer, the maximum number of function
-evaluations for the quasi-Monte-Carlo integration used when four or more
-weights are supplied. Defaults to 25000.</p></dd>
+evaluations for the quasi-Monte-Carlo integration used with four or more
+weights or with a two-sided test (see Details). Defaults to 25000.</p></dd>
 
 </dl></div>
     <div class="section level2">

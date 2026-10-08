@@ -204,7 +204,8 @@ analysis_fast(
 
   A single positive integer, the maximum number of function evaluations
   for the quasi-Monte-Carlo integration used by the `"maxcombo"` p-value
-  when four or more weights are supplied. Defaults to 25000.
+  with four or more weights or with a two-sided test (see Details).
+  Defaults to 25000.
 
 - medsurv.method:
 
@@ -469,7 +470,10 @@ and one row per `(sim, look)`, matching the whole-population analysis.
 [`ahr_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
 [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
 [`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md),
-[`wmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md).
+[`wmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md),
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md),
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md),
+[`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md).
 
 ## Examples
 

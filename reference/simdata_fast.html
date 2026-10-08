@@ -21,7 +21,7 @@ reference implementation, so results are reproducible from seed."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -361,7 +361,8 @@ optional dropout as a shared value or a per-arm list through <code>d.hazard</cod
 or <code>d.median</code>. The arms share the master <code>seed</code>, so the result is
 reproducible. A multi-arm design is analyzed as a set of pairwise contrasts by
 subsetting the output to the control arm and one other arm and calling
-<code><a href="analysis_fast.html">analysis_fast</a></code> once per contrast. Multi-arm mode does not support
+<code><a href="analysis_fast.html">analysis_fast</a></code> once per contrast, which
+<code><a href="pairwise_fast.html">pairwise_fast</a></code> does for every experimental arm. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.</p>
     </div>
     <div class="section level2">
@@ -387,7 +388,8 @@ across runs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="analysis_fast.html">analysis_fast</a></code></p></div>
+    <div class="dont-index"><p><code><a href="analysis_fast.html">analysis_fast</a></code>, <code><a href="cutoff_fast.html">cutoff_fast</a></code>,
+  <code><a href="switch_fast.html">switch_fast</a></code>, <code><a href="pairwise_fast.html">pairwise_fast</a></code></p></div>
     </div>
 
     <div class="section level2">

@@ -296,19 +296,19 @@ double-integral covariance terms in linear scans. The primary test is on
 the group-share scale, as in the source method, with an equivalent test
 and a confidence interval reported on the log scale.
 
-**simdata_fast** generates individual patient data for one- or two-group
-time-to-event trials. Accrual times follow a piecewise-uniform
-distribution, and survival and dropout times follow either a simple or
-piecewise exponential distribution, selected automatically based on
-whether a scalar or vector hazard is supplied. Optional subgroups are
-defined by a prevalence specification. It can also generate two
-correlated time-to-event endpoints, such as progression-free and overall
-survival, from an illness-death model with transition hazards for the
-intermediate event, the direct terminal event, and the post-event
-terminal event, and with optional treatment switching. The entire
-generation pipeline runs in a single C++ kernel that materializes the
-output data frame once, avoiding intermediate R-level vector operations
-and copies, and random-number generation uses
+**simdata_fast** generates individual patient data for one-group,
+two-group, or multi-arm time-to-event trials. Accrual times follow a
+piecewise-uniform distribution, and survival and dropout times follow
+either a simple or piecewise exponential distribution, selected
+automatically based on whether a scalar or vector hazard is supplied.
+Optional subgroups are defined by a prevalence specification. It can
+also generate two correlated time-to-event endpoints, such as
+progression-free and overall survival, from an illness-death model with
+transition hazards for the intermediate event, the direct terminal
+event, and the post-event terminal event, and with optional treatment
+switching. The entire generation pipeline runs in a single C++ kernel
+that materializes the output data frame once, avoiding intermediate
+R-level vector operations and copies, and random-number generation uses
 [dqrng](https://cran.r-project.org/package=dqrng) for speed. With the
 `stream` argument a large study can be generated in batches from
 independent random-number streams, sequentially or in parallel, with
@@ -349,19 +349,23 @@ fixed calendar looks every contrast shares the same data cutoff. With an
 event-driven design a designated primary contrast fixes the
 per-simulation calendar cutoff at which all contrasts are analyzed,
 reproducing the standard rule that the primary analysis defines a single
-data cutoff. An optional Bonferroni adjustment controls the family-wise
-error rate across the contrasts at each look.
+data cutoff. Per-simulation cutoffs from
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+can also be supplied directly. An optional Bonferroni adjustment
+controls the family-wise error rate across the contrasts at each look.
 
 **switch_fast** applies a treatment-switching rule to simulated data by
 changing only the outcomes after each subject’s switch: switching at the
 intermediate event of an illness-death simulation (for example at
 progression), at an opening time after an interim analysis (crossover at
 a milestone), or at the later of the two, with the remaining time to the
-terminal event multiplied by an acceleration factor or redrawn from a
-new hazard. Because the history before the switch is kept, an interim
-analysis is unaffected, so a crossover decided by an interim result is
-simulated for all trials at once: analyze the interim, select the
-trials, switch, and analyze the later looks.
+terminal event multiplied by an acceleration factor (the causal model of
+the rank-preserving structural failure time method of Robins and
+Tsiatis, 1991) or redrawn from a new hazard. Because the history before
+the switch is kept, an interim analysis is unaffected, so a crossover
+decided by an interim result is simulated for all trials at once:
+analyze the interim, select the trials, switch, and analyze the later
+looks.
 
 **simsummary_fast** aggregates the per-simulation, per-look output of
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
@@ -547,6 +551,10 @@ hazard ratio. *Biometrika*, 68(1), 105-112.
 Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
 calculation under nonproportional hazards using average hazard ratios.
 *Biometrical Journal*, 66(6), e202300271.
+
+Robins, J. M., & Tsiatis, A. A. (1991). Correcting for non-compliance in
+randomized trials using rank preserving structural failure time models.
+*Communications in Statistics - Theory and Methods*, 20(8), 2609-2631.
 
 Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
 ed.). Chapman and Hall/CRC.

@@ -300,8 +300,10 @@ so the result is reproducible. A multi-arm design is analyzed as a set
 of pairwise contrasts by subsetting the output to the control arm and
 one other arm and calling
 [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-once per contrast. Multi-arm mode does not support subgroups or the
-illness-death model, which remain two-group.
+once per contrast, which
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+does for every experimental arm. Multi-arm mode does not support
+subgroups or the illness-death model, which remain two-group.
 
 ## Batches and parallel execution
 
@@ -329,7 +331,10 @@ for p-values that are identical across runs.
 
 ## See also
 
-[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+[`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md),
+[`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
 
 ## Examples
 

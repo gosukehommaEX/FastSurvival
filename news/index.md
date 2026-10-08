@@ -1,6 +1,6 @@
 # Changelog
 
-## FastSurvival (development version)
+## FastSurvival 1.1.0
 
 ### New features
 
@@ -68,7 +68,8 @@
 - New vignette “Treatment switching and crossover after an interim
   analysis” simulates crossover after a positive PFS analysis and
   switching at progression, and checks the switching model with the
-  RPSFT estimator of the rpsftm package.
+  RPSFT estimator of the rpsftm package, which is added to Suggests and
+  used only when it is installed.
 
 - The correlated PFS and OS vignette now analyzes OS at the PFS-driven
   cutoffs with
