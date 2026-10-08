@@ -91,9 +91,18 @@ replicates would exceed the build-time limits. To reproduce the numbers,
 run the code blocks interactively. The same code is collected in the
 <code>tools/benchmark_speed.R</code> script of the package’s GitHub
 repository.</p>
-<p>The reported figures are median times from microbenchmark replicates
-on a single desktop machine. Absolute timings depend on hardware, sample
-size, and event rate, so the ratios matter more than the raw values.</p>
+<p>The reported figures are median times of 1,000 microbenchmark
+replicates, measured on 2026-09-29 with R 4.6.0 on Windows 11 (x86_64)
+for the data set of 500 subjects below, all of whom have an event. The
+FastSurvival functions are timed on presorted input, so the single sort
+of the data is excluded from their times, whereas the reference
+functions sort internally; in a simulation loop the sort is paid once
+per data set. <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> computes a closed-form
+approximation of the Cox estimate (the Pike-Halley Estimator) rather
+than the iterative maximum partial likelihood estimate, so its row
+compares two estimators of the same quantity. Absolute timings depend on
+hardware, sample size, and event rate, so the ratios matter more than
+the raw values.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
@@ -303,11 +312,11 @@ to reproduce it.</p>
 <h2 id="ahr_fast-vs-ahrahrkm">ahr_fast vs AHR::ahrKM<a class="anchor" aria-label="anchor" href="#ahr_fast-vs-ahrahrkm"></a>
 </h2>
 <p>The Kalbfleisch-Prentice average hazard ratio is benchmarked against
-<code>ahrKM()</code> from the AHR package, the reference implementation
-used by Dormuth et al. (2024). Because AHR has been archived on CRAN,
-this benchmark is shown as a static block rather than a live chunk.
-Install AHR with <code>remotes::install_github("cran/AHR")</code> and
-run the block to reproduce it.</p>
+<code>ahrKM()</code> from the AHR package, which Dormuth et al. (2024)
+used to compute the average hazard ratio. Because AHR has been archived
+on CRAN, this benchmark is shown as a static block rather than a live
+chunk. Install AHR with <code>remotes::install_github("cran/AHR")</code>
+and run the block to reproduce it.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
 <span>  fast <span class="op">=</span> <span class="fu"><a href="../reference/ahr_fast.html">ahr_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, <span class="va">g_s</span>, control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tau</span>, side <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -439,6 +448,13 @@ of the computing time; when only the decisions at given nominal levels
 are needed, the <code>mc.alpha</code> argument of
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> restricts the integration to the p-values
 near those levels.</p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Dormuth, I., Pauly, M., Rauch, G., &amp; Herrmann, C. (2024). Sample
+size calculation under nonproportional hazards using average hazard
+ratios. <em>Biometrical Journal</em>, 66(6), e202300271.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -110,8 +110,10 @@ treated as the treatment group.</p></dd>
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
 <dd><p>1 for a one-sided test in the direction of treatment benefit
 (hazard ratio below 1, i.e. a negative coefficient) or 2 for a two-sided
-test (default 2). The reported p-value follows this choice; the confidence
-interval is always two-sided at <code>conf.level</code>.</p></dd>
+test (default 2). The returned vector has no p-value: <code>side</code> is
+stored as an attribute, and the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method reports the
+p-value that follows it. The confidence interval is always two-sided at
+<code>conf.level</code>.</p></dd>
 
 
 <dt id="arg-conf-level">conf.level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
@@ -125,7 +127,8 @@ level for the Wald interval. Defaults to 0.95.</p></dd>
 ascending order of <code>time</code> (with <code>strata</code>, sorted by stratum
 and by time within stratum, so that the rows of each stratum are
 contiguous), and the internal <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> call is skipped. If
-<code>FALSE</code> (default), sorting is handled internally.</p></dd>
+<code>FALSE</code> (default), sorting is handled internally.
+The order is checked, and an error is given when it does not hold.</p></dd>
 
 
 <dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
@@ -311,9 +314,9 @@ estimator. Manuscript under review.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr     min      lq      mean   median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast  25.068  29.660  45.45564  38.4125  43.1250 4226.194  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 676.385 704.838 742.53435 714.8330 729.1345 5609.421  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq       mean    median       uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   60.633   69.3645   81.19345   86.8575   89.802  213.939  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1510.229 1543.5160 1598.27914 1559.2855 1576.037 7105.983  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

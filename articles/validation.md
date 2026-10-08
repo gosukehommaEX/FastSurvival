@@ -80,8 +80,8 @@ data.frame(
 ## Log-rank test
 
 [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
-with `side = 1` returns a signed Z-score. Its square is the chi-square
-statistic from
+with `side = 1` returns the signed Z-score of the log-rank test (Mantel,
+1966). Its square is the chi-square statistic from
 [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html).
 
 ``` r
@@ -133,28 +133,32 @@ family, including the ordinary log-rank test recovered at
 ## Cox hazard ratio
 
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-returns the Pike-Halley Estimator, a closed-form approximation to the
-Cox partial likelihood maximizer. We report the log hazard ratio from
-both; the sign convention is the same and `side` does not affect the
-point estimate.
+returns the Pike-Halley Estimator (Homma, 2025), a closed-form
+approximation to the maximizer of the Cox partial likelihood with the
+Breslow method for ties. The reference is therefore
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) with
+`ties = "breslow"` (its default is the Efron method). We report the log
+hazard ratio from both; the sign convention is the same and `side` does
+not affect the point estimate.
 
 ``` r
 
 fast_hr <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                       control = 0, side = 1)
 
-ref_cox <- coxph(Surv(rfstime, status) ~ hormon, data = gbsg)
+ref_cox <- coxph(Surv(rfstime, status) ~ hormon, data = gbsg,
+                 ties = "breslow")
 
 c(fast = unclass(fast_hr)["coef"], cox = unname(coef(ref_cox)))
 #>  fast.coef        cox 
-#> -0.3638987 -0.3640099
+#> -0.3638987 -0.3638988
+cox_diff <- abs(unname(unclass(fast_hr)["coef"]) - unname(coef(ref_cox)))
 ```
 
 Because the Pike-Halley Estimator is a closed-form approximation rather
 than the exact partial-likelihood maximizer, the two log hazard ratios
-are not expected to be identical. They differ slightly, here in the
-fourth decimal place, which reflects the approximation and is not a sign
-of error.
+are not expected to be identical. Their absolute difference here is
+2.1e-09, which reflects the approximation and is not a sign of error.
 
 With `strata`,
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
@@ -181,8 +185,8 @@ c(fast = unclass(fast_hr_s)["coef"], cox = unname(coef(ref_cox_s)))
 ## Restricted mean survival time
 
 [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
-integrates the Kaplan-Meier survival curve up to a horizon. We compare
-the two-group RMST difference against
+integrates the Kaplan-Meier survival curve up to a horizon (Royston and
+Parmar, 2013). We compare the two-group RMST difference against
 [`survRM2::rmst2()`](https://rdrr.io/pkg/survRM2/man/rmst2.html) at 1000
 days.
 
@@ -208,9 +212,10 @@ c(fast = unclass(fast_rmst)["diff"],
 
 [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
 integrates the Kaplan-Meier curve between a lower and an upper window
-limit, generalizing the restricted mean survival time. CRAN has no
-dedicated WMST package, so we validate the per-group windowed area
-directly against a Kaplan-Meier step-function integral computed from
+limit, generalizing the restricted mean survival time (Paukner and
+Chappell, 2021). CRAN has no dedicated WMST package, so we validate the
+per-group windowed area directly against a Kaplan-Meier step-function
+integral computed from
 [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) over the
 same window. A full comparison against the `survWMST` package, which is
 distributed on GitHub, is provided in `tools/compare_wmst_survwmst.R` of
@@ -292,7 +297,9 @@ this vignette.
 
 [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
 compares Kaplan-Meier survival between two groups at a milestone
-timepoint. The per-group survival probabilities match those from
+timepoint, here with the complementary log-log intervals and the MOVER
+interval of the difference of Tang (2021). The per-group survival
+probabilities match those from
 [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html).
 
 ``` r
@@ -460,9 +467,9 @@ That external comparison is reproducible with the
 
 [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
 computes the max-combo test, the most extreme of a set of
-Fleming-Harrington weighted log-rank statistics. The `nph` package
-provides `logrank.maxtest()`, whose default weight set is FH(0, 0),
-FH(0, 1), and FH(1, 0). We request the same three weights from
+Fleming-Harrington weighted log-rank statistics (Karrison, 2016). The
+`nph` package provides `logrank.maxtest()`, whose default weight set is
+FH(0, 0), FH(0, 1), and FH(1, 0). We request the same three weights from
 [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
 and compare the component Z-scores. The individual Z-scores are kept in
 the `z` attribute, signed so that a negative value indicates benefit for

@@ -18,7 +18,8 @@ library(FastSurvival)
 
 ## Function families
 
-The package has two families of functions.
+The package has two families of functions. Collett (2014) gives the
+methodological background of the standard methods they implement.
 
 The estimation and testing functions operate on a single dataset and
 return an S3 object with a
@@ -28,7 +29,8 @@ evaluates the Kaplan-Meier estimate at a single time point.
 [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
 computes the log-rank test and its weighted and stratified variants.
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-returns a closed-form hazard ratio.
+returns a closed-form hazard ratio, the Pike-Halley Estimator (Homma,
+2025).
 [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
 returns the restricted mean survival time, and
 [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)

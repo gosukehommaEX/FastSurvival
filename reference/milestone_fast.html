@@ -6,7 +6,10 @@ methods are provided. The "wald" method uses the unpooled Greenwood
 variance directly. The "loglog" and "mover" methods build the
 confidence interval for the difference with the method of variance estimates
 recovery (MOVER), recovering the variance from the one-sample complementary
-log-log and log transformed confidence intervals respectively. See Tang
+log-log and log transformed confidence intervals respectively. When the
+estimate of a group is 0 or 1 at tau, its one-sample interval
+degenerates to the estimate, so the interval of the difference is still
+given; the "loglog" test statistic is then NA. See Tang
 (2021) for the MOVER difference interval and Tang (2022) for the use of
 milestone survival in trial design.'><meta property="og:description" content='Compares the Kaplan-Meier survival probabilities of two groups at a
 prespecified milestone timepoint. The point estimate of interest is the
@@ -15,7 +18,10 @@ methods are provided. The "wald" method uses the unpooled Greenwood
 variance directly. The "loglog" and "mover" methods build the
 confidence interval for the difference with the method of variance estimates
 recovery (MOVER), recovering the variance from the one-sample complementary
-log-log and log transformed confidence intervals respectively. See Tang
+log-log and log transformed confidence intervals respectively. When the
+estimate of a group is 0 or 1 at tau, its one-sample interval
+degenerates to the estimate, so the interval of the difference is still
+given; the "loglog" test statistic is then NA. See Tang
 (2021) for the MOVER difference interval and Tang (2022) for the use of
 milestone survival in trial design.'><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -72,7 +78,10 @@ methods are provided. The <code>"wald"</code> method uses the unpooled Greenwood
 variance directly. The <code>"loglog"</code> and <code>"mover"</code> methods build the
 confidence interval for the difference with the method of variance estimates
 recovery (MOVER), recovering the variance from the one-sample complementary
-log-log and log transformed confidence intervals respectively. See Tang
+log-log and log transformed confidence intervals respectively. When the
+estimate of a group is 0 or 1 at <code>tau</code>, its one-sample interval
+degenerates to the estimate, so the interval of the difference is still
+given; the <code>"loglog"</code> test statistic is then <code>NA</code>. See Tang
 (2021) for the MOVER difference interval and Tang (2022) for the use of
 milestone survival in trial design.</p>
     </div>
@@ -142,7 +151,8 @@ one of <code>"wald"</code>, <code>"loglog"</code>, or <code>"mover"</code>.</p><
 <dt id="arg-presorted">presorted<a class="anchor" aria-label="anchor" href="#arg-presorted"></a></dt>
 <dd><p>Logical. If <code>TRUE</code> the input is assumed to be sorted
 by <code>time</code> in ascending order and the internal sort is skipped. This
-is intended for repeated calls inside simulation loops.</p></dd>
+is intended for repeated calls inside simulation loops.
+The order is checked, and an error is given when it does not hold.</p></dd>
 
 </dl></div>
     <div class="section level2">

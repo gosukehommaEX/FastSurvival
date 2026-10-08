@@ -134,11 +134,11 @@ observed event time, <code>S(t) = 1</code> and the standard error is zero.</p>
 <p>The standard error is estimated by Greenwood's formula:</p>
 <p>SE[S(t)] = S(t) * sqrt(sum_{t_i &lt;= t, d_i &gt; 0} d_i / (n_i * (n_i - d_i)))</p>
 <p>where d_i is the number of events and n_i is the number at risk at time t_i.
-The output field <code>std.err</code> follows the convention of
-<code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>, which reports SE[S(t)] / S(t) (i.e., the
-standard error on the log scale) when <code>conf.type != "plain"</code>, and
-SE[S(t)] when <code>conf.type = "plain"</code>. This function always returns
-SE[S(t)] (the standard error on the survival scale).</p>
+The output field <code>std.err</code> is SE[S(t)], the standard error on the
+survival scale, which is the <code>std.err</code> reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+of a <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code> object. The <code>std.err</code> component
+of the <code>survfit</code> object itself is on the cumulative-hazard scale,
+SE[S(t)] / S(t), whatever <code>conf.type</code> is.</p>
 <p>When <code>S(t_eval) = 0</code> (all subjects have experienced the event by
 <code>t_eval</code>), the standard error is zero and the confidence interval
 collapses to <code>[0, 0]</code>, consistent with <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>.</p>

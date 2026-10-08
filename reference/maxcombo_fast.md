@@ -72,7 +72,8 @@ maxcombo_fast(
   A logical value. If `TRUE`, `time`, `event`, and `group` are assumed
   to be sorted in ascending order of `time`, and the internal
   [`order()`](https://rdrr.io/r/base/order.html) call is skipped. If
-  `FALSE` (default), sorting is handled internally.
+  `FALSE` (default), sorting is handled internally. The order is
+  checked, and an error is given when it does not hold.
 
 - abseps:
 

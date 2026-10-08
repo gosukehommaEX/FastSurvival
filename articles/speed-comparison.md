@@ -11,9 +11,19 @@ build-time limits. To reproduce the numbers, run the code blocks
 interactively. The same code is collected in the
 `tools/benchmark_speed.R` script of the package’s GitHub repository.
 
-The reported figures are median times from microbenchmark replicates on
-a single desktop machine. Absolute timings depend on hardware, sample
-size, and event rate, so the ratios matter more than the raw values.
+The reported figures are median times of 1,000 microbenchmark
+replicates, measured on 2026-09-29 with R 4.6.0 on Windows 11 (x86_64)
+for the data set of 500 subjects below, all of whom have an event. The
+FastSurvival functions are timed on presorted input, so the single sort
+of the data is excluded from their times, whereas the reference
+functions sort internally; in a simulation loop the sort is paid once
+per data set.
+[`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+computes a closed-form approximation of the Cox estimate (the
+Pike-Halley Estimator) rather than the iterative maximum partial
+likelihood estimate, so its row compares two estimators of the same
+quantity. Absolute timings depend on hardware, sample size, and event
+rate, so the ratios matter more than the raw values.
 
 ``` r
 
@@ -240,11 +250,11 @@ microbenchmark(
 ## ahr_fast vs AHR::ahrKM
 
 The Kalbfleisch-Prentice average hazard ratio is benchmarked against
-`ahrKM()` from the AHR package, the reference implementation used by
-Dormuth et al. (2024). Because AHR has been archived on CRAN, this
-benchmark is shown as a static block rather than a live chunk. Install
-AHR with `remotes::install_github("cran/AHR")` and run the block to
-reproduce it.
+`ahrKM()` from the AHR package, which Dormuth et al. (2024) used to
+compute the average hazard ratio. Because AHR has been archived on CRAN,
+this benchmark is shown as a static block rather than a live chunk.
+Install AHR with `remotes::install_github("cran/AHR")` and run the block
+to reproduce it.
 
 ``` r
 
@@ -313,3 +323,9 @@ the decisions at given nominal levels are needed, the `mc.alpha`
 argument of
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
 restricts the integration to the p-values near those levels.
+
+## References
+
+Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size
+calculation under nonproportional hazards using average hazard ratios.
+*Biometrical Journal*, 66(6), e202300271.

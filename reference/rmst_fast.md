@@ -6,9 +6,10 @@ returns the RMST with its Greenwood-type standard error and a Wald
 confidence interval. When a `group` is supplied, it additionally returns
 the two-group contrasts: the RMST difference (treatment minus control)
 and the RMST ratio (treatment over control), each with a standard error,
-confidence interval, and two-sided test. The C++ backend integrates the
-survival step function in a single scan and is reused once per group, so
-the function is suitable for simulation loops with `presorted = TRUE`.
+confidence interval, and test (one- or two-sided, following `side`). The
+C++ backend integrates the survival step function in a single scan and
+is reused once per group, so the function is suitable for simulation
+loops with `presorted = TRUE`.
 
 ## Usage
 
@@ -70,7 +71,8 @@ rmst_fast(
 
   A logical value. If `TRUE`, the inputs are assumed to be sorted in
   ascending order of `time`. If `FALSE` (default), sorting is handled
-  internally.
+  internally. The order is checked, and an error is given when it does
+  not hold.
 
 ## Value
 

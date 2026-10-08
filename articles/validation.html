@@ -153,9 +153,9 @@ at the same time (1000 days).</p>
 <div class="section level2">
 <h2 id="log-rank-test">Log-rank test<a class="anchor" aria-label="anchor" href="#log-rank-test"></a>
 </h2>
-<p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> with <code>side = 1</code> returns a
-signed Z-score. Its square is the chi-square statistic from
-<code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code>.</p>
+<p><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> with <code>side = 1</code> returns the
+signed Z-score of the log-rank test (Mantel, 1966). Its square is the
+chi-square statistic from <code><a href="https://rdrr.io/pkg/survival/man/survdiff.html" class="external-link">survdiff()</a></code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fast_lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
 <span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -200,24 +200,29 @@ weight family, including the ordinary log-rank test recovered at
 <div class="section level2">
 <h2 id="cox-hazard-ratio">Cox hazard ratio<a class="anchor" aria-label="anchor" href="#cox-hazard-ratio"></a>
 </h2>
-<p><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> returns the Pike-Halley Estimator, a
-closed-form approximation to the Cox partial likelihood maximizer. We
-report the log hazard ratio from both; the sign convention is the same
-and <code>side</code> does not affect the point estimate.</p>
+<p><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> returns the Pike-Halley Estimator (Homma,
+2025), a closed-form approximation to the maximizer of the Cox partial
+likelihood with the Breslow method for ties. The reference is therefore
+<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> with <code>ties = "breslow"</code> (its default is
+the Efron method). We report the log hazard ratio from both; the sign
+convention is the same and <code>side</code> does not affect the point
+estimate.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fast_hr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
 <span>                      control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ref_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
+<span><span class="va">ref_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span>,</span>
+<span>                 ties <span class="op">=</span> <span class="st">"breslow"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span>, cox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  fast.coef        cox </span></span>
-<span><span class="co">#&gt; -0.3638987 -0.3640099</span></span></code></pre></div>
+<span><span class="co">#&gt; -0.3638987 -0.3638988</span></span>
+<span><span class="va">cox_diff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Because the Pike-Halley Estimator is a closed-form approximation
 rather than the exact partial-likelihood maximizer, the two log hazard
-ratios are not expected to be identical. They differ slightly, here in
-the fourth decimal place, which reflects the approximation and is not a
-sign of error.</p>
+ratios are not expected to be identical. Their absolute difference here
+is 2.1e-09, which reflects the approximation and is not a sign of
+error.</p>
 <p>With <code>strata</code>, <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> approximates the
 stratified Cox model, in which each stratum has its own baseline hazard.
 Stratifying by tumor grade, the estimate is compared with
@@ -239,8 +244,8 @@ targets.</p>
 <h2 id="restricted-mean-survival-time">Restricted mean survival time<a class="anchor" aria-label="anchor" href="#restricted-mean-survival-time"></a>
 </h2>
 <p><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> integrates the Kaplan-Meier survival curve
-up to a horizon. We compare the two-group RMST difference against
-<code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code> at 1000 days.</p>
+up to a horizon (Royston and Parmar, 2013). We compare the two-group
+RMST difference against <code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code> at 1000 days.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">survRM2</span><span class="op">)</span></span>
 <span></span>
@@ -262,13 +267,13 @@ up to a horizon. We compare the two-group RMST difference against
 </h2>
 <p><code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> integrates the Kaplan-Meier curve between a
 lower and an upper window limit, generalizing the restricted mean
-survival time. CRAN has no dedicated WMST package, so we validate the
-per-group windowed area directly against a Kaplan-Meier step-function
-integral computed from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> over the same window. A
-full comparison against the <code>survWMST</code> package, which is
-distributed on GitHub, is provided in
-<code>tools/compare_wmst_survwmst.R</code> of the package’s GitHub
-repository.</p>
+survival time (Paukner and Chappell, 2021). CRAN has no dedicated WMST
+package, so we validate the per-group windowed area directly against a
+Kaplan-Meier step-function integral computed from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>
+over the same window. A full comparison against the
+<code>survWMST</code> package, which is distributed on GitHub, is
+provided in <code>tools/compare_wmst_survwmst.R</code> of the package’s
+GitHub repository.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tau1</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
 <span><span class="va">tau2</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
@@ -338,8 +343,10 @@ rather than in this vignette.</p>
 <h2 id="milestone-survival">Milestone survival<a class="anchor" aria-label="anchor" href="#milestone-survival"></a>
 </h2>
 <p><code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> compares Kaplan-Meier survival between
-two groups at a milestone timepoint. The per-group survival
-probabilities match those from <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>.</p>
+two groups at a milestone timepoint, here with the complementary log-log
+intervals and the MOVER interval of the difference of Tang (2021). The
+per-group survival probabilities match those from
+<code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code>.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tstar</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span></span>
@@ -488,15 +495,16 @@ repository.</p>
 <h2 id="max-combo-test">Max-combo test<a class="anchor" aria-label="anchor" href="#max-combo-test"></a>
 </h2>
 <p><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> computes the max-combo test, the most
-extreme of a set of Fleming-Harrington weighted log-rank statistics. The
-<code>nph</code> package provides <code>logrank.maxtest()</code>, whose
-default weight set is FH(0, 0), FH(0, 1), and FH(1, 0). We request the
-same three weights from <code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> and compare the
-component Z-scores. The individual Z-scores are kept in the
-<code>z</code> attribute, signed so that a negative value indicates
-benefit for the treatment group under the package convention. Because
-<code>nph</code> orients the contrast in the opposite direction, the
-signs are mirrored, so we compare absolute values.</p>
+extreme of a set of Fleming-Harrington weighted log-rank statistics
+(Karrison, 2016). The <code>nph</code> package provides
+<code>logrank.maxtest()</code>, whose default weight set is FH(0, 0),
+FH(0, 1), and FH(1, 0). We request the same three weights from
+<code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> and compare the component Z-scores. The
+individual Z-scores are kept in the <code>z</code> attribute, signed so
+that a negative value indicates benefit for the treatment group under
+the package convention. Because <code>nph</code> orients the contrast in
+the opposite direction, the signs are mirrored, so we compare absolute
+values.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rho</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">gamma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>

@@ -134,7 +134,8 @@ component and the test reduces to the ordinary log-rank test.</p></dd>
 <dd><p>A logical value. If <code>TRUE</code>, <code>time</code>, <code>event</code>,
 and <code>group</code> are assumed to be already sorted by ascending <code>time</code>,
 and the internal <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> call is skipped. If <code>FALSE</code> (default),
-sorting is handled internally.</p></dd>
+sorting is handled internally.
+The order is checked, and an error is given when it does not hold.</p></dd>
 
 </dl></div>
     <div class="section level2">

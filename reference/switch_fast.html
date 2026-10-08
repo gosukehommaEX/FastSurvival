@@ -134,10 +134,12 @@ switches. Defaults to 1.</p></dd>
 <dt id="arg-cutoff">cutoff<a class="anchor" aria-label="anchor" href="#arg-cutoff"></a></dt>
 <dd><p>Per-simulation calendar times at which switching opens, used
 with <code>when = "cutoff"</code> or <code>"later"</code>. Either a numeric vector with
-one element per simulated trial (in the order of the sorted distinct values
-of <code>data$sim</code>) or a one-column matrix from <code><a href="cutoff_fast.html">cutoff_fast</a></code>
-(rows matched by row names). <code>NA</code> disables switching in that
-simulated trial.</p></dd>
+one element per simulated trial or a one-column matrix from
+<code><a href="cutoff_fast.html">cutoff_fast</a></code>. As in the <code>cutoff.looks</code> argument of
+<code><a href="analysis_fast.html">analysis_fast</a></code>, the names of a vector (or the row names of a
+matrix) are matched to the values of <code>data$sim</code>; without names the
+elements are taken in the order of the sorted distinct values of
+<code>data$sim</code>. <code>NA</code> disables switching in that simulated trial.</p></dd>
 
 
 <dt id="arg-delay">delay<a class="anchor" aria-label="anchor" href="#arg-delay"></a></dt>
@@ -215,9 +217,10 @@ from accrual to the switch) record the switches. The columns <code>sim</code>,
     illness-death data only.</p></li>
 </ul><p>A subject of the selected <code>group</code> switches with probability
 <code>prob</code> when the switch occurs before the terminal event and before
-dropout (<code>s &lt; e2_surv_time</code> and <code>s &lt; dropout_time</code>, or
-<code>s &lt; surv_time</code> for single-endpoint data) and the subject has not
-already switched. With <code>when = "cutoff"</code> or <code>"later"</code>, the switch
+dropout (<code>s &lt; e2_surv_time</code>, or <code>s &lt; surv_time</code> for
+single-endpoint data, and <code>s &lt; dropout_time</code>) and the subject has not
+already switched (<code>switched == 1</code>, for example at progression through
+the <code>switch.prop</code> argument of <code><a href="simdata_fast.html">simdata_fast</a></code>). With <code>when = "cutoff"</code> or <code>"later"</code>, the switch
 never occurs before the opening time, so every outcome observed by calendar
 time <code>cutoff + delay</code> is left unchanged; subjects accrued after the
 opening are also eligible, as in a protocol that opens crossover from that

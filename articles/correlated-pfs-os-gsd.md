@@ -5,8 +5,9 @@
 Many confirmatory oncology trials test progression-free survival (PFS)
 as the primary endpoint and overall survival (OS) as a key secondary
 endpoint, with the two endpoints tested in a fixed sequence to control
-the family-wise error rate. Because every PFS event is a death or a
-progression and every death is also a PFS event, the two endpoints are
+the family-wise error rate. A PFS event is a progression or a death, so
+a death before progression is an event for both endpoints, and the OS
+time is never shorter than the PFS time. The two endpoints are therefore
 positively correlated, and that correlation is needed to characterize
 the operating characteristics of the sequential procedure.
 
@@ -249,6 +250,14 @@ they are negated to match the natural sign of `logrank.z`, where
 treatment benefit is a negative value. The first look carries a
 non-binding futility rule on PFS, expressed as a threshold on the
 standardized statistic.
+
+The OS information fractions are planning values: they come from the
+mean OS event counts simulated under the alternative hypothesis, whereas
+a trial would use the observed counts at each analysis. This vignette
+evaluates power under the alternative only; the family-wise error rate
+of the hierarchical procedure would be checked by a further simulation
+under the null hypothesis for both endpoints (equal transition hazards
+in the two groups).
 
 ``` r
 

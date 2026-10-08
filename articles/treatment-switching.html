@@ -89,7 +89,7 @@ Switching leaves the outcomes observed before the switch unchanged and
 alters only what happens afterward, typically prolonging the remaining
 overall survival (OS) of the switchers and diluting the
 intention-to-treat comparison of OS.</p>
-<p>The TrialSimulator package expresses such designs with
+<p>The TrialSimulator package (Zhang, 2026) expresses such designs with
 <code>regimen()</code> (a switching rule fixed at enrollment) and
 <code>crossover()</code> (a switch that opens at a milestone), and runs
 the simulated trials one at a time. Because a switch never rewrites the
@@ -273,7 +273,7 @@ scenario, runs in a few seconds.</p>
 <span>  <span class="va">r1</span>  <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">d1</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.326   0.022   0.347</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.436   0.023   0.459</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="a-check-with-the-rank-preserving-structural-failure-time-model">A check with the rank-preserving structural failure time model<a class="anchor" aria-label="anchor" href="#a-check-with-the-rank-preserving-structural-failure-time-model"></a>
@@ -288,8 +288,8 @@ value. The check below simulates 10 large trials in which the
 experimental group has all transition hazards divided by <code>f</code>
 (an accelerated failure time effect of <code>f</code>), lets 60 percent
 of the control patients who progress switch with the same factor, and
-estimates <code>psi</code> in each trial with the rpsftm package,
-ignoring censoring.</p>
+estimates <code>psi</code> in each trial with the rpsftm package
+(Allison, White, and Bond, 2017), ignoring censoring.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f</span>   <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
 <span><span class="va">h01</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fl">8</span></span>
@@ -353,6 +353,9 @@ approach.</p>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Allison, A., White, I. R., &amp; Bond, S. (2017). rpsftm: an R
+package for rank preserving structural failure time models. <em>The R
+Journal</em>, 9(2), 342-353.</p>
 <p>Robins, J. M. and Tsiatis, A. A. (1991). Correcting for
 non-compliance in randomized trials using rank preserving structural
 failure time models. <em>Communications in Statistics - Theory and

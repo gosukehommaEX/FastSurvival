@@ -107,8 +107,8 @@ experimental arms), runs the two pairwise log-rank tests, and reports
 the operating characteristics of the screening design under a Bonferroni
 correction, including the disjunctive power of finding at least one
 winning arm and the probability of selecting the truly better
-experimental arm. It then confirms empirically that the family-wise
-error rate is controlled under the global null.</p>
+experimental arm. It then estimates the family-wise error rate under the
+global null and compares it with its normal approximation.</p>
 </div>
 <div class="section level2">
 <h2 id="design-parameters">Design parameters<a class="anchor" aria-label="anchor" href="#design-parameters"></a>
@@ -364,22 +364,41 @@ the nominal family-wise level.</p>
 <span><span class="co"># One column per contrast; the rows of each arm are ordered by simulation.</span></span>
 <span><span class="va">P0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">exp_arms</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="va">pw0</span><span class="op">$</span><span class="va">logrank.p</span><span class="op">[</span><span class="va">pw0</span><span class="op">$</span><span class="va">arm</span> <span class="op">==</span> <span class="va">k</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">pce_hat</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">P0</span> <span class="op">&lt;=</span> <span class="va">alpha_total</span><span class="op">)</span></span>
+<span><span class="va">fwer_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">P0</span> <span class="op">&lt;=</span> <span class="va">thr_bonferroni</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co"># Normal approximation with the shared-control correlation of one half.</span></span>
+<span><span class="va">fwer_nrm</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu">mvtnorm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">pmvnorm</a></span><span class="op">(</span></span>
+<span>  upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">thr_bonferroni</span><span class="op">)</span>, <span class="va">n_contrast</span><span class="op">)</span>,</span>
+<span>  corr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="va">n_contrast</span>, <span class="va">n_contrast</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="va">n_contrast</span><span class="op">)</span>,</span>
+<span>  algorithm <span class="op">=</span> <span class="fu">mvtnorm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">TVPACK</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Per-contrast type I error (nominal)"</span>,</span>
-<span>               <span class="st">"Family-wise error, Bonferroni"</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">P0</span> <span class="op">&lt;=</span> <span class="va">alpha_total</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">P0</span> <span class="op">&lt;=</span> <span class="va">thr_bonferroni</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Per-contrast type I error (nominal 0.025)"</span>,</span>
+<span>               <span class="st">"Family-wise error, Bonferroni"</span>,</span>
+<span>               <span class="st">"Family-wise error, Bonferroni (normal approximation)"</span><span class="op">)</span>,</span>
+<span>  estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pce_hat</span>, <span class="va">fwer_hat</span>, <span class="va">fwer_nrm</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  mc.se    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">pce_hat</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">pce_hat</span><span class="op">)</span> <span class="op">/</span> <span class="va">nsim</span><span class="op">)</span>,</span>
+<span>                     <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">fwer_hat</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">fwer_hat</span><span class="op">)</span> <span class="op">/</span> <span class="va">nsim</span><span class="op">)</span>, <span class="cn">NA</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;                              quantity value</span></span>
-<span><span class="co">#&gt; 1 Per-contrast type I error (nominal) 0.024</span></span>
-<span><span class="co">#&gt; 2       Family-wise error, Bonferroni 0.022</span></span></code></pre></div>
-<p>The per-contrast error is near the nominal one-sided level, and the
-Bonferroni family-wise error is at or below the target, confirming that
-the screening rule controls the error rate. A Dunnett procedure would
-recover some of the conservatism by using the shared-control
-correlation, at the cost of the closed-form simplicity of the Bonferroni
-threshold.</p>
+<span><span class="co">#&gt;                                               quantity estimate  mc.se</span></span>
+<span><span class="co">#&gt; 1            Per-contrast type I error (nominal 0.025)   0.0243 0.0034</span></span>
+<span><span class="co">#&gt; 2                        Family-wise error, Bonferroni   0.0220 0.0033</span></span>
+<span><span class="co">#&gt; 3 Family-wise error, Bonferroni (normal approximation)   0.0232     NA</span></span></code></pre></div>
+<p>The column <code>mc.se</code> is the Monte Carlo standard error of
+each estimate (for the per-contrast error, which pools the two
+correlated contrasts, it is an upper bound). The per-contrast error is
+near the nominal one-sided level, and the Bonferroni family-wise error
+agrees with its normal approximation, which lies below the target
+because the Bonferroni threshold ignores the positive correlation, to
+within two Monte Carlo standard errors. With 2,000 trials the simulation
+cannot by itself resolve differences of a few thousandths, so the
+guarantee that the family-wise error does not exceed the target comes
+from the Bonferroni inequality, and the simulation confirms that the
+implementation is consistent with it. A Dunnett procedure would recover
+some of the conservatism by using the shared-control correlation, at the
+cost of the closed-form simplicity of the Bonferroni threshold.</p>
 </div>
 <div class="section level2">
 <h2 id="remarks">Remarks<a class="anchor" aria-label="anchor" href="#remarks"></a>

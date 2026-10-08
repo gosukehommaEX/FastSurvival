@@ -186,10 +186,10 @@ simdata_fast(
 
 - switch.prop:
 
-  Probability that a subject with an intermediate event switches
-  treatment, a scalar or a two-element list (control, treatment).
-  Defaults to zero (no switching); the treatment group is typically left
-  at zero.
+  Probability that a subject whose intermediate event is observed (on or
+  before dropout) switches treatment at that event, a scalar or a
+  two-element list (control, treatment). Defaults to zero (no
+  switching); the treatment group is typically left at zero.
 
 - h12.switch.hazard:
 
@@ -234,7 +234,13 @@ illness-death model the columns are instead `sim`, `group`,
 `e2_calendar_time`, `intermediate`, `switched`, and `switch_time`, where
 `e1` is the first (state-0 exit) endpoint and `e2` is the terminal
 endpoint. In oncology `e1` is progression-free survival, `e2` is overall
-survival, and `intermediate` flags progression.
+survival, and `intermediate` flags progression. The column
+`intermediate` describes the latent process (an intermediate event
+before the terminal event, `e1_surv_time < e2_surv_time`), also when it
+would occur after dropout; the observed intermediate event is
+`intermediate == 1` with `e1_event == 1`. A switch (`switched == 1`, at
+`switch_time`, the intermediate-event time) occurs only after an
+observed intermediate event.
 
 ## Details
 
@@ -242,6 +248,12 @@ For each subject the observed time-to-event is
 `tte = pmin(surv_time, dropout_time)` and `event` is 1 when the survival
 time occurs first. The calendar time of the observed event is
 `accrual_time + tte`.
+
+A hazard of zero in the last piece (for example a cure fraction, as in
+`e.hazard = c(0.1, 0)` with `e.time = c(0, 24, Inf)`) gives an infinite
+latent time to some subjects. A subject with neither a finite survival
+time nor a finite dropout time has `tte = Inf` and `event = 0`, and an
+analysis at a finite cutoff censors the subject at the cutoff.
 
 The total enrolled is fixed at `sum(n)`. With `a.rate` the rates are
 absolute (subjects per unit time): when the accrual period is fully
@@ -283,10 +295,11 @@ per cell of that group. So with subgroups and a scalar `n`,
 unless `alloc` is supplied, in which case it means per-group hazards. In
 a two-group simulation each specification is either shared by both
 groups (not a list) or a list of length two (control first), and each
-group's element may be a per-cell list when there are subgroups. The
-breakpoints `e.time` and `d.time` follow the same structure (per group
-in a two-group simulation, per cell in a one-group simulation with
-subgroups).
+group's element may be a per-cell list when there are subgroups. Without
+subgroups, a length-two `n` requires at least one of the survival and
+dropout specifications to be such a list. The breakpoints `e.time` and
+`d.time` follow the same structure (per group in a two-group simulation,
+per cell in a one-group simulation with subgroups).
 
 When `n` is a vector of length greater than two together with a per-arm
 survival list, the simulation is a multi-arm trial. Each arm is

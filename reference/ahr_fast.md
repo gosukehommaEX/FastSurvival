@@ -67,7 +67,8 @@ ahr_fast(
 
   if `TRUE`, assume `time` is already sorted in ascending order so that
   each group's observations are also ascending; this skips the internal
-  sort (default `FALSE`)
+  sort (default `FALSE`) The order is checked, and an error is given
+  when it does not hold.
 
 ## Value
 

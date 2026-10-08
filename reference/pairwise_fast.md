@@ -132,7 +132,13 @@ per-simulation calendar cutoffs, for example those returned by
 [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
 for a combination of event and calendar-time rules. A look that is not
 reached in a simulation (`NA` cutoff) is marked with `reached = FALSE`
-and `NA` counts and statistics, as in the event-driven regime.
+and `NA` counts and statistics, as in the event-driven regime. This
+differs from
+[`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+which analyzes the full data at an unreached look; in
+[`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+an unreached look of `pairwise_fast` output therefore never crosses a
+boundary.
 
 The Bonferroni option multiplies each p-value by the number of contrasts
 and caps it at one, controlling the family-wise error rate across the

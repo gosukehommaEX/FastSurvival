@@ -272,9 +272,9 @@ rows. When `by.subgroup = TRUE`, it has
 `sim`, `look` (1-based look index), `look.value` (the requested event
 count or calendar time, or the `"look.value"` attribute of
 `cutoff.looks`), optionally `population`, `cutoff` (the calendar time
-used, `NA` when an event target was not reached), `reached`,
-`n.enrolled`, `n.event`, `n.dropout` (the number of enrolled subjects
-whose dropout occurred on or before the cutoff) and `n.pipeline`
+used, `NA` when the look was not reached), `reached`, `n.enrolled`,
+`n.event`, `n.dropout` (the number of enrolled subjects whose dropout
+occurred on or before the cutoff) and `n.pipeline`
 (`n.enrolled - n.event - n.dropout`, the subjects still in follow-up at
 the cutoff), followed by the columns of the requested statistics. A
 statistic that cannot be computed for a row (no events, or an empty
@@ -337,7 +337,10 @@ survival), by a subset of the subjects, or by a combination of event and
 calendar-time rules. A missing or infinite entry marks a look whose
 trigger was not met in that simulation: as for an unreached
 `event.looks` target, the full data are used, `reached` is `FALSE`, and
-`cutoff` is `NA`.
+`cutoff` is `NA`. In contrast,
+[`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+reports `NA` counts and statistics for an unreached look, because its
+contrasts share one cutoff and have no common final data.
 
 Exactly one of `event.looks`, `time.looks`, and `cutoff.looks` must be
 supplied.
@@ -425,6 +428,9 @@ survival). For `"wald"` and `"mover"` a positive Z favors treatment; for
 transforms, so a negative Z favors treatment, and the one-sided p-value
 is the lower tail as in
 [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+When the Kaplan-Meier estimate of a group is 0 or 1 at `tau`, its
+one-sample interval degenerates to the estimate, so the interval of the
+difference is still reported, while the `"loglog"` statistic is `NA`.
 
 The `"rmw"` statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a

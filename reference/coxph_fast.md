@@ -51,8 +51,10 @@ coxph_fast(
 
   1 for a one-sided test in the direction of treatment benefit (hazard
   ratio below 1, i.e. a negative coefficient) or 2 for a two-sided test
-  (default 2). The reported p-value follows this choice; the confidence
-  interval is always two-sided at `conf.level`.
+  (default 2). The returned vector has no p-value: `side` is stored as
+  an attribute, and the [`print()`](https://rdrr.io/r/base/print.html)
+  method reports the p-value that follows it. The confidence interval is
+  always two-sided at `conf.level`.
 
 - conf.level:
 
@@ -66,7 +68,8 @@ coxph_fast(
   sorted by stratum and by time within stratum, so that the rows of each
   stratum are contiguous), and the internal
   [`order()`](https://rdrr.io/r/base/order.html) call is skipped. If
-  `FALSE` (default), sorting is handled internally.
+  `FALSE` (default), sorting is handled internally. The order is
+  checked, and an error is given when it does not hold.
 
 - strata:
 
@@ -268,8 +271,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr     min      lq      mean   median       uq      max neval cld
-#>  coxph_fast  25.068  29.660  45.45564  38.4125  43.1250 4226.194  1000  a 
-#>       coxph 676.385 704.838 742.53435 714.8330 729.1345 5609.421  1000   b
+#>        expr      min        lq       mean    median       uq      max neval cld
+#>  coxph_fast   60.633   69.3645   81.19345   86.8575   89.802  213.939  1000  a 
+#>       coxph 1510.229 1543.5160 1598.27914 1559.2855 1576.037 7105.983  1000   b
 # }
 ```

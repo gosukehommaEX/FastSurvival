@@ -65,11 +65,14 @@ switch_fast(
 
   Per-simulation calendar times at which switching opens, used with
   `when = "cutoff"` or `"later"`. Either a numeric vector with one
-  element per simulated trial (in the order of the sorted distinct
-  values of `data$sim`) or a one-column matrix from
-  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
-  (rows matched by row names). `NA` disables switching in that simulated
-  trial.
+  element per simulated trial or a one-column matrix from
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+  As in the `cutoff.looks` argument of
+  [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+  the names of a vector (or the row names of a matrix) are matched to
+  the values of `data$sim`; without names the elements are taken in the
+  order of the sorted distinct values of `data$sim`. `NA` disables
+  switching in that simulated trial.
 
 - delay:
 
@@ -153,9 +156,12 @@ The switch time `s`, measured from accrual, is
 
 A subject of the selected `group` switches with probability `prob` when
 the switch occurs before the terminal event and before dropout
-(`s < e2_surv_time` and `s < dropout_time`, or `s < surv_time` for
-single-endpoint data) and the subject has not already switched. With
-`when = "cutoff"` or `"later"`, the switch never occurs before the
+(`s < e2_surv_time`, or `s < surv_time` for single-endpoint data, and
+`s < dropout_time`) and the subject has not already switched
+(`switched == 1`, for example at progression through the `switch.prop`
+argument of
+[`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)).
+With `when = "cutoff"` or `"later"`, the switch never occurs before the
 opening time, so every outcome observed by calendar time
 `cutoff + delay` is left unchanged; subjects accrued after the opening
 are also eligible, as in a protocol that opens crossover from that time

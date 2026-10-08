@@ -235,8 +235,10 @@ and `e.time` and keep everything else the same. The log-rank statistic
 loses power under a delayed effect, and a weighted or max-combo
 statistic (Lin et al., 2020) can be substituted at the
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-step. Because gsDesign cannot evaluate these cases in closed form, the
-simulation machinery becomes the tool of choice.
+step. Analytic approximations exist for some non-proportional hazards
+settings and some of these tests, but simulation evaluates any
+combination of data-generating model, test, and analysis timing in the
+same way, and it checks such approximations.
 
 The max-combo p-value requires a multivariate normal integral for every
 simulated trial and look, which dominates the computing time. When only

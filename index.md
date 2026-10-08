@@ -14,6 +14,8 @@ overhead of
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) becomes a
 computational bottleneck. Core computations are implemented in C++ via
 [Rcpp](https://cran.r-project.org/package=Rcpp) for maximum performance.
+Collett (2014) gives the methodological background of the standard
+methods.
 
 The full documentation site, including function references and articles,
 is available at <https://gosukehommaEX.github.io/FastSurvival/>.
@@ -173,26 +175,29 @@ plus [`summary()`](https://rdrr.io/r/base/summary.html) when the same
 sorted data are evaluated repeatedly at a fixed landmark time inside a
 simulation loop.
 
-**survdiff_fast** computes the log-rank statistic using a two-pointer
-merge scan over the pooled sorted data, walking the time axis once while
-maintaining per-group at-risk counters and processing tied event times
-atomically. The C++ backend avoids the rank construction,
-[`tabulate()`](https://rdrr.io/r/base/tabulate.html), and reverse
-cumulative sum operations of the standard R implementation, and the
-function itself bypasses the S3 object construction and formula parsing
-of [`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html).
-Beyond the ordinary unweighted test, it supports the Fleming-Harrington,
+**survdiff_fast** computes the log-rank statistic (Mantel, 1966) using a
+two-pointer merge scan over the pooled sorted data, walking the time
+axis once while maintaining per-group at-risk counters and processing
+tied event times atomically. The C++ backend avoids the rank
+construction, [`tabulate()`](https://rdrr.io/r/base/tabulate.html), and
+reverse cumulative sum operations of the standard R implementation, and
+the function itself bypasses the S3 object construction and formula
+parsing of
+[`survdiff()`](https://rdrr.io/pkg/survival/man/survdiff.html). Beyond
+the ordinary unweighted test, it supports the Fleming-Harrington,
 modestly-weighted, Gehan-Breslow, and Tarone-Ware weighted tests, as
 well as stratified and stratified-weighted variants, all sharing the
 same single-scan backend.
 
 **coxph_fast** implements the Pike-Halley Estimator proposed by Homma
 (2025), a closed-form approximation to the Cox partial likelihood
-maximizer. The estimator anchors at the Pike closed-form estimate and
-applies a single analytic Halley correction to the Cox score, giving
-residual error of order O_p(n^{-3/2}) relative to the Cox maximum
-likelihood estimate. On the `pharmacoSmoking` dataset (tie rate 77.5%),
-the Pike-Halley Estimator reproduces the Breslow-based Cox estimate to
+maximizer. The estimator anchors at the Pike closed-form estimate, the
+ratio of the observed-to-expected event ratios of the two groups from
+the log-rank computation (Berry, Kitchin, and Mock, 1991), and applies a
+single analytic Halley correction to the Cox score, giving residual
+error of order O_p(n^{-3/2}) relative to the Cox maximum likelihood
+estimate. On the `pharmacoSmoking` dataset (tie rate 77.5%), the
+Pike-Halley Estimator reproduces the Breslow-based Cox estimate to
 within on the order of 1e-08. The Wald confidence interval uses the
 observed information at the Pike anchor as the variance estimate. The
 C++ backend performs group splitting, at-risk counting, and
@@ -202,11 +207,11 @@ and information are summed over strata, which approximates the
 stratified Cox model `coxph(... + strata(s), ties = "breslow")`.
 
 **rmst_fast** integrates the Kaplan-Meier survival step function up to a
-horizon in a single C++ scan, reused once per group. With a single group
-it returns the RMST with a Greenwood-type standard error and a Wald
-confidence interval; with two groups it adds the RMST difference and
-ratio contrasts, each with a standard error, confidence interval, and
-two-sided test.
+horizon (Royston and Parmar, 2013) in a single C++ scan, reused once per
+group. With a single group it returns the RMST with a Greenwood-type
+standard error and a Wald confidence interval; with two groups it adds
+the RMST difference and ratio contrasts, each with a standard error,
+confidence interval, and test.
 
 **wmst_fast** computes the window mean survival time, the area under the
 Kaplan-Meier curve between a lower and an upper window limit,
@@ -217,7 +222,7 @@ following Paukner and Chappell (2021). The same single C++ scan as
 `rmst_fast` accumulates the windowed area and a Greenwood-type variance
 in which each event time contributes its squared remaining window area.
 With two groups it reports the difference (treatment minus control) with
-a standard error, confidence interval, and two-sided test.
+a standard error, confidence interval, and test.
 
 **milestone_fast** compares the Kaplan-Meier survival probabilities of
 two groups at a prespecified milestone timepoint, estimating the
@@ -234,17 +239,19 @@ variance of a quantile depends on the local hazard, two variance methods
 are provided: a native method using a kernel-smoothed hazard with a
 Greenwood increment, and an `nph`-compatible method using a local
 constant hazard, which reproduces the standard error and p-value of the
-median comparison in the `nph` package to numerical precision. The point
-estimate is the same under both methods.
+median comparison in the `nph` package to numerical precision when the
+Kaplan-Meier and Nelson-Aalen medians coincide (the usual case). The
+point estimate is the same under both methods.
 
 **maxcombo_fast** computes the max-combo test, the maximum over a set of
 Fleming-Harrington weighted log-rank statistics, for comparing survival
-under non-proportional hazards. The C++ backend evaluates every weighted
-numerator and the full between-scheme covariance matrix in a single
-scan, and the p-value follows from the implied multivariate normal
-distribution. Taking the most extreme of several complementary weights
-makes the test robust to the shape of the hazard difference, with the
-multiplicity accounted for through the joint distribution.
+under non-proportional hazards (Karrison, 2016; Lin et al., 2020). The
+C++ backend evaluates every weighted numerator and the full
+between-scheme covariance matrix in a single scan, and the p-value
+follows from the implied multivariate normal distribution. Taking the
+most extreme of several complementary weights makes the test robust to
+the shape of the hazard difference, with the multiplicity accounted for
+through the joint distribution.
 
 **rmw_fast** computes the robust modestly-weighted (rMW) test of Magirr
 and Öhrn (2026), the maximum of the standard log-rank statistic and a
@@ -446,20 +453,28 @@ res <- analysis_fast(
   stat = "logrank", side = 1
 )
 
-# 3. Summarize operating characteristics against efficacy boundaries
-#    (nominal levels from a group-sequential design, e.g. gsDesign)
+# 3. Summarize operating characteristics against efficacy boundaries:
+#    nominal one-sided levels of Lan-DeMets O'Brien-Fleming-type spending
+#    (one-sided alpha 0.025) at 300 and 450 events, from
+#    gsDesign::gsDesign(k = 2, test.type = 1, timing = 300 / 450,
+#                       sfu = gsDesign::sfLDOF)
 oc <- simsummary_fast(
   res,
   p.col = "logrank.p",
-  alpha = c(0.0006, 0.0238)
+  alpha = c(0.0060, 0.0231)
 )
 oc
 ```
 
-The estimation functions can also be used directly inside a loop. Each
-returned object is internally a numeric vector, so after stripping the
-class with [`unclass()`](https://rdrr.io/r/base/class.html) the
-per-simulation results can be combined with
+The estimation functions can also be used directly inside a loop. Except
+for
+[`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+and
+[`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+which return lists, each returned object is internally a numeric vector,
+so after stripping the class with
+[`unclass()`](https://rdrr.io/r/base/class.html) the per-simulation
+results can be combined with
 [`rbind()`](https://rdrr.io/r/base/cbind.html) into an ordinary numeric
 matrix:
 

@@ -344,7 +344,7 @@ integration only when the Bonferroni bounds do not decide the comparison
   columns are <code>sim</code>, <code>look</code> (1-based look index),
   <code>look.value</code> (the requested event count or calendar time, or the
   <code>"look.value"</code> attribute of <code>cutoff.looks</code>), optionally <code>population</code>, <code>cutoff</code> (the
-  calendar time used, <code>NA</code> when an event target was not reached),
+  calendar time used, <code>NA</code> when the look was not reached),
   <code>reached</code>, <code>n.enrolled</code>, <code>n.event</code>, <code>n.dropout</code> (the
   number of enrolled subjects whose dropout occurred on or before the cutoff)
   and <code>n.pipeline</code> (<code>n.enrolled - n.event - n.dropout</code>, the
@@ -412,7 +412,10 @@ of progression-free survival), by a subset of the subjects, or by a
 combination of event and calendar-time rules. A missing or infinite entry
 marks a look whose trigger was not met in that simulation: as for an
 unreached <code>event.looks</code> target, the full data are used, <code>reached</code>
-is <code>FALSE</code>, and <code>cutoff</code> is <code>NA</code>.</p>
+is <code>FALSE</code>, and <code>cutoff</code> is <code>NA</code>. In contrast,
+<code><a href="pairwise_fast.html">pairwise_fast</a></code> reports <code>NA</code> counts and statistics for an
+unreached look, because its contrasts share one cutoff and have no common
+final data.</p>
 <p>Exactly one of <code>event.looks</code>, <code>time.looks</code>, and
 <code>cutoff.looks</code> must be supplied.</p>
 <p>The statistics are selected with <code>stat</code>, which may name one or more of
@@ -486,7 +489,10 @@ is a positive difference (higher treatment survival). For <code>"wald"</code> an
 <code>"mover"</code> a positive Z favors treatment; for <code>"loglog"</code> the
 statistic is the difference of the complementary log-log transforms, so a
 negative Z favors treatment, and the one-sided p-value is the lower tail as
-in <code><a href="milestone_fast.html">milestone_fast</a></code>.</p>
+in <code><a href="milestone_fast.html">milestone_fast</a></code>. When the Kaplan-Meier estimate of a group
+is 0 or 1 at <code>tau</code>, its one-sample interval degenerates to the
+estimate, so the interval of the difference is still reported, while the
+<code>"loglog"</code> statistic is <code>NA</code>.</p>
 <p>The <code>"rmw"</code> statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a single
 modestly-weighted component with survival-threshold <code>s_star</code>. Its

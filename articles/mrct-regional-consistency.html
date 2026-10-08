@@ -105,16 +105,16 @@ its information accrues on a different calendar. When the assumptions
 behind the closed-form formulas no longer hold, simulation is the
 natural way to obtain the consistency probabilities.</p>
 <p>FastSurvival does not provide a regional-consistency function, and it
-is not meant to: three-or-more-region designs and consistency criteria
-are outside its scope. What it does provide are fast, validated building
-blocks. This vignette shows that the existing simulation trio,
-<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>, <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>, and
-<code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>, can be composed to evaluate the
-conditional regional consistency probabilities of Method 1 and Method 2
-at every interim and final analysis, under a group-sequential design
-with a late-enrolling region. The only piece written by hand is a short
-post-processing layer in base R that applies the consistency criteria to
-the per-region estimates the trio returns.</p>
+is not meant to: consistency criteria are outside its scope. What it
+does provide are fast, validated building blocks. This vignette shows
+that the existing simulation trio, <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>,
+<code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>, and <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code>, can be
+composed to evaluate the conditional regional consistency probabilities
+of Method 1 and Method 2 at every interim and final analysis, under a
+group-sequential design with a late-enrolling region. The only piece
+written by hand is a short post-processing layer in base R that applies
+the consistency criteria to the per-region estimates the trio
+returns.</p>
 </div>
 <div class="section level2">
 <h2 id="the-two-criteria">The two criteria<a class="anchor" aria-label="anchor" href="#the-two-criteria"></a>
@@ -122,9 +122,9 @@ the per-region estimates the trio returns.</p>
 <p>Write the estimated treatment effect on the hazard-reduction scale,
 that is <code>1 - HR</code> for the entire trial population and
 <code>1 - HR_s</code> for region <code>s</code>, where a positive value
-indicates benefit (this is the survival-endpoint formulation of Teng et
-al., 2018). The region of interest is region 1, and <code>pi</code> is
-the effect-retention fraction, conventionally <code>0.5</code>.</p>
+indicates benefit. The region of interest is region 1, and
+<code>pi</code> is the effect-retention fraction, conventionally
+<code>0.5</code>.</p>
 <p>Method 1 asks that region 1 retain at least a fraction
 <code>pi</code> of the overall effect,
 <code>(1 - HR_1) &gt; pi * (1 - HR)</code>. Method 2 asks that the
@@ -363,17 +363,17 @@ are undefined (<code>NA</code>, a zero-over-zero ratio).
 <code>Analysis_time</code> is the mean calendar time of the look itself,
 taken over all trials, and so is reported at every look. At the later
 looks the table gives, per analysis, the conditional regional
-consistency probability for each method. Method 2 is the looser
-criterion and so its conditional probability runs higher than Method 1’s
-at both efficacy looks. For each method the conditional consistency is
-comparable at the two efficacy looks, if anything slightly higher at the
-interim, because the trials that cross the stringent interim efficacy
-boundary are enriched for a strong overall effect, which also makes the
-regional criteria more likely to be met. This calendar-driven behavior,
-together with the late-starting region 1 whose events accrue on a
-different schedule, is exactly what the closed-form formulas, which
-assume a single final analysis and simultaneous accrual, cannot
-capture.</p>
+consistency probability for each method. Neither criterion implies the
+other; in this design the conditional probability of Method 2 is higher
+than that of Method 1 at both efficacy looks. For each method the
+conditional consistency is comparable at the two efficacy looks, if
+anything slightly higher at the interim, because the trials that cross
+the stringent interim efficacy boundary are enriched for a strong
+overall effect, which also makes the regional criteria more likely to be
+met. This calendar-driven behavior, together with the late-starting
+region 1 whose events accrue on a different schedule, is exactly what
+the closed-form formulas, which assume a single final analysis and
+simultaneous accrual, cannot capture.</p>
 </div>
 <div class="section level2">
 <h2 id="tying-back-to-the-trio-standard-operating-characteristics">Tying back to the trio: standard operating characteristics<a class="anchor" aria-label="anchor" href="#tying-back-to-the-trio-standard-operating-characteristics"></a>
@@ -425,8 +425,8 @@ power and the expected information and calendar time at stopping.</p>
 <h2 id="notes-and-extensions">Notes and extensions<a class="anchor" aria-label="anchor" href="#notes-and-extensions"></a>
 </h2>
 <p>The hazard ratio used for the consistency criteria is the Cox
-estimate from <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>. To use the log-scale criterion
-of Teng et al. (2018) instead, replace <code>cox.hr</code> with
+estimate from <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>. To use a criterion on the log
+hazard ratio scale instead, replace <code>cox.hr</code> with
 <code>cox.coef</code> and test
 <code>cox.coef_1 &lt; PI * cox.coef_overall</code> for Method 1 and
 <code>cox.coef_s &lt; 0</code> for all regions for Method 2. The

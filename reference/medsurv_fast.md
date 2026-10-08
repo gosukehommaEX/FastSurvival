@@ -75,7 +75,8 @@ medsurv_fast(
 
   Logical; set to `TRUE` when `time`, `event` and `group` are already
   sorted in ascending order of `time`, to skip the internal sort.
-  Defaults to `FALSE`.
+  Defaults to `FALSE`. The order is checked, and an error is given when
+  it does not hold.
 
 ## Value
 

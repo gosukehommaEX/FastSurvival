@@ -208,6 +208,15 @@ so the analyzed event count can exceed the target, as in
 <p>A matrix <code>event.looks</code> with one row per simulated trial gives
 simulation-specific event targets, for example targets re-estimated at an
 interim analysis.</p>
+<p>Each look is determined by its own conditions; only <code>min.gap</code> refers
+to the previous look. A look with <code>max.time</code> as its only condition is
+placed at that time. When the previous look is not reached, <code>t_gap</code> is
+infinite, so a look with <code>min.gap</code> is not reached either unless its
+<code>max.time</code> caps it. The looks are not reordered: when the conditions
+of a later look give an earlier cutoff than the previous look (for example
+<code>event.looks = c(150, 220)</code> with <code>max.time = c(NA, 30)</code>), a
+warning is given. Supplying <code>min.gap</code> (for example 0) at the later
+looks keeps them in order unless their <code>max.time</code> is earlier.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

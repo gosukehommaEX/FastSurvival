@@ -281,9 +281,12 @@ result. This is the behavior Freidlin and Korn (2019) warn against: a
 statistically significant result in favor of a treatment that is, by
 construction, never better on the survival scale. The modestly-weighted
 log-rank test of Magirr and Burman (2019) behaves like the log-rank test
-here, since capping the weights prevents the late region from
-dominating, which is why it remains a useful member of the weighted
-family even when unbounded late-emphasis tests do not.</p>
+here. Its weights start at one, never fall below that value, and are
+capped, so the early events keep their full weight and the late region
+cannot dominate. The FH(0,1) weights, by contrast, lie between zero and
+one but are close to zero for the early events. This is why the
+modestly-weighted test remains a useful member of the weighted family
+even when tests that give the early events almost no weight do not.</p>
 <p>None of this means that emphasizing late events is never appropriate.
 Freidlin and Korn (2019) note that a test down-weighting early events
 can be justified when it is known in advance that the intervention

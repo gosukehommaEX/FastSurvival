@@ -8,8 +8,11 @@ Greenwood variance directly. The `"loglog"` and `"mover"` methods build
 the confidence interval for the difference with the method of variance
 estimates recovery (MOVER), recovering the variance from the one-sample
 complementary log-log and log transformed confidence intervals
-respectively. See Tang (2021) for the MOVER difference interval and Tang
-(2022) for the use of milestone survival in trial design.
+respectively. When the estimate of a group is 0 or 1 at `tau`, its
+one-sample interval degenerates to the estimate, so the interval of the
+difference is still given; the `"loglog"` test statistic is then `NA`.
+See Tang (2021) for the MOVER difference interval and Tang (2022) for
+the use of milestone survival in trial design.
 
 ## Usage
 
@@ -75,7 +78,8 @@ milestone_fast(
 
   Logical. If `TRUE` the input is assumed to be sorted by `time` in
   ascending order and the internal sort is skipped. This is intended for
-  repeated calls inside simulation loops.
+  repeated calls inside simulation loops. The order is checked, and an
+  error is given when it does not hold.
 
 ## Value
 

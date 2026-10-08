@@ -77,12 +77,12 @@ SE\[S(t)\] = S(t) \* sqrt(sum\_{t_i \<= t, d_i \> 0} d_i / (n_i \*
 (n_i - d_i)))
 
 where d_i is the number of events and n_i is the number at risk at time
-t_i. The output field `std.err` follows the convention of
-[`survfit`](https://rdrr.io/pkg/survival/man/survfit.html), which
-reports SE\[S(t)\] / S(t) (i.e., the standard error on the log scale)
-when `conf.type != "plain"`, and SE\[S(t)\] when `conf.type = "plain"`.
-This function always returns SE\[S(t)\] (the standard error on the
-survival scale).
+t_i. The output field `std.err` is SE\[S(t)\], the standard error on the
+survival scale, which is the `std.err` reported by
+[`summary()`](https://rdrr.io/r/base/summary.html) of a
+[`survfit`](https://rdrr.io/pkg/survival/man/survfit.html) object. The
+`std.err` component of the `survfit` object itself is on the
+cumulative-hazard scale, SE\[S(t)\] / S(t), whatever `conf.type` is.
 
 When `S(t_eval) = 0` (all subjects have experienced the event by
 `t_eval`), the standard error is zero and the confidence interval

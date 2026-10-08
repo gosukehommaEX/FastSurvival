@@ -214,7 +214,9 @@ FALSE</code> in <code><a href="analysis_fast.html">analysis_fast</a></code> outp
 final data and an <code>NA</code> cutoff at that look. Its statistics are compared
 with the boundary like any other, and it is left out of <code>cutoff.mean</code>
 (the mean over the simulations with a finite cutoff) but not out of the
-count means.</p>
+count means. In <code><a href="pairwise_fast.html">pairwise_fast</a></code> output the statistics and
+counts of an unreached look are <code>NA</code>, so that look never crosses a
+boundary and is left out of the count means.</p>
 <p>The rejection rate is the type I error under a null data-generating truth and
 the power under an alternative truth, but because the function does not know the
 truth used to generate <code>data</code> it is reported neutrally as the rejection

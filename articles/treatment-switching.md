@@ -10,11 +10,11 @@ alters only what happens afterward, typically prolonging the remaining
 overall survival (OS) of the switchers and diluting the
 intention-to-treat comparison of OS.
 
-The TrialSimulator package expresses such designs with `regimen()` (a
-switching rule fixed at enrollment) and `crossover()` (a switch that
-opens at a milestone), and runs the simulated trials one at a time.
-Because a switch never rewrites the history before it, the same designs
-can also be simulated with the whole set of trials at once.
+The TrialSimulator package (Zhang, 2026) expresses such designs with
+`regimen()` (a switching rule fixed at enrollment) and `crossover()` (a
+switch that opens at a milestone), and runs the simulated trials one at
+a time. Because a switch never rewrites the history before it, the same
+designs can also be simulated with the whole set of trials at once.
 [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
 modifies the simulated data after their generation, and
 [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.326   0.022   0.347
+#>   0.436   0.023   0.459
 ```
 
 ## A check with the rank-preserving structural failure time model
@@ -222,7 +222,8 @@ the true value. The check below simulates 10 large trials in which the
 experimental group has all transition hazards divided by `f` (an
 accelerated failure time effect of `f`), lets 60 percent of the control
 patients who progress switch with the same factor, and estimates `psi`
-in each trial with the rpsftm package, ignoring censoring.
+in each trial with the rpsftm package (Allison, White, and Bond, 2017),
+ignoring censoring.
 
 ``` r
 
@@ -287,6 +288,10 @@ dropping an arm and re-randomizing new patients, change the
 data-generating process and are outside this approach.
 
 ## References
+
+Allison, A., White, I. R., & Bond, S. (2017). rpsftm: an R package for
+rank preserving structural failure time models. *The R Journal*, 9(2),
+342-353.
 
 Robins, J. M. and Tsiatis, A. A. (1991). Correcting for non-compliance
 in randomized trials using rank preserving structural failure time

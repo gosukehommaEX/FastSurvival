@@ -30,9 +30,9 @@ behind the closed-form formulas no longer hold, simulation is the
 natural way to obtain the consistency probabilities.
 
 FastSurvival does not provide a regional-consistency function, and it is
-not meant to: three-or-more-region designs and consistency criteria are
-outside its scope. What it does provide are fast, validated building
-blocks. This vignette shows that the existing simulation trio,
+not meant to: consistency criteria are outside its scope. What it does
+provide are fast, validated building blocks. This vignette shows that
+the existing simulation trio,
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
 and
@@ -48,10 +48,9 @@ trio returns.
 
 Write the estimated treatment effect on the hazard-reduction scale, that
 is `1 - HR` for the entire trial population and `1 - HR_s` for region
-`s`, where a positive value indicates benefit (this is the
-survival-endpoint formulation of Teng et al., 2018). The region of
-interest is region 1, and `pi` is the effect-retention fraction,
-conventionally `0.5`.
+`s`, where a positive value indicates benefit. The region of interest is
+region 1, and `pi` is the effect-retention fraction, conventionally
+`0.5`.
 
 Method 1 asks that region 1 retain at least a fraction `pi` of the
 overall effect, `(1 - HR_1) > pi * (1 - HR)`. Method 2 asks that the
@@ -302,16 +301,16 @@ therefore degenerate at look 1: the joint probabilities `JOI_M1` and
 is the mean calendar time of the look itself, taken over all trials, and
 so is reported at every look. At the later looks the table gives, per
 analysis, the conditional regional consistency probability for each
-method. Method 2 is the looser criterion and so its conditional
-probability runs higher than Method 1’s at both efficacy looks. For each
-method the conditional consistency is comparable at the two efficacy
-looks, if anything slightly higher at the interim, because the trials
-that cross the stringent interim efficacy boundary are enriched for a
-strong overall effect, which also makes the regional criteria more
-likely to be met. This calendar-driven behavior, together with the
-late-starting region 1 whose events accrue on a different schedule, is
-exactly what the closed-form formulas, which assume a single final
-analysis and simultaneous accrual, cannot capture.
+method. Neither criterion implies the other; in this design the
+conditional probability of Method 2 is higher than that of Method 1 at
+both efficacy looks. For each method the conditional consistency is
+comparable at the two efficacy looks, if anything slightly higher at the
+interim, because the trials that cross the stringent interim efficacy
+boundary are enriched for a strong overall effect, which also makes the
+regional criteria more likely to be met. This calendar-driven behavior,
+together with the late-starting region 1 whose events accrue on a
+different schedule, is exactly what the closed-form formulas, which
+assume a single final analysis and simultaneous accrual, cannot capture.
 
 ## Tying back to the trio: standard operating characteristics
 
@@ -369,7 +368,7 @@ time at stopping.
 The hazard ratio used for the consistency criteria is the Cox estimate
 from
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md).
-To use the log-scale criterion of Teng et al. (2018) instead, replace
+To use a criterion on the log hazard ratio scale instead, replace
 `cox.hr` with `cox.coef` and test `cox.coef_1 < PI * cox.coef_overall`
 for Method 1 and `cox.coef_s < 0` for all regions for Method 2. The
 conditional probability here is defined on the first efficacy-stopping

@@ -143,8 +143,9 @@ Visualization:
 
 - [`kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md):
 
-  Analysis-stage Kaplan-Meier curves with a risk table, with
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  Analysis-stage Kaplan-Meier curves of a single data set, with
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (optionally
+  with restricted-mean shading and a smoothed hazard-ratio panel) and
   [`print()`](https://rdrr.io/r/base/print.html) methods.
 
 ## References

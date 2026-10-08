@@ -66,7 +66,8 @@ survdiff_fast(
   when supplied) are assumed to be already sorted in the required order,
   and the internal [`order()`](https://rdrr.io/r/base/order.html) call
   is skipped. If `FALSE` (default), sorting is handled internally. See
-  Details for the required order in the stratified case.
+  Details for the required order in the stratified case. The order is
+  checked, and an error is given when it does not hold.
 
 - strata:
 
@@ -340,8 +341,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min       lq      mean  median       uq      max neval cld
-#>  survdiff_fast  25.769  29.9700  33.98895  33.746  36.3545  158.358  1000  a 
-#>       survdiff 424.707 443.7415 487.15844 452.174 465.5090 7158.637  1000   b
+#>           expr     min      lq       mean   median        uq      max neval cld
+#>  survdiff_fast  55.714  64.365   79.83598   77.545   81.1565 5435.927  1000  a 
+#>       survdiff 952.398 998.248 1043.86197 1008.919 1025.1640 9038.962  1000   b
 # }
 ```
