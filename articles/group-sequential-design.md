@@ -218,10 +218,10 @@ The efficacy boundaries are the spending boundaries fed into the
 simulation, so they match by construction. The crossing probabilities,
 expected events, and expected timing are estimated independently by
 simulation. The Monte Carlo standard error of a probability near 0.7
-from 10,000 trials is about 0.005. The first row shows a second,
-systematic source of difference: the simulated mean of the interim
-log-rank statistic is slightly smaller than the large-sample drift, so
-the closed form slightly overstates the crossing probabilities. The
+from 10,000 trials is about 0.005, and that of the mean of the interim
+statistic is about 0.01. The closed form also relies on the large-sample
+approximation for the log-rank statistic, whose accuracy the first row
+shows, so the remaining differences reflect both sources of error. The
 expected analysis time of the closed form is evaluated at the expected
 number of events, whereas the simulation averages the realized analysis
 times.
