@@ -1,7 +1,7 @@
 Package: FastSurvival
 Type: Package
 Title: Fast Survival Analysis and Simulation for Clinical Trials
-Version: 1.0.0.9000
+Version: 1.1.0
 Authors@R: person(
     given  = "Gosuke",
     family = "Homma",
@@ -24,8 +24,9 @@ Description: Provides fast alternatives to standard survival analysis functions
     layer generates individual patient data (simdata_fast()), determines the
     calendar time of each analysis from combined event and calendar-time
     rules (cutoff_fast()), performs interim or sequential analyses
-    (analysis_fast()), applies treatment switching at progression or after an
-    interim analysis (switch_fast()), and aggregates operating
+    (analysis_fast()), compares several experimental arms with a shared
+    control (pairwise_fast()), applies treatment switching at progression or
+    after an interim analysis (switch_fast()), and aggregates operating
     characteristics (simsummary_fast()). A visualization layer assembles
     design-stage scenarios (gen_scenario_fast()) and builds analysis-stage
     Kaplan-Meier curves (kmcurve_fast()), each with plot and print methods.

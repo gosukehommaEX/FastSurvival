@@ -242,7 +242,8 @@ optional dropout as a shared value or a per-arm list through \code{d.hazard}
 or \code{d.median}. The arms share the master \code{seed}, so the result is
 reproducible. A multi-arm design is analyzed as a set of pairwise contrasts by
 subsetting the output to the control arm and one other arm and calling
-\code{\link{analysis_fast}} once per contrast. Multi-arm mode does not support
+\code{\link{analysis_fast}} once per contrast, which
+\code{\link{pairwise_fast}} does for every experimental arm. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.
 }
 \section{Batches and parallel execution}{
@@ -421,5 +422,6 @@ head(res12)
 
 }
 \seealso{
-\code{\link{analysis_fast}}
+\code{\link{analysis_fast}}, \code{\link{cutoff_fast}},
+  \code{\link{switch_fast}}, \code{\link{pairwise_fast}}
 }

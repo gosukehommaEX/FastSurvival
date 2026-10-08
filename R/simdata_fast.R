@@ -70,7 +70,8 @@
 #' or \code{d.median}. The arms share the master \code{seed}, so the result is
 #' reproducible. A multi-arm design is analyzed as a set of pairwise contrasts by
 #' subsetting the output to the control arm and one other arm and calling
-#' \code{\link{analysis_fast}} once per contrast. Multi-arm mode does not support
+#' \code{\link{analysis_fast}} once per contrast, which
+#' \code{\link{pairwise_fast}} does for every experimental arm. Multi-arm mode does not support
 #' subgroups or the illness-death model, which remain two-group.
 #'
 #' @param nsim Number of simulated trials.
@@ -349,7 +350,8 @@
 #' res12 <- analysis_fast(sub12, control = 1, time.looks = 24, side = 1)
 #' head(res12)
 #'
-#' @seealso \code{\link{analysis_fast}}
+#' @seealso \code{\link{analysis_fast}}, \code{\link{cutoff_fast}},
+#'   \code{\link{switch_fast}}, \code{\link{pairwise_fast}}
 #'
 #' @export
 simdata_fast <- function(nsim       = 1000,

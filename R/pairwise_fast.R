@@ -21,16 +21,16 @@
 #' reproduces the standard design in which the primary event-driven analysis
 #' fixes a single data cutoff at which all comparisons are performed. For a
 #' simulation in which the primary event target is not reached at a look, that
-#' look is marked with \code{reached = FALSE} and \code{NA} statistics for every
-#' contrast. The shared cutoffs are computed by \code{\link{cutoff_fast}} on the
+#' look is marked with \code{reached = FALSE}, and its counts and statistics are
+#' \code{NA} for every contrast. The shared cutoffs are computed by \code{\link{cutoff_fast}} on the
 #' events of the control and primary arms.
 #'
 #' With \code{cutoff.looks}, every contrast is analyzed at the supplied
 #' per-simulation calendar cutoffs, for example those returned by
 #' \code{\link{cutoff_fast}} for a combination of event and calendar-time rules.
 #' A look that is not reached in a simulation (\code{NA} cutoff) is marked with
-#' \code{reached = FALSE} and \code{NA} statistics, as in the event-driven
-#' regime.
+#' \code{reached = FALSE} and \code{NA} counts and statistics, as in the
+#' event-driven regime.
 #'
 #' The Bonferroni option multiplies each p-value by the number of contrasts and
 #' caps it at one, controlling the family-wise error rate across the
@@ -105,7 +105,8 @@
 #'                      stat = "logrank", side = 1, adjust = "bonferroni")
 #' head(pw2)
 #'
-#' @seealso \code{\link{simdata_fast}}, \code{\link{analysis_fast}}
+#' @seealso \code{\link{simdata_fast}}, \code{\link{analysis_fast}},
+#'   \code{\link{cutoff_fast}}
 #'
 #' @export
 pairwise_fast <- function(data, control,

@@ -136,8 +136,8 @@ p-value. Defaults to 1e-5.}
 
 \item{maxpts}{A single positive integer, the maximum number of function
 evaluations for the quasi-Monte-Carlo integration used by the
-\code{"maxcombo"} p-value when four or more weights are supplied. Defaults
-to 25000.}
+\code{"maxcombo"} p-value with four or more weights or with a two-sided
+test (see Details). Defaults to 25000.}
 
 \item{medsurv.method}{A character string naming the variance method for the
 \code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
@@ -431,5 +431,6 @@ head(res5)
   \code{\link{ahsw_fast}}, \code{\link{milestone_fast}},
   \code{\link{rmw_fast}}, \code{\link{ahr_fast}},
   \code{\link{medsurv_fast}}, \code{\link{wkm_fast}},
-  \code{\link{wmst_fast}}.
+  \code{\link{wmst_fast}}, \code{\link{cutoff_fast}},
+  \code{\link{pairwise_fast}}, \code{\link{switch_fast}}.
 }
