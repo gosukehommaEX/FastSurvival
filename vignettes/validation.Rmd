@@ -184,7 +184,7 @@ dedicated WMST package, so we validate the per-group windowed area directly
 against a Kaplan-Meier step-function integral computed from `survfit()` over
 the same window. A full comparison against the `survWMST` package, which is
 distributed on GitHub, is provided in
-`tools/compare_wmst_survwmst.R`.
+`tools/compare_wmst_survwmst.R` of the package's GitHub repository.
 
 ```{r wmst, eval = have_survival}
 tau1 <- 200
@@ -379,9 +379,9 @@ The point estimates match the survival-based reference to numerical precision.
 The average hazard ratio was additionally cross-checked against the archived
 AHR package, the reference implementation used by Dormuth et al. (2024): the
 two group shares, the average hazard ratio, the variances, and both test
-statistics agree to within the order of 1e-15. That external comparison is
-reproducible with the `tools/compare_ahr_ahrKM.R` script shipped in the package
-sources.
+statistics agree to within about 1e-14. That external comparison is
+reproducible with the `tools/compare_ahr_ahrKM.R` script of the package's
+GitHub repository.
 
 # Max-combo test
 
@@ -413,9 +413,9 @@ data.frame(
 
 The component statistics agree in absolute value. The final max-combo statistic
 is the largest of these, which for the one-sided test is the most extreme
-component Z. The p-values from the two packages are close but not identical,
-since they use different numerical methods for the joint distribution (a
-multivariate normal integral here, a Bonferroni-style combination in `nph`).
+component Z. The p-values are not compared here, because
+`nph::logrank.maxtest()` reports two-sided p-values and the call above is
+one-sided.
 
 # Robust modestly-weighted log-rank test
 
@@ -455,14 +455,10 @@ data.frame(
 ```
 
 The component statistics agree in absolute value. The null correlation of the
-two components, reported in the `corr` attribute, matches the covariance
-computed by the authors' `find_cor` routine to numerical precision. The
+two components, reported in the `corr` attribute, is checked against an
+independent implementation in the package test suite. The
 combined statistic and one-sided p-value then follow from the bivariate normal
-distribution of the two components, evaluated with `mvtnorm::pmvnorm`. On the
-POPLAR overall-survival data analyzed in the original article, `rmw_fast()`
-reproduces the published one-sided p-values of 0.0028 for the log-rank test,
-0.0009 for the modestly-weighted test, and 0.0012 for the rMW test, with a
-component correlation of 0.97.
+distribution of the two components, evaluated with `mvtnorm::pmvnorm`.
 
 # Analysis cutoffs
 

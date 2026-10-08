@@ -97,6 +97,25 @@
 #' mvtnorm, which uses R's random-number generator; call \code{set.seed()}
 #' beforehand for p-values that are reproducible to the last digit.
 #'
+#' The multivariate normal integration dominates the computing time of the
+#' \code{"maxcombo"} statistic in a large simulation. When only the decision
+#' at a nominal level matters, \code{mc.alpha} avoids most of these
+#' integrals. With \code{K} weights and \code{p_min} the smallest
+#' component p-value (\code{pnorm(m)} for \code{side = 1} and
+#' \code{2 * pnorm(-m)} for \code{side = 2}, where \code{m} is
+#' \code{maxcombo.stat}), the max-combo p-value satisfies
+#' \code{p_min <= p <= min(1, K * p_min)} (the Bonferroni inequality). When
+#' \code{p_min > mc.alpha}, \code{p_min} is reported; when
+#' \code{K * p_min <= mc.alpha}, \code{K * p_min} is reported; otherwise the
+#' p-value is computed by integration. The reported value is therefore on the
+#' same side of \code{mc.alpha} as the exact p-value, so the rejection
+#' decision \code{maxcombo.p <= mc.alpha} (as in \code{\link{simsummary_fast}}
+#' with \code{alpha = mc.alpha}) is the same as with exact p-values, but the
+#' reported value is a bound unless \code{maxcombo.p.exact} is \code{TRUE}.
+#' Use exact p-values (the default \code{mc.alpha = NULL}) when the p-values
+#' themselves, or decisions at other levels such as Bonferroni-adjusted levels,
+#' are needed.
+#'
 #' The \code{"ahsw"} statistic is the average hazard with survival weight of Uno
 #' and Horiguchi on the window from 0 to \code{tau}. It reports the per-group
 #' average hazards, the ratio (RAH) and difference (DAH) contrasts with their
@@ -282,6 +301,12 @@
 #'   the \code{"wmst"} statistic, which must exceed \code{wmst.tau1}. \code{NULL}
 #'   (default) falls back to \code{tau}. Required (through either argument) only
 #'   when \code{"wmst"} is requested.
+#' @param mc.alpha An optional numeric vector of nominal levels in (0, 1), one
+#'   per look or a single value for all looks, at which the \code{"maxcombo"}
+#'   p-value is compared. When supplied, the p-value is computed by
+#'   integration only when the Bonferroni bounds do not decide the comparison
+#'   (see Details), and the output gains a logical column
+#'   \code{maxcombo.p.exact}. \code{NULL} (default) computes every p-value.
 #'
 #' @return A data frame. When \code{by.subgroup = FALSE}, it has
 #'   \code{nsim * length(looks)} rows. When \code{by.subgroup = TRUE}, it has
@@ -304,7 +329,8 @@
 #'   \code{rmst.diff.lower}, \code{rmst.diff.upper}, \code{rmst.z}, and
 #'   \code{rmst.p} for \code{"rmst"}; \code{km.surv.ctrl} and
 #'   \code{km.surv.trt} for \code{"km"}; \code{maxcombo.stat} and
-#'   \code{maxcombo.p} for \code{"maxcombo"}; and \code{ahsw.ah.ctrl},
+#'   \code{maxcombo.p} (and \code{maxcombo.p.exact} when \code{mc.alpha} is
+#'   supplied) for \code{"maxcombo"}; and \code{ahsw.ah.ctrl},
 #'   \code{ahsw.ah.trt}, \code{ahsw.rah}, \code{ahsw.rah.lower},
 #'   \code{ahsw.rah.upper}, \code{ahsw.p.rah}, \code{ahsw.dah},
 #'   \code{ahsw.dah.lower}, \code{ahsw.dah.upper}, and \code{ahsw.p.dah} for
@@ -390,7 +416,7 @@ analysis_fast <- function(data, control,
                           medsurv.method = c("km", "nph"), medsurv.bw = NULL,
                           wkm.weight = c("PF", "sqrtPF", "constant"),
                           wmst.tau1 = 0, wmst.tau2 = NULL,
-                          cutoff.looks = NULL) {
+                          cutoff.looks = NULL, mc.alpha = NULL) {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
@@ -483,6 +509,15 @@ analysis_fast <- function(data, control,
   }
   if ("maxcombo" %in% stat && length(mc.rho) != length(mc.gamma)) {
     stop("'mc.rho' and 'mc.gamma' must have the same length")
+  }
+  if ("maxcombo" %in% stat && !is.null(mc.alpha)) {
+    if (!is.numeric(mc.alpha) || anyNA(mc.alpha) || any(mc.alpha <= 0) ||
+        any(mc.alpha >= 1) ||
+        !length(mc.alpha) %in% c(1L, length(looks))) {
+      stop("'mc.alpha' must contain values in (0, 1), one per look or a ",
+           "single value")
+    }
+    mc.alpha <- rep_len(as.numeric(mc.alpha), length(looks))
   }
   if ("rmw" %in% stat &&
       (length(s_star) != 1L || !is.finite(s_star) || s_star <= 0 ||
@@ -766,6 +801,12 @@ analysis_fast <- function(data, control,
     p_vec    <- rep(NA_real_, total)
     Umat_all <- core$mc_U
     Vmat_all <- core$mc_V
+    # Optional Bonferroni shortcut (see Details): per-row nominal level.
+    use_bound <- !is.null(mc.alpha) && nw >= 2L
+    if (!is.null(mc.alpha)) {
+      exact_vec <- rep(NA, total)
+      a_row     <- mc.alpha[out$look]
+    }
     for (r in seq_len(total)) {
       U <- Umat_all[r, ]
       if (anyNA(U)) next
@@ -781,6 +822,18 @@ analysis_fast <- function(data, control,
         m_obs <- max(abs(zc))
         lower <- rep(-m_obs, nw); upper <- rep(m_obs, nw)
       }
+      stat_vec[r] <- as.numeric(m_obs)
+      if (!is.null(mc.alpha)) exact_vec[r] <- TRUE
+      if (use_bound) {
+        p_lo <- if (side == 1L) pnorm(m_obs) else 2 * pnorm(-m_obs)
+        p_hi <- min(1, nw * p_lo)
+        if (p_lo > a_row[r]) {
+          p_vec[r] <- p_lo; exact_vec[r] <- FALSE; next
+        }
+        if (p_hi <= a_row[r]) {
+          p_vec[r] <- p_hi; exact_vec[r] <- FALSE; next
+        }
+      }
       if (nw == 1L) {
         joint <- pnorm(upper) - pnorm(lower)
       } else if (nw <= 3L && side == 1L) {
@@ -794,11 +847,11 @@ analysis_fast <- function(data, control,
                                     maxpts = maxpts, abseps = abseps,
                                     releps = 0))[1L]
       }
-      stat_vec[r] <- as.numeric(m_obs)
-      p_vec[r]    <- 1 - as.numeric(joint)
+      p_vec[r] <- 1 - as.numeric(joint)
     }
     out$maxcombo.stat <- stat_vec
     out$maxcombo.p    <- p_vec
+    if (!is.null(mc.alpha)) out$maxcombo.p.exact <- exact_vec
   }
   if (do_ahsw) {
     a0 <- core$ahsw[, 1]; vQ0 <- core$ahsw[, 2]; vU0 <- core$ahsw[, 3]; n0 <- core$ahsw[, 4]

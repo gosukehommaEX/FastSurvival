@@ -31,7 +31,8 @@ analysis_fast(
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
   wmst.tau2 = NULL,
-  cutoff.looks = NULL
+  cutoff.looks = NULL,
+  mc.alpha = NULL
 )
 }
 \arguments{
@@ -170,6 +171,13 @@ not reached. The \code{look.value} column of the output is taken from the
 \code{"look.value"} attribute of the matrix when it is present, and is
 \code{NA} otherwise. Mutually exclusive with \code{event.looks} and
 \code{time.looks}.}
+
+\item{mc.alpha}{An optional numeric vector of nominal levels in (0, 1), one
+per look or a single value for all looks, at which the \code{"maxcombo"}
+p-value is compared. When supplied, the p-value is computed by
+integration only when the Bonferroni bounds do not decide the comparison
+(see Details), and the output gains a logical column
+\code{maxcombo.p.exact}. \code{NULL} (default) computes every p-value.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -193,7 +201,8 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   \code{rmst.diff.lower}, \code{rmst.diff.upper}, \code{rmst.z}, and
   \code{rmst.p} for \code{"rmst"}; \code{km.surv.ctrl} and
   \code{km.surv.trt} for \code{"km"}; \code{maxcombo.stat} and
-  \code{maxcombo.p} for \code{"maxcombo"}; and \code{ahsw.ah.ctrl},
+  \code{maxcombo.p} (and \code{maxcombo.p.exact} when \code{mc.alpha} is
+  supplied) for \code{"maxcombo"}; and \code{ahsw.ah.ctrl},
   \code{ahsw.ah.trt}, \code{ahsw.rah}, \code{ahsw.rah.lower},
   \code{ahsw.rah.upper}, \code{ahsw.p.rah}, \code{ahsw.dah},
   \code{ahsw.dah.lower}, \code{ahsw.dah.upper}, and \code{ahsw.p.dah} for
@@ -310,6 +319,25 @@ three weights is computed by the deterministic TVPACK algorithm, and
 otherwise by the randomized quasi-Monte-Carlo GenzBretz algorithm of
 mvtnorm, which uses R's random-number generator; call \code{set.seed()}
 beforehand for p-values that are reproducible to the last digit.
+
+The multivariate normal integration dominates the computing time of the
+\code{"maxcombo"} statistic in a large simulation. When only the decision
+at a nominal level matters, \code{mc.alpha} avoids most of these
+integrals. With \code{K} weights and \code{p_min} the smallest
+component p-value (\code{pnorm(m)} for \code{side = 1} and
+\code{2 * pnorm(-m)} for \code{side = 2}, where \code{m} is
+\code{maxcombo.stat}), the max-combo p-value satisfies
+\code{p_min <= p <= min(1, K * p_min)} (the Bonferroni inequality). When
+\code{p_min > mc.alpha}, \code{p_min} is reported; when
+\code{K * p_min <= mc.alpha}, \code{K * p_min} is reported; otherwise the
+p-value is computed by integration. The reported value is therefore on the
+same side of \code{mc.alpha} as the exact p-value, so the rejection
+decision \code{maxcombo.p <= mc.alpha} (as in \code{\link{simsummary_fast}}
+with \code{alpha = mc.alpha}) is the same as with exact p-values, but the
+reported value is a bound unless \code{maxcombo.p.exact} is \code{TRUE}.
+Use exact p-values (the default \code{mc.alpha = NULL}) when the p-values
+themselves, or decisions at other levels such as Bonferroni-adjusted levels,
+are needed.
 
 The \code{"ahsw"} statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to \code{tau}. It reports the per-group

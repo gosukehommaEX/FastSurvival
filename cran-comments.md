@@ -6,13 +6,16 @@ simulation of clinical trials:
 * `cutoff_fast()` (new) computes the calendar time of each analysis in every
   simulated trial from combined event, calendar-time, and enrollment rules;
 * `switch_fast()` (new) applies treatment switching to simulated data;
-* `analysis_fast()` and `pairwise_fast()` gain a `cutoff.looks` argument, and
-  `simdata_fast()` gains a `stream` argument for reproducible simulation in
-  batches.
+* `analysis_fast()` and `pairwise_fast()` gain a `cutoff.looks` argument,
+  `analysis_fast()` gains an `mc.alpha` argument that avoids most of the
+  multivariate normal integrals of the max-combo p-values when only the
+  decisions at given levels are needed, and `simdata_fast()` gains a `stream`
+  argument for reproducible simulation in batches.
 
 It also fixes an error of `analysis_fast()` for the two-sided max-combo test
 with two or three weights. A new vignette uses the 'rpsftm' package, which is
-added to Suggests and used only when it is installed. See NEWS.md for the full
+added to Suggests and used only when it is installed; the 'rpact' package is no
+longer used and is removed from Suggests. See NEWS.md for the full
 list of changes.
 
 ## Notes for the reviewer
@@ -30,9 +33,9 @@ requireNamespace(). The package was checked with --run-donttest.
 
 ## Test environments
 
-* Local: Windows 11 x64 (build 26200), R 4.6.0
-* win-builder: R-release (R 4.6.1)
-* win-builder: R-devel (2026-10-05 r90641)
+* Local: Windows 11 x64 (build 26200), R 4.6.0 [TO BE CONFIRMED]
+* win-builder: R-release (R 4.6.1) [TO BE CONFIRMED]
+* win-builder: R-devel [TO BE CONFIRMED]
 * GitHub Actions (R-CMD-check workflow) [TO BE CONFIRMED]:
   - ubuntu-latest (R release)
   - ubuntu-latest (R devel)

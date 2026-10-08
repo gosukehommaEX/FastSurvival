@@ -7,6 +7,7 @@
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
 [![CRAN downloads total](https://cranlogs.r-pkg.org/badges/grand-total/FastSurvival)](https://cran.r-project.org/package=FastSurvival)
 [![pkgdown site](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://gosukehommaEX.github.io/FastSurvival/)
+[![Codecov test coverage](https://codecov.io/gh/gosukehommaEX/FastSurvival/graph/badge.svg)](https://app.codecov.io/gh/gosukehommaEX/FastSurvival)
 <!-- badges: end -->
 
 FastSurvival provides fast alternatives to the standard survival analysis
@@ -325,7 +326,11 @@ requested statistics are computed for each simulated trial. The censoring,
 time sorting, and per-cell statistics are handled by a fused C++ kernel that
 reuses the same analysis cores as the standalone functions, so the same
 results are obtained without the per-iteration overhead of repeated wrapper
-calls. Statistics can also be reported within each subgroup.
+calls. Statistics can also be reported within each subgroup. The max-combo
+p-value, a multivariate normal integral per trial and look, dominates the
+computing time; when only the decisions at nominal levels are needed,
+`mc.alpha` integrates only the p-values that the Bonferroni bounds do not
+already place on one side of the level, with unchanged decisions.
 
 **pairwise_fast** compares each experimental arm against a shared control on
 multi-arm data by running `analysis_fast()` once per contrast and stacking the
@@ -444,7 +449,7 @@ statistics arising in its consideration. *Cancer Chemotherapy Reports*,
 50(3), 163-170.
  
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
-single-censored samples. *Biometrika*, 52, 203-223.
+singly-censored samples. *Biometrika*, 52, 203-223.
  
 Tarone, R. E., & Ware, J. (1977). On distribution-free tests for equality of
 survival distributions. *Biometrika*, 64, 156-160.

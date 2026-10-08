@@ -501,3 +501,58 @@ test_that("analysis_fast max-combo with two or three weights matches maxcombo_fa
     }
   }
 })
+
+test_that("analysis_fast max-combo with mc.alpha keeps the decisions and bounds the p-values", {
+  dat <- simdata_fast(nsim = 60, n = c(100, 100), a.time = c(0, 12),
+                      a.prop = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 20)),
+                      e.time = list(NULL, c(0, 4, Inf)), seed = 406)
+  lev <- c(0.01, 0.025)
+  for (sd in c(1, 2)) {
+    for (w in list(list(rho = c(0, 0), gamma = c(0, 1)),
+                   list(rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1)))) {
+      K <- length(w$rho)
+      set.seed(2)
+      ex <- analysis_fast(dat, control = 1, time.looks = c(15, 30),
+                          stat = "maxcombo", side = sd,
+                          mc.rho = w$rho, mc.gamma = w$gamma)
+      set.seed(2)
+      bd <- analysis_fast(dat, control = 1, time.looks = c(15, 30),
+                          stat = "maxcombo", side = sd,
+                          mc.rho = w$rho, mc.gamma = w$gamma, mc.alpha = lev)
+      expect_false("maxcombo.p.exact" %in% names(ex))
+      expect_true(is.logical(bd$maxcombo.p.exact))
+      expect_equal(bd$maxcombo.stat, ex$maxcombo.stat)
+      ok <- !is.na(ex$maxcombo.p)
+      expect_true(all(ok))
+      a    <- lev[bd$look]
+      p_lo <- if (sd == 1) pnorm(bd$maxcombo.stat) else
+        2 * pnorm(-bd$maxcombo.stat)
+      p_hi <- pmin(1, K * p_lo)
+      # The exact p-values lie within the Bonferroni bounds (up to the
+      # integration error).
+      expect_true(all(ex$maxcombo.p >= p_lo - 1e-4 &
+                        ex$maxcombo.p <= p_hi + 1e-4))
+      ix <- bd$maxcombo.p.exact
+      expect_true(any(!ix))
+      # Rows that are integrated agree with the run without mc.alpha.
+      tol <- if (sd == 1 && K <= 3) 1e-10 else 1e-3
+      expect_lt(max(c(0, abs(bd$maxcombo.p[ix] - ex$maxcombo.p[ix]))), tol)
+      # Rows that are not integrated report the bound on the side of the level.
+      expect_equal(bd$maxcombo.p[!ix],
+                   ifelse(p_lo[!ix] > a[!ix], p_lo[!ix], p_hi[!ix]))
+      expect_true(all(ix | p_lo > a | p_hi <= a))
+      # The decisions at the levels are those of the exact p-values (rows
+      # within the integration error of the level are excluded).
+      clear <- abs(ex$maxcombo.p - a) > 1e-3
+      expect_equal((bd$maxcombo.p <= a)[clear], (ex$maxcombo.p <= a)[clear])
+    }
+  }
+  expect_error(analysis_fast(dat, control = 1, time.looks = c(15, 30),
+                             stat = "maxcombo",
+                             mc.alpha = c(0.01, 0.02, 0.03)),
+               "mc.alpha")
+  expect_error(analysis_fast(dat, control = 1, time.looks = 30,
+                             stat = "maxcombo", mc.alpha = 1),
+               "mc.alpha")
+})

@@ -4,7 +4,9 @@
 # Part 1 times simdata_fast() and analysis_fast() (two event-driven looks; the
 # log-rank and RMST statistics and the max-combo test timed separately) for an
 # increasing number of simulated trials and records the size of the simulated
-# data. Part 2 runs the same study in batches, once sequentially and once on a
+# data. The max-combo test is timed twice: with every p-value integrated, and
+# with mc.alpha set to the nominal levels of a group-sequential design, which
+# integrates only the p-values that the Bonferroni bounds do not decide. Part 2 runs the same study in batches, once sequentially and once on a
 # parallel cluster, and checks that the combined results are identical.
 # Results are written to tools/paper/output/.
 #
@@ -21,6 +23,12 @@ design <- list(n = c(300, 300), a.time = c(0, 12), a.rate = 600 / 12,
                e.hazard = list(c(0.06, 0.06), c(0.06, 0.035)),
                e.time = c(0, 4, Inf), d.hazard = 0.001)
 looks <- c(200, 350)
+
+# Nominal one-sided levels of a Lan-DeMets O'Brien-Fleming design at these
+# looks, used for the max-combo shortcut (mc.alpha) in Part 1.
+mc_alpha <- stats::pnorm(-gsDesign::gsDesign(
+  k = 2, test.type = 1, alpha = 0.025, timing = looks / max(looks),
+  sfu = gsDesign::sfLDOF)$upper$bound)
 
 run_once <- function(nsim, seed, stream = NULL) {
   d <- do.call(simdata_fast, c(list(nsim = nsim, seed = seed, stream = stream),
@@ -43,14 +51,25 @@ part1 <- do.call(rbind, lapply(grid, function(ns) {
     analysis_fast(d, control = 1, event.looks = looks,
                   stat = c("logrank", "rmst"), tau = 18, side = 1)
   )[["elapsed"]]
+  set.seed(1)
   t_mc <- system.time(
-    analysis_fast(d, control = 1, event.looks = looks, stat = "maxcombo",
-                  side = 1)
+    r_mc <- analysis_fast(d, control = 1, event.looks = looks,
+                          stat = "maxcombo", side = 1)
   )[["elapsed"]]
+  set.seed(1)
+  t_mb <- system.time(
+    r_mb <- analysis_fast(d, control = 1, event.looks = looks,
+                          stat = "maxcombo", side = 1, mc.alpha = mc_alpha)
+  )[["elapsed"]]
+  a_row <- mc_alpha[r_mc$look]
   data.frame(nsim = ns, rows = nrow(d),
              data_mb = as.numeric(object.size(d)) / 2^20,
              generate_sec = t_gen, logrank_rmst_sec = t_det,
-             maxcombo_sec = t_mc)
+             maxcombo_sec = t_mc, maxcombo_mc_alpha_sec = t_mb,
+             share_integrated = mean(r_mb$maxcombo.p.exact, na.rm = TRUE),
+             decisions_differ = sum((r_mb$maxcombo.p <= a_row) !=
+                                      (r_mc$maxcombo.p <= a_row),
+                                    na.rm = TRUE))
 }))
 print(part1)
 write.csv(part1, file.path(out_dir, "bench_scaling.csv"), row.names = FALSE)

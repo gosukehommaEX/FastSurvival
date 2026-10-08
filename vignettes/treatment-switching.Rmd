@@ -167,7 +167,7 @@ tab
 ```
 
 Switching pulls the intention-to-treat hazard ratio for OS toward one and lowers
-the power of the OS test. The first two scenarios differ only in the trials
+the power of the OS test. The two crossover scenarios differ only in the trials
 where PFS was not significant, in which crossover is opened in the second
 scenario but not in the first, so opening crossover in every trial dilutes the
 OS comparison more.
