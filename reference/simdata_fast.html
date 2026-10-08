@@ -189,7 +189,8 @@ groups is determined.</p></dd>
 <dt id="arg-prevalence">prevalence<a class="anchor" aria-label="anchor" href="#arg-prevalence"></a></dt>
 <dd><p>Optional subgroup prevalence specification (numeric
 vector, list of vectors, array, or a named <code>control</code>/<code>treatment</code>
-list for group-specific prevalence).</p></dd>
+list for group-specific prevalence), for the single-endpoint and the
+illness-death models.</p></dd>
 
 
 <dt id="arg-fixed-alloc">fixed.alloc<a class="anchor" aria-label="anchor" href="#arg-fixed-alloc"></a></dt>
@@ -298,7 +299,8 @@ the same numbers as no stream. See the section on batches.</p></dd>
   <code>surv_time</code>, <code>dropout_time</code>, <code>tte</code>, <code>event</code>, and
   <code>calendar_time</code>.
   In the illness-death model the columns are instead <code>sim</code>,
-  <code>group</code>, <code>accrual_time</code>, <code>e1_surv_time</code>,
+  <code>group</code>, any subgroup columns, <code>accrual_time</code>,
+  <code>e1_surv_time</code>,
   <code>e2_surv_time</code>, <code>dropout_time</code>, <code>e1_tte</code>, <code>e1_event</code>,
   <code>e2_tte</code>, <code>e2_event</code>, <code>e1_calendar_time</code>,
   <code>e2_calendar_time</code>, <code>intermediate</code>, <code>switched</code>, and
@@ -380,6 +382,22 @@ subsetting the output to the control arm and one other arm and calling
 <code><a href="analysis_fast.html">analysis_fast</a></code> once per contrast, which
 <code><a href="pairwise_fast.html">pairwise_fast</a></code> does for every experimental arm. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.</p>
+<p>The illness-death model (activated by <code>h01.*</code> or <code>h02.*</code>) also
+accepts <code>prevalence</code> and <code>fixed.alloc</code>. The transition hazards
+(<code>h01.*</code>, <code>h02.*</code>, <code>h12.*</code>, <code>h12.switch.*</code>),
+<code>switch.prop</code>, and the dropout specification then follow the rules of
+<code>e.hazard</code> with subgroups: in a two-group simulation each is shared or
+a list with one element per group, and each group's element is shared or a
+list with one element per subgroup cell, for example
+<code>h01.hazard = list(list(0.10, 0.06), 0.05)</code>; with a scalar <code>n</code>
+and no <code>alloc</code>, a list without list elements holds one element per
+cell of a single group. All subjects share one accrual process and the
+subgroup cells are assigned after accrual, so the subgroups enroll over the
+same calendar in proportion to their prevalence. This gives a mixture of
+illness-death models without generating the subgroups separately and
+adjusting their accrual rates. With a single cell (for example
+<code>prevalence = 1</code>) the data equal those without <code>prevalence</code>, with
+the subgroup column added.</p>
     </div>
     <div class="section level2">
     <h2 id="batches-and-parallel-execution">Batches and parallel execution<a class="anchor" aria-label="anchor" href="#batches-and-parallel-execution"></a></h2>
@@ -661,6 +679,24 @@ across runs.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4        1   0.6111453</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5        0          NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6        0          NA</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Illness-death model with two subgroups (prevalence 0.4 and 0.6): the</span></span></span>
+<span class="r-in"><span><span class="co"># treatment effect on progression is larger in subgroup 2.</span></span></span>
+<span class="r-in"><span><span class="va">dfsg</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  nsim       <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>  n          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150</span>, <span class="fl">150</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.time     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.rate     <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  h01.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">14</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h02.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  prevalence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.6</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  seed       <span class="op">=</span> <span class="fl">8</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dfsg</span><span class="op">$</span><span class="va">group</span>, <span class="va">dfsg</span><span class="op">$</span><span class="va">subgroup</span><span class="op">)</span> <span class="op">/</span> <span class="fl">100</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         1     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1 59.63 90.37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2 60.12 89.88</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Three-arm trial (one control and two treatment arms) analyzed as pairwise</span></span></span>
 <span class="r-in"><span><span class="co"># contrasts against the shared control.</span></span></span>

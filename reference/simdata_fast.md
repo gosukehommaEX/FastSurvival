@@ -127,7 +127,8 @@ simdata_fast(
 
   Optional subgroup prevalence specification (numeric vector, list of
   vectors, array, or a named `control`/`treatment` list for
-  group-specific prevalence).
+  group-specific prevalence), for the single-endpoint and the
+  illness-death models.
 
 - fixed.alloc:
 
@@ -228,8 +229,8 @@ simdata_fast(
 A `data.frame` with `nsim * sum(n)` rows. The columns are `sim`,
 `group`, any subgroup columns, `accrual_time`, `surv_time`,
 `dropout_time`, `tte`, `event`, and `calendar_time`. In the
-illness-death model the columns are instead `sim`, `group`,
-`accrual_time`, `e1_surv_time`, `e2_surv_time`, `dropout_time`,
+illness-death model the columns are instead `sim`, `group`, any subgroup
+columns, `accrual_time`, `e1_surv_time`, `e2_surv_time`, `dropout_time`,
 `e1_tte`, `e1_event`, `e2_tte`, `e2_event`, `e1_calendar_time`,
 `e2_calendar_time`, `intermediate`, `switched`, and `switch_time`, where
 `e1` is the first (state-0 exit) endpoint and `e2` is the terminal
@@ -317,6 +318,22 @@ once per contrast, which
 [`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
 does for every experimental arm. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.
+
+The illness-death model (activated by `h01.*` or `h02.*`) also accepts
+`prevalence` and `fixed.alloc`. The transition hazards (`h01.*`,
+`h02.*`, `h12.*`, `h12.switch.*`), `switch.prop`, and the dropout
+specification then follow the rules of `e.hazard` with subgroups: in a
+two-group simulation each is shared or a list with one element per
+group, and each group's element is shared or a list with one element per
+subgroup cell, for example `h01.hazard = list(list(0.10, 0.06), 0.05)`;
+with a scalar `n` and no `alloc`, a list without list elements holds one
+element per cell of a single group. All subjects share one accrual
+process and the subgroup cells are assigned after accrual, so the
+subgroups enroll over the same calendar in proportion to their
+prevalence. This gives a mixture of illness-death models without
+generating the subgroups separately and adjusting their accrual rates.
+With a single cell (for example `prevalence = 1`) the data equal those
+without `prevalence`, with the subgroup column added.
 
 ## Batches and parallel execution
 
@@ -603,6 +620,24 @@ head(dfsw)
 #> 4        1   0.6111453
 #> 5        0          NA
 #> 6        0          NA
+
+# Illness-death model with two subgroups (prevalence 0.4 and 0.6): the
+# treatment effect on progression is larger in subgroup 2.
+dfsg <- simdata_fast(
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  h01.median = list(8, list(10, 14)),
+  h02.median = list(24, 30),
+  prevalence = c(0.4, 0.6),
+  seed       = 8
+)
+table(dfsg$group, dfsg$subgroup) / 100
+#>    
+#>         1     2
+#>   1 59.63 90.37
+#>   2 60.12 89.88
 
 # Three-arm trial (one control and two treatment arms) analyzed as pairwise
 # contrasts against the shared control.

@@ -57,6 +57,19 @@
   the integrated rows. The default (`NULL`) computes every p-value as
   before.
 
+- The illness-death model of
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  now supports subgroups through `prevalence` and `fixed.alloc`
+  ([\#3](https://github.com/gosukehommaEX/FastSurvival/issues/3),
+  suggested by Isaac Gravestock). The transition hazards, `switch.prop`,
+  and the dropout specification accept per-group and per-cell nested
+  lists with the same rules as `e.hazard`, for example
+  `h01.hazard = list(list(0.10, 0.06), 0.05)`, so a mixture of
+  illness-death models is simulated in one call. All subjects share one
+  accrual process and the subgroups are assigned after accrual, so they
+  enroll over the same calendar in proportion to their prevalence.
+  Without `prevalence` the results are unchanged.
+
 - [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
   gains a `stream` argument that selects an independent `dqrng`
   random-number stream for the given `seed`, so that a large simulation
@@ -233,6 +246,16 @@
   [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md)
   and uses `mc.alpha` for the max-combo test.
 
+- The convergence statement of
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+  (help page and README) is corrected. The residual error of the
+  Pike-Halley Estimator is of the order of the cube of the error of the
+  Pike anchor; it is negligible near the null hypothesis, but at a fixed
+  hazard ratio away from 1 the Pike anchor keeps a bias that does not
+  vanish with the sample size, so the residual error levels off at a
+  small value rather than decreasing at the rate O_p(n^{-3/2}) stated
+  before.
+
 - Help pages corrected or completed: the eligibility condition of
   [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
   for single-endpoint data includes dropout; the rules of
@@ -310,6 +333,15 @@
   switching and dropout in the illness-death model; degenerate milestone
   intervals; the order check of `presorted = TRUE`; and the input
   checks.
+
+- New tests for subgroups in the illness-death model: a single cell
+  reproduces the data without subgroups, each cell follows its own
+  transition hazards, a subgroup matches its separate simulation with
+  the accrual rate scaled by the prevalence, and the output works with
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+  [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md),
+  and
+  [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md).
 
 ## FastSurvival 1.0.0
 

@@ -1,10 +1,10 @@
 # Fast Closed-Form Hazard Ratio Estimation via the Pike-Halley Estimator
 
 Estimates the hazard ratio for a two-group parallel trial using the
-Pike-Halley Estimator, a pure closed-form approximation to the Cox
-partial likelihood maximizer. The function returns the point estimate,
-its standard error on the log scale, and a Wald-type confidence
-interval, using output names consistent with
+Pike-Halley Estimator (Homma, 2025), a pure closed-form approximation to
+the Cox partial likelihood maximizer. The function returns the point
+estimate, its standard error on the log scale, and a Wald-type
+confidence interval, using output names consistent with
 `summary(survival::coxph(...))`. The C++ backend accepts pooled sorted
 vectors directly, performing group splitting and all accumulation in a
 single C++ pass without intermediate R-level vector copies.
@@ -135,19 +135,24 @@ Third, the closed-form Halley correction is applied:
 delta_hat = U_0 / I_0 - J_0 U_0^2 / (2 I_0^3) theta_hat = theta_0
 exp(delta_hat)
 
-The residual error satisfies \|theta_hat - theta_Cox\| = O_p(n^{-3/2}),
-three orders of magnitude faster than the O_p(n^{-1/2}) rate of Peto and
-Pike, and the per-call cost is approximately thirty times lower than
-that of the iterative Cox solver (Homma, 2025).
+The Halley step converges cubically, so the residual error
+\|log(theta_hat) - log(theta_Cox)\| is of the order of the cube of the
+error of the Pike anchor. Near the null hypothesis the anchor is already
+close to the Cox estimate and the residual error is negligible. At a
+fixed hazard ratio away from 1 the Pike anchor has a bias that does not
+vanish as the sample size grows (Berry, Kitchin, and Mock, 1991), so the
+residual error levels off at a small value that depends on the hazard
+ratio and the censoring pattern instead of decreasing with the sample
+size.
 
 The Wald standard error on the log scale is SE = 1 / sqrt(I_0), where
-I_0 is the observed information evaluated at the Pike anchor. This is
-the same quantity used in the Wald confidence interval reported by
-`summary(coxph(...))`, which is based on the observed information at the
-maximum likelihood estimate. Because the Pike anchor lies within
-O_p(n^{-1/2}) of the Cox maximum likelihood estimate, the difference
-between I_0 and the information at the maximum likelihood estimate is
-negligible for the purpose of interval construction.
+I_0 is the observed information evaluated at the Pike anchor. The Wald
+confidence interval reported by `summary(coxph(...))` uses the observed
+information at the maximum likelihood estimate instead. The two differ
+by an amount of the order of the error of the Pike anchor, which is
+small when the hazard ratio is not far from 1; Berry, Kitchin, and Mock
+(1991) found the bias of the Pike estimator minimal for hazard ratios
+below 3.
 
 With `strata`, the estimator targets the stratified Cox model, in which
 each stratum has its own baseline hazard and the hazard ratio is common
@@ -271,8 +276,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min        lq       mean    median       uq      max neval cld
-#>  coxph_fast   60.633   69.3645   81.19345   86.8575   89.802  213.939  1000  a 
-#>       coxph 1510.229 1543.5160 1598.27914 1559.2855 1576.037 7105.983  1000   b
+#>        expr    min       lq      mean   median       uq      max neval cld
+#>  coxph_fast  26.69  31.3965  46.91932  40.0095  44.9770 4196.311  1000  a 
+#>       coxph 710.66 739.3485 774.15252 748.3465 763.1985 5377.644  1000   b
 # }
 ```

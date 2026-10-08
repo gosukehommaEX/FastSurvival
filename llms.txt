@@ -43,7 +43,7 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 
 | Function | Description |
 |----|----|
-| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
+| [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md) | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model, which can also be combined with subgroups. |
 | [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md) | Per-simulation calendar cutoffs of the analysis looks from combined trigger rules (target events, planned and maximum calendar times, minimum time after the previous look, minimum follow-up after a number of enrolled subjects). |
 | [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts, calendar times, or per-simulation cutoffs from [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md). |
 | [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md) | Treatment switching in simulated data: switching at an intermediate event (such as progression), at an opening time after an interim analysis, or at the later of the two, optionally only in the trials selected by an interim decision, with an accelerated-failure-time or new-hazard effect after the switch. |
@@ -194,17 +194,21 @@ same single-scan backend.
 maximizer. The estimator anchors at the Pike closed-form estimate, the
 ratio of the observed-to-expected event ratios of the two groups from
 the log-rank computation (Berry, Kitchin, and Mock, 1991), and applies a
-single analytic Halley correction to the Cox score, giving residual
-error of order O_p(n^{-3/2}) relative to the Cox maximum likelihood
-estimate. On the `pharmacoSmoking` dataset (tie rate 77.5%), the
-Pike-Halley Estimator reproduces the Breslow-based Cox estimate to
-within on the order of 1e-08. The Wald confidence interval uses the
-observed information at the Pike anchor as the variance estimate. The
-C++ backend performs group splitting, at-risk counting, and
-per-distinct-event-time accumulation in a single pass. With `strata`,
-the risk sets are formed within each stratum and the Pike anchor, score,
-and information are summed over strata, which approximates the
-stratified Cox model `coxph(... + strata(s), ties = "breslow")`.
+single analytic Halley correction to the Cox score. Because the Halley
+step converges cubically, the residual error relative to the Cox maximum
+likelihood estimate is of the order of the cube of the error of the Pike
+anchor. It is negligible near the null hypothesis. At a fixed hazard
+ratio away from 1 the Pike anchor keeps a bias that does not vanish with
+the sample size, so the residual error levels off at a small value. On
+the `pharmacoSmoking` dataset (tie rate 77.5%), the Pike-Halley
+Estimator reproduces the Breslow-based Cox estimate to within on the
+order of 1e-08. The Wald confidence interval uses the observed
+information at the Pike anchor as the variance estimate. The C++ backend
+performs group splitting, at-risk counting, and per-distinct-event-time
+accumulation in a single pass. With `strata`, the risk sets are formed
+within each stratum and the Pike anchor, score, and information are
+summed over strata, which approximates the stratified Cox model
+`coxph(... + strata(s), ties = "breslow")`.
 
 **rmst_fast** integrates the Kaplan-Meier survival step function up to a
 horizon (Royston and Parmar, 2013) in a single C++ scan, reused once per
