@@ -121,6 +121,16 @@ so the analyzed event count can exceed the target, as in
 A matrix \code{event.looks} with one row per simulated trial gives
 simulation-specific event targets, for example targets re-estimated at an
 interim analysis.
+
+Each look is determined by its own conditions; only \code{min.gap} refers
+to the previous look. A look with \code{max.time} as its only condition is
+placed at that time. When the previous look is not reached, \code{t_gap} is
+infinite, so a look with \code{min.gap} is not reached either unless its
+\code{max.time} caps it. The looks are not reordered: when the conditions
+of a later look give an earlier cutoff than the previous look (for example
+\code{event.looks = c(150, 220)} with \code{max.time = c(NA, 30)}), a
+warning is given. Supplying \code{min.gap} (for example 0) at the later
+looks keeps them in order unless their \code{max.time} is earlier.
 }
 \examples{
 df <- simdata_fast(nsim = 20, n = c(150, 150), a.time = c(0, 12),

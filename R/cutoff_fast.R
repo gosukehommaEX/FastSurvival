@@ -59,6 +59,16 @@
 #' simulation-specific event targets, for example targets re-estimated at an
 #' interim analysis.
 #'
+#' Each look is determined by its own conditions; only \code{min.gap} refers
+#' to the previous look. A look with \code{max.time} as its only condition is
+#' placed at that time. When the previous look is not reached, \code{t_gap} is
+#' infinite, so a look with \code{min.gap} is not reached either unless its
+#' \code{max.time} caps it. The looks are not reordered: when the conditions
+#' of a later look give an earlier cutoff than the previous look (for example
+#' \code{event.looks = c(150, 220)} with \code{max.time = c(NA, 30)}), a
+#' warning is given. Supplying \code{min.gap} (for example 0) at the later
+#' looks keeps them in order unless their \code{max.time} is earlier.
+#'
 #' @param data A data frame of simulated trials, such as the output of
 #'   \code{\link{simdata_fast}}, with columns \code{sim}, \code{accrual_time},
 #'   and the columns named by \code{tte.col} and \code{event.col}.
@@ -264,6 +274,19 @@ cutoff_fast <- function(data, event.looks = NULL, time.looks = NULL,
     t_cal, target, t_cap, gap, n_enr, f_up
   )
   core[!is.finite(core)] <- NA_real_
+
+  # Each look follows its own rules, so a later look can fall before the
+  # previous one (for example when only the later look has a calendar cap).
+  # The looks are not reordered; the user is warned instead.
+  if (n_looks > 1L) {
+    back   <- core[, -1L, drop = FALSE] < core[, -n_looks, drop = FALSE]
+    n_back <- sum(rowSums(back, na.rm = TRUE) > 0)
+    if (n_back > 0L) {
+      warning("in ", n_back, " simulated trial(s) the cutoff of a look is ",
+              "earlier than that of the previous look; see Details of ",
+              "?cutoff_fast", call. = FALSE)
+    }
+  }
 
   look_value <- if (!is.null(event.looks) && !ev_is_mat) {
     ifelse(!is.na(target[1L, ]), target[1L, ], t_cal)

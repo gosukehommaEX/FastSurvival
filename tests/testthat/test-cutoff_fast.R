@@ -160,3 +160,16 @@ test_that("cutoff_fast: input validation", {
                "must be a data frame")
   expect_error(cutoff_fast(df[0, ], event.looks = 10), "no rows")
 })
+
+test_that("cutoff_fast: a later look before the previous one gives a warning", {
+  df <- simdata_fast(nsim = 10, n = c(150, 150), a.time = c(0, 12),
+                     a.rate = 25, e.median = list(12, 18), d.hazard = 0.01,
+                     seed = 1)
+  # About 100 events are expected by month 15, so the capped second look
+  # precedes the 150-event first look.
+  expect_warning(cut <- cutoff_fast(df, event.looks = c(150, 220),
+                                    max.time = c(NA, 15)),
+                 "earlier than that of the previous look")
+  expect_true(any(cut[, 2] < cut[, 1], na.rm = TRUE))
+  expect_warning(cutoff_fast(df, event.looks = c(150, 220)), NA)
+})

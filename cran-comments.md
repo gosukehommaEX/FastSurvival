@@ -20,6 +20,11 @@ list of changes.
 
 ## Notes for the reviewer
 
+This update follows version 1.0.0 (published on 2026-09-29) after a short
+interval because it fixes an error in `analysis_fast()` for the two-sided
+max-combo test with two or three weights, in addition to the new features
+described above.
+
 The checks below reported no NOTE. If the incoming check reports possibly
 misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author
 surnames, used to name the
@@ -34,8 +39,8 @@ requireNamespace(). The package was checked with --run-donttest.
 ## Test environments
 
 * Local: Windows 11 x64 (build 26200), R 4.6.0
-* win-builder: R-release (R 4.6.1) [TO BE CONFIRMED]
-* win-builder: R-devel [TO BE CONFIRMED]
+* win-builder: R-release (R 4.6.1)
+* win-builder: R-devel (2026-10-05 r90641)
 * GitHub Actions (R-CMD-check workflow):
   - ubuntu-latest (R release)
   - ubuntu-latest (R devel)

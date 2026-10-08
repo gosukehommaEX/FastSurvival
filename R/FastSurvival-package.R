@@ -89,8 +89,10 @@
 #'   \item{\code{\link{gen_scenario_fast}}}{Design-stage assembly of survival,
 #'     dropout, and accrual scenarios, with \code{plot()} and \code{print()}
 #'     methods.}
-#'   \item{\code{\link{kmcurve_fast}}}{Analysis-stage Kaplan-Meier curves with
-#'     a risk table, with \code{plot()} and \code{print()} methods.}
+#'   \item{\code{\link{kmcurve_fast}}}{Analysis-stage Kaplan-Meier curves of a
+#'     single data set, with \code{plot()} (optionally with restricted-mean
+#'     shading and a smoothed hazard-ratio panel) and \code{print()}
+#'     methods.}
 #' }
 #'
 #' @references

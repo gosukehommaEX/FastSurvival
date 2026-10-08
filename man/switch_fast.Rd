@@ -37,10 +37,12 @@ switches. Defaults to 1.}
 
 \item{cutoff}{Per-simulation calendar times at which switching opens, used
 with \code{when = "cutoff"} or \code{"later"}. Either a numeric vector with
-one element per simulated trial (in the order of the sorted distinct values
-of \code{data$sim}) or a one-column matrix from \code{\link{cutoff_fast}}
-(rows matched by row names). \code{NA} disables switching in that
-simulated trial.}
+one element per simulated trial or a one-column matrix from
+\code{\link{cutoff_fast}}. As in the \code{cutoff.looks} argument of
+\code{\link{analysis_fast}}, the names of a vector (or the row names of a
+matrix) are matched to the values of \code{data$sim}; without names the
+elements are taken in the order of the sorted distinct values of
+\code{data$sim}. \code{NA} disables switching in that simulated trial.}
 
 \item{delay}{A single non-negative number added to \code{cutoff}, for
 example the time needed to implement the crossover after an interim
@@ -118,9 +120,10 @@ The switch time \code{s}, measured from accrual, is
 }
 A subject of the selected \code{group} switches with probability
 \code{prob} when the switch occurs before the terminal event and before
-dropout (\code{s < e2_surv_time} and \code{s < dropout_time}, or
-\code{s < surv_time} for single-endpoint data) and the subject has not
-already switched. With \code{when = "cutoff"} or \code{"later"}, the switch
+dropout (\code{s < e2_surv_time}, or \code{s < surv_time} for
+single-endpoint data, and \code{s < dropout_time}) and the subject has not
+already switched (\code{switched == 1}, for example at progression through
+the \code{switch.prop} argument of \code{\link{simdata_fast}}). With \code{when = "cutoff"} or \code{"later"}, the switch
 never occurs before the opening time, so every outcome observed by calendar
 time \code{cutoff + delay} is left unchanged; subjects accrued after the
 opening are also eligible, as in a protocol that opens crossover from that

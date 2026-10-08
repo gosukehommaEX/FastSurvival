@@ -30,7 +30,10 @@
 #' \code{\link{cutoff_fast}} for a combination of event and calendar-time rules.
 #' A look that is not reached in a simulation (\code{NA} cutoff) is marked with
 #' \code{reached = FALSE} and \code{NA} counts and statistics, as in the
-#' event-driven regime.
+#' event-driven regime. This differs from \code{\link{analysis_fast}}, which
+#' analyzes the full data at an unreached look; in
+#' \code{\link{simsummary_fast}} an unreached look of \code{pairwise_fast}
+#' output therefore never crosses a boundary.
 #'
 #' The Bonferroni option multiplies each p-value by the number of contrasts and
 #' caps it at one, controlling the family-wise error rate across the

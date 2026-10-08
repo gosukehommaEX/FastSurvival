@@ -556,3 +556,12 @@ test_that("analysis_fast max-combo with mc.alpha keeps the decisions and bounds 
                              stat = "maxcombo", mc.alpha = 1),
                "mc.alpha")
 })
+
+test_that("analysis_fast: an event target beyond the integer range is not reached", {
+  df <- simdata_fast(nsim = 3, n = c(30, 30), a.time = c(0, 6), a.rate = 10,
+                     e.median = list(12, 18), seed = 1)
+  res <- analysis_fast(df, control = 1, event.looks = 3e9)
+  expect_true(all(!res$reached))
+  expect_true(all(is.na(res$cutoff)))
+  expect_equal(res$look.value, rep(3e9, 3))
+})

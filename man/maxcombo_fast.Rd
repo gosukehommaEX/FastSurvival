@@ -45,7 +45,8 @@ G(1,0) for early differences, and G(1,1) for middle differences.}
 \item{presorted}{A logical value. If \code{TRUE}, \code{time}, \code{event},
 and \code{group} are assumed to be sorted in ascending order of
 \code{time}, and the internal \code{order()} call is skipped. If
-\code{FALSE} (default), sorting is handled internally.}
+\code{FALSE} (default), sorting is handled internally.
+The order is checked, and an error is given when it does not hold.}
 
 \item{abseps}{A single positive numeric value, the absolute error tolerance
 passed to the multivariate normal integration. Defaults to 1e-5. Larger

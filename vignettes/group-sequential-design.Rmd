@@ -198,9 +198,10 @@ proportional hazards. To study a delayed treatment effect, replace the constant
 event hazard with a piecewise specification through `e.hazard` and `e.time` and
 keep everything else the same. The log-rank statistic loses power under a
 delayed effect, and a weighted or max-combo statistic (Lin et al., 2020) can be
-substituted at the `analysis_fast()` step. Because gsDesign cannot evaluate
-these cases in closed form, the simulation machinery becomes the tool of
-choice.
+substituted at the `analysis_fast()` step. Analytic approximations exist for
+some non-proportional hazards settings and some of these tests, but simulation
+evaluates any combination of data-generating model, test, and analysis timing
+in the same way, and it checks such approximations.
 
 The max-combo p-value requires a multivariate normal integral for every
 simulated trial and look, which dominates the computing time. When only the

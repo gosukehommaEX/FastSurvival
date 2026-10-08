@@ -53,7 +53,10 @@
 #' combination of event and calendar-time rules. A missing or infinite entry
 #' marks a look whose trigger was not met in that simulation: as for an
 #' unreached \code{event.looks} target, the full data are used, \code{reached}
-#' is \code{FALSE}, and \code{cutoff} is \code{NA}.
+#' is \code{FALSE}, and \code{cutoff} is \code{NA}. In contrast,
+#' \code{\link{pairwise_fast}} reports \code{NA} counts and statistics for an
+#' unreached look, because its contrasts share one cutoff and have no common
+#' final data.
 #'
 #' Exactly one of \code{event.looks}, \code{time.looks}, and
 #' \code{cutoff.looks} must be supplied.
@@ -134,7 +137,10 @@
 #' \code{"mover"} a positive Z favors treatment; for \code{"loglog"} the
 #' statistic is the difference of the complementary log-log transforms, so a
 #' negative Z favors treatment, and the one-sided p-value is the lower tail as
-#' in \code{\link{milestone_fast}}.
+#' in \code{\link{milestone_fast}}. When the Kaplan-Meier estimate of a group
+#' is 0 or 1 at \code{tau}, its one-sample interval degenerates to the
+#' estimate, so the interval of the difference is still reported, while the
+#' \code{"loglog"} statistic is \code{NA}.
 #'
 #' The \code{"rmw"} statistic is the robust modestly-weighted log-rank test of
 #' Magirr and Ohrn, the maximum of the standard log-rank component and a single
@@ -315,7 +321,7 @@
 #'   columns are \code{sim}, \code{look} (1-based look index),
 #'   \code{look.value} (the requested event count or calendar time, or the
 #'   \code{"look.value"} attribute of \code{cutoff.looks}), optionally \code{population}, \code{cutoff} (the
-#'   calendar time used, \code{NA} when an event target was not reached),
+#'   calendar time used, \code{NA} when the look was not reached),
 #'   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
 #'   number of enrolled subjects whose dropout occurred on or before the cutoff)
 #'   and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
@@ -702,10 +708,15 @@ analysis_fast <- function(data, control,
   wmst_tau1_v  <- as.numeric(wmst.tau1)
   wmst_tau2_v  <- if (is.null(wmst.tau2_use)) 0 else as.numeric(wmst.tau2_use)
 
+  # Event targets beyond the integer range can never be met; cap them so that
+  # the C++ conversion to int is defined, as in cutoff_fast().
+  look_core <- as.numeric(looks)
+  if (look_type == 0L) look_core <- pmin(look_core, .Machine$integer.max)
+
   # ---- Call the fused kernel ---------------------------------------------
   core <- analysis_loop_core(
     sim_ptr, accrual, tte, event, j_all,
-    look_type, as.numeric(looks), cut_mat,
+    look_type, look_core, cut_mat,
     pop_col, pop_level, sub_mat,
     if (use_strata) strata_int else integer(0), use_strata,
     do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw,
@@ -893,6 +904,11 @@ analysis_fast <- function(data, control,
         up <- surv + z_mult * se
       } else {
         ok_s <- is.finite(surv) & is.finite(se) & surv > 0 & surv < 1
+        # An estimate of 0 or 1 has zero Greenwood variance; its interval
+        # degenerates to the estimate (as in milestone_fast()).
+        deg <- is.finite(surv) & (surv <= 0 | surv >= 1)
+        lo[deg] <- surv[deg]
+        up[deg] <- surv[deg]
         if (ms.method == "mover") {
           g_se <- se / surv
           lo[ok_s] <- (surv * exp(-z_mult * g_se))[ok_s]

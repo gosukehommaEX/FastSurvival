@@ -213,3 +213,27 @@ test_that("switch_fast: input validation", {
                            group = 1, when = "cutoff", cutoff = 1,
                            aft.factor = 2), "latent columns")
 })
+
+test_that("switch_fast: a named cutoff vector is matched by name", {
+  df  <- make_sw_data(nsim = 5)
+  ia  <- cutoff_fast(df, event.looks = 60)
+  ref <- switch_fast(df, group = 1, when = "cutoff", cutoff = ia,
+                     aft.factor = 1.5)
+  v <- ia[, 1]
+  expect_identical(names(v), rownames(ia))
+  expect_identical(switch_fast(df, group = 1, when = "cutoff", cutoff = rev(v),
+                               aft.factor = 1.5), ref)
+  expect_error(switch_fast(df, group = 1, when = "cutoff",
+                           cutoff = stats::setNames(v, paste0("x", 1:5)),
+                           aft.factor = 1.5), "names")
+})
+
+test_that("switch_fast: subjects without a finite event or dropout time stay censored", {
+  df <- simdata_fast(nsim = 5, n = c(100, 100), a.time = c(0, 12),
+                     a.rate = 200 / 12, e.hazard = list(c(0.1, 0), c(0.1, 0)),
+                     e.time = c(0, 24, Inf), seed = 6)
+  sw <- switch_fast(df, group = 1, when = "cutoff", cutoff = rep(18, 5),
+                    aft.factor = 1.5)
+  expect_true(any(sw$switched == 1 & !is.finite(sw$surv_time)))
+  expect_equal(sw$event, as.integer(is.finite(sw$surv_time)))
+})

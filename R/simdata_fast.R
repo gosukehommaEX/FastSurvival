@@ -16,6 +16,13 @@
 #' survival time occurs first. The calendar time of the observed event is
 #' \code{accrual_time + tte}.
 #'
+#' A hazard of zero in the last piece (for example a cure fraction, as in
+#' \code{e.hazard = c(0.1, 0)} with \code{e.time = c(0, 24, Inf)}) gives an
+#' infinite latent time to some subjects. A subject with neither a finite
+#' survival time nor a finite dropout time has \code{tte = Inf} and
+#' \code{event = 0}, and an analysis at a finite cutoff censors the subject at
+#' the cutoff.
+#'
 #' The total enrolled is fixed at \code{sum(n)}. With \code{a.rate} the rates are
 #' absolute (subjects per unit time): when the accrual period is fully specified
 #' the rates must accrue exactly \code{sum(n)}, and when one extra rate is given
@@ -56,6 +63,8 @@
 #' per-group hazards. In a two-group simulation each specification is either
 #' shared by both groups (not a list) or a list of length two (control first),
 #' and each group's element may be a per-cell list when there are subgroups.
+#' Without subgroups, a length-two \code{n} requires at least one of the
+#' survival and dropout specifications to be such a list.
 #' The breakpoints \code{e.time} and \code{d.time} follow the same structure
 #' (per group in a two-group simulation, per cell in a one-group simulation with
 #' subgroups).
@@ -151,8 +160,9 @@
 #'   to \code{h12.hazard}.
 #' @param h12.time Breakpoints for a piecewise \code{h12.hazard}, measured from
 #'   the intermediate-event time (clock-reset).
-#' @param switch.prop Probability that a subject with an intermediate event
-#'   switches treatment, a scalar or a two-element list (control, treatment).
+#' @param switch.prop Probability that a subject whose intermediate event is
+#'   observed (on or before dropout) switches treatment at that event, a
+#'   scalar or a two-element list (control, treatment).
 #'   Defaults to zero (no switching); the treatment group is typically left at
 #'   zero.
 #' @param h12.switch.hazard Transition hazard(s) from state 1 to state 2 for
@@ -194,7 +204,13 @@
 #'   \code{switch_time}, where \code{e1} is the first (state-0 exit) endpoint
 #'   and \code{e2} is the terminal endpoint. In oncology \code{e1} is
 #'   progression-free survival, \code{e2} is overall survival, and
-#'   \code{intermediate} flags progression.
+#'   \code{intermediate} flags progression. The column \code{intermediate}
+#'   describes the latent process (an intermediate event before the terminal
+#'   event, \code{e1_surv_time < e2_surv_time}), also when it would occur
+#'   after dropout; the observed intermediate event is \code{intermediate == 1}
+#'   with \code{e1_event == 1}. A switch (\code{switched == 1}, at
+#'   \code{switch_time}, the intermediate-event time) occurs only after an
+#'   observed intermediate event.
 #'
 #' @examples
 #' # Batches from independent random-number streams: the simulations of each
@@ -385,6 +401,10 @@ simdata_fast <- function(nsim       = 1000,
                          switch.clock = "reset",
                          stream     = NULL) {
 
+  if (missing(n) || !is.numeric(n) || length(n) < 1L || anyNA(n) ||
+      any(!is.finite(n)) || any(n < 1) || any(abs(n - round(n)) > 1e-8)) {
+    stop("'n' must contain positive whole numbers")
+  }
   if (!is.null(stream)) {
     if (is.null(seed)) stop("'stream' requires 'seed'")
     if (length(stream) != 1L || !is.finite(stream) || stream < 0 ||

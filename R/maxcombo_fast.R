@@ -69,6 +69,7 @@
 #'   and \code{group} are assumed to be sorted in ascending order of
 #'   \code{time}, and the internal \code{order()} call is skipped. If
 #'   \code{FALSE} (default), sorting is handled internally.
+#'   The order is checked, and an error is given when it does not hold.
 #' @param abseps A single positive numeric value, the absolute error tolerance
 #'   passed to the multivariate normal integration. Defaults to 1e-5. Larger
 #'   values speed up the quasi-Monte-Carlo integration (four or more weights,
@@ -173,6 +174,7 @@ maxcombo_fast <- function(time, event, group, control, side = 2,
     event <- as.integer(event[ord])
     j     <- j[ord]
   } else {
+    check_presorted(time)
     event <- as.integer(event)
   }
 

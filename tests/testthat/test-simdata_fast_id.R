@@ -235,3 +235,35 @@ test_that("simdata_fast (illness-death): scalar n with alloc gives two groups", 
   expect_equal(sort(unique(dat$group)), c(1, 2))
   expect_equal(sum(dat$group == 1 & dat$sim == 1), 50)
 })
+
+test_that("simdata_fast (illness-death): a switch requires an observed intermediate event", {
+  dat <- simdata_fast(
+    nsim = 1, n = c(20000, 20000), a.time = c(0, 1), a.prop = 1,
+    h01.hazard = list(0.10, 0.07), h02.hazard = list(0.05, 0.04),
+    d.hazard = 0.08, switch.prop = list(0.5, 0),
+    h12.switch.hazard = list(0.015, 0.015), seed = 9
+  )
+  sw <- dat$switched == 1L
+  expect_true(any(sw))
+  expect_true(all(dat$intermediate[sw] == 1L & dat$e1_event[sw] == 1L))
+  # A latent intermediate event after dropout does not lead to a switch.
+  late <- dat$intermediate == 1L & dat$e1_event == 0L
+  expect_true(any(late))
+  expect_true(all(dat$switched[late] == 0L))
+  expect_true(all(is.na(dat$switch_time[late])))
+  obs <- dat$group == 1L & dat$intermediate == 1L & dat$e1_event == 1L
+  expect_lt(abs(mean(dat$switched[obs]) - 0.5), 0.02)
+})
+
+test_that("simdata_fast (illness-death): infinite latent times are censored", {
+  dat <- simdata_fast(
+    nsim = 1, n = c(3000, 3000), a.time = c(0, 1), a.prop = 1,
+    h01.hazard = c(0.05, 0), h01.time = c(0, 12, Inf),
+    h02.hazard = c(0.02, 0), h02.time = c(0, 12, Inf), seed = 4
+  )
+  never <- !is.finite(dat$e1_surv_time)
+  expect_true(any(never))
+  expect_equal(dat$e1_event, as.integer(is.finite(dat$e1_surv_time)))
+  expect_equal(dat$e2_event, as.integer(is.finite(dat$e2_surv_time)))
+  expect_true(all(dat$intermediate[never] == 0L))
+})

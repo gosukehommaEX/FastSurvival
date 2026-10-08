@@ -187,7 +187,7 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   columns are \code{sim}, \code{look} (1-based look index),
   \code{look.value} (the requested event count or calendar time, or the
   \code{"look.value"} attribute of \code{cutoff.looks}), optionally \code{population}, \code{cutoff} (the
-  calendar time used, \code{NA} when an event target was not reached),
+  calendar time used, \code{NA} when the look was not reached),
   \code{reached}, \code{n.enrolled}, \code{n.event}, \code{n.dropout} (the
   number of enrolled subjects whose dropout occurred on or before the cutoff)
   and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
@@ -276,7 +276,10 @@ of progression-free survival), by a subset of the subjects, or by a
 combination of event and calendar-time rules. A missing or infinite entry
 marks a look whose trigger was not met in that simulation: as for an
 unreached \code{event.looks} target, the full data are used, \code{reached}
-is \code{FALSE}, and \code{cutoff} is \code{NA}.
+is \code{FALSE}, and \code{cutoff} is \code{NA}. In contrast,
+\code{\link{pairwise_fast}} reports \code{NA} counts and statistics for an
+unreached look, because its contrasts share one cutoff and have no common
+final data.
 
 Exactly one of \code{event.looks}, \code{time.looks}, and
 \code{cutoff.looks} must be supplied.
@@ -357,7 +360,10 @@ is a positive difference (higher treatment survival). For \code{"wald"} and
 \code{"mover"} a positive Z favors treatment; for \code{"loglog"} the
 statistic is the difference of the complementary log-log transforms, so a
 negative Z favors treatment, and the one-sided p-value is the lower tail as
-in \code{\link{milestone_fast}}.
+in \code{\link{milestone_fast}}. When the Kaplan-Meier estimate of a group
+is 0 or 1 at \code{tau}, its one-sample interval degenerates to the
+estimate, so the interval of the difference is still reported, while the
+\code{"loglog"} statistic is \code{NA}.
 
 The \code{"rmw"} statistic is the robust modestly-weighted log-rank test of
 Magirr and Ohrn, the maximum of the standard log-rank component and a single

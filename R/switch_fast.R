@@ -42,9 +42,10 @@
 #' }
 #' A subject of the selected \code{group} switches with probability
 #' \code{prob} when the switch occurs before the terminal event and before
-#' dropout (\code{s < e2_surv_time} and \code{s < dropout_time}, or
-#' \code{s < surv_time} for single-endpoint data) and the subject has not
-#' already switched. With \code{when = "cutoff"} or \code{"later"}, the switch
+#' dropout (\code{s < e2_surv_time}, or \code{s < surv_time} for
+#' single-endpoint data, and \code{s < dropout_time}) and the subject has not
+#' already switched (\code{switched == 1}, for example at progression through
+#' the \code{switch.prop} argument of \code{\link{simdata_fast}}). With \code{when = "cutoff"} or \code{"later"}, the switch
 #' never occurs before the opening time, so every outcome observed by calendar
 #' time \code{cutoff + delay} is left unchanged; subjects accrued after the
 #' opening are also eligible, as in a protocol that opens crossover from that
@@ -91,10 +92,12 @@
 #'   \code{"cutoff"}, and \code{"later"}, giving the switch time (see Details).
 #' @param cutoff Per-simulation calendar times at which switching opens, used
 #'   with \code{when = "cutoff"} or \code{"later"}. Either a numeric vector with
-#'   one element per simulated trial (in the order of the sorted distinct values
-#'   of \code{data$sim}) or a one-column matrix from \code{\link{cutoff_fast}}
-#'   (rows matched by row names). \code{NA} disables switching in that
-#'   simulated trial.
+#'   one element per simulated trial or a one-column matrix from
+#'   \code{\link{cutoff_fast}}. As in the \code{cutoff.looks} argument of
+#'   \code{\link{analysis_fast}}, the names of a vector (or the row names of a
+#'   matrix) are matched to the values of \code{data$sim}; without names the
+#'   elements are taken in the order of the sorted distinct values of
+#'   \code{data$sim}. \code{NA} disables switching in that simulated trial.
 #' @param delay A single non-negative number added to \code{cutoff}, for
 #'   example the time needed to implement the crossover after an interim
 #'   analysis. Defaults to 0.
@@ -248,6 +251,10 @@ switch_fast <- function(data, group, prob = 1,
     if (is.null(cutoff)) {
       stop("'cutoff' must be supplied when when = \"", when, "\"")
     }
+    if (!is.matrix(cutoff) && !is.null(names(cutoff))) {
+      cutoff <- matrix(as.numeric(cutoff), ncol = 1L,
+                       dimnames = list(names(cutoff), NULL))
+    }
     if (is.matrix(cutoff)) {
       if (ncol(cutoff) != 1L) {
         stop("a matrix 'cutoff' must have one column; select the look, for ",
@@ -258,8 +265,8 @@ switch_fast <- function(data, group, prob = 1,
       if (!is.null(rn)) {
         idx <- match(sim_key(sim_ids), rn)
         if (anyNA(idx)) {
-          stop("the row names of 'cutoff' do not cover every value of ",
-               "'data$sim'")
+          stop("the names (or row names) of 'cutoff' do not cover every ",
+               "value of 'data$sim'")
         }
         cv <- cv[idx]
       }
@@ -371,10 +378,14 @@ switch_fast <- function(data, group, prob = 1,
     e2[idx] <- term_new
     out$e1_surv_time     <- e1
     out$e2_surv_time     <- e2
+    # Ties count as events; a subject with neither a finite event time nor a
+    # finite dropout time is censored, as in simdata_fast().
     out$e1_tte           <- pmin(e1, drop_t)
-    out$e1_event         <- as.integer(e1 <= drop_t)
+    out$e1_event         <- as.integer(e1 < drop_t |
+                                         (e1 == drop_t & is.finite(e1)))
     out$e2_tte           <- pmin(e2, drop_t)
-    out$e2_event         <- as.integer(e2 <= drop_t)
+    out$e2_event         <- as.integer(e2 < drop_t |
+                                         (e2 == drop_t & is.finite(e2)))
     out$e1_calendar_time <- a + out$e1_tte
     out$e2_calendar_time <- a + out$e2_tte
   } else {
@@ -382,7 +393,7 @@ switch_fast <- function(data, group, prob = 1,
     st[idx] <- term_new
     out$surv_time <- st
     out$tte   <- pmin(st, drop_t)
-    out$event <- as.integer(st <= drop_t)
+    out$event <- as.integer(st < drop_t | (st == drop_t & is.finite(st)))
     if ("calendar_time" %in% names(out)) out$calendar_time <- a + out$tte
   }
   out$switched    <- sw_col

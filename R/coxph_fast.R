@@ -81,8 +81,10 @@
 #'   treated as the treatment group.
 #' @param side 1 for a one-sided test in the direction of treatment benefit
 #'   (hazard ratio below 1, i.e. a negative coefficient) or 2 for a two-sided
-#'   test (default 2). The reported p-value follows this choice; the confidence
-#'   interval is always two-sided at \code{conf.level}.
+#'   test (default 2). The returned vector has no p-value: \code{side} is
+#'   stored as an attribute, and the \code{print()} method reports the
+#'   p-value that follows it. The confidence interval is always two-sided at
+#'   \code{conf.level}.
 #' @param conf.level A single numeric value in (0, 1) specifying the confidence
 #'   level for the Wald interval. Defaults to 0.95.
 #' @param presorted A logical value. If \code{TRUE}, \code{time},
@@ -91,6 +93,7 @@
 #'   and by time within stratum, so that the rows of each stratum are
 #'   contiguous), and the internal \code{order()} call is skipped. If
 #'   \code{FALSE} (default), sorting is handled internally.
+#'   The order is checked, and an error is given when it does not hold.
 #' @param strata An optional vector of stratum labels aligned with
 #'   \code{time}, without missing values. When supplied, the stratified
 #'   estimator described in Details is computed. Several stratification
@@ -237,11 +240,8 @@ coxph_fast <- function(time, event, group, control, side = 2,
     j     <- j[ord]
     if (use_strata) strata_int <- strata_int[ord]
   } else {
+    check_presorted(time, if (use_strata) strata_int else NULL)
     event <- as.integer(event)
-    if (use_strata && anyDuplicated(rle(strata_int)$values) > 0L) {
-      stop("With presorted = TRUE the rows of each stratum must be ",
-           "contiguous; use presorted = FALSE")
-    }
   }
 
   # C++ core: single scan over pooled sorted data (per stratum when

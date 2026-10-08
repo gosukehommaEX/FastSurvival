@@ -76,7 +76,7 @@ static inline double inv_cum_hazard(double tgt,
                                     const std::vector<double>& fin_time,
                                     const std::vector<double>& cum_haz) {
   const int n_int = (int) hazard.size();
-  if (n_int == 1) return tgt / hazard[0];
+  if (n_int == 1) return (hazard[0] > 0.0) ? tgt / hazard[0] : R_PosInf;
   int lo = 0, hi = n_int - 1;
   while (lo < hi) {
     int mid = lo + (hi - lo) / 2;
@@ -84,7 +84,15 @@ static inline double inv_cum_hazard(double tgt,
   }
   int k = lo;
   if (cum_haz[k] > tgt && k > 0) --k;
-  return fin_time[k] + (tgt - cum_haz[k]) / hazard[k];
+  // A zero hazard in the last piece gives an infinite time.
+  return (hazard[k] > 0.0) ? fin_time[k] + (tgt - cum_haz[k]) / hazard[k]
+                           : R_PosInf;
+}
+
+// Event indicator of min(t, dr): ties count as events, and a subject with
+// neither a finite event time nor a finite dropout time is censored.
+static inline int event_first(double t, double dr) {
+  return (t < dr || (t == dr && std::isfinite(t))) ? 1 : 0;
 }
 
 // Fill one group's block of every output column starting at row 'base'.
@@ -138,6 +146,7 @@ static void simulate_group_id_into(
     double e1_t, e2_t;
     int    intermediate = 0, switched = 0;
     double sw_time = NA_REAL;
+    const double dr = dro_col[base + i];
 
     if (t02 <= t01) {
       // Direct terminal event before any intermediate event.
@@ -145,9 +154,12 @@ static void simulate_group_id_into(
       e2_t = t02;
     } else {
       // Intermediate event first, then post-event survival (clock-reset).
+      // 'intermediate' flags the latent intermediate event; a switch requires
+      // the intermediate event to be observed, that is, on or before dropout
+      // (t01 is finite here because t01 < t02).
       intermediate = 1;
       e1_t = t01;
-      const bool sw = (u_sw[i] < switch_prop);
+      const bool sw = (u_sw[i] < switch_prop) && (t01 <= dr);
       double osp;
       if (sw) {
         switched = 1;
@@ -159,16 +171,15 @@ static void simulate_group_id_into(
       e2_t = t01 + osp;
     }
 
-    const double dr = dro_col[base + i];
     const double e1_tt = (e1_t <= dr) ? e1_t : dr;
     const double e2_tt = (e2_t <= dr) ? e2_t : dr;
 
     e1_surv_col[base + i] = e1_t;
     e2_surv_col[base + i] = e2_t;
     e1_tte_col[base + i]  = e1_tt;
-    e1_evt_col[base + i]  = (e1_t <= dr) ? 1 : 0;
+    e1_evt_col[base + i]  = event_first(e1_t, dr);
     e2_tte_col[base + i]  = e2_tt;
-    e2_evt_col[base + i]  = (e2_t <= dr) ? 1 : 0;
+    e2_evt_col[base + i]  = event_first(e2_t, dr);
     e1_cal_col[base + i]  = acc_col[base + i] + e1_tt;
     e2_cal_col[base + i]  = acc_col[base + i] + e2_tt;
     inter_col[base + i]   = intermediate;

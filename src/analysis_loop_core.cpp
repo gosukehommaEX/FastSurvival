@@ -50,6 +50,7 @@ struct WkmScratch {
   std::vector<double> width; std::vector<double> wt;
   std::vector<double> s1; std::vector<double> s2;
   std::vector<double> sp; std::vector<double> a_seq;
+  std::vector<double> pf;
 };
 void wkm_core_impl(const double*, const int*, const int*, int, int,
                    WkmScratch&, double*);
@@ -311,7 +312,9 @@ List analysis_loop_core(
         const double a = accrual[g];
         if (a > cut_cutoff) continue;
         const double full   = tte[g];
-        const bool   before = (a + full <= cut_cutoff);
+        // A subject who never has the event or drops out (infinite time)
+        // stays in follow-up, also when the look is not reached.
+        const bool   before = std::isfinite(full) && (a + full <= cut_cutoff);
         orig_cut[m] = g - g0;
         t_cut[m]    = before ? full : (cut_cutoff - a);
         e_cut[m]    = before ? event[g] : 0;

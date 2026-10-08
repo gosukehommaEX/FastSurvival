@@ -31,8 +31,10 @@ treated as the treatment group.}
 
 \item{side}{1 for a one-sided test in the direction of treatment benefit
 (hazard ratio below 1, i.e. a negative coefficient) or 2 for a two-sided
-test (default 2). The reported p-value follows this choice; the confidence
-interval is always two-sided at \code{conf.level}.}
+test (default 2). The returned vector has no p-value: \code{side} is
+stored as an attribute, and the \code{print()} method reports the
+p-value that follows it. The confidence interval is always two-sided at
+\code{conf.level}.}
 
 \item{conf.level}{A single numeric value in (0, 1) specifying the confidence
 level for the Wald interval. Defaults to 0.95.}
@@ -42,7 +44,8 @@ level for the Wald interval. Defaults to 0.95.}
 ascending order of \code{time} (with \code{strata}, sorted by stratum
 and by time within stratum, so that the rows of each stratum are
 contiguous), and the internal \code{order()} call is skipped. If
-\code{FALSE} (default), sorting is handled internally.}
+\code{FALSE} (default), sorting is handled internally.
+The order is checked, and an error is given when it does not hold.}
 
 \item{strata}{An optional vector of stratum labels aligned with
 \code{time}, without missing values. When supplied, the stratified
