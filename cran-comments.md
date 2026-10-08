@@ -17,8 +17,9 @@ list of changes.
 
 ## Notes for the reviewer
 
-If the incoming check reports possibly misspelled words in the DESCRIPTION,
-"Kalbfleisch" and "Pepe" are author surnames, used to name the
+The checks below reported no NOTE. If the incoming check reports possibly
+misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author
+surnames, used to name the
 Kalbfleisch-Prentice average hazard ratio and the Pepe-Fleming weighted
 Kaplan-Meier test. The spelling is correct.
 
@@ -29,12 +30,19 @@ requireNamespace(). The package was checked with --run-donttest.
 
 ## Test environments
 
-[TO BE FILLED IN FROM THE CHECK RESULTS]
+* Local: Windows 11 x64 (build 26200), R 4.6.0
+* win-builder: R-release (R 4.6.1)
+* win-builder: R-devel (2026-10-05 r90641)
+* GitHub Actions (R-CMD-check workflow) [TO BE CONFIRMED]:
+  - ubuntu-latest (R release)
+  - ubuntu-latest (R devel)
+  - windows-latest (R release)
+  - macos-latest (R release)
 
 ## R CMD check results
 
-[TO BE FILLED IN FROM THE CHECK RESULTS]
+0 errors | 0 warnings | 0 notes
 
 ## Downstream dependencies
 
-[TO BE CONFIRMED]
+There are no downstream dependencies.
