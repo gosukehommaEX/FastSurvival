@@ -12,18 +12,31 @@ simulation of clinical trials:
   decisions at given levels are needed, and `simdata_fast()` gains a `stream`
   argument for reproducible simulation in batches.
 
-It also fixes an error of `analysis_fast()` for the two-sided max-combo test
-with two or three weights. A new vignette uses the 'rpsftm' package, which is
-added to Suggests and used only when it is installed; the 'rpact' package is no
-longer used and is removed from Suggests. See NEWS.md for the full
-list of changes.
+The illness-death model of `simdata_fast()` now also supports subgroups.
+
+It also fixes several errors found in a review of the package before this
+release, among them:
+
+* the variance of `wkm_fast()` with the "sqrtPF" and "constant" weights (the
+  standard error was too small; the default weight was correct);
+* subjects with neither a finite event time nor a finite dropout time (for
+  example a cure fraction without dropout) were recorded as events in
+  `simdata_fast()`;
+* an error of `analysis_fast()` for the two-sided max-combo test with two or
+  three weights;
+* missing confidence limits of `milestone_fast()` when a survival estimate is
+  0 or 1, and unchecked `presorted = TRUE` input in the analysis functions.
+
+A new vignette uses the 'rpsftm' package, which is added to Suggests and used
+only when it is installed; the 'rpact' package is no longer used and is
+removed from Suggests. See NEWS.md for the full list of changes.
 
 ## Notes for the reviewer
 
 This update follows version 1.0.0 (published on 2026-09-29) after a short
-interval because it fixes an error in `analysis_fast()` for the two-sided
-max-combo test with two or three weights, in addition to the new features
-described above.
+interval because it fixes the errors listed above, in particular the
+underestimated standard error of `wkm_fast()` with non-default weights, in
+addition to the new features described above.
 
 The checks below reported no NOTE. If the incoming check reports possibly
 misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author
