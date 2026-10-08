@@ -346,6 +346,10 @@ simdata_core_id <- function(nsim, n_grp, a_time, acc_counts_c, acc_counts_t, h01
     .Call(`_FastSurvival_simdata_core_id`, nsim, n_grp, a_time, acc_counts_c, acc_counts_t, h01_haz_c, h01_fin_c, h01_cum_c, h01_haz_t, h01_fin_t, h01_cum_t, h02_haz_c, h02_fin_c, h02_cum_c, h02_haz_t, h02_fin_t, h02_cum_t, h12_haz_c, h12_fin_c, h12_cum_c, h12_haz_t, h12_fin_t, h12_cum_t, h12s_haz_c, h12s_fin_c, h12s_cum_c, h12s_haz_t, h12s_fin_t, h12s_cum_t, switch_prop_c, switch_prop_t, has_dropout, d_haz_c, d_fin_c, d_cum_c, d_haz_t, d_fin_t, d_cum_t)
 }
 
+simdata_core_id_sub <- function(nsim, n_grp, a_time, acc_counts_c, acc_counts_t, spec_c, spec_t, has_dropout, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t) {
+    .Call(`_FastSurvival_simdata_core_id_sub`, nsim, n_grp, a_time, acc_counts_c, acc_counts_t, spec_c, spec_t, has_dropout, cum_prev_c, cum_prev_t, level_table_c, level_table_t, sub_names, fixed_alloc, fixed_counts_c, fixed_counts_t)
+}
+
 #' Core stratified log-rank computation on stratum-blocked sorted vectors
 #'
 #' @description

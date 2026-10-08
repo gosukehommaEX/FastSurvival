@@ -49,7 +49,7 @@ available at <https://gosukehommaEX.github.io/FastSurvival/>.
 
 | Function | Description |
 |----------|-------------|
-| `simdata_fast()` | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model. |
+| `simdata_fast()` | Individual patient data simulator for one-, two-, or multi-arm trials, with piecewise-uniform accrual, piecewise-exponential survival and dropout, optional subgroups, and two correlated endpoints from an illness-death model, which can also be combined with subgroups. |
 | `cutoff_fast()` | Per-simulation calendar cutoffs of the analysis looks from combined trigger rules (target events, planned and maximum calendar times, minimum time after the previous look, minimum follow-up after a number of enrolled subjects). |
 | `analysis_fast()` | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts, calendar times, or per-simulation cutoffs from `cutoff_fast()`. |
 | `switch_fast()` | Treatment switching in simulated data: switching at an intermediate event (such as progression), at an opening time after an interim analysis, or at the later of the two, optionally only in the trials selected by an interim decision, with an accelerated-failure-time or new-hazard effect after the switch. |
@@ -193,8 +193,12 @@ sharing the same single-scan backend.
 The estimator anchors at the Pike closed-form estimate, the ratio of the
 observed-to-expected event ratios of the two groups from the log-rank
 computation (Berry, Kitchin, and Mock, 1991), and applies a single analytic
-Halley correction to the Cox score, giving residual error of order
-O_p(n^{-3/2}) relative to the Cox maximum likelihood estimate. On the
+Halley correction to the Cox score. Because the Halley step converges
+cubically, the residual error relative to the Cox maximum likelihood estimate
+is of the order of the cube of the error of the Pike anchor. It is negligible
+near the null hypothesis. At a fixed hazard ratio away from 1 the Pike anchor
+keeps a bias that does not vanish with the sample size, so the residual error
+levels off at a small value. On the
 `pharmacoSmoking` dataset (tie rate 77.5%), the Pike-Halley Estimator
 reproduces the Breslow-based Cox estimate to within on the order of 1e-08.
 The Wald confidence interval uses the observed information at the Pike

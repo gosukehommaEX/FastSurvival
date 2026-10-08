@@ -89,7 +89,8 @@ groups is determined.}
 
 \item{prevalence}{Optional subgroup prevalence specification (numeric
 vector, list of vectors, array, or a named \code{control}/\code{treatment}
-list for group-specific prevalence).}
+list for group-specific prevalence), for the single-endpoint and the
+illness-death models.}
 
 \item{fixed.alloc}{Logical; when \code{TRUE} subgroup sizes are
 deterministic rather than drawn.}
@@ -164,7 +165,8 @@ A \code{data.frame} with \code{nsim * sum(n)} rows. The columns are
   \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
   \code{calendar_time}.
   In the illness-death model the columns are instead \code{sim},
-  \code{group}, \code{accrual_time}, \code{e1_surv_time},
+  \code{group}, any subgroup columns, \code{accrual_time},
+  \code{e1_surv_time},
   \code{e2_surv_time}, \code{dropout_time}, \code{e1_tte}, \code{e1_event},
   \code{e2_tte}, \code{e2_event}, \code{e1_calendar_time},
   \code{e2_calendar_time}, \code{intermediate}, \code{switched}, and
@@ -261,6 +263,23 @@ subsetting the output to the control arm and one other arm and calling
 \code{\link{analysis_fast}} once per contrast, which
 \code{\link{pairwise_fast}} does for every experimental arm. Multi-arm mode does not support
 subgroups or the illness-death model, which remain two-group.
+
+The illness-death model (activated by \code{h01.*} or \code{h02.*}) also
+accepts \code{prevalence} and \code{fixed.alloc}. The transition hazards
+(\code{h01.*}, \code{h02.*}, \code{h12.*}, \code{h12.switch.*}),
+\code{switch.prop}, and the dropout specification then follow the rules of
+\code{e.hazard} with subgroups: in a two-group simulation each is shared or
+a list with one element per group, and each group's element is shared or a
+list with one element per subgroup cell, for example
+\code{h01.hazard = list(list(0.10, 0.06), 0.05)}; with a scalar \code{n}
+and no \code{alloc}, a list without list elements holds one element per
+cell of a single group. All subjects share one accrual process and the
+subgroup cells are assigned after accrual, so the subgroups enroll over the
+same calendar in proportion to their prevalence. This gives a mixture of
+illness-death models without generating the subgroups separately and
+adjusting their accrual rates. With a single cell (for example
+\code{prevalence = 1}) the data equal those without \code{prevalence}, with
+the subgroup column added.
 }
 \section{Batches and parallel execution}{
 
@@ -420,6 +439,20 @@ dfsw <- simdata_fast(
   seed              = 7
 )
 head(dfsw)
+
+# Illness-death model with two subgroups (prevalence 0.4 and 0.6): the
+# treatment effect on progression is larger in subgroup 2.
+dfsg <- simdata_fast(
+  nsim       = 100,
+  n          = c(150, 150),
+  a.time     = c(0, 12),
+  a.rate     = 300 / 12,
+  h01.median = list(8, list(10, 14)),
+  h02.median = list(24, 30),
+  prevalence = c(0.4, 0.6),
+  seed       = 8
+)
+table(dfsg$group, dfsg$subgroup) / 100
 
 # Three-arm trial (one control and two treatment arms) analyzed as pairwise
 # contrasts against the shared control.

@@ -83,6 +83,23 @@
 #' \code{\link{pairwise_fast}} does for every experimental arm. Multi-arm mode does not support
 #' subgroups or the illness-death model, which remain two-group.
 #'
+#' The illness-death model (activated by \code{h01.*} or \code{h02.*}) also
+#' accepts \code{prevalence} and \code{fixed.alloc}. The transition hazards
+#' (\code{h01.*}, \code{h02.*}, \code{h12.*}, \code{h12.switch.*}),
+#' \code{switch.prop}, and the dropout specification then follow the rules of
+#' \code{e.hazard} with subgroups: in a two-group simulation each is shared or
+#' a list with one element per group, and each group's element is shared or a
+#' list with one element per subgroup cell, for example
+#' \code{h01.hazard = list(list(0.10, 0.06), 0.05)}; with a scalar \code{n}
+#' and no \code{alloc}, a list without list elements holds one element per
+#' cell of a single group. All subjects share one accrual process and the
+#' subgroup cells are assigned after accrual, so the subgroups enroll over the
+#' same calendar in proportion to their prevalence. This gives a mixture of
+#' illness-death models without generating the subgroups separately and
+#' adjusting their accrual rates. With a single cell (for example
+#' \code{prevalence = 1}) the data equal those without \code{prevalence}, with
+#' the subgroup column added.
+#'
 #' @param nsim Number of simulated trials.
 #' @param n Either a single total sample size (split by \code{alloc}), a
 #'   length-two vector of per-group sample sizes, or, for a multi-arm trial, a
@@ -130,7 +147,8 @@
 #'   the same numbers as no stream. See the section on batches.
 #' @param prevalence Optional subgroup prevalence specification (numeric
 #'   vector, list of vectors, array, or a named \code{control}/\code{treatment}
-#'   list for group-specific prevalence).
+#'   list for group-specific prevalence), for the single-endpoint and the
+#'   illness-death models.
 #' @param fixed.alloc Logical; when \code{TRUE} subgroup sizes are
 #'   deterministic rather than drawn.
 #' @param h01.hazard Transition hazard(s) for the non-terminal (intermediate)
@@ -197,7 +215,8 @@
 #'   \code{surv_time}, \code{dropout_time}, \code{tte}, \code{event}, and
 #'   \code{calendar_time}.
 #'   In the illness-death model the columns are instead \code{sim},
-#'   \code{group}, \code{accrual_time}, \code{e1_surv_time},
+#'   \code{group}, any subgroup columns, \code{accrual_time},
+#'   \code{e1_surv_time},
 #'   \code{e2_surv_time}, \code{dropout_time}, \code{e1_tte}, \code{e1_event},
 #'   \code{e2_tte}, \code{e2_event}, \code{e1_calendar_time},
 #'   \code{e2_calendar_time}, \code{intermediate}, \code{switched}, and
@@ -351,6 +370,20 @@
 #' )
 #' head(dfsw)
 #'
+#' # Illness-death model with two subgroups (prevalence 0.4 and 0.6): the
+#' # treatment effect on progression is larger in subgroup 2.
+#' dfsg <- simdata_fast(
+#'   nsim       = 100,
+#'   n          = c(150, 150),
+#'   a.time     = c(0, 12),
+#'   a.rate     = 300 / 12,
+#'   h01.median = list(8, list(10, 14)),
+#'   h02.median = list(24, 30),
+#'   prevalence = c(0.4, 0.6),
+#'   seed       = 8
+#' )
+#' table(dfsg$group, dfsg$subgroup) / 100
+#'
 #' # Three-arm trial (one control and two treatment arms) analyzed as pairwise
 #' # contrasts against the shared control.
 #' dfk <- simdata_fast(
@@ -437,7 +470,8 @@ simdata_fast <- function(nsim       = 1000,
       h12.switch.time = h12.switch.time,
       switch.clock = switch.clock,
       d.hazard = d.hazard, d.median = d.median, d.time = d.time,
-      prevalence = prevalence, alloc_given = !missing(alloc)))
+      prevalence = prevalence, fixed.alloc = fixed.alloc,
+      alloc_given = !missing(alloc)))
   }
 
   # Multi-arm (K > 2) mode dispatches to a separate assembler that generates each
@@ -933,7 +967,8 @@ resolve_accrual_counts <- function(n_grp_int, a.time, a.rate, a.prop) {
 # ------------------------------------------------------------------ #
 # Validates the transition-hazard arguments, builds the per-group
 # piecewise-exponential pre-computations, and calls simdata_core_id. The seed is
-# already set by the caller. Subgroups are not supported here.
+# already set by the caller. With 'prevalence' the work is passed to
+# simdata_fast_id_sub(); without it the code below is unchanged.
 simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
                             h01.hazard, h01.median, h01.time,
                             h02.hazard, h02.median, h02.time,
@@ -942,12 +977,9 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
                             h12.switch.hazard, h12.switch.median, h12.switch.time,
                             switch.clock,
                             d.hazard, d.median, d.time,
-                            prevalence, alloc_given = FALSE) {
+                            prevalence, fixed.alloc = FALSE,
+                            alloc_given = FALSE) {
 
-  if (!is.null(prevalence)) {
-    stop("Subgroups ('prevalence') are not supported with the illness-death ",
-         "model; call simdata_fast separately per subgroup and combine with rbind().")
-  }
   if (!identical(switch.clock, "reset")) {
     stop("Only switch.clock = \"reset\" is currently implemented.")
   }
@@ -988,6 +1020,20 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
     stop("Specify exactly one of 'd.hazard' and 'd.median'")
   }
   if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
+
+  if (!is.null(prevalence)) {
+    return(simdata_fast_id_sub(
+      nsim = nsim, n = n, alloc = alloc, alloc_given = alloc_given,
+      a.time = a.time, a.rate = a.rate, a.prop = a.prop,
+      h01.hazard = h01.hazard, h01.time = h01.time,
+      h02.hazard = h02.hazard, h02.time = h02.time,
+      h12.hazard = h12.hazard, h12.time = h12.time,
+      switch.prop = switch.prop,
+      h12.switch.hazard = h12.switch.hazard,
+      h12.switch.time = h12.switch.time,
+      has_dropout = has_dropout, d.hazard = d.hazard, d.time = d.time,
+      prevalence = prevalence, fixed.alloc = fixed.alloc))
+  }
 
   # A two-group simulation is signalled by a length-two 'n', an explicitly
   # supplied 'alloc', or any group-specific (length-two list) hazard, switch, or
