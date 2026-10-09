@@ -373,3 +373,25 @@ test_that("simdata_fast (illness-death): subgroup data work with the analysis fu
   expect_identical(sw$subgroup, dat$subgroup)
   expect_true(any(sw$switched == 1))
 })
+
+test_that("simdata_fast (illness-death): switching and dropout can differ by subgroup", {
+  dat <- simdata_fast(
+    nsim = 1, n = c(30000, 30000), a.time = c(0, 1), a.prop = 1,
+    h01.hazard = list(0.10, 0.07), h02.hazard = list(0.03, 0.02),
+    switch.prop = list(list(0.6, 0.2), 0),
+    h12.switch.hazard = list(list(0.02, 0.05), 0.05),
+    d.hazard = list(list(0.01, 0.05), 0.01),
+    prevalence = c(0.5, 0.5), seed = 51
+  )
+  for (s in 1:2) {
+    ctl <- dat$group == 1L & dat$subgroup == s
+    obs <- ctl & dat$intermediate == 1L & dat$e1_event == 1L
+    expect_lt(abs(mean(dat$switched[obs]) - c(0.6, 0.2)[s]), 0.02)
+    sw <- ctl & dat$switched == 1L
+    post <- dat$e2_surv_time[sw] - dat$e1_surv_time[sw]
+    expect_equal(1 / mean(post), c(0.02, 0.05)[s], tolerance = 0.05)
+    expect_equal(1 / mean(dat$dropout_time[ctl]), c(0.01, 0.05)[s],
+                 tolerance = 0.03)
+  }
+  expect_true(all(dat$switched[dat$group == 2L] == 0L))
+})
