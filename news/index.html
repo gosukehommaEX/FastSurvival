@@ -42,11 +42,11 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/gosukehommaEX/FastSurvival/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/gosukehommaEX/FastSurvival/blob/v1.1.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.0" id="fastsurvival-110">FastSurvival 1.1.0<a class="anchor" aria-label="anchor" href="#fastsurvival-110"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.1.0" id="fastsurvival-110">FastSurvival 1.1.0<a class="anchor" aria-label="anchor" href="#fastsurvival-110"></a></h2><p class="text-muted">CRAN release: 2026-10-08</p>
 <div class="section level3">
 <h3 id="new-features-1-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-0"></a></h3>
 <ul><li><p>New <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> computes the calendar time of each analysis look in every simulated trial in a single C++ pass, from a target number of events, a planned calendar time, a maximum calendar time, a minimum time after the previous look, and a minimum follow-up after a given number of enrolled subjects, combined as <code>min(max(...), maximum time)</code> as in <code><a href="https://merck.github.io/simtrial/reference/get_analysis_date.html" class="external-link">simtrial::get_analysis_date()</a></code>. Events can be counted on a subset of the subjects (for example the control group) or on another endpoint (for example the PFS columns of an illness-death simulation), and the event targets can be given per simulated trial.</p></li>
