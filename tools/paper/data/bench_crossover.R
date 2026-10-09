@@ -9,6 +9,8 @@
 # is multiplied by aft. OS is analyzed at d_os deaths. The script records the
 # PFS power, the proportion of trials with crossover, the OS power, and the
 # elapsed time, and writes them to tools/paper/output/bench_crossover.csv.
+# The column distinct_trials counts the distinct calendar times of the PFS
+# analysis, to confirm that the simulated trials are distinct.
 #
 # Run from the package root after installing FastSurvival 1.1.0 from CRAN
 # (checked by machine_info.R):
@@ -54,7 +56,8 @@ oc_row <- function(package, nsim, pfs_rej, os_rej, pfs_cut, os_cut, elapsed) {
     os_analyzed = sum(!is.na(os_rej)),
     pfs_month = mean(pfs_cut, na.rm = TRUE), pfs_month_se = mean_se(pfs_cut),
     os_month = mean(os_cut, na.rm = TRUE), os_month_se = mean_se(os_cut),
-    elapsed = elapsed, sec_per_trial = elapsed / nsim
+    elapsed = elapsed, sec_per_trial = elapsed / nsim,
+    distinct_trials = length(unique(round(pfs_cut[!is.na(pfs_cut)], 8)))
   )
 }
 
@@ -90,7 +93,14 @@ results$FastSurvival <- oc_row("FastSurvival", nsim_fast, pos,
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
   suppressPackageStartupMessages(library(TrialSimulator))
-  t_ts <- system.time({
+  # TrialSimulator 1.35.8 draws the seed of each replicate of
+  # controller$run(n) from the random-number state left by the previous
+  # replicate, so the seeds follow a deterministic sequence that can repeat;
+  # with seed = 1 the replicates repeated after a few hundred trials
+  # (check_crossover_pfs.R). Each simulated trial is therefore run by its own
+  # controller with seed = i, and only the time of controller$run() is
+  # counted.
+  make_ctl <- function(seed) {
     mk_arm <- function(name, h) {
       a <- arm(name = name)
       a$add_endpoints(endpoint(name = c("pfs", "os"), type = c("tte", "tte"),
@@ -103,7 +113,7 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
                 enroller = StaggeredRecruiter,
                 accrual_rate = data.frame(end_time = Inf,
                                           piecewise_rate = acc_rate),
-                dropout = rexp, rate = drop_haz, seed = 1, silent = TRUE)
+                dropout = rexp, rate = drop_haz, seed = seed, silent = TRUE)
     tr$add_arms(sample_ratio = c(1, 1), mk_arm("control", h_ctrl),
                 mk_arm("treatment", h_trt))
 
@@ -145,10 +155,17 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
       milestone(name = "os", when = eventNumber(endpoint = "os", n = d_os),
                 action = act_os)
     )
-    ctl <- controller(tr, lst)
-    ctl$run(n = nsim_ts, plot_event = FALSE, silent = TRUE)
-    out <- ctl$get_output()
-  })[["elapsed"]]
+    controller(tr, lst)
+  }
+  t_ts <- 0
+  outs <- vector("list", nsim_ts)
+  for (i in seq_len(nsim_ts)) {
+    ctl <- make_ctl(i)
+    t_ts <- t_ts + system.time(
+      ctl$run(n = 1, plot_event = FALSE, silent = TRUE))[["elapsed"]]
+    outs[[i]] <- ctl$get_output()
+  }
+  out <- as.data.frame(dplyr::bind_rows(outs))
   results$TrialSimulator <- oc_row("TrialSimulator", nsim_ts,
                                    out$p_pfs <= alpha, out$p_os <= alpha,
                                    out[["milestone_time_<pfs>"]],

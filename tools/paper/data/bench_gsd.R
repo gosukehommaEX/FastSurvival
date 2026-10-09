@@ -5,7 +5,9 @@
 # expected number of events and calendar time at each look) and the elapsed
 # time, and writes them to tools/paper/output/bench_gsd.csv. The operating
 # characteristics should agree within Monte Carlo error; the elapsed time per
-# simulated trial is the benchmark.
+# simulated trial is the benchmark. The column distinct_trials counts the
+# distinct calendar times of the final look, to confirm that the simulated
+# trials are distinct.
 #
 # Run from the package root (FastSurvival.Rproj) after installing FastSurvival
 # 1.1.0 from CRAN (checked by machine_info.R):
@@ -52,7 +54,8 @@ oc_row <- function(package, z, cut1, cut2, elapsed) {
     mean_z_look2 = mean(z[, 2]), mean_z_look2_se = mean_se(z[, 2]),
     cutoff_look1 = mean(cut1), cutoff_look1_se = mean_se(cut1),
     cutoff_look2 = mean(cut2), cutoff_look2_se = mean_se(cut2),
-    elapsed = elapsed, sec_per_trial = elapsed / nrow(z)
+    elapsed = elapsed, sec_per_trial = elapsed / nrow(z),
+    distinct_trials = length(unique(round(cut2, 8)))
   )
 }
 
@@ -106,7 +109,14 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
   suppressPackageStartupMessages(library(TrialSimulator))
-  t_ts <- system.time({
+  # TrialSimulator 1.35.8 draws the seed of each replicate of
+  # controller$run(n) from the random-number state left by the previous
+  # replicate, so the seeds follow a deterministic sequence that can repeat;
+  # with seed = 1 the replicates repeated after a few hundred trials
+  # (check_crossover_pfs.R). Each simulated trial is therefore run by its own
+  # controller with seed = i, and only the time of controller$run() is
+  # counted.
+  make_ctl <- function(seed) {
     ctrl <- arm(name = "control")
     ctrl$add_endpoints(endpoint(name = "os", type = "tte", generator = rexp,
                                 rate = log(2) / med_ctrl))
@@ -117,7 +127,7 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
                 enroller = StaggeredRecruiter,
                 accrual_rate = data.frame(end_time = Inf,
                                           piecewise_rate = acc_rate),
-                dropout = rexp, rate = drop_haz, seed = 1, silent = TRUE)
+                dropout = rexp, rate = drop_haz, seed = seed, silent = TRUE)
     tr$add_arms(sample_ratio = c(1, 1), ctrl, trt)
     act <- function(look) {
       force(look)
@@ -136,10 +146,17 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
       milestone(name = "fa", when = eventNumber(endpoint = "os", n = looks[2]),
                 action = act("fa"))
     )
-    ctl <- controller(tr, lst)
-    ctl$run(n = nsim_ts, plot_event = FALSE, silent = TRUE)
-    out <- ctl$get_output()
-  })[["elapsed"]]
+    controller(tr, lst)
+  }
+  t_ts <- 0
+  outs <- vector("list", nsim_ts)
+  for (i in seq_len(nsim_ts)) {
+    ctl <- make_ctl(i)
+    t_ts <- t_ts + system.time(
+      ctl$run(n = 1, plot_event = FALSE, silent = TRUE))[["elapsed"]]
+    outs[[i]] <- ctl$get_output()
+  }
+  out <- as.data.frame(dplyr::bind_rows(outs))
   # fitLogrank's z has the sign of the log hazard ratio (negative for benefit).
   z_ts <- -cbind(out$z_ia, out$z_fa)
   results$TrialSimulator <- oc_row("TrialSimulator", z_ts,
