@@ -1,0 +1,11 @@
+"method","reference","fast_ms","ref_ms","speedup"
+"survfit_fast()","survival::survfit() + summary()",0.09995,3.5235,35.2526263131566
+"survdiff_fast()","survival::survdiff()",0.11995,2.98485,24.8841183826594
+"coxph_fast()","survival::coxph(ties = ""breslow"")",0.12025,3.77185,31.366735966736
+"rmst_fast()","survRM2::rmst2()",0.13545,4.3827,32.3565891472868
+"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.16125,40.4835,251.060465116279
+"milestone_fast()","survival::survfit() + summary()",0.2341,4.2474,18.1435284066638
+"medsurv_fast()","nph::nphparams()",0.34495,12.652,36.6777793883172
+"maxcombo_fast()","nph::logrank.maxtest()",0.50945,171.72065,337.070664442045
+"rmw_fast()","nphRCT::wlrt() (two components)",0.2968,23.01005,77.5271226415094
+"ahsw_fast()","survAH::ah2()",0.1625,58.6589,360.977846153846

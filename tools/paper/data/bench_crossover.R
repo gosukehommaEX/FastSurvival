@@ -10,10 +10,12 @@
 # PFS power, the proportion of trials with crossover, the OS power, and the
 # elapsed time, and writes them to tools/paper/output/bench_crossover.csv.
 #
-# Run from the package root after installing the package:
-#   source("tools/paper/bench_crossover.R")
+# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# (checked by machine_info.R):
+#   source("tools/paper/data/bench_crossover.R")
 
 library(FastSurvival)
+source(file.path("tools", "paper", "data", "machine_info.R"))
 
 out_dir <- file.path("tools", "paper", "output")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
@@ -31,7 +33,30 @@ aft      <- 1.3
 alpha    <- 0.025
 
 nsim_fast <- 10000
-nsim_ts   <- 200
+nsim_ts   <- 2000
+
+# One row of operating characteristics: the PFS and OS power and the mean
+# calendar time of the two analyses, each with its Monte Carlo standard error
+# over the simulated trials in which it is available, and the elapsed time.
+prop_se <- function(x) {
+  x <- x[!is.na(x)]
+  sqrt(mean(x) * (1 - mean(x)) / length(x))
+}
+mean_se <- function(x) {
+  x <- x[!is.na(x)]
+  sd(x) / sqrt(length(x))
+}
+oc_row <- function(package, nsim, pfs_rej, os_rej, pfs_cut, os_cut, elapsed) {
+  data.frame(
+    package = package, nsim = nsim,
+    pfs_power = mean(pfs_rej, na.rm = TRUE), pfs_power_se = prop_se(pfs_rej),
+    os_power = mean(os_rej, na.rm = TRUE), os_power_se = prop_se(os_rej),
+    os_analyzed = sum(!is.na(os_rej)),
+    pfs_month = mean(pfs_cut, na.rm = TRUE), pfs_month_se = mean_se(pfs_cut),
+    os_month = mean(os_cut, na.rm = TRUE), os_month_se = mean_se(os_cut),
+    elapsed = elapsed, sec_per_trial = elapsed / nsim
+  )
+}
 
 results <- list()
 
@@ -58,12 +83,9 @@ t_fast <- system.time({
                      event.col = "e2_event")
   orr <- analysis_fast(ep(sw, 2), control = 1, cutoff.looks = oc, side = 1)
 })[["elapsed"]]
-results$FastSurvival <- data.frame(
-  package = "FastSurvival", nsim = nsim_fast,
-  pfs_power = mean(pos), os_power = mean(orr$logrank.p <= alpha, na.rm = TRUE),
-  pfs_month = mean(pc[, 1], na.rm = TRUE), os_month = mean(oc[, 1], na.rm = TRUE),
-  elapsed = t_fast, sec_per_trial = t_fast / nsim_fast
-)
+results$FastSurvival <- oc_row("FastSurvival", nsim_fast, pos,
+                               orr$logrank.p <= alpha, pc[, 1], oc[, 1],
+                               t_fast)
 
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
@@ -127,18 +149,22 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
     ctl$run(n = nsim_ts, plot_event = FALSE, silent = TRUE)
     out <- ctl$get_output()
   })[["elapsed"]]
-  results$TrialSimulator <- data.frame(
-    package = "TrialSimulator", nsim = nsim_ts,
-    pfs_power = mean(out$p_pfs <= alpha), os_power = mean(out$p_os <= alpha),
-    pfs_month = mean(out[["milestone_time_<pfs>"]]),
-    os_month = mean(out[["milestone_time_<os>"]]),
-    elapsed = t_ts, sec_per_trial = t_ts / nsim_ts
-  )
+  results$TrialSimulator <- oc_row("TrialSimulator", nsim_ts,
+                                   out$p_pfs <= alpha, out$p_os <= alpha,
+                                   out[["milestone_time_<pfs>"]],
+                                   out[["milestone_time_<os>"]], t_ts)
 }
 
 tab <- do.call(rbind, results)
 rownames(tab) <- NULL
 tab$speedup_vs_FastSurvival <- tab$sec_per_trial / tab$sec_per_trial[1]
+# Differences from FastSurvival in units of their combined Monte Carlo standard
+# error (0 in the FastSurvival row).
+diff_z <- function(est, se) (est - est[1]) / sqrt(se^2 + se[1]^2)
+tab$pfs_power_diff_z <- diff_z(tab$pfs_power, tab$pfs_power_se)
+tab$os_power_diff_z  <- diff_z(tab$os_power, tab$os_power_se)
+tab$pfs_month_diff_z <- diff_z(tab$pfs_month, tab$pfs_month_se)
+tab$os_month_diff_z  <- diff_z(tab$os_month, tab$os_month_se)
 print(tab)
 write.csv(tab, file.path(out_dir, "bench_crossover.csv"), row.names = FALSE)
 writeLines(capture.output(sessionInfo()),

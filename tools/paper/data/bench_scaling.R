@@ -6,15 +6,18 @@
 # increasing number of simulated trials and records the size of the simulated
 # data. The max-combo test is timed twice: with every p-value integrated, and
 # with mc.alpha set to the nominal levels of a group-sequential design, which
-# integrates only the p-values that the Bonferroni bounds do not decide. Part 2 runs the same study in batches, once sequentially and once on a
-# parallel cluster, and checks that the combined results are identical.
+# integrates only the p-values that the Bonferroni bounds do not decide. Part 2
+# runs the same study in batches, once sequentially and once on a parallel
+# cluster, and checks that the combined results are identical.
 # Results are written to tools/paper/output/.
 #
-# Run from the package root after installing the package:
-#   source("tools/paper/bench_scaling.R")
+# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# (checked by machine_info.R):
+#   source("tools/paper/data/bench_scaling.R")
 
 library(FastSurvival)
 library(parallel)
+source(file.path("tools", "paper", "data", "machine_info.R"))
 
 out_dir <- file.path("tools", "paper", "output")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)

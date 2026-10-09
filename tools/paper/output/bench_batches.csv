@@ -1,2 +1,2 @@
 "batches","trials","cores","sequential_sec","parallel_sec","identical_results","max_abs_difference"
-8,20000,4,356.51,161.68,TRUE,0
+8,20000,4,320.92,166.91,TRUE,0

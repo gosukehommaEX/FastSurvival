@@ -7,10 +7,12 @@
 # characteristics should agree within Monte Carlo error; the elapsed time per
 # simulated trial is the benchmark.
 #
-# Run from the package root (FastSurvival.Rproj) after installing the package:
-#   source("tools/paper/bench_gsd.R")
+# Run from the package root (FastSurvival.Rproj) after installing FastSurvival
+# 1.1.0 from CRAN (checked by machine_info.R):
+#   source("tools/paper/data/bench_gsd.R")
 
 library(FastSurvival)
+source(file.path("tools", "paper", "data", "machine_info.R"))
 
 out_dir <- file.path("tools", "paper", "output")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
@@ -36,9 +38,27 @@ reject_gs <- function(zmat, bound) {
   rej
 }
 
+# One row of operating characteristics: the power and the mean Z statistic and
+# calendar time of each look, each with its Monte Carlo standard error, and the
+# elapsed time.
+mean_se <- function(x) sd(x) / sqrt(length(x))
+oc_row <- function(package, z, cut1, cut2, elapsed) {
+  rej <- reject_gs(z, bnd)
+  power <- mean(rej)
+  data.frame(
+    package = package, nsim = nrow(z),
+    power = power, power_se = sqrt(power * (1 - power) / length(rej)),
+    mean_z_look1 = mean(z[, 1]), mean_z_look1_se = mean_se(z[, 1]),
+    mean_z_look2 = mean(z[, 2]), mean_z_look2_se = mean_se(z[, 2]),
+    cutoff_look1 = mean(cut1), cutoff_look1_se = mean_se(cut1),
+    cutoff_look2 = mean(cut2), cutoff_look2_se = mean_se(cut2),
+    elapsed = elapsed, sec_per_trial = elapsed / nrow(z)
+  )
+}
+
 nsim_fast <- 10000
-nsim_simtrial <- 1000
-nsim_ts <- 200
+nsim_simtrial <- 2000
+nsim_ts <- 2000
 
 results <- list()
 
@@ -52,17 +72,15 @@ t_fast <- system.time({
 })[["elapsed"]]
 # logrank.z is negative for benefit; flip to the benefit-positive scale.
 z_fast <- -matrix(res$logrank.z, ncol = length(looks), byrow = TRUE)
-results$FastSurvival <- data.frame(
-  package = "FastSurvival", nsim = nsim_fast,
-  power = mean(reject_gs(z_fast, bnd)),
-  mean_z_look1 = mean(z_fast[, 1]), mean_z_look2 = mean(z_fast[, 2]),
-  cutoff_look1 = mean(res$cutoff[res$look == 1]),
-  cutoff_look2 = mean(res$cutoff[res$look == 2]),
-  elapsed = t_fast, sec_per_trial = t_fast / nsim_fast
-)
+results$FastSurvival <- oc_row("FastSurvival", z_fast,
+                               res$cutoff[res$look == 1],
+                               res$cutoff[res$look == 2], t_fast)
 
 # ---- simtrial ---------------------------------------------------------------
 if (requireNamespace("simtrial", quietly = TRUE)) {
+  # Run simtrial sequentially, as the other packages, and reproducibly.
+  if (requireNamespace("future", quietly = TRUE)) future::plan("sequential")
+  set.seed(1)
   t_st <- system.time({
     st <- simtrial::sim_gs_n(
       n_sim = nsim_simtrial, sample_size = 2 * n_arm,
@@ -80,14 +98,9 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
   z_st <- matrix(st$z, ncol = length(looks), byrow = TRUE)
   # simtrial reports z = -estimate / se; check that benefit is positive.
   if (mean(z_st[, 2]) < 0) z_st <- -z_st
-  results$simtrial <- data.frame(
-    package = "simtrial", nsim = nsim_simtrial,
-    power = mean(reject_gs(z_st, bnd)),
-    mean_z_look1 = mean(z_st[, 1]), mean_z_look2 = mean(z_st[, 2]),
-    cutoff_look1 = mean(st$cut_date[st$analysis == 1]),
-    cutoff_look2 = mean(st$cut_date[st$analysis == 2]),
-    elapsed = t_st, sec_per_trial = t_st / nsim_simtrial
-  )
+  results$simtrial <- oc_row("simtrial", z_st,
+                             st$cut_date[st$analysis == 1],
+                             st$cut_date[st$analysis == 2], t_st)
 }
 
 # ---- TrialSimulator ---------------------------------------------------------
@@ -129,19 +142,22 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
   })[["elapsed"]]
   # fitLogrank's z has the sign of the log hazard ratio (negative for benefit).
   z_ts <- -cbind(out$z_ia, out$z_fa)
-  results$TrialSimulator <- data.frame(
-    package = "TrialSimulator", nsim = nsim_ts,
-    power = mean(reject_gs(z_ts, bnd)),
-    mean_z_look1 = mean(z_ts[, 1]), mean_z_look2 = mean(z_ts[, 2]),
-    cutoff_look1 = mean(out[["milestone_time_<ia>"]]),
-    cutoff_look2 = mean(out[["milestone_time_<fa>"]]),
-    elapsed = t_ts, sec_per_trial = t_ts / nsim_ts
-  )
+  results$TrialSimulator <- oc_row("TrialSimulator", z_ts,
+                                   out[["milestone_time_<ia>"]],
+                                   out[["milestone_time_<fa>"]], t_ts)
 }
 
 tab <- do.call(rbind, results)
 rownames(tab) <- NULL
 tab$speedup_vs_FastSurvival <- tab$sec_per_trial / tab$sec_per_trial[1]
+# Differences from FastSurvival in units of their combined Monte Carlo standard
+# error (0 in the FastSurvival row).
+diff_z <- function(est, se) (est - est[1]) / sqrt(se^2 + se[1]^2)
+tab$power_diff_z   <- diff_z(tab$power, tab$power_se)
+tab$z_look1_diff_z <- diff_z(tab$mean_z_look1, tab$mean_z_look1_se)
+tab$z_look2_diff_z <- diff_z(tab$mean_z_look2, tab$mean_z_look2_se)
+tab$cutoff1_diff_z <- diff_z(tab$cutoff_look1, tab$cutoff_look1_se)
+tab$cutoff2_diff_z <- diff_z(tab$cutoff_look2, tab$cutoff_look2_se)
 print(tab)
 write.csv(tab, file.path(out_dir, "bench_gsd.csv"), row.names = FALSE)
 writeLines(capture.output(sessionInfo()),

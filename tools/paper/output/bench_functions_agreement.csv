@@ -1,0 +1,19 @@
+"method","reference","quantity","n_compared","max_abs_difference","max_abs_reference"
+"survfit_fast()","survival::survfit()","survival and standard error at 1000 days",2,1.11022302462516e-16,0.657750395448056
+"survdiff_fast()","survival::survdiff()","chi-square statistic",1,4.79616346638068e-14,8.56478085353896
+"survdiff_fast(strata)","survival::survdiff()","chi-square statistic, stratified by grade",1,3.99680288865056e-14,7.39579653792318
+"survdiff_fast(weight = ""fh"")","nph::logrank.test()","chi-square statistic, FH(0,1), FH(1,0), FH(0,0), FH(1,1)",4,8.88178419700125e-15,8.71379144171131
+"coxph_fast()","survival::coxph(ties = ""breslow"")","log hazard ratio",1,2.08020545233722e-09,0.363898751422563
+"coxph_fast(strata)","survival::coxph(ties = ""breslow"")","log hazard ratio, stratified by grade",1,1.68148354129372e-08,0.339667912549119
+"rmst_fast()","survRM2::rmst2()","difference in RMST at 1000 days",1,1.13686837721616e-12,51.1444670065334
+"wmst_fast()","Kaplan-Meier integral from survival::survfit()","WMST per group over [200, 1000] days",2,1.13686837721616e-13,678.339251628737
+"wkm_fast(weight = ""constant"")","rmst_fast() at the largest time","weighted difference (identity with the RMST difference)",1,2.33058017329313e-12,256.720724415407
+"milestone_fast()","survival::survfit()","survival per group at 1000 days",2,1.11022302462516e-16,0.723008192649428
+"medsurv_fast()","survival::survfit()","median per group",2,0,2018
+"ahsw_fast()","survAH::ah2()","average hazard per group",2,0,0.000458585703165026
+"ahr_fast()","Kaplan-Meier curves from survival::survfit()","group shares and average hazard ratio",3,1.55431223447522e-15,0.673889934315908
+"maxcombo_fast()","nph::logrank.maxtest()","absolute component Z statistics, FH(0,0), FH(0,1), FH(1,0)",3,1.77635683940025e-15,2.95191318329508
+"rmw_fast()","nphRCT::wlrt()","absolute component Z statistics, s_star = 1 and 0.5",2,5.77315972805081e-15,2.92656468466682
+"cutoff_fast()","simtrial::get_analysis_date()","calendar time of the analysis in 50 simulated trials",50,0,23.9712382123454
+"analysis_fast()","survival::survdiff() on the censored data","log-rank chi-square at two event-driven looks in 50 trials",100,8.74855743404623e-14,12.8509150161877
+"analysis_fast()","survRM2::rmst2() on the censored data","difference in RMST at two event-driven looks in 50 trials",100,6.21724893790088e-15,0.742282564643431
