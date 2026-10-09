@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -333,13 +333,14 @@ analysis timing in the same way, and it checks such approximations.</p>
 every simulated trial and look, which dominates the computing time. When
 only the decisions at the nominal levels are needed,
 <code>mc.alpha</code> computes the integral only for the p-values that
-the Bonferroni bounds do not already place on one side of the level; the
-decisions are the same as with every p-value integrated. The nominal
-levels below are those of the log-rank design and are used for
-illustration only: the correlation between the max-combo statistics at
-the two looks differs from that of the log-rank statistic, so a formal
-design would derive its boundaries for the max-combo statistic
-itself.</p>
+the Bonferroni bounds do not already place on one side of the level. The
+decisions that the bounds settle are those of the exact p-values, and
+the others carry the error of the randomized integration, as without
+<code>mc.alpha</code>. The nominal levels below are those of the
+log-rank design and are used for illustration only: the correlation
+between the max-combo statistics at the two looks differs from that of
+the log-rank statistic, so a formal design would derive its boundaries
+for the max-combo statistic itself.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nsim_nph</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
 <span><span class="va">df_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>

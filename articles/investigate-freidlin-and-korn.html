@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,8 +167,10 @@ analysis is a calendar-time cut at 5 years and testing is one-sided in
 the direction of experimental benefit. Only the decision at the 2.5%
 level is needed from the MaxCombo test, so <code>mc.alpha = ALPHA</code>
 evaluates the multivariate normal integral only for the p-values that
-the Bonferroni bounds do not place on one side of that level; the
-decisions are the same as with every p-value integrated.</p>
+the Bonferroni bounds do not place on one side of that level. The
+decisions that the bounds settle are those of the exact p-values, and
+the others carry the error of the randomized integration, as without
+<code>mc.alpha</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">NSIM</span>    <span class="op">&lt;-</span> <span class="fl">2000L</span>     <span class="co"># raise (e.g. 5000) for tighter Monte Carlo error</span></span>
 <span><span class="va">N_TOTAL</span> <span class="op">&lt;-</span> <span class="fl">2L</span> <span class="op">*</span> <span class="va">N_HALF</span></span>

@@ -354,8 +354,8 @@ Statistics can also be reported within each subgroup. The max-combo
 p-value, a multivariate normal integral per trial and look, dominates
 the computing time; when only the decisions at nominal levels are
 needed, `mc.alpha` integrates only the p-values that the Bonferroni
-bounds do not already place on one side of the level, with unchanged
-decisions.
+bounds do not already place on one side of the level; the decisions that
+the bounds settle are those of the exact p-values.
 
 **pairwise_fast** compares each experimental arm against a shared
 control on multi-arm data by running

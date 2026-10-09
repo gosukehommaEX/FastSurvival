@@ -78,15 +78,18 @@ maxcombo_fast(
 - abseps:
 
   A single positive numeric value, the absolute error tolerance passed
-  to the multivariate normal integration. Defaults to 1e-5. Larger
-  values speed up the quasi-Monte-Carlo integration (four or more
-  weights, or a two-sided test) at the cost of p-value precision.
+  to the multivariate normal integration. Defaults to 1e-5. The
+  quasi-Monte-Carlo integration (four or more weights, or a two-sided
+  test) stops at `maxpts` function evaluations when the tolerance is not
+  reached, as is usual with the default weights (see Details). Larger
+  values can stop it earlier at the cost of p-value precision.
 
 - maxpts:
 
   A single positive integer, the maximum number of function evaluations
   for the quasi-Monte-Carlo integration used with four or more weights
-  or with a two-sided test (see Details). Defaults to 25000.
+  or with a two-sided test (see Details). Defaults to 25000. Larger
+  values reduce the integration error at a higher computing cost.
 
 ## Value
 
@@ -130,14 +133,25 @@ one-sided test, where the integration region is a half-space, the
 deterministic
 [`TVPACK`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm is
 used. For the two-sided test, whose region is a bounded rectangle, and
-for four or more weights, the quasi-Monte-Carlo
+for four or more weights, the randomized quasi-Monte-Carlo
 [`GenzBretz`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm
-is used, whose precision is governed by `abseps` and `maxpts`. In a
-simulation study the Monte Carlo error of the estimated rejection rate
-is driven by the number of simulated trials rather than by the precision
-of each individual p-value, so `abseps` can be loosened to speed up the
-four-weight case with negligible effect on the operating
-characteristics.
+is used. It uses R's random-number generator, so call
+[`set.seed()`](https://rdrr.io/r/base/Random.html) beforehand for
+reproducible p-values, and it stops when its error estimate falls below
+`abseps` or after `maxpts` function evaluations, whichever comes first.
+
+The weights of G(0,1) and G(1,0) add up to the weight of G(0,0) at every
+time, because (1 - S) + S = 1, so the numerator of the G(0,0) component
+is the sum of the other two. The correlation matrix of the default
+weights, or of any set that contains these three, is therefore singular,
+and the quasi-Monte-Carlo integral converges slowly. With the default
+`maxpts` the absolute error of the p-value is typically of the order of
+1e-4 rather than `abseps`: in a check with the default weights and a
+one-sided test, two integrations of the same p-values with different
+seeds differed by up to about 1e-3. A larger `maxpts` reduces the error
+at a higher computing cost. In a simulation study, the integration error
+affects only the decisions for p-values within about that error of the
+nominal level.
 
 When `presorted = TRUE`, the inputs are assumed to be sorted in
 ascending order of `time` and the internal

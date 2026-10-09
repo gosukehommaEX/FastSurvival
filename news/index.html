@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,24 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="fastsurvival-development-version">FastSurvival (development version)<a class="anchor" aria-label="anchor" href="#fastsurvival-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.2.0" id="fastsurvival-120">FastSurvival 1.2.0<a class="anchor" aria-label="anchor" href="#fastsurvival-120"></a></h2>
+<p>This release corrects errors and documentation found while preparing an article on the package. It adds no new features.</p>
+<div class="section level3">
+<h3 id="bug-fixes-1-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/print.simsummary_fast.html">print.simsummary_fast()</a></code> failed with “undefined columns selected” for a selection of the columns of a <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> result, which keeps the class but not the boundary settings, and for a selection of rows without any look row. Such subsets are now printed as ordinary data frames.</p></li>
+<li><p>The weighted Kaplan-Meier test (<code><a href="../reference/wkm_fast.html">wkm_fast()</a></code> and the <code>"wkm"</code> statistic of <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>) returned <code>NaN</code> or an infinite weighted difference when an observed time was infinite, for example for a subject without a finite event or dropout time (a cure fraction without dropout) at a look of <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> that is not reached. The integral over the observed range is not defined in this case, and all the statistics are now <code>NA</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-2-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code> and <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> now describe the precision of the max-combo p-value correctly. The weights of G(0,1) and G(1,0) add up to the weight of G(0,0), so the correlation matrix of the default weights is singular, and the quasi-Monte-Carlo GenzBretz integral converges slowly: with the default <code>maxpts</code> the error of the p-value is of the order of 1e-4 rather than <code>abseps</code>. The statement that <code>abseps</code> can be loosened with negligible effect is removed.</p></li>
+<li><p>The description of <code>mc.alpha</code> in <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code>, the README, and three vignettes is corrected. The decisions that the Bonferroni bounds settle are those of the exact p-values. The other p-values are integrated as without <code>mc.alpha</code>, but the GenzBretz integration uses random numbers, so near the level a decision can differ from that of a run without <code>mc.alpha</code>, as it can between two runs with different seeds. The statement that the decisions are the same as with every p-value integrated is removed.</p></li>
+<li><p>The speed-comparison vignette now gives the ratio of the time per simulated trial with simtrial or TrialSimulator to that with FastSurvival as one to two orders of magnitude, because the ratio varies between runs.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-1-2-0">Tests<a class="anchor" aria-label="anchor" href="#tests-1-2-0"></a></h3>
+<ul><li><p>The one-sided max-combo p-values with three and four weights, whose correlation matrices are singular, are compared with an independent numerical integral that uses this structure.</p></li>
+<li><p>New tests cover the printing of subsets of <code><a href="../reference/simsummary_fast.html">simsummary_fast()</a></code> results and the weighted Kaplan-Meier test with infinite times. The tests of <code><a href="../reference/print.simsummary_fast.html">print.simsummary_fast()</a></code> are moved to their own file.</p></li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="fastsurvival-110">FastSurvival 1.1.0<a class="anchor" aria-label="anchor" href="#fastsurvival-110"></a></h2><p class="text-muted">CRAN release: 2026-10-08</p>

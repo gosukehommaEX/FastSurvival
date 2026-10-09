@@ -39,7 +39,7 @@ presorted = TRUE, so each look avoids a redundant sort.'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -272,14 +272,17 @@ the <code>"maxcombo"</code> statistic, aligned with <code>mc.rho</code>. Default
 <dt id="arg-abseps">abseps<a class="anchor" aria-label="anchor" href="#arg-abseps"></a></dt>
 <dd><p>A single positive numeric value, the absolute error tolerance
 passed to the multivariate normal integration of the <code>"maxcombo"</code>
-p-value. Defaults to 1e-5.</p></dd>
+p-value. Defaults to 1e-5. With the default weights the quasi-Monte-Carlo
+integration usually stops at <code>maxpts</code> before reaching it (see
+<code><a href="maxcombo_fast.html">maxcombo_fast</a></code>).</p></dd>
 
 
 <dt id="arg-maxpts">maxpts<a class="anchor" aria-label="anchor" href="#arg-maxpts"></a></dt>
 <dd><p>A single positive integer, the maximum number of function
 evaluations for the quasi-Monte-Carlo integration used by the
 <code>"maxcombo"</code> p-value with four or more weights or with a two-sided
-test (see Details). Defaults to 25000.</p></dd>
+test (see Details). Defaults to 25000. Larger values reduce the
+integration error at a higher computing cost.</p></dd>
 
 
 <dt id="arg-medsurv-method">medsurv.method<a class="anchor" aria-label="anchor" href="#arg-medsurv-method"></a></dt>
@@ -453,7 +456,10 @@ multivariate-normal p-value, which already follows <code>side</code>. As in
 three weights is computed by the deterministic TVPACK algorithm, and
 otherwise by the randomized quasi-Monte-Carlo GenzBretz algorithm of
 mvtnorm, which uses R's random-number generator; call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>
-beforehand for p-values that are reproducible to the last digit.</p>
+beforehand for p-values that are reproducible to the last digit. The
+correlation matrix of the default weights is singular, and the GenzBretz
+p-values then carry an integration error of the order of 1e-4 with the
+default <code>maxpts</code> (see <code><a href="maxcombo_fast.html">maxcombo_fast</a></code>).</p>
 <p>The multivariate normal integration dominates the computing time of the
 <code>"maxcombo"</code> statistic in a large simulation. When only the decision
 at a nominal level matters, <code>mc.alpha</code> avoids most of these
@@ -464,11 +470,17 @@ component p-value (<code>pnorm(m)</code> for <code>side = 1</code> and
 <code>p_min &lt;= p &lt;= min(1, K * p_min)</code> (the Bonferroni inequality). When
 <code>p_min &gt; mc.alpha</code>, <code>p_min</code> is reported; when
 <code>K * p_min &lt;= mc.alpha</code>, <code>K * p_min</code> is reported; otherwise the
-p-value is computed by integration. The reported value is therefore on the
-same side of <code>mc.alpha</code> as the exact p-value, so the rejection
-decision <code>maxcombo.p &lt;= mc.alpha</code> (as in <code><a href="simsummary_fast.html">simsummary_fast</a></code>
-with <code>alpha = mc.alpha</code>) is the same as with exact p-values, but the
-reported value is a bound unless <code>maxcombo.p.exact</code> is <code>TRUE</code>.
+p-value is computed by integration. A bound is reported only when it is on
+the same side of <code>mc.alpha</code> as the exact p-value, so the rejection
+decisions <code>maxcombo.p &lt;= mc.alpha</code> (as in <code><a href="simsummary_fast.html">simsummary_fast</a></code>
+with <code>alpha = mc.alpha</code>) that the bounds settle are those of the exact
+p-values, and the reported value is a bound unless
+<code>maxcombo.p.exact</code> is <code>TRUE</code>. The remaining p-values are
+integrated as without <code>mc.alpha</code>. When the randomized GenzBretz
+algorithm is used, the random numbers of each integral change with the
+number of integrals, so near the level a decision can differ from that of
+a run without <code>mc.alpha</code>, as it can between two runs with different
+seeds.
 Use exact p-values (the default <code>mc.alpha = NULL</code>) when the p-values
 themselves, or decisions at other levels such as Bonferroni-adjusted levels,
 are needed.</p>
@@ -521,7 +533,11 @@ It reports the weighted integrated survival difference (treatment minus
 control) with its confidence interval, the Wald statistic, and the p-value.
 The weight is selected with <code>wkm.weight</code> (<code>"PF"</code>, <code>"sqrtPF"</code>,
 or <code>"constant"</code>), matching <code><a href="wkm_fast.html">wkm_fast</a></code>. The benefit direction
-is a positive weighted difference (a positive Z favors treatment).</p>
+is a positive weighted difference (a positive Z favors treatment). The
+integral runs over the observed range, so all the <code>"wkm"</code> columns are
+<code>NA</code> when an observed time is infinite, as for a subject without a
+finite event or dropout time (<code>tte = Inf</code>) at a look that is not
+reached.</p>
 <p>The <code>"wmst"</code> statistic compares the window mean survival time, the area
 under the Kaplan-Meier curve between <code>wmst.tau1</code> and <code>wmst.tau2</code>.
 It reports the per-group WMST values, their difference (treatment minus

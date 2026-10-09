@@ -244,12 +244,13 @@ The max-combo p-value requires a multivariate normal integral for every
 simulated trial and look, which dominates the computing time. When only
 the decisions at the nominal levels are needed, `mc.alpha` computes the
 integral only for the p-values that the Bonferroni bounds do not already
-place on one side of the level; the decisions are the same as with every
-p-value integrated. The nominal levels below are those of the log-rank
-design and are used for illustration only: the correlation between the
-max-combo statistics at the two looks differs from that of the log-rank
-statistic, so a formal design would derive its boundaries for the
-max-combo statistic itself.
+place on one side of the level. The decisions that the bounds settle are
+those of the exact p-values, and the others carry the error of the
+randomized integration, as without `mc.alpha`. The nominal levels below
+are those of the log-rank design and are used for illustration only: the
+correlation between the max-combo statistics at the two looks differs
+from that of the log-rank statistic, so a formal design would derive its
+boundaries for the max-combo statistic itself.
 
 ``` r
 

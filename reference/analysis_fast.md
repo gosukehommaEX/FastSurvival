@@ -199,14 +199,17 @@ analysis_fast(
 
   A single positive numeric value, the absolute error tolerance passed
   to the multivariate normal integration of the `"maxcombo"` p-value.
-  Defaults to 1e-5.
+  Defaults to 1e-5. With the default weights the quasi-Monte-Carlo
+  integration usually stops at `maxpts` before reaching it (see
+  [`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)).
 
 - maxpts:
 
   A single positive integer, the maximum number of function evaluations
   for the quasi-Monte-Carlo integration used by the `"maxcombo"` p-value
   with four or more weights or with a two-sided test (see Details).
-  Defaults to 25000.
+  Defaults to 25000. Larger values reduce the integration error at a
+  higher computing cost.
 
 - medsurv.method:
 
@@ -384,7 +387,11 @@ the deterministic TVPACK algorithm, and otherwise by the randomized
 quasi-Monte-Carlo GenzBretz algorithm of mvtnorm, which uses R's
 random-number generator; call
 [`set.seed()`](https://rdrr.io/r/base/Random.html) beforehand for
-p-values that are reproducible to the last digit.
+p-values that are reproducible to the last digit. The correlation matrix
+of the default weights is singular, and the GenzBretz p-values then
+carry an integration error of the order of 1e-4 with the default
+`maxpts` (see
+[`maxcombo_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)).
 
 The multivariate normal integration dominates the computing time of the
 `"maxcombo"` statistic in a large simulation. When only the decision at
@@ -395,15 +402,19 @@ a nominal level matters, `mc.alpha` avoids most of these integrals. With
 `p_min <= p <= min(1, K * p_min)` (the Bonferroni inequality). When
 `p_min > mc.alpha`, `p_min` is reported; when `K * p_min <= mc.alpha`,
 `K * p_min` is reported; otherwise the p-value is computed by
-integration. The reported value is therefore on the same side of
-`mc.alpha` as the exact p-value, so the rejection decision
+integration. A bound is reported only when it is on the same side of
+`mc.alpha` as the exact p-value, so the rejection decisions
 `maxcombo.p <= mc.alpha` (as in
 [`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
-with `alpha = mc.alpha`) is the same as with exact p-values, but the
-reported value is a bound unless `maxcombo.p.exact` is `TRUE`. Use exact
-p-values (the default `mc.alpha = NULL`) when the p-values themselves,
-or decisions at other levels such as Bonferroni-adjusted levels, are
-needed.
+with `alpha = mc.alpha`) that the bounds settle are those of the exact
+p-values, and the reported value is a bound unless `maxcombo.p.exact` is
+`TRUE`. The remaining p-values are integrated as without `mc.alpha`.
+When the randomized GenzBretz algorithm is used, the random numbers of
+each integral change with the number of integrals, so near the level a
+decision can differ from that of a run without `mc.alpha`, as it can
+between two runs with different seeds. Use exact p-values (the default
+`mc.alpha = NULL`) when the p-values themselves, or decisions at other
+levels such as Bonferroni-adjusted levels, are needed.
 
 The `"ahsw"` statistic is the average hazard with survival weight of Uno
 and Horiguchi on the window from 0 to `tau`. It reports the per-group
@@ -466,7 +477,10 @@ p-value. The weight is selected with `wkm.weight` (`"PF"`, `"sqrtPF"`,
 or `"constant"`), matching
 [`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md).
 The benefit direction is a positive weighted difference (a positive Z
-favors treatment).
+favors treatment). The integral runs over the observed range, so all the
+`"wkm"` columns are `NA` when an observed time is infinite, as for a
+subject without a finite event or dropout time (`tte = Inf`) at a look
+that is not reached.
 
 The `"wmst"` statistic compares the window mean survival time, the area
 under the Kaplan-Meier curve between `wmst.tau1` and `wmst.tau2`. It

@@ -54,8 +54,11 @@ alternative columns or the alpha and beta spending of an analytic design
 report. When the summary has several blocks (arms of
 [`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
 output or subgroup populations), each block is printed under its own
-heading. The underlying object is an ordinary data frame, so the
-unrounded values remain available by subsetting it directly.
+heading. The object is a data frame with an additional class, so the
+unrounded values remain available by subsetting it. A selection of rows
+keeps the boundary settings and is printed as a report. A selection of
+columns keeps the class but not the boundary settings, and is printed as
+an ordinary data frame, as is a selection without any look row.
 
 ## See also
 

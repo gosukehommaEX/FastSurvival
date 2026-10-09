@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -435,17 +435,18 @@ scripts in <code>tools/paper/</code> of the package’s GitHub repository
 run the same designs with FastSurvival and with other simulation
 packages and record the operating characteristics and the elapsed time.
 For a two-arm group-sequential design with 600 subjects and two
-event-driven log-rank analyses, the time per simulated trial was about
-200 times longer with simtrial and about 80 times longer with
-TrialSimulator than with FastSurvival, and for a crossover after a
-positive progression-free survival analysis in an illness-death model it
-was about 50 times longer with TrialSimulator. The power and the
-analysis times agreed within Monte Carlo error. With FastSurvival,
-generating 10,000 such trials and computing the log-rank and RMST
-statistics at the two looks each took about one second. The max-combo
-p-values, one multivariate normal integral per trial and look, take most
-of the computing time; when only the decisions at given nominal levels
-are needed, the <code>mc.alpha</code> argument of
+event-driven log-rank analyses, the time per simulated trial was one to
+two orders of magnitude longer with simtrial and with TrialSimulator
+than with FastSurvival, and for a crossover after a positive
+progression-free survival analysis in an illness-death model it was more
+than an order of magnitude longer with TrialSimulator. The ratios varied
+between runs on the same computer. The power and the analysis times
+agreed within Monte Carlo error. With FastSurvival, generating 10,000
+such trials and computing the log-rank and RMST statistics at the two
+looks each took on the order of one second. The max-combo p-values, one
+multivariate normal integral per trial and look, take most of the
+computing time; when only the decisions at given nominal levels are
+needed, the <code>mc.alpha</code> argument of
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> restricts the integration to the p-values
 near those levels.</p>
 </div>

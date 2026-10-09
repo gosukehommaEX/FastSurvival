@@ -1,6 +1,71 @@
 # Changelog
 
-## FastSurvival (development version)
+## FastSurvival 1.2.0
+
+This release corrects errors and documentation found while preparing an
+article on the package. It adds no new features.
+
+### Bug fixes
+
+- [`print.simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
+  failed with “undefined columns selected” for a selection of the
+  columns of a
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  result, which keeps the class but not the boundary settings, and for a
+  selection of rows without any look row. Such subsets are now printed
+  as ordinary data frames.
+
+- The weighted Kaplan-Meier test
+  ([`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
+  and the `"wkm"` statistic of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md))
+  returned `NaN` or an infinite weighted difference when an observed
+  time was infinite, for example for a subject without a finite event or
+  dropout time (a cure fraction without dropout) at a look of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  that is not reached. The integral over the observed range is not
+  defined in this case, and all the statistics are now `NA`.
+
+### Documentation
+
+- [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md)
+  and
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  now describe the precision of the max-combo p-value correctly. The
+  weights of G(0,1) and G(1,0) add up to the weight of G(0,0), so the
+  correlation matrix of the default weights is singular, and the
+  quasi-Monte-Carlo GenzBretz integral converges slowly: with the
+  default `maxpts` the error of the p-value is of the order of 1e-4
+  rather than `abseps`. The statement that `abseps` can be loosened with
+  negligible effect is removed.
+
+- The description of `mc.alpha` in
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+  the README, and three vignettes is corrected. The decisions that the
+  Bonferroni bounds settle are those of the exact p-values. The other
+  p-values are integrated as without `mc.alpha`, but the GenzBretz
+  integration uses random numbers, so near the level a decision can
+  differ from that of a run without `mc.alpha`, as it can between two
+  runs with different seeds. The statement that the decisions are the
+  same as with every p-value integrated is removed.
+
+- The speed-comparison vignette now gives the ratio of the time per
+  simulated trial with simtrial or TrialSimulator to that with
+  FastSurvival as one to two orders of magnitude, because the ratio
+  varies between runs.
+
+### Tests
+
+- The one-sided max-combo p-values with three and four weights, whose
+  correlation matrices are singular, are compared with an independent
+  numerical integral that uses this structure.
+
+- New tests cover the printing of subsets of
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  results and the weighted Kaplan-Meier test with infinite times. The
+  tests of
+  [`print.simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
+  are moved to their own file.
 
 ## FastSurvival 1.1.0
 

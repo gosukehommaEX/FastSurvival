@@ -99,8 +99,9 @@ at 5 years and testing is one-sided in the direction of experimental
 benefit. Only the decision at the 2.5% level is needed from the MaxCombo
 test, so `mc.alpha = ALPHA` evaluates the multivariate normal integral
 only for the p-values that the Bonferroni bounds do not place on one
-side of that level; the decisions are the same as with every p-value
-integrated.
+side of that level. The decisions that the bounds settle are those of
+the exact p-values, and the others carry the error of the randomized
+integration, as without `mc.alpha`.
 
 ``` r
 
