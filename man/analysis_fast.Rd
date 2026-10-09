@@ -133,12 +133,15 @@ the \code{"maxcombo"} statistic, aligned with \code{mc.rho}. Defaults to
 
 \item{abseps}{A single positive numeric value, the absolute error tolerance
 passed to the multivariate normal integration of the \code{"maxcombo"}
-p-value. Defaults to 1e-5.}
+p-value. Defaults to 1e-5. With the default weights the quasi-Monte-Carlo
+integration usually stops at \code{maxpts} before reaching it (see
+\code{\link{maxcombo_fast}}).}
 
 \item{maxpts}{A single positive integer, the maximum number of function
 evaluations for the quasi-Monte-Carlo integration used by the
 \code{"maxcombo"} p-value with four or more weights or with a two-sided
-test (see Details). Defaults to 25000.}
+test (see Details). Defaults to 25000. Larger values reduce the
+integration error at a higher computing cost.}
 
 \item{medsurv.method}{A character string naming the variance method for the
 \code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
@@ -321,7 +324,10 @@ multivariate-normal p-value, which already follows \code{side}. As in
 three weights is computed by the deterministic TVPACK algorithm, and
 otherwise by the randomized quasi-Monte-Carlo GenzBretz algorithm of
 mvtnorm, which uses R's random-number generator; call \code{set.seed()}
-beforehand for p-values that are reproducible to the last digit.
+beforehand for p-values that are reproducible to the last digit. The
+correlation matrix of the default weights is singular, and the GenzBretz
+p-values then carry an integration error of the order of 1e-4 with the
+default \code{maxpts} (see \code{\link{maxcombo_fast}}).
 
 The multivariate normal integration dominates the computing time of the
 \code{"maxcombo"} statistic in a large simulation. When only the decision
@@ -333,11 +339,17 @@ component p-value (\code{pnorm(m)} for \code{side = 1} and
 \code{p_min <= p <= min(1, K * p_min)} (the Bonferroni inequality). When
 \code{p_min > mc.alpha}, \code{p_min} is reported; when
 \code{K * p_min <= mc.alpha}, \code{K * p_min} is reported; otherwise the
-p-value is computed by integration. The reported value is therefore on the
-same side of \code{mc.alpha} as the exact p-value, so the rejection
-decision \code{maxcombo.p <= mc.alpha} (as in \code{\link{simsummary_fast}}
-with \code{alpha = mc.alpha}) is the same as with exact p-values, but the
-reported value is a bound unless \code{maxcombo.p.exact} is \code{TRUE}.
+p-value is computed by integration. A bound is reported only when it is on
+the same side of \code{mc.alpha} as the exact p-value, so the rejection
+decisions \code{maxcombo.p <= mc.alpha} (as in \code{\link{simsummary_fast}}
+with \code{alpha = mc.alpha}) that the bounds settle are those of the exact
+p-values, and the reported value is a bound unless
+\code{maxcombo.p.exact} is \code{TRUE}. The remaining p-values are
+integrated as without \code{mc.alpha}. When the randomized GenzBretz
+algorithm is used, the random numbers of each integral change with the
+number of integrals, so near the level a decision can differ from that of
+a run without \code{mc.alpha}, as it can between two runs with different
+seeds.
 Use exact p-values (the default \code{mc.alpha = NULL}) when the p-values
 themselves, or decisions at other levels such as Bonferroni-adjusted levels,
 are needed.
@@ -396,7 +408,11 @@ It reports the weighted integrated survival difference (treatment minus
 control) with its confidence interval, the Wald statistic, and the p-value.
 The weight is selected with \code{wkm.weight} (\code{"PF"}, \code{"sqrtPF"},
 or \code{"constant"}), matching \code{\link{wkm_fast}}. The benefit direction
-is a positive weighted difference (a positive Z favors treatment).
+is a positive weighted difference (a positive Z favors treatment). The
+integral runs over the observed range, so all the \code{"wkm"} columns are
+\code{NA} when an observed time is infinite, as for a subject without a
+finite event or dropout time (\code{tte = Inf}) at a look that is not
+reached.
 
 The \code{"wmst"} statistic compares the window mean survival time, the area
 under the Kaplan-Meier curve between \code{wmst.tau1} and \code{wmst.tau2}.

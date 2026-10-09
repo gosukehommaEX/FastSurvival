@@ -223,3 +223,18 @@ test_that("wkm_fast: presorted = TRUE checks the order", {
   expect_error(wkm_fast(c(3, 1, 2, 4), c(1, 1, 0, 1), c(0, 1, 0, 1),
                         control = 0, presorted = TRUE), "presorted = FALSE")
 })
+
+test_that("wkm_fast: an infinite observed time gives NA statistics", {
+  time  <- c(2, 3, 5, 7, 11, 13, Inf, Inf)
+  event <- c(1, 1, 1, 0, 1, 1, 0, 0)
+  group <- rep(1:2, 4)
+  r <- wkm_fast(time, event, group, control = 1)
+  # The weighted difference comes from the C++ core without arithmetic, so
+  # it is NA and not NaN.
+  expect_true(is.na(r[["wdiff"]]) && !is.nan(r[["wdiff"]]))
+  expect_true(all(is.na(unclass(r))))
+  expect_equal(attr(r, "n"), c(4, 4))
+  # A finite time in place of Inf gives a finite weighted difference.
+  f <- wkm_fast(replace(time, 7:8, 20), event, group, control = 1)
+  expect_true(is.finite(f[["wdiff"]]))
+})

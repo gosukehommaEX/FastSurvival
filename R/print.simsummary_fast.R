@@ -23,8 +23,12 @@
 #' does not carry the separate null and alternative columns or the alpha and beta
 #' spending of an analytic design report. When the summary has several blocks
 #' (arms of \code{\link{pairwise_fast}} output or subgroup populations), each
-#' block is printed under its own heading. The underlying object is an ordinary
-#' data frame, so the unrounded values remain available by subsetting it directly.
+#' block is printed under its own heading. The object is a data frame with an
+#' additional class, so the unrounded values remain available by subsetting
+#' it. A selection of rows keeps the boundary settings and is printed as a
+#' report. A selection of columns keeps the class but not the boundary
+#' settings, and is printed as an ordinary data frame, as is a selection
+#' without any look row.
 #'
 #' @param x An object of class \code{"simsummary_fast"} from
 #'   \code{\link{simsummary_fast}}.
@@ -45,6 +49,17 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
   is_z    <- !is.null(bd) && identical(bd$mode, "z")
   has_fut <- is_z && !is.null(bd$futility)
   has_col <- function(nm) nm %in% names(dat)
+
+  # A selection of columns keeps the class but not the boundary attribute,
+  # and may lack the columns of the report; such a subset, or one without any
+  # look row, is printed as an ordinary data frame.
+  need <- c("look", "population", "cum.reject", "prob.stop.efficacy",
+            if (has_fut) "prob.stop.futility")
+  if (is.null(bd) || !all(need %in% names(dat)) ||
+      !any(dat$look != "overall")) {
+    print(dat, ...)
+    return(invisible(x))
+  }
 
   fmt <- function(v, d) {
     out <- formatC(as.numeric(v), format = "f", digits = d)
@@ -86,7 +101,7 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
     if (has_col("n.event.mean")) {
       ev  <- lk$n.event.mean
       fin <- ev[nlook]
-      if (is.finite(fin) && fin > 0) info_frac <- ev / fin
+      if (nlook > 0L && is.finite(fin) && fin > 0) info_frac <- ev / fin
     } else if (has_col("look.value")) {
       lv <- lk$look.value
       if (any(is.finite(lv)) && max(lv, na.rm = TRUE) > 0) {

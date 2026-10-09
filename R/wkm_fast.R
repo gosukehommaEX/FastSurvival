@@ -20,6 +20,10 @@
 #' range. With \code{weight = "PF"} the result reproduces
 #' \code{nphsim::wkm.Stat} for data without tied times.
 #'
+#' The integral runs up to the largest observed time, so it is not defined
+#' when a time is infinite (for example a subject without a finite event or
+#' dropout time in simulated data), and all the statistics are then \code{NA}.
+#'
 #' The weighted difference is computed as treatment minus control, so a
 #' positive value and a positive z indicate longer survival under treatment.
 #'

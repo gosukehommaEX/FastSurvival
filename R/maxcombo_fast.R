@@ -36,13 +36,24 @@
 #' the univariate normal is used. With two or three weights and a one-sided
 #' test, where the integration region is a half-space, the deterministic
 #' \code{\link[mvtnorm]{TVPACK}} algorithm is used. For the two-sided test, whose
-#' region is a bounded rectangle, and for four or more weights, the
-#' quasi-Monte-Carlo \code{\link[mvtnorm]{GenzBretz}} algorithm is used, whose
-#' precision is governed by \code{abseps} and \code{maxpts}. In a simulation
-#' study the Monte Carlo error of the estimated rejection rate is driven by the
-#' number of simulated trials rather than by the precision of each individual
-#' p-value, so \code{abseps} can be loosened to speed up the four-weight case
-#' with negligible effect on the operating characteristics.
+#' region is a bounded rectangle, and for four or more weights, the randomized
+#' quasi-Monte-Carlo \code{\link[mvtnorm]{GenzBretz}} algorithm is used. It
+#' uses R's random-number generator, so call \code{set.seed()} beforehand for
+#' reproducible p-values, and it stops when its error estimate falls below
+#' \code{abseps} or after \code{maxpts} function evaluations, whichever comes
+#' first.
+#'
+#' The weights of G(0,1) and G(1,0) add up to the weight of G(0,0) at every
+#' time, because (1 - S) + S = 1, so the numerator of the G(0,0) component is
+#' the sum of the other two. The correlation matrix of the default weights, or
+#' of any set that contains these three, is therefore singular, and the
+#' quasi-Monte-Carlo integral converges slowly. With the default \code{maxpts}
+#' the absolute error of the p-value is typically of the order of 1e-4 rather
+#' than \code{abseps}: in a check with the default weights and a one-sided
+#' test, two integrations of the same p-values with different seeds differed
+#' by up to about 1e-3. A larger \code{maxpts} reduces the error at a higher
+#' computing cost. In a simulation study, the integration error affects only
+#' the decisions for p-values within about that error of the nominal level.
 #'
 #' When \code{presorted = TRUE}, the inputs are assumed to be sorted in ascending
 #' order of \code{time} and the internal \code{order()} call is skipped, which is
@@ -71,12 +82,15 @@
 #'   \code{FALSE} (default), sorting is handled internally.
 #'   The order is checked, and an error is given when it does not hold.
 #' @param abseps A single positive numeric value, the absolute error tolerance
-#'   passed to the multivariate normal integration. Defaults to 1e-5. Larger
-#'   values speed up the quasi-Monte-Carlo integration (four or more weights,
-#'   or a two-sided test) at the cost of p-value precision.
+#'   passed to the multivariate normal integration. Defaults to 1e-5. The
+#'   quasi-Monte-Carlo integration (four or more weights, or a two-sided test)
+#'   stops at \code{maxpts} function evaluations when the tolerance is not
+#'   reached, as is usual with the default weights (see Details). Larger
+#'   values can stop it earlier at the cost of p-value precision.
 #' @param maxpts A single positive integer, the maximum number of function
 #'   evaluations for the quasi-Monte-Carlo integration used with four or more
-#'   weights or with a two-sided test (see Details). Defaults to 25000.
+#'   weights or with a two-sided test (see Details). Defaults to 25000. Larger
+#'   values reduce the integration error at a higher computing cost.
 #'
 #' @return An object of class \code{"maxcombo_fast"}, a named numeric vector of
 #'   length two with elements \code{statistic} (the max-combo statistic;

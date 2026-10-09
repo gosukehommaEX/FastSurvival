@@ -1,42 +1,31 @@
 ## Update
 
-This is an update from version 1.0.0 to 1.1.0. It adds features for the
-simulation of clinical trials:
+This is an update from version 1.1.0 to 1.2.0. It corrects errors and
+documentation found while preparing an article on the package, and adds no
+new features:
 
-* `cutoff_fast()` (new) computes the calendar time of each analysis in every
-  simulated trial from combined event, calendar-time, and enrollment rules;
-* `switch_fast()` (new) applies treatment switching to simulated data;
-* `analysis_fast()` and `pairwise_fast()` gain a `cutoff.looks` argument,
-  `analysis_fast()` gains an `mc.alpha` argument that avoids most of the
-  multivariate normal integrals of the max-combo p-values when only the
-  decisions at given levels are needed, and `simdata_fast()` gains a `stream`
-  argument for reproducible simulation in batches.
+* `print.simsummary_fast()` failed for a selection of the columns of a
+  `simsummary_fast()` result;
+* the weighted Kaplan-Meier test returned NaN or an infinite value, instead of
+  NA, when an observed time was infinite (for example a cure fraction without
+  dropout in simulated data);
+* the documentation of `maxcombo_fast()` and `analysis_fast()` described the
+  precision of the max-combo p-value and the `mc.alpha` shortcut incorrectly.
+  The correlation matrix of the default weights is singular, so the
+  quasi-Monte-Carlo integration does not reach the requested tolerance. This
+  is now stated, and new tests compare the p-values with an independent
+  numerical integral.
 
-The illness-death model of `simdata_fast()` now also supports subgroups.
-
-It also fixes several errors found in a review of the package before this
-release, among them:
-
-* the variance of `wkm_fast()` with the "sqrtPF" and "constant" weights (the
-  standard error was too small; the default weight was correct);
-* subjects with neither a finite event time nor a finite dropout time (for
-  example a cure fraction without dropout) were recorded as events in
-  `simdata_fast()`;
-* an error of `analysis_fast()` for the two-sided max-combo test with two or
-  three weights;
-* missing confidence limits of `milestone_fast()` when a survival estimate is
-  0 or 1, and unchecked `presorted = TRUE` input in the analysis functions.
-
-A new vignette uses the 'rpsftm' package, which is added to Suggests and used
-only when it is installed; the 'rpact' package is no longer used and is
-removed from Suggests. See NEWS.md for the full list of changes.
+See NEWS.md for the full list of changes.
 
 ## Notes for the reviewer
 
-This update follows version 1.0.0 (published on 2026-09-29) after a short
-interval because it fixes the errors listed above, in particular the
-underestimated standard error of `wkm_fast()` with non-default weights, in
-addition to the new features described above.
+This update follows version 1.1.0 (published on 2026-10-08) after a short
+interval, and I am aware that the CRAN policy asks for updates no more than
+every 1-2 months. It is submitted now because an article on the package that
+I am preparing describes the behavior of the CRAN version, and version 1.1.0
+has the two errors listed above and overstates the precision of the
+max-combo p-values in its documentation.
 
 The checks below reported no NOTE. If the incoming check reports possibly
 misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author

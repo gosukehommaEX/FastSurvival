@@ -493,8 +493,9 @@ test_that("analysis_fast max-combo with two or three weights matches maxcombo_fa
                             presorted = TRUE)
         expect_equal(res$maxcombo.stat[s], unname(mc["statistic"]),
                      tolerance = 1e-8)
-        # TVPACK (one-sided) is deterministic; GenzBretz (two-sided) is
-        # accurate to about abseps = 1e-5.
+        # TVPACK (one-sided) is deterministic; the GenzBretz integral
+        # (two-sided) carries a randomized integration error, of the
+        # order of 1e-4 for singular weight sets (see maxcombo_fast()).
         tol <- if (sd == 1) 1e-8 else 1e-3
         expect_lt(abs(res$maxcombo.p[s] - unname(mc["p.value"])), tol)
       }
@@ -564,4 +565,29 @@ test_that("analysis_fast: an event target beyond the integer range is not reache
   expect_true(all(!res$reached))
   expect_true(all(is.na(res$cutoff)))
   expect_equal(res$look.value, rep(3e9, 3))
+})
+
+test_that("analysis_fast: wkm is NA at an unreached look with infinite times", {
+  # Cure model without dropout: subjects without an event have tte = Inf, so
+  # at a look that is not reached their observed time is infinite and the
+  # integral of the weighted Kaplan-Meier test has no finite upper limit.
+  d <- simdata_fast(nsim = 5, n = c(100, 100), a.time = c(0, 12),
+                    a.rate = 200 / 12, e.hazard = list(c(0.1, 0), c(0.1, 0)),
+                    e.time = c(0, 24, Inf), seed = 5)
+  expect_true(any(is.infinite(d$tte)))
+  r <- analysis_fast(d, control = 1, event.looks = c(30, 1000),
+                     stat = c("logrank", "wkm"))
+  un <- r[!r$reached, ]
+  expect_equal(nrow(un), 5L)
+  # The weighted difference comes from the C++ core without arithmetic, so
+  # it is NA and not NaN; the derived columns are NA.
+  expect_true(all(is.na(un[["wkm.wdiff"]]) & !is.nan(un[["wkm.wdiff"]])))
+  for (cn in c("wkm.lower", "wkm.upper", "wkm.z", "wkm.p")) {
+    expect_true(all(is.na(un[[cn]])), info = cn)
+  }
+  expect_true(all(is.finite(un[["logrank.z"]])))
+  # Reached looks (finite observed times) are unaffected.
+  rc <- r[r$reached, ]
+  expect_equal(nrow(rc), 5L)
+  expect_true(all(is.finite(rc[["wkm.wdiff"]]) & is.finite(rc[["wkm.z"]])))
 })

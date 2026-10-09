@@ -311,3 +311,75 @@ test_that("maxcombo_fast: presorted = TRUE checks the order", {
   group <- c(0, 1, 0, 1, 0, 1)
   expect_error(maxcombo_fast(time, event, group, control = 0, presorted = TRUE), "presorted = FALSE")
 })
+
+# ------------------------------------------------------------------ #
+#  Singular correlation of the Fleming-Harrington weights
+# ------------------------------------------------------------------ #
+
+# The weights of G(0,1) and G(1,0) add up to that of G(0,0) at every time
+# ((1 - S) + S = 1), so Z00 = c1 Z01 + c2 Z10 exactly and the correlation
+# matrix of these components is singular. The one-sided p-value
+# 1 - P(Z_k >= m for all k) then reduces to a one-dimensional (three weights)
+# or two-dimensional (four weights) integral of normal densities and
+# distribution functions, evaluated here with stats::integrate() as a
+# reference independent of mvtnorm. The formulas were checked against a
+# quasi-Monte-Carlo integral with 1e7 points in Python (agreement within
+# 2e-5). The components are ordered FH(0,0), FH(0,1), FH(1,0) and, with four
+# weights, FH(1,1).
+ref_singular_p <- function(m, corr) {
+  S  <- corr[2:3, 2:3]
+  cc <- solve(S, corr[1, 2:3])
+  r  <- S[1, 2]
+  sr <- sqrt(1 - r^2)
+  # Lower limit of Z10 given Z01 = x; its kink at x0 splits the outer range.
+  lower_y <- function(x) pmax(m, (m - cc[1] * x) / cc[2])
+  x0  <- m * (1 - cc[2]) / cc[1]
+  brk <- if (x0 > m) c(m, x0, Inf) else c(m, Inf)
+  pieces <- function(f, rel) {
+    sum(vapply(seq_len(length(brk) - 1L), function(k) {
+      integrate(f, brk[k], brk[k + 1L], rel.tol = rel, abs.tol = 1e-12)$value
+    }, numeric(1)))
+  }
+  if (nrow(corr) == 3L) {
+    f <- function(x) {
+      dnorm(x) * pnorm((lower_y(x) - r * x) / sr, lower.tail = FALSE)
+    }
+    joint <- pieces(f, 1e-10)
+  } else {
+    beta <- solve(S, corr[4, 2:3])
+    s11  <- sqrt(1 - sum(beta * (S %*% beta)))
+    inner <- function(x) {
+      g <- function(y) {
+        dnorm((y - r * x) / sr) / sr *
+          pnorm((m - beta[1] * x - beta[2] * y) / s11, lower.tail = FALSE)
+      }
+      integrate(g, lower_y(x), Inf, rel.tol = 1e-10, abs.tol = 1e-13)$value
+    }
+    f <- function(x) dnorm(x) * vapply(x, inner, numeric(1))
+    joint <- pieces(f, 1e-7)
+  }
+  list(p = 1 - joint, resid = 1 - sum(cc * (S %*% cc)))
+}
+
+test_that("one-sided p-values with singular weight sets match an independent integral", {
+  skip_if_not_installed("survival")
+  ov <- survival::ovarian
+  # Three weights: TVPACK (deterministic).
+  f3 <- maxcombo_fast(ov$futime, ov$fustat, ov$rx, control = 1, side = 1,
+                      rho = c(0, 0, 1), gamma = c(0, 1, 0))
+  m3 <- unname(f3["statistic"])
+  r3 <- ref_singular_p(m3, attr(f3, "corr"))
+  expect_lt(abs(r3$resid), 1e-8)
+  expect_lt(abs(unname(f3["p.value"]) - r3$p), 2e-5)
+  # Four weights: GenzBretz with the default maxpts, whose error is of the
+  # order of 1e-4 for this singular problem.
+  set.seed(1)
+  f4 <- maxcombo_fast(ov$futime, ov$fustat, ov$rx, control = 1, side = 1)
+  m4 <- unname(f4["statistic"])
+  r4 <- ref_singular_p(m4, attr(f4, "corr"))
+  expect_lt(abs(r4$resid), 1e-8)
+  expect_lt(abs(unname(f4["p.value"]) - r4$p), 2e-3)
+  # The reference is sensitive at these tolerances.
+  expect_gt(abs(ref_singular_p(m3 + 0.05, attr(f3, "corr"))$p - r3$p), 2e-3)
+  expect_gt(abs(ref_singular_p(m4 + 0.05, attr(f4, "corr"))$p - r4$p), 2e-3)
+})
