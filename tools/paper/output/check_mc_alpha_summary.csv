@@ -1,0 +1,2 @@
+"nsim","analyses","integrated_mc_alpha","decisions_differ_mc_alpha","decisions_differ_seed","max_gap_differ","max_abs_noise","q99_abs_noise","precise_agrees_mc_alpha","precise_agrees_seed1"
+10000,20000,1835,47,43,0.0003907676760987,0.000803803533827252,0.00033051594820258,20,27
