@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.421   0.031   0.452
+#>   0.437   0.029   0.466
 ```
 
 ## A check with the rank-preserving structural failure time model
