@@ -7,16 +7,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/gosukehommaEX/FastSurvival/blob/v1.1.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/gosukehommaEX/FastSurvival/blob/main/DESCRIPTION)
 
 Homma G (2026). *FastSurvival: Fast Survival Analysis and Simulation for
-Clinical Trials*. R package version 1.1.0,
+Clinical Trials*. R package version 1.1.0.9000,
 <https://github.com/gosukehommaEX/FastSurvival>.
 
     @Manual{,
       title = {FastSurvival: Fast Survival Analysis and Simulation for Clinical Trials},
       author = {Gosuke Homma},
       year = {2026},
-      note = {R package version 1.1.0},
+      note = {R package version 1.1.0.9000},
       url = {https://github.com/gosukehommaEX/FastSurvival},
     }
