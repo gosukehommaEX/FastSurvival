@@ -28,8 +28,8 @@
 #' @param event An integer or numeric vector of event indicators (1 = event,
 #'   0 = censored), aligned with \code{time}.
 #' @param group A vector identifying the groups, aligned with \code{time}, with
-#'   one or two distinct values. If \code{NULL} (default), all subjects are
-#'   treated as a single group.
+#'   one or two distinct values and no missing values. If \code{NULL}
+#'   (default), all subjects are treated as a single group.
 #' @param control The value of \code{group} that denotes the reference (control)
 #'   group; the other value is treated as the treatment group. Required in the
 #'   two-group case and ignored in the single-group case.
@@ -75,6 +75,9 @@ kmcurve_fast <- function(time, event, group = NULL, control = NULL) {
   } else {
     if (length(group) != n) {
       stop("'group' must have the same length as 'time'")
+    }
+    if (anyNA(group)) {
+      stop("'group' must not contain missing values")
     }
     if (is.factor(group)) group <- as.character(group)
     ulev  <- sort(unique(group))

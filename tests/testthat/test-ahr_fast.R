@@ -250,21 +250,24 @@ test_that("input validation catches bad arguments", {
   group <- rep(c(0, 1), each = n)
 
   # three distinct group values
-  expect_error(ahr_fast(obs, status, rep(c(0, 1, 2), length.out = 2 * n)))
+  expect_error(ahr_fast(obs, status, rep(c(0, 1, 2), length.out = 2 * n)),
+               "exactly two distinct values")
   # mismatched lengths
-  expect_error(ahr_fast(obs[-1], status, group))
+  expect_error(ahr_fast(obs[-1], status, group), "same length")
   # status not 0/1
   bad_status <- status
   bad_status[1] <- 2L
-  expect_error(ahr_fast(obs, bad_status, group))
+  expect_error(ahr_fast(obs, bad_status, group), "must be 0 or 1")
+  # a factor event indicator
+  expect_error(ahr_fast(obs, factor(status), group, control = 0), "factor")
   # invalid confidence level
-  expect_error(ahr_fast(obs, status, group, conf.level = 1.5))
+  expect_error(ahr_fast(obs, status, group, conf.level = 1.5), "conf.level")
   # non-positive null.ahr
-  expect_error(ahr_fast(obs, status, group, null.ahr = -1))
+  expect_error(ahr_fast(obs, status, group, null.ahr = -1), "null.ahr")
   # missing values
   na_obs <- obs
   na_obs[1] <- NA
-  expect_error(ahr_fast(na_obs, status, group))
+  expect_error(ahr_fast(na_obs, status, group), "missing values")
   # control not one of the two group values
   expect_error(ahr_fast(obs, status, group, control = 9), "must be one of")
 })

@@ -13,8 +13,8 @@ kmcurve_fast(time, event, group = NULL, control = NULL)
 0 = censored), aligned with \code{time}.}
 
 \item{group}{A vector identifying the groups, aligned with \code{time}, with
-one or two distinct values. If \code{NULL} (default), all subjects are
-treated as a single group.}
+one or two distinct values and no missing values. If \code{NULL}
+(default), all subjects are treated as a single group.}
 
 \item{control}{The value of \code{group} that denotes the reference (control)
 group; the other value is treated as the treatment group. Required in the

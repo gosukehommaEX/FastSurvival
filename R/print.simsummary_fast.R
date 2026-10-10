@@ -25,8 +25,12 @@
 #' (arms of \code{\link{pairwise_fast}} output or subgroup populations), each
 #' block is printed under its own heading. The object is a data frame with an
 #' additional class, so the unrounded values remain available by subsetting
-#' it. A selection of rows keeps the boundary settings and is printed as a
-#' report. A selection of columns keeps the class but not the boundary
+#' it. A selection of rows that keeps, in every block, all the looks in their
+#' original order (for example one population or one arm) is printed as a
+#' report. Any other selection of rows, such as some of the looks or rows in a
+#' different order, is printed as an ordinary data frame, because the
+#' boundaries and the information fractions refer to all the looks of the
+#' design. A selection of columns keeps the class but not the boundary
 #' settings, and is printed as an ordinary data frame, as is a selection
 #' without any look row.
 #'
@@ -59,6 +63,23 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
       !any(dat$look != "overall")) {
     print(dat, ...)
     return(invisible(x))
+  }
+
+  # The boundaries are stored per look of the design, so the report is printed
+  # only when every block keeps all the looks in their original order; any
+  # other selection of rows is printed as an ordinary data frame.
+  if (!is.null(bd$looks)) {
+    blk_cols <- c(if ("arm" %in% names(dat)) "arm", "population")
+    blk_keys <- unique(dat[, blk_cols, drop = FALSE])
+    for (b in seq_len(nrow(blk_keys))) {
+      in_blk <- dat$population == blk_keys$population[b]
+      if ("arm" %in% names(dat)) in_blk <- in_blk & dat$arm == blk_keys$arm[b]
+      blk_looks <- as.character(dat$look[in_blk & dat$look != "overall"])
+      if (!identical(blk_looks, bd$looks)) {
+        print(dat, ...)
+        return(invisible(x))
+      }
+    }
   }
 
   fmt <- function(v, d) {
@@ -117,8 +138,8 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
     if (has_col("n.event.mean"))    t1[["Events (s)"]] <- fmt(lk$n.event.mean, 1)
     if (has_col("n.enrolled.mean")) t1[["Sample (n)"]] <- fmt(lk$n.enrolled.mean, 1)
     if (is_z) {
-      t1[["Efficacy Z"]] <- fmt(eff_b, digits)
-      if (has_fut) t1[["Futility Z"]] <- fmt(bd$futility, digits)
+      t1[["Efficacy Bound"]] <- fmt(eff_b, digits)
+      if (has_fut) t1[["Futility Bound"]] <- fmt(bd$futility, digits)
     } else {
       t1[["Nominal p"]] <- fmt(eff_b, digits)
     }

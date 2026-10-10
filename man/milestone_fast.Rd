@@ -69,6 +69,20 @@ given; the \code{"loglog"} test statistic is then \code{NA}. See Tang
 (2021) for the MOVER difference interval and Tang (2022) for the use of
 milestone survival in trial design.
 }
+\details{
+The \code{"wald"} statistic is the difference divided by its Greenwood
+standard error. The \code{"loglog"} statistic is the difference of the
+complementary log-log transforms of the two estimates divided by its
+standard error, so it is negative when the treatment group has the higher
+milestone survival, and its one-sided p-value is the lower tail. The
+\code{"mover"} statistic is the normal quantile of \code{conf.level} times
+the difference divided by the half-width of the MOVER interval on the side
+of zero. It is obtained by inverting the interval at \code{conf.level}, so
+the statistic and its p-value depend on \code{conf.level}, and the
+two-sided p-value is below \code{1 - conf.level} exactly when the interval
+excludes zero. For \code{"wald"} and \code{"mover"} a positive statistic
+favors treatment and the one-sided p-value is the upper tail.
+}
 \examples{
 set.seed(1)
 time <- c(rexp(50, 0.1), rexp(50, 0.07))

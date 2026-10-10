@@ -104,7 +104,9 @@
 #'   Fleming-Harrington G(rho, gamma) test with weight
 #'   \code{S(t-)^rho (1 - S(t-))^gamma}. \code{"mwlrt"} is the modestly-weighted
 #'   log-rank test of Magirr and Burman with weight
-#'   \code{1 / max(S(t-), S(t_star-))}. \code{"gehan"} is the Gehan-Breslow test
+#'   \code{1 / max(S(t-), S(t_star-))}, the left-continuous form used by
+#'   nphRCT (Magirr and Burman define the weight with \code{S(t)} and
+#'   \code{S(t_star)}). \code{"gehan"} is the Gehan-Breslow test
 #'   with weight equal to the at-risk count, and \code{"tarone-ware"} uses the
 #'   square root of the at-risk count. Here \code{S(t-)} is the left-continuous
 #'   pooled Kaplan-Meier estimate just prior to each event time.
@@ -119,7 +121,8 @@
 #'   "mwlrt"}. The weight is capped at \code{1 / S(t_star-)}, where
 #'   \code{S(t_star-)} is the pooled Kaplan-Meier value just before
 #'   \code{t_star} (the product over event times strictly less than
-#'   \code{t_star}, as in nphRCT).
+#'   \code{t_star}, as in nphRCT). When that value is 0 (the pooled curve
+#'   reaches 0 before \code{t_star}), the weight is not capped.
 #'   A value of 0 yields the ordinary log-rank test.
 #'
 #' @return An object of class \code{"survdiff_fast"}, which is a length-one
@@ -133,7 +136,7 @@
 #'   observed event counts, and \code{E0} and \code{E1} are \code{NA} because a
 #'   single unweighted expected count is not defined for a weighted test.
 #'   Returns \code{NA_real_} (still with class \code{"survdiff_fast"}) when the
-#'   variance is zero (e.g., all events in one group).
+#'   variance is zero (e.g., no event time at which both groups are at risk).
 #'
 #' @examples
 #' library(survival)
@@ -193,14 +196,14 @@
 #'
 #' @references
 #' Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
-#' singly-censored samples. \emph{Biometrika}, \emph{52}, 203-224.
+#' singly-censored samples. \emph{Biometrika}, \emph{52}(1-2), 203-224.
 #'
 #' Mantel, N. (1966). Evaluation of survival data and two new rank order
 #' statistics arising in its consideration. \emph{Cancer Chemotherapy
 #' Reports}, \emph{50}(3), 163-170.
 #'
 #' Tarone, R. E., & Ware, J. (1977). On distribution-free tests for equality of
-#' survival distributions. \emph{Biometrika}, \emph{64}, 156-160.
+#' survival distributions. \emph{Biometrika}, \emph{64}(1), 156-160.
 #'
 #' Fleming, T. R., & Harrington, D. P. (1991). \emph{Counting Processes and
 #' Survival Analysis}. New York: John Wiley & Sons.

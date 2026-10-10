@@ -20,6 +20,14 @@
 #' range. With \code{weight = "PF"} the result reproduces
 #' \code{nphsim::wkm.Stat} for data without tied times.
 #'
+#' Because the integral extends to the largest observed time of the pooled
+#' data, the curve of a group whose follow-up ends earlier with a censored time
+#' is carried forward flat beyond that time. The Pepe-Fleming weight is zero
+#' there, but the constant and square-root weights are not, so with these weights the
+#' statistic can be biased, even under the null hypothesis, when follow-up
+#' differs between the groups. The Pepe-Fleming weight is recommended in that
+#' case.
+#'
 #' The integral runs up to the largest observed time, so it is not defined
 #' when a time is infinite (for example a subject without a finite event or
 #' dropout time in simulated data), and all the statistics are then \code{NA}.
@@ -59,12 +67,12 @@
 #'
 #' @references
 #' Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics: a
-#' class of distance tests for censored survival data. Biometrics, 45(2),
-#' 497-507.
+#' class of distance tests for censored survival data. \emph{Biometrics},
+#' \emph{45}(2), 497-507.
 #'
 #' Pepe, M. S., & Fleming, T. R. (1991). Weighted Kaplan-Meier statistics:
-#' large sample and optimality considerations. Journal of the Royal Statistical
-#' Society. Series B (Methodological), 53(2), 341-352.
+#' large sample and optimality considerations. \emph{Journal of the Royal
+#' Statistical Society. Series B (Methodological)}, \emph{53}(2), 341-352.
 #'
 #' @importFrom stats qnorm pnorm
 #' @export
@@ -90,6 +98,10 @@ wkm_fast <- function(time, event, group, control = NULL,
   if (!all(event %in% c(0, 1))) {
     stop("event must be coded as 0 (censored) or 1 (event).")
   }
+  # Type, sign, and coding of the inputs, as in the other analysis functions
+  # (a factor 'event' would otherwise be replaced by its integer codes, and a
+  # character 'time' sorted as text).
+  check_time_event(time, event)
   if (!(side %in% c(1, 2))) {
     stop("side must be 1 or 2.")
   }

@@ -35,7 +35,7 @@ Description: Provides fast alternatives to standard survival analysis functions
     re-estimation, probability-of-success calculations, and regional consistency
     evaluation in multi-regional trials. Core computations are implemented in
     'C++' via 'Rcpp' for maximum performance. Methodological background is
-    described in Collett (2014, ISBN:9780429196294).
+    described in Collett (2014, ISBN:9781439856789).
 License: MIT + file LICENSE
 URL: https://github.com/gosukehommaEX/FastSurvival,
     https://gosukehommaEX.github.io/FastSurvival/
@@ -48,12 +48,12 @@ Imports:
     graphics,
     grDevices,
     stats,
-    dqrng,
+    dqrng (>= 0.4.0),
     Rcpp,
     mvtnorm
 LinkingTo:
     Rcpp,
-    dqrng
+    dqrng (>= 0.4.0)
 Suggests:
     survival,
     survRM2,

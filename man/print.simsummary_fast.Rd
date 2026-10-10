@@ -43,8 +43,12 @@ spending of an analytic design report. When the summary has several blocks
 (arms of \code{\link{pairwise_fast}} output or subgroup populations), each
 block is printed under its own heading. The object is a data frame with an
 additional class, so the unrounded values remain available by subsetting
-it. A selection of rows keeps the boundary settings and is printed as a
-report. A selection of columns keeps the class but not the boundary
+it. A selection of rows that keeps, in every block, all the looks in their
+original order (for example one population or one arm) is printed as a
+report. Any other selection of rows, such as some of the looks or rows in a
+different order, is printed as an ordinary data frame, because the
+boundaries and the information fractions refer to all the looks of the
+design. A selection of columns keeps the class but not the boundary
 settings, and is printed as an ordinary data frame, as is a selection
 without any look row.
 }

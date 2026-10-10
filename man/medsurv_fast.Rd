@@ -72,7 +72,11 @@ interval, the midpoint of that interval is returned (the next event time, or
 the last observed time when no later event exists, closes the interval). This
 is the convention used by \code{survfit}, including its tolerance of
 \code{sqrt(.Machine$double.eps)} when comparing the estimate with 0.5. The
-point estimate is the same for both variance methods.
+point estimate is the same for both variance methods. When the estimate
+stays at 0.5 up to an infinite observed time (for example a subject without
+a finite event or dropout time in simulated data), the midpoint is not
+defined, and the median of that group and the statistics that depend on it
+are \code{NA}.
 
 Two variance methods are available through the \code{method} argument. With
 \code{method = "km"} the variance of the estimated median follows the
@@ -105,6 +109,6 @@ medsurv_fast(time, event, group = g, control = 0, method = "nph")
 
 }
 \references{
-Fleming, T. R., & Harrington, D. P. (1991). Counting Processes and Survival
-Analysis. New York: John Wiley & Sons.
+Fleming, T. R., & Harrington, D. P. (1991). \emph{Counting Processes and
+Survival Analysis}. New York: John Wiley & Sons.
 }

@@ -79,8 +79,9 @@ the ratio of the cumulative event probability at \code{tau} to the restricted
 mean survival time at \code{tau}. It can be read as a general censoring-free
 incidence rate on the window from 0 to \code{tau} and stays interpretable
 under non-proportional hazards. This is a different quantity from the average
-hazard ratio of Kalbfleisch, which averages the time-varying ratio of hazards
-rather than forming a single average hazard per group and then contrasting.
+hazard ratio of Kalbfleisch and Prentice (see \code{\link{ahr_fast}}), which
+averages the time-varying ratio of hazards rather than forming a single
+average hazard per group and then contrasting.
 
 Writing the treatment and control average hazards as a1 and a0, the ratio
 contrast is RAH = a1 / a0, formed on the log scale with variance

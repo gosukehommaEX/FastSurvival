@@ -105,7 +105,8 @@ statistic is max_k abs(Z_k) and the p-value is
 
 The joint normal probability is evaluated by dimension. With a single weight
 the univariate normal is used. With two or three weights and a one-sided
-test, where the integration region is a half-space, the deterministic
+test, where the integration region is an orthant (all upper limits
+infinite), the deterministic
 \code{\link[mvtnorm]{TVPACK}} algorithm is used. For the two-sided test, whose
 region is a bounded rectangle, and for four or more weights, the randomized
 quasi-Monte-Carlo \code{\link[mvtnorm]{GenzBretz}} algorithm is used. It

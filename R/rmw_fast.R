@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Computes the robust modestly-weighted (rMW) log-rank test of Magirr and
-#' Ohrn, which combines the standard log-rank test with a single
+#' \enc{Öhrn}{Ohrn}, which combines the standard log-rank test with a single
 #' modestly-weighted log-rank test. The test statistic is the maximum of the
 #' two standardized components, evaluated against their joint null distribution.
 #' Because the standard log-rank statistic is included as one of the two
@@ -37,7 +37,8 @@
 #' \code{side = 2} the statistic is \code{max(abs(Z_lr), abs(Z_mw))} and the
 #' two-sided p-value is \code{P(max(abs(Z_lr), abs(Z_mw)) >= observed)}. The
 #' joint normal probability is evaluated with \code{mvtnorm::pmvnorm}, using the
-#' exact \code{TVPACK} algorithm for the one-sided half-space and the
+#' exact \code{TVPACK} algorithm for the one-sided region, an orthant (all
+#' upper limits infinite), and the
 #' deterministic \code{Miwa} algorithm for the two-sided rectangle.
 #'
 #' When \code{presorted = TRUE}, the input vectors are assumed to be sorted by
@@ -73,7 +74,7 @@
 #'   observed number of events in the treatment group), \code{side}, and
 #'   \code{n} (the total sample size). Returns \code{NA} statistic and p-value
 #'   (still with class \code{"rmw_fast"}) when either component variance is zero
-#'   (e.g., all events in one group).
+#'   (e.g., no event time at which both groups are at risk).
 #'
 #' @examples
 #' library(survival)

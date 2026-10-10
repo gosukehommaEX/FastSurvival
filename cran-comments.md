@@ -1,22 +1,28 @@
 ## Update
 
-This is an update from version 1.1.0 to 1.2.0. It corrects errors and
-documentation found while preparing an article on the package, and adds no
-new features:
+This is an update from version 1.1.0 to 1.2.0. It is submitted soon after
+version 1.1.0 (published on 2026-10-08) because it corrects results that the
+published version returns without a warning, found in an independent review
+of the package while preparing an article on it. It adds no new features. The
+main corrections are:
 
-* `print.simsummary_fast()` failed for a selection of the columns of a
-  `simsummary_fast()` result;
+* the median survival time of `medsurv_fast()` and `analysis_fast()` was
+  infinite, with a p-value of 0, when a Kaplan-Meier curve stayed at 0.5 up
+  to an infinite observed time;
+* `simdata_fast()` truncated a group size such as `90 * 0.7` to the integer
+  below and, with fixed subgroup sizes, wrote past the end of a buffer in the
+  C++ code;
+* the modestly-weighted log-rank test reduced to the ordinary log-rank test
+  when the pooled Kaplan-Meier estimate reached 0 before `t_star`;
+* `print.simsummary_fast()` printed boundaries next to the wrong looks for
+  some selections of rows, and failed for others;
 * the weighted Kaplan-Meier test returned NaN or an infinite value, instead of
-  NA, when an observed time was infinite (for example a cure fraction without
-  dropout in simulated data);
-* the documentation of `maxcombo_fast()` and `analysis_fast()` described the
-  precision of the max-combo p-value and the `mc.alpha` shortcut incorrectly.
-  The correlation matrix of the default weights is singular, so the
-  quasi-Monte-Carlo integration does not reach the requested tolerance. This
-  is now stated, and new tests compare the p-values with an independent
-  numerical integral.
+  NA, when an observed time was infinite;
+* several functions accepted a factor event indicator or negative times and
+  returned wrong results; these inputs are now errors.
 
-See NEWS.md for the full list of changes.
+The documentation was also corrected, including the precision of the
+max-combo p-value. See NEWS.md for the full list of changes.
 
 ## Notes for the reviewer
 

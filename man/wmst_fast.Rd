@@ -33,7 +33,9 @@ Required when \code{group} is supplied.}
 to both groups is used (the minimum over groups of the maximum observed
 time), or the maximum observed time for a single group. A supplied value
 larger than that gives a warning, because the Kaplan-Meier curve is not
-estimated beyond it.}
+estimated beyond it. The window must be finite: when that default is
+infinite (for example when each group has a subject without a finite
+event or dropout time in simulated data), \code{tau2} must be supplied.}
 
 \item{side}{Either 2 for a two-sided test or 1 for a one-sided test of
 treatment superiority (difference greater than 0).}
@@ -85,6 +87,6 @@ wmst_fast(time, event, group = g, control = 0, tau1 = 2, tau2 = 12)
 
 }
 \references{
-Paukner, M., & Chappell, R. (2021). Window mean survival time. Statistics in
-Medicine, 40(25), 5521-5533.
+Paukner, M., & Chappell, R. (2021). Window mean survival time.
+\emph{Statistics in Medicine}, \emph{40}(25), 5521-5533.
 }

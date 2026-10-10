@@ -395,3 +395,30 @@ test_that("simdata_fast (illness-death): switching and dropout can differ by sub
   }
   expect_true(all(dat$switched[dat$group == 2L] == 0L))
 })
+
+test_that("simdata_fast (illness-death): switch.prop and per-group lists are checked without subgroups", {
+  # A percentage instead of a probability.
+  expect_error(
+    simdata_fast(nsim = 1, n = c(200, 200), a.time = c(0, 6), a.prop = 1,
+                 h01.hazard = list(0.10, 0.07), h02.hazard = list(0.03, 0.02),
+                 switch.prop = list(40, 0), h12.switch.hazard = 0.05, seed = 1),
+    "single probability in \\[0, 1\\]")
+  expect_error(
+    simdata_fast(nsim = 1, n = c(200, 200), a.time = c(0, 6), a.prop = 1,
+                 h01.hazard = list(0.10, 0.07), h02.hazard = list(0.03, 0.02),
+                 switch.prop = list(-0.2, 0), h12.switch.hazard = 0.05,
+                 seed = 1),
+    "single probability in \\[0, 1\\]")
+  # A per-group list with a third element.
+  expect_error(
+    simdata_fast(nsim = 1, n = c(50, 50), a.time = c(0, 6), a.prop = 1,
+                 h01.hazard = list(0.10, 0.07, 0.05),
+                 h02.hazard = list(0.03, 0.02), seed = 1),
+    "list of length 2")
+  # Valid probabilities are accepted.
+  d <- simdata_fast(nsim = 1, n = c(50, 50), a.time = c(0, 6), a.prop = 1,
+                    h01.hazard = list(0.10, 0.07), h02.hazard = list(0.03, 0.02),
+                    switch.prop = list(0.4, 0), h12.switch.hazard = 0.05,
+                    seed = 1)
+  expect_equal(nrow(d), 100L)
+})

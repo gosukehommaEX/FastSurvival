@@ -138,7 +138,7 @@ test_that("single-group mode returns a WMST and confidence interval", {
 
 test_that("input validation works", {
   expect_error(wmst_fast(1:5, c(0, 1, 0, 1)), "same length")
-  expect_error(wmst_fast(1:5, rep(2L, 5)), "0")
+  expect_error(wmst_fast(1:5, rep(2L, 5)), "coded as 0")
   expect_error(
     wmst_fast(1:6, rep(0:1, 3), group = rep(1:3, 2), control = 1), "two distinct"
   )
@@ -188,4 +188,31 @@ test_that("wmst_fast: presorted = TRUE checks the order", {
   event <- c(1, 1, 0, 1, 1, 0)
   group <- c(0, 1, 0, 1, 0, 1)
   expect_error(wmst_fast(time, event, group, control = 0, tau1 = 1, tau2 = 3, presorted = TRUE), "presorted = FALSE")
+})
+
+test_that("wmst_fast: an infinite window end is rejected", {
+  # Each group has subjects with an infinite time, so the default tau2 (the
+  # largest time common to the two groups) is infinite.
+  tt <- c(2, 3, 5, Inf, Inf, 1, 4, 6, Inf, Inf)
+  ee <- c(1, 1, 1, 0, 0, 1, 1, 1, 0, 0)
+  gg <- rep(0:1, each = 5)
+  expect_error(wmst_fast(tt, ee, gg, control = 0), "tau2 must be supplied")
+  expect_error(wmst_fast(tt, ee, gg, control = 0, tau2 = Inf),
+               "single finite value")
+  expect_error(wmst_fast(tt[gg == 0], ee[gg == 0]), "tau2 must be supplied")
+  res <- wmst_fast(tt, ee, gg, control = 0, tau2 = 5)
+  expect_true(all(is.finite(res[c("wmst.control", "wmst.treatment", "diff",
+                                  "se.diff", "z", "p")])))
+})
+
+test_that("wmst_fast: time and event must be numeric and time non-negative", {
+  set.seed(1)
+  tt <- rexp(40, 0.1)
+  ee <- rbinom(40, 1, 0.7)
+  gg <- rep(0:1, 20)
+  expect_error(wmst_fast(as.character(tt), ee, gg, control = 0, tau2 = 5),
+               "numeric")
+  expect_error(wmst_fast(c(-1, tt[-1]), ee, gg, control = 0, tau2 = 5),
+               "non-negative")
+  expect_error(wmst_fast(tt, factor(ee), gg, control = 0, tau2 = 5), "factor")
 })

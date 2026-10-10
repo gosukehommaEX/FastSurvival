@@ -30,7 +30,9 @@
 #'   to both groups is used (the minimum over groups of the maximum observed
 #'   time), or the maximum observed time for a single group. A supplied value
 #'   larger than that gives a warning, because the Kaplan-Meier curve is not
-#'   estimated beyond it.
+#'   estimated beyond it. The window must be finite: when that default is
+#'   infinite (for example when each group has a subject without a finite
+#'   event or dropout time in simulated data), \code{tau2} must be supplied.
 #' @param side Either 2 for a two-sided test or 1 for a one-sided test of
 #'   treatment superiority (difference greater than 0).
 #' @param conf.level Confidence level for the intervals.
@@ -56,8 +58,8 @@
 #' wmst_fast(time, event, group = g, control = 0, tau1 = 2, tau2 = 12)
 #'
 #' @references
-#' Paukner, M., & Chappell, R. (2021). Window mean survival time. Statistics in
-#' Medicine, 40(25), 5521-5533.
+#' Paukner, M., & Chappell, R. (2021). Window mean survival time.
+#' \emph{Statistics in Medicine}, \emph{40}(25), 5521-5533.
 #'
 #' @importFrom stats qnorm pnorm
 #' @export
@@ -77,6 +79,10 @@ wmst_fast <- function(time, event, group = NULL, control = NULL,
   if (!all(event %in% c(0, 1))) {
     stop("event must be coded as 0 (censored) or 1 (event).")
   }
+  # Type, sign, and coding of the inputs, as in the other analysis functions
+  # (a factor 'event' would otherwise be replaced by its integer codes, and a
+  # character 'time' sorted as text).
+  check_time_event(time, event)
   if (!(side %in% c(1, 2))) {
     stop("side must be 1 or 2.")
   }
@@ -123,7 +129,14 @@ wmst_fast <- function(time, event, group = NULL, control = NULL,
     } else {
       tau2 <- max(time)
     }
+    if (!is.finite(tau2)) {
+      stop("tau2 must be supplied, because its default (the largest observed ",
+           "time common to the groups) is infinite.")
+    }
   } else {
+    if (length(tau2) != 1L || !is.numeric(tau2) || !is.finite(tau2)) {
+      stop("tau2 must be a single finite value.")
+    }
     check_tau_follow_up(time, if (two_group) gcode else NULL, tau2,
                         arg = "tau2")
   }

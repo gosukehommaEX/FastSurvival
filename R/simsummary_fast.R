@@ -123,8 +123,8 @@
 #'   sum, and \code{cum.reject} again the total rejection rate; its timing columns
 #'   are the expected counts and calendar time at the stopping look. The number of
 #'   simulations is stored in the attribute \code{nsim} (one value per block when
-#'   the blocks differ) and the boundary settings in the attribute
-#'   \code{boundary}.
+#'   the blocks differ) and the boundary settings, with the look labels, in the
+#'   attribute \code{boundary}.
 #'
 #' @examples
 #' df <- simdata_fast(
@@ -224,9 +224,11 @@ simsummary_fast <- function(data,
   bdesc <- if (use_z) {
     list(mode = "z", eff.col = eff.col, efficacy = efficacy,
          fut.col = if (use_fut) fut.col else NA_character_,
-         futility = futility, direction = direction)
+         futility = futility, direction = direction,
+         looks = as.character(looks))
   } else {
-    list(mode = "p", p.col = p.col, alpha = alpha)
+    list(mode = "p", p.col = p.col, alpha = alpha,
+         looks = as.character(looks))
   }
 
   # ------------------------------------------------------------------ #

@@ -14,6 +14,19 @@
 #' (2021) for the MOVER difference interval and Tang (2022) for the use of
 #' milestone survival in trial design.
 #'
+#' The \code{"wald"} statistic is the difference divided by its Greenwood
+#' standard error. The \code{"loglog"} statistic is the difference of the
+#' complementary log-log transforms of the two estimates divided by its
+#' standard error, so it is negative when the treatment group has the higher
+#' milestone survival, and its one-sided p-value is the lower tail. The
+#' \code{"mover"} statistic is the normal quantile of \code{conf.level} times
+#' the difference divided by the half-width of the MOVER interval on the side
+#' of zero. It is obtained by inverting the interval at \code{conf.level}, so
+#' the statistic and its p-value depend on \code{conf.level}, and the
+#' two-sided p-value is below \code{1 - conf.level} exactly when the interval
+#' excludes zero. For \code{"wald"} and \code{"mover"} a positive statistic
+#' favors treatment and the one-sided p-value is the upper tail.
+#'
 #' @param time A numeric vector of follow-up times.
 #' @param event An integer vector of event indicators, 1 for an event and 0
 #'   for a censored observation.
@@ -75,6 +88,10 @@ milestone_fast <- function(time, event, group, control, side = 2,
     stop("'time' and 'group' must not contain missing values.")
   }
   if (any(time < 0)) stop("'time' must be non-negative.")
+  if (!(is.numeric(event) || is.logical(event))) {
+    stop("'event' must be numeric or logical, not a factor or a character ",
+         "vector.")
+  }
   # Validate before converting, so that a value such as 0.7 is not truncated.
   if (anyNA(event) || !all(event == 0 | event == 1)) {
     stop("'event' must contain only 0 (censored) and 1 (event).")
@@ -165,7 +182,8 @@ milestone_fast <- function(time, event, group, control, side = 2,
         stat <- NA_real_
       }
     } else {
-      # MOVER binding-side test statistic (confidence-level invariant).
+      # MOVER binding-side test statistic: the interval at conf.level inverted,
+      # so the statistic depends on conf.level.
       bind <- if (diff_est >= 0) sigma_l else sigma_u
       stat <- if (is.finite(bind) && bind > 0) z * diff_est / sqrt(bind) else NA_real_
     }

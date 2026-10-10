@@ -479,3 +479,38 @@ test_that("survdiff_fast: correctly presorted stratified input is accepted", {
   expect_error(survdiff_fast(time, event, group, control = 0, presorted = TRUE,
                              strata = c(1, 2, 1, 2, 1, 2)), "contiguous")
 })
+
+test_that("survdiff_fast: mwlrt is not capped when the pooled curve reaches 0 before t_star", {
+  # All six subjects have events before t_star = 10, so S(t_star-) = 0 and the
+  # weights 1 / S(t-) = 1, 1.2, 1.5, 2, 3, 6 are not capped (as in nphRCT). The
+  # expected values were computed independently in Python; the ordinary
+  # log-rank Z is -0.6963306, and the stratified Z with a cap of 1 in the first
+  # stratum would be 0.5465244.
+  tt <- 1:6
+  ee <- rep(1, 6)
+  gg <- c(0, 1, 0, 1, 0, 1)
+  z_mw <- as.numeric(survdiff_fast(tt, ee, gg, control = 0, side = 1,
+                                   weight = "mwlrt", t_star = 10))
+  expect_equal(z_mw, -0.7734668523, tolerance = 1e-8)
+  t2 <- c(2, 4, 6, 8, 10, 12)
+  e2 <- c(1, 1, 1, 0, 1, 0)
+  g2 <- c(1, 0, 1, 0, 1, 0)
+  z_st <- as.numeric(survdiff_fast(c(tt, t2), c(ee, e2), c(gg, g2),
+                                   control = 0, side = 1, weight = "mwlrt",
+                                   t_star = 10, strata = rep(1:2, each = 6)))
+  expect_equal(z_st, 0.0655990630, tolerance = 1e-8)
+  # Report whether the external comparison below is run or skipped.
+  message("nphRCT available for the mwlrt comparison: ",
+          requireNamespace("nphRCT", quietly = TRUE))
+  skip_if_not_installed("nphRCT")
+  skip_if_not_installed("survival")
+  df <- data.frame(time = tt, event = ee, arm = factor(gg))
+  ref <- nphRCT::wlrt(survival::Surv(time, event) ~ arm, data = df,
+                      method = "mw", t_star = 10)
+  expect_equal(abs(z_mw), abs(ref$z), tolerance = 1e-8)
+})
+
+test_that("survdiff_fast: a factor event indicator is rejected", {
+  expect_error(survdiff_fast(1:6, factor(c(1, 0, 1, 1, 0, 1)), rep(0:1, 3),
+                             control = 0), "factor")
+})

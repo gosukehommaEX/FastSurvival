@@ -99,6 +99,10 @@ ahr_fast <- function(time, event, group, control, side = 2,
   if (anyNA(time) || anyNA(event) || anyNA(group)) {
     stop("'time', 'event' and 'group' must not contain missing values.")
   }
+  if (!(is.numeric(event) || is.logical(event))) {
+    stop("'event' must be numeric or logical, not a factor or a character ",
+         "vector.")
+  }
   # Validate before converting, so that a value such as 0.7 is not truncated.
   if (!all(event == 0 | event == 1)) stop("'event' must be 0 or 1.")
   event <- as.integer(event)
@@ -172,9 +176,9 @@ ahr_fast <- function(time, event, group, control, side = 2,
     # AHR = null.ahr, the comparison-group share equals null.ahr / (1 +
     # null.ahr) (which is 0.5 when null.ahr = 1). Using the comparison share
     # (rather than the reference share) aligns the sign of z with log(ahr).
-    # The comparison share is tested with its own variance (var.theta2), which
-    # matches the per-component test in the AHR package (the direct estimator
-    # does not force var.theta1 == var.theta2 in finite samples).
+    # The comparison share is tested with its own variance (var.theta2), as in
+    # the per-component test of the AHR package. Because theta2 = 1 - theta1,
+    # var.theta2 equals var.theta1 algebraically (up to rounding).
     se.theta <- sqrt(var.theta2)
     null.share <- null.ahr / (1 + null.ahr)
     z <- (theta2 - null.share) / se.theta

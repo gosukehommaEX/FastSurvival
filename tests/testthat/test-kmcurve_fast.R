@@ -181,3 +181,18 @@ test_that("kmcurve_fast: time and event are validated", {
   expect_error(kmcurve_fast(c(1, 2, 3), c(1, 0.7, 1)), "0 \\(censored\\)")
   expect_error(kmcurve_fast(c(-1, 2, 3), c(1, 0, 1)), "non-negative")
 })
+
+test_that("kmcurve_fast: the median is NA when the curve stays at 0.5 up to Inf", {
+  # A flat stretch at 0.5 that ends at an infinite time has no midpoint.
+  expect_true(is.na(km_step_median(c(1, 2), c(0.75, 0.5), Inf)))
+  expect_equal(km_step_median(c(1, 2), c(0.75, 0.5), 4), 3)
+  fit <- kmcurve_fast(c(1, 2, Inf, Inf), c(1, 1, 0, 0))
+  out <- utils::capture.output(print(fit))
+  expect_false(any(grepl("Inf", out, fixed = TRUE)))
+})
+
+test_that("kmcurve_fast: missing group values are rejected", {
+  expect_error(kmcurve_fast(c(1, 2, 3, 4), c(1, 0, 1, 1),
+                            group = c(1, 2, NA, 2), control = 1),
+               "missing values")
+})

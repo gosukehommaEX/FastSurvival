@@ -83,13 +83,16 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
   build_group <- function(g) {
     lapply(seq_len(n_cell), function(cc) {
       h01 <- piecewise_precompute(cell_spec(h01.hazard, g, cc, "h01.hazard"),
-                                  cell_spec(h01.time, g, cc, "h01.time"))
+                                  cell_spec(h01.time, g, cc, "h01.time"),
+                                  "h01")
       h02 <- piecewise_precompute(cell_spec(h02.hazard, g, cc, "h02.hazard"),
-                                  cell_spec(h02.time, g, cc, "h02.time"))
+                                  cell_spec(h02.time, g, cc, "h02.time"),
+                                  "h02")
       # The post-event no-switch hazard defaults to the direct terminal hazard.
       h12 <- if (is.null(h12.hazard)) h02 else
         piecewise_precompute(cell_spec(h12.hazard, g, cc, "h12.hazard"),
-                             cell_spec(h12.time, g, cc, "h12.time"))
+                             cell_spec(h12.time, g, cc, "h12.time"),
+                             "h12")
       sw <- if (is.null(switch.prop)) 0 else
         cell_spec(switch.prop, g, cc, "switch.prop")
       if (is.null(sw)) sw <- 0
@@ -104,13 +107,15 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
       h12s <- if (sw > 0) {
         piecewise_precompute(
           cell_spec(h12.switch.hazard, g, cc, "h12.switch.hazard"),
-          cell_spec(h12.switch.time, g, cc, "h12.switch.time"))
+          cell_spec(h12.switch.time, g, cc, "h12.switch.time"),
+          "h12.switch")
       } else {
         empty_spec
       }
       d <- if (has_dropout) {
         piecewise_precompute(cell_spec(d.hazard, g, cc, "d.hazard"),
-                             cell_spec(d.time, g, cc, "d.time"))
+                             cell_spec(d.time, g, cc, "d.time"),
+                             "d")
       } else {
         empty_spec
       }

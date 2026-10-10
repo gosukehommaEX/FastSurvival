@@ -54,3 +54,40 @@ test_that("print.simsummary_fast prints a selection without look rows as a data 
   expect_false(any(grepl("Group-Sequential", out, fixed = TRUE)))
   expect_true(any(grepl("overall", out, fixed = TRUE)))
 })
+
+test_that("print.simsummary_fast prints a selection of some looks as a data frame", {
+  res <- make_summary()
+  # Look 2 only: the boundaries refer to both looks of the design.
+  out1 <- utils::capture.output(print(res[res$look %in% c("2", "overall"), ]))
+  expect_false(any(grepl("Stopping Boundaries", out1, fixed = TRUE)))
+  expect_true(any(grepl("cum.reject", out1, fixed = TRUE)))
+  # Reordered rows.
+  out2 <- utils::capture.output(print(res[c(2, 1, 3), ]))
+  expect_false(any(grepl("Stopping Boundaries", out2, fixed = TRUE)))
+  # Two of three looks: printed without an error.
+  df3 <- data.frame(sim = rep(1:4, each = 3), look = rep(1:3, 4),
+                    logrank.z = rep(c(-1, -2, -3), 4),
+                    n.event = rep(c(30, 60, 90), 4),
+                    cutoff = rep(c(6, 12, 18), 4))
+  res3 <- simsummary_fast(df3, eff.col = "logrank.z",
+                          efficacy = c(-3.5, -2.8, -1.96))
+  out3 <- utils::capture.output(
+    v <- withVisible(print(res3[res3$look %in% c("1", "3", "overall"), ])))
+  expect_false(v$visible)
+  expect_false(any(grepl("Stopping Boundaries", out3, fixed = TRUE)))
+})
+
+test_that("print.simsummary_fast pairs each look with its own boundary", {
+  res <- make_summary()
+  out <- utils::capture.output(print(res))
+  # Header of the boundary columns (the statistic need not be a Z-score).
+  expect_true(any(grepl("Efficacy Bound", out, fixed = TRUE)))
+  tab_line <- function(lk) {
+    out[grepl(paste0("^ +", lk, " +[0-9.]+ +[0-9.]+ +-"), out)][1L]
+  }
+  expect_match(tab_line(1), "-2.8000", fixed = TRUE)
+  expect_match(tab_line(2), "-1.9600", fixed = TRUE)
+  # A selection of whole blocks (here the single population) keeps the report.
+  sub <- res[res$population == res$population[1L], ]
+  expect_output(print(sub), "Stopping Boundaries: Look by Look")
+})

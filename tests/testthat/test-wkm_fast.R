@@ -145,7 +145,7 @@ test_that("weight options run and give finite statistics", {
 test_that("input validation works", {
   expect_error(wkm_fast(1:5, c(0, 1, 0, 1), rep(0:1, 2)), "same length")
   expect_error(
-    wkm_fast(1:6, rep(2L, 6), rep(0:1, 3), control = 0), "0"
+    wkm_fast(1:6, rep(2L, 6), rep(0:1, 3), control = 0), "coded as 0"
   )
   expect_error(
     wkm_fast(1:6, rep(0:1, 3), rep(1:3, 2), control = 1), "two distinct"
@@ -154,7 +154,8 @@ test_that("input validation works", {
     wkm_fast(1:6, rep(0:1, 3), rep(0:1, 3)), "control must be specified"
   )
   expect_error(
-    wkm_fast(1:6, rep(0:1, 3), rep(0:1, 3), control = 0, weight = "foo")
+    wkm_fast(1:6, rep(0:1, 3), rep(0:1, 3), control = 0, weight = "foo"),
+    "should be one of"
   )
 })
 
@@ -195,7 +196,7 @@ test_that("wkm_fast matches the survfit-based reference for every weight", {
 test_that("wkm_fast: the standard error is calibrated for every weight", {
   # Under the null, the empirical SD of the weighted difference over repeated
   # trials should match the mean estimated SE. With the weight-specific
-  # divisor of versions up to 1.1.0 the ratio was about 1.15 for the constant
+  # divisor of versions before 1.1.0 the ratio was about 1.15 for the constant
   # weight in this setting (independent Python simulation).
   set.seed(2026)
   nsim <- 600
@@ -237,4 +238,14 @@ test_that("wkm_fast: an infinite observed time gives NA statistics", {
   # A finite time in place of Inf gives a finite weighted difference.
   f <- wkm_fast(replace(time, 7:8, 20), event, group, control = 1)
   expect_true(is.finite(f[["wdiff"]]))
+})
+
+test_that("wkm_fast: time and event must be numeric and time non-negative", {
+  set.seed(1)
+  tt <- rexp(40, 0.1)
+  ee <- rbinom(40, 1, 0.7)
+  gg <- rep(0:1, 20)
+  expect_error(wkm_fast(as.character(tt), ee, gg, control = 0), "numeric")
+  expect_error(wkm_fast(c(-1, tt[-1]), ee, gg, control = 0), "non-negative")
+  expect_error(wkm_fast(tt, factor(ee), gg, control = 0), "factor")
 })

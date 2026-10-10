@@ -101,19 +101,20 @@ U_0 = sum (O_T_k - O_k p_k)
 I_0 = sum O_k p_k (1 - p_k)
 J_0 = sum O_k p_k (1 - p_k) (1 - 2 p_k)
 
-Third, the closed-form Halley correction is applied:
+Third, a single Halley correction to the score is applied, expanded to
+second order so that it is in closed form (a third-order correction):
 
 delta_hat = U_0 / I_0 - J_0 U_0^2 / (2 I_0^3)
 theta_hat = theta_0 exp(delta_hat)
 
-The Halley step converges cubically, so the residual error
+This correction converges cubically, so the residual error
 |log(theta_hat) - log(theta_Cox)| is of the order of the cube of the error
 of the Pike anchor. Near the null hypothesis the anchor is
 already close to the Cox estimate and the residual error is negligible. At
-a fixed hazard ratio away from 1 the Pike anchor has a bias that does not
-vanish as the sample size grows (Berry, Kitchin, and Mock, 1991), so the
-residual error levels off at a small value that depends on the hazard ratio
-and the censoring pattern instead of decreasing with the sample size.
+a fixed hazard ratio away from 1 the error of the Pike anchor relative to
+the Cox estimate does not vanish as the sample size grows, so the residual
+error levels off at a small value that depends on the hazard ratio and the
+censoring pattern instead of decreasing with the sample size.
 
 The Wald standard error on the log scale is SE = 1 / sqrt(I_0), where I_0
 is the observed information evaluated at the Pike anchor. The Wald

@@ -236,3 +236,48 @@ test_that("milestone_fast: presorted = TRUE checks the order", {
                               control = 0, tau = 2, presorted = TRUE),
                "presorted = FALSE")
 })
+
+test_that("milestone_fast: the mover statistic inverts the interval at conf.level", {
+  set.seed(5)
+  n <- 120
+  g <- rep(0:1, each = n / 2)
+  tt <- rexp(n, ifelse(g == 1, 1 / 14, 1 / 10))
+  cc <- runif(n, 0, 30)
+  ev <- as.integer(tt <= cc)
+  ti <- pmin(tt, cc)
+  levels <- c(0.80, 0.90, 0.95, 0.99)
+  stats <- numeric(length(levels))
+  for (k in seq_along(levels)) {
+    cl <- levels[k]
+    r <- milestone_fast(ti, ev, g, control = 0, tau = 8, method = "mover",
+                        conf.level = cl)
+    stats[k] <- r$statistic
+    # The two-sided p-value is below 1 - conf.level exactly when the interval
+    # excludes zero.
+    expect_identical(r$p.value < 1 - cl, r$diff.lower > 0 | r$diff.upper < 0,
+                     info = cl)
+    # The statistic is the normal quantile times the difference over the
+    # half-width of the interval on the side of zero.
+    half <- if (r$diff >= 0) r$diff - r$diff.lower else r$diff.upper - r$diff
+    expect_equal(r$statistic, qnorm(1 - (1 - cl) / 2) * r$diff / half,
+                 tolerance = 1e-12)
+  }
+  # The statistic depends on conf.level (it does not for "wald").
+  expect_gt(diff(range(stats)), 0.05)
+  w <- vapply(levels, function(cl) {
+    milestone_fast(ti, ev, g, control = 0, tau = 8, method = "wald",
+                   conf.level = cl)$statistic
+  }, numeric(1))
+  expect_lt(diff(range(w)), 1e-12)
+})
+
+test_that("milestone_fast: a factor event indicator is rejected", {
+  set.seed(1)
+  tt <- rexp(40, 0.1)
+  ee <- rbinom(40, 1, 0.7)
+  gg <- rep(0:1, 20)
+  expect_error(milestone_fast(tt, factor(ee), gg, control = 0, tau = 8),
+               "factor")
+  expect_equal(milestone_fast(tt, ee == 1, gg, control = 0, tau = 8)$statistic,
+               milestone_fast(tt, ee, gg, control = 0, tau = 8)$statistic)
+})
