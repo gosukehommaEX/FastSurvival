@@ -96,9 +96,6 @@
 #' }
 #'
 #' @references
-#' Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-#' estimator. Manuscript under review.
-#'
 #' Collett, D. (2014). \emph{Modelling Survival Data in Medical Research}
 #' (3rd ed.). Chapman and Hall/CRC.
 #'

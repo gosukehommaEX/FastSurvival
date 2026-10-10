@@ -76,7 +76,7 @@ events, all events in one group, or \code{I_0 = 0}).
 }
 \description{
 Estimates the hazard ratio for a two-group parallel trial using the
-Pike-Halley Estimator (Homma, 2025), a pure closed-form approximation to the Cox partial
+Pike-Halley Estimator, a pure closed-form approximation to the Cox partial
 likelihood maximizer. The function returns the point estimate, its standard
 error on the log scale, and a Wald-type confidence interval, using output
 names consistent with \code{summary(survival::coxph(...))}. The C++ backend
@@ -192,9 +192,6 @@ Royal Statistical Society. Series B (Methodological)}, \emph{34}(2),
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two simple
 hazard ratio estimators based on the logrank test. \emph{Statistics in
 Medicine}, \emph{10}(5), 749-755.
-
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. Manuscript under review.
 }
 \seealso{
 \code{\link[survival]{coxph}} for the standard iterative Cox estimator.

@@ -40,8 +40,13 @@ article on the package. It adds no new features.
   two orders of magnitude, because the ratio varies between runs.
 
 * The page ranges of Cox (1972) and Gehan (1965) follow the publishers'
-  records (187-202 and 203-224), and the mrct-regional-consistency vignette
-  states the result of Homma (2024) for binary outcomes more precisely.
+  records (187-202 and 203-224), and the `mrct-regional-consistency` vignette
+  states the result of Homma (2024) for binary outcomes more precisely. The
+  `group-sequential-design` vignette attributes its planning assumptions to
+  the trial protocol.
+
+* The reference to an unpublished manuscript on the Pike-Halley Estimator is
+  removed. The documentation of `coxph_fast()` describes the computation.
 
 ## Tests
 
@@ -52,6 +57,10 @@ article on the package. It adds no new features.
 * New tests cover the printing of subsets of `simsummary_fast()` results and
   the weighted Kaplan-Meier test with infinite times. The tests of
   `print.simsummary_fast()` are moved to their own file.
+
+* A test checks that the switching proportion, the hazard after switching,
+  and the dropout hazard of the illness-death model of `simdata_fast()` can
+  differ by subgroup.
 
 # FastSurvival 1.1.0
 
