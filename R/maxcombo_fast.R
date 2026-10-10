@@ -50,8 +50,8 @@
 #' quasi-Monte-Carlo integral converges slowly. With the default \code{maxpts}
 #' the absolute error of the p-value is typically of the order of 1e-4 rather
 #' than \code{abseps}: in a check with the default weights and a one-sided
-#' test, two integrations of the same p-values with different seeds differed
-#' by up to about 1e-3. A larger \code{maxpts} reduces the error at a higher
+#' test, the same p-values computed twice with different seeds differed by up
+#' to about 1e-3. A larger \code{maxpts} reduces the error at a higher
 #' computing cost. In a simulation study, the integration error affects only
 #' the decisions for p-values within about that error of the nominal level.
 #'

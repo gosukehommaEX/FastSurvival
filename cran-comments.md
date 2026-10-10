@@ -20,13 +20,6 @@ See NEWS.md for the full list of changes.
 
 ## Notes for the reviewer
 
-This update follows version 1.1.0 (published on 2026-10-08) after a short
-interval, and I am aware that the CRAN policy asks for updates no more than
-every 1-2 months. It is submitted now because an article on the package that
-I am preparing describes the behavior of the CRAN version, and version 1.1.0
-has the two errors listed above and overstates the precision of the
-max-combo p-values in its documentation.
-
 The checks below reported no NOTE. If the incoming check reports possibly
 misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author
 surnames, used to name the
