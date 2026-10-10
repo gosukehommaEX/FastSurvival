@@ -187,7 +187,7 @@ in every trial dilutes the OS comparison more.
 ## Computing time
 
 The whole study, from data generation to the OS analysis of one
-scenario, runs in a few seconds.
+scenario, runs in about a second.
 
 ``` r
 
@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.452   0.041   0.493
+#>   0.425   0.033   0.458
 ```
 
 ## A check with the rank-preserving structural failure time model
@@ -293,10 +293,9 @@ Allison, A., White, I. R., & Bond, S. (2017). rpsftm: an R package for
 rank preserving structural failure time models. *The R Journal*, 9(2),
 342-353.
 
-Robins, J. M. and Tsiatis, A. A. (1991). Correcting for non-compliance
-in randomized trials using rank preserving structural failure time
-models. *Communications in Statistics - Theory and Methods*, 20(8),
-2609-2631.
+Robins, J. M., & Tsiatis, A. A. (1991). Correcting for non-compliance in
+randomized trials using rank preserving structural failure time models.
+*Communications in Statistics - Theory and Methods*, 20(8), 2609-2631.
 
 Zhang, H. (2026). TrialSimulator: Clinical Trial Simulator. R package
 version 1.35.8. <https://CRAN.R-project.org/package=TrialSimulator>

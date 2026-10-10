@@ -5,19 +5,19 @@ stratum is processed as an independent weighted log-rank test using the same
 logic as weighted_logrank_core, with weights derived from the
 within-stratum pooled Kaplan-Meier estimate, and the per-stratum numerator U
 and variance V are accumulated into the returned totals. The overall
-statistic is Z = sum U / sqrt(sum V). This matches the stratified weighted
-log-rank test of Magirr, which sums the per-stratum U and V and standardizes
-once. Not intended to be called directly by users; use
-survdiff_fast() with both weight and strata instead."><meta property="og:description" content="Internal C++ function that computes the stratified weighted log-rank totals
+statistic is Z = sum U / sqrt(sum V), the usual stratified form, which sums
+the per-stratum U and V and standardizes once. Not intended to be called
+directly by users; use survdiff_fast() with both weight and
+strata instead."><meta property="og:description" content="Internal C++ function that computes the stratified weighted log-rank totals
 from a dataset sorted by stratum first and by time within stratum. Each
 stratum is processed as an independent weighted log-rank test using the same
 logic as weighted_logrank_core, with weights derived from the
 within-stratum pooled Kaplan-Meier estimate, and the per-stratum numerator U
 and variance V are accumulated into the returned totals. The overall
-statistic is Z = sum U / sqrt(sum V). This matches the stratified weighted
-log-rank test of Magirr, which sums the per-stratum U and V and standardizes
-once. Not intended to be called directly by users; use
-survdiff_fast() with both weight and strata instead."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
+statistic is Z = sum U / sqrt(sum V), the usual stratified form, which sums
+the per-stratum U and V and standardizes once. Not intended to be called
+directly by users; use survdiff_fast() with both weight and
+strata instead."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -71,10 +71,10 @@ stratum is processed as an independent weighted log-rank test using the same
 logic as <code>weighted_logrank_core</code>, with weights derived from the
 within-stratum pooled Kaplan-Meier estimate, and the per-stratum numerator U
 and variance V are accumulated into the returned totals. The overall
-statistic is Z = sum U / sqrt(sum V). This matches the stratified weighted
-log-rank test of Magirr, which sums the per-stratum U and V and standardizes
-once. Not intended to be called directly by users; use
-<code><a href="survdiff_fast.html">survdiff_fast()</a></code> with both <code>weight</code> and <code>strata</code> instead.</p>
+statistic is Z = sum U / sqrt(sum V), the usual stratified form, which sums
+the per-stratum U and V and standardizes once. Not intended to be called
+directly by users; use <code><a href="survdiff_fast.html">survdiff_fast()</a></code> with both <code>weight</code> and
+<code>strata</code> instead.</p>
     </div>
 
     <div class="section level2">
@@ -144,8 +144,9 @@ first and by ascending time within each stratum.</p></dd>
     <p>The scheme codes match <code>weighted_logrank_core</code>: 0 = Fleming-Harrington
 G(rho, gamma); 1 = modestly-weighted with cap <code>1 / S(t_star-)</code>, the
 pooled Kaplan-Meier value just before <code>t_star</code>, computed within each
-stratum; 2 = Gehan-Breslow; 3 = Tarone-Ware. The left-continuous
-pooled Kaplan-Meier estimate is restarted at 1 at the beginning of every
+stratum (no cap when that value is 0); 2 = Gehan-Breslow; 3 = Tarone-Ware.
+The left-continuous pooled Kaplan-Meier estimate is restarted at 1 at the
+beginning of every
 stratum, so the weights of each stratum depend only on that stratum's
 pooled data. For the modestly-weighted scheme the weight cap is determined
 in a first pass within each stratum before accumulation.</p>

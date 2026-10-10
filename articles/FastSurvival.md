@@ -114,8 +114,8 @@ coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 #>   alternative = one.sided
 #> 
 #> Coefficients:
-#>          coef exp(coef) se(coef)      z Pr(>|z|)
-#> group -0.5964    0.5508   0.5868 -1.016    0.155
+#>          coef exp(coef) se(coef)      z Pr(<z)
+#> group -0.5964    0.5508   0.5868 -1.016  0.155
 #> 
 #> Hazard ratio and 95% Wald confidence interval:
 #>       exp(coef) exp(-coef) lower .95 upper .95

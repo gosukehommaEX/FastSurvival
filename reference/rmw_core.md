@@ -2,7 +2,7 @@
 
 Internal C++ function that computes, in a single pass over a pooled
 sorted dataset, the two component statistics of the robust
-modestly-weighted (rMW) log-rank test of Magirr and Ohrn together with
+modestly-weighted (rMW) log-rank test of Magirr and Öhrn together with
 their null covariance. The first component is the standard log-rank
 statistic (weight one at every event time); the second is a
 modestly-weighted log-rank statistic with weight

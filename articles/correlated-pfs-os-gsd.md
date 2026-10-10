@@ -35,7 +35,7 @@ Since `TTP` and `OS` are independent exponentials, `PFS` is exponential
 with hazard `Lambda = lam1 + lam2`. Given the medians of PFS and OS, the
 OS hazard is `lam2 = log(2) / median_OS` and the PFS hazard is
 `Lambda = log(2) / median_PFS`, so the implied TTP hazard is
-`lam1 = Lambda - lam2`, which must be positive (median OS at least
+`lam1 = Lambda - lam2`, which must be positive (median OS longer than
 median PFS in each group). The dependence between the two endpoints is
 induced entirely through the shared `OS` component.
 
@@ -324,10 +324,14 @@ oc_PFS
 #>   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'logrank.z'
 #> 
 #> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.
-#>     1        0.50      200.0      490.9         NA     0.0000           0.0000
-#>     2        0.75      300.0      599.9    -2.3397         NA           0.8668
-#>     3        1.00      400.0      600.0    -2.0118         NA           0.9766
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Futility Bound
+#>     1        0.50      200.0      490.9             NA         0.0000
+#>     2        0.75      300.0      599.9        -2.3397             NA
+#>     3        1.00      400.0      600.0        -2.0118             NA
+#>  Cum. Cross. Eff.
+#>            0.0000
+#>            0.8668
+#>            0.9766
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
 #>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
@@ -360,10 +364,10 @@ oc_OS
 #>   Boundaries: efficacy on 'logrank.z' (direction = lower)
 #> 
 #> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.
-#>     1        0.45      111.7      490.9         NA           0.0000
-#>     2        0.70      174.7      599.9    -2.0599           0.3376
-#>     3        1.00      250.4      600.0    -2.2516           0.4604
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Cum. Cross. Eff.
+#>     1        0.45      111.7      490.9             NA           0.0000
+#>     2        0.70      174.7      599.9        -2.0599           0.3376
+#>     3        1.00      250.4      600.0        -2.2516           0.4604
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
 #>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
@@ -577,18 +581,18 @@ the correlation and power estimates at a proportional cost.
 
 ### References
 
-Fleischer, F., Gaschler-Markefski, B., and Bluhmki, E. (2009). A
+Fleischer, F., Gaschler-Markefski, B., & Bluhmki, E. (2009). A
 statistical model for the dependence between progression-free survival
 and overall survival. *Statistics in Medicine*, 28(21), 2669-2686.
 
-Glimm, E., Maurer, W., and Bretz, F. (2010). Hierarchical testing of
+Glimm, E., Maurer, W., & Bretz, F. (2010). Hierarchical testing of
 multiple endpoints in group-sequential trials. *Statistics in Medicine*,
 29(2), 219-228.
 
-Lan, K. K. G. and DeMets, D. L. (1983). Discrete sequential boundaries
+Lan, K. K. G., & DeMets, D. L. (1983). Discrete sequential boundaries
 for clinical trials. *Biometrika*, 70(3), 659-663.
 
-O’Brien, P. C. and Fleming, T. R. (1979). A multiple testing procedure
+O’Brien, P. C., & Fleming, T. R. (1979). A multiple testing procedure
 for clinical trials. *Biometrics*, 35(3), 549-556.
 
 Pocock, S. J. (1977). Group sequential methods in the design and

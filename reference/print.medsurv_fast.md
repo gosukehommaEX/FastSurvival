@@ -5,7 +5,10 @@ other two-group estimation summaries in the package. The header shows
 the control label and the inference settings. The body shows the
 per-group median survival with its confidence interval, followed, for a
 two-group object, by the difference contrast (treatment minus control)
-with a confidence interval, the test statistic, and the p-value.
+with a confidence interval, the test statistic, and the p-value. The
+p-value column is labelled `Pr(>|z|)` for a two-sided test and `Pr(>z)`
+for a one-sided test, whose p-value is the upper tail in the direction
+of treatment benefit.
 
 ## Usage
 

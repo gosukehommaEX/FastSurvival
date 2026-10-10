@@ -169,11 +169,12 @@ df3 <- simdata_fast(
 specified time point. A C++ backend locates the evaluation cutoff via
 binary search, then accumulates the Kaplan-Meier product and the
 Greenwood variance sum in a single scan over event positions, without
-constructing intermediate vectors. This makes it orders of magnitude
-faster than [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
-plus [`summary()`](https://rdrr.io/r/base/summary.html) when the same
-sorted data are evaluated repeatedly at a fixed landmark time inside a
-simulation loop.
+constructing intermediate vectors. This makes it more than an order of
+magnitude faster than
+[`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) plus
+[`summary()`](https://rdrr.io/r/base/summary.html) (see the
+speed-comparison vignette) when the same sorted data are evaluated
+repeatedly at a fixed landmark time inside a simulation loop.
 
 **survdiff_fast** computes the log-rank statistic (Mantel, 1966) using a
 two-pointer merge scan over the pooled sorted data, walking the time
@@ -194,20 +195,20 @@ approximation to the Cox partial likelihood maximizer. The estimator
 anchors at the Pike closed-form estimate, the ratio of the
 observed-to-expected event ratios of the two groups from the log-rank
 computation (Berry, Kitchin, and Mock, 1991), and applies a single
-analytic Halley correction to the Cox score. Because the Halley step
-converges cubically, the residual error relative to the Cox maximum
-likelihood estimate is of the order of the cube of the error of the Pike
-anchor. It is negligible near the null hypothesis. At a fixed hazard
-ratio away from 1 the Pike anchor keeps a bias that does not vanish with
-the sample size, so the residual error levels off at a small value. On
-the `pharmacoSmoking` dataset (tie rate 77.5%), the Pike-Halley
-Estimator reproduces the Breslow-based Cox estimate to within on the
-order of 1e-08. The Wald confidence interval uses the observed
-information at the Pike anchor as the variance estimate. The C++ backend
-performs group splitting, at-risk counting, and per-distinct-event-time
-accumulation in a single pass. With `strata`, the risk sets are formed
-within each stratum and the Pike anchor, score, and information are
-summed over strata, which approximates the stratified Cox model
+Halley correction to the Cox score, expanded to second order so that the
+result is in closed form. Because this correction converges cubically,
+the residual error relative to the Cox maximum likelihood estimate is of
+the order of the cube of the error of the Pike anchor. It is negligible
+near the null hypothesis. At a fixed hazard ratio away from 1 the Pike
+anchor keeps a bias that does not vanish with the sample size, so the
+residual error levels off at a small value. The validation vignette
+compares the estimate with `coxph(..., ties = "breslow")` on the `gbsg`
+data. The Wald confidence interval uses the observed information at the
+Pike anchor as the variance estimate. The C++ backend performs group
+splitting, at-risk counting, and per-distinct-event-time accumulation in
+a single pass. With `strata`, the risk sets are formed within each
+stratum and the Pike anchor, score, and information are summed over
+strata, which approximates the stratified Cox model
 `coxph(... + strata(s), ties = "breslow")`.
 
 **rmst_fast** integrates the Kaplan-Meier survival step function up to a
@@ -450,7 +451,7 @@ df <- simdata_fast(
   seed     = 42
 )
 
-# 2. Analyze at two interim looks defined by target event counts
+# 2. Analyze at an interim and a final look defined by target event counts
 res <- analysis_fast(
   df, control = 1,
   event.looks = c(300, 450),
@@ -505,10 +506,10 @@ statistics arising in its consideration. *Cancer Chemotherapy Reports*,
 50(3), 163-170.
 
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
-arbitrarily singly-censored samples. *Biometrika*, 52, 203-224.
+arbitrarily singly-censored samples. *Biometrika*, 52(1-2), 203-224.
 
 Tarone, R. E., & Ware, J. (1977). On distribution-free tests for
-equality of survival distributions. *Biometrika*, 64, 156-160.
+equality of survival distributions. *Biometrika*, 64(1), 156-160.
 
 Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
 Survival Analysis*. New York: John Wiley & Sons.

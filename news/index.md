@@ -8,12 +8,115 @@ article on the package. It adds no new features.
 ### Bug fixes
 
 - [`print.simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
-  failed with “undefined columns selected” for a selection of the
-  columns of a
+  failed with an error for a selection of the columns of a
   [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
   result, which keeps the class but not the boundary settings, and for a
   selection of rows without any look row. Such subsets are now printed
-  as ordinary data frames.
+  as ordinary data frames. A selection of rows that keeps only some of
+  the looks, or rows in a different order, paired the boundaries and
+  information fractions with the wrong looks or failed; it is now also
+  printed as an ordinary data frame, and the report is printed only when
+  every block keeps all its looks in their original order. The boundary
+  columns are labelled `Efficacy Bound` and `Futility Bound`, because
+  the statistic need not be a Z-score.
+
+- The median survival time of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  and of the `"medsurv"` statistic of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  was infinite when the Kaplan-Meier estimate of a group stayed at 0.5
+  up to an infinite observed time (subjects with `tte = Inf` at a look
+  that is not reached), and with `method = "nph"` the test then gave
+  `z = Inf` and `p = 0`. The midpoint of such a stretch is not defined,
+  and the median and the statistics that depend on it are now `NA`. The
+  median printed by
+  [`print.kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md)
+  follows the same rule.
+
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  truncated a group size that is a whole number up to rounding error,
+  such as `90 * 0.7` (62.99999999999999), to the integer below, so the
+  group had one subject fewer, and with `fixed.alloc = TRUE` and
+  subgroups the C++ kernel wrote past the end of a buffer. The sizes are
+  now rounded, and the kernels check that the fixed subgroup counts add
+  up to the group size. The data simulated for such sizes change.
+
+- The modestly-weighted log-rank test (`weight = "mwlrt"` in
+  [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
+  and
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md))
+  capped the weights at 1, which gives the ordinary log-rank test, when
+  the pooled Kaplan-Meier estimate reached 0 before `t_star` (within a
+  stratum for the stratified test). The weights `1 / S(t-)` are now not
+  capped in this case, as the definition `1 / max(S(t-), S(t_star-))`
+  and nphRCT imply.
+
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  and
+  [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+  accepted negative event times, which the analysis kernel sorted after
+  all positive times, and they placed a negative zero (`-0`) last,
+  unlike the stand-alone functions. Negative times are now an error, and
+  `-0` is treated as 0.
+
+- An event indicator given as a factor with the levels “0” and “1”
+  passed the checks of most functions and was then replaced by its
+  integer codes 1 and 2, which exchanges events and censored
+  observations (for example in
+  [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+  and
+  [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)).
+  Factor and character event indicators are now an error.
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+  [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md),
+  and
+  [`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
+  now also reject non-numeric and negative times, which they sorted as
+  text or accepted.
+
+- [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
+  returned infinite or `NaN` values when `tau2` was not supplied and
+  each group had an infinite observed time. `tau2` must now be finite,
+  and an error asks for it when its default is infinite.
+
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  with the illness-death model and without `prevalence` did not check
+  `switch.prop` (a percentage such as 40 made every subject switch) or
+  the length of per-group lists (a third element was ignored). Both are
+  now checked as with `prevalence`. A multi-arm `n` with the
+  illness-death model now gives the error message intended for it.
+
+- [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md)
+  kept a shared `e.hazard` when a scenario gave `e.median` (and likewise
+  for the other hazard and median pairs), so the printed and plotted
+  scenario used the shared hazard, and
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  failed with the merged arguments. A scenario value now replaces the
+  other member of the pair in `shared`.
+
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  reported `NA` for the per-group average hazards of `"ahsw"` whenever
+  the contrasts were not defined, for example for a group without events
+  up to `tau`. Finite average hazards are now reported, as in
+  [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
+
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  combined several `strata` columns through pasted labels, so values
+  containing “.” could merge two strata. The columns are now combined
+  through their integer codes.
+
+- Clearer errors:
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  for an empty `mc.rho`, a `conf.level` that is `NA` or not a single
+  value, and a `by.subgroup` that is not `TRUE` or `FALSE`, and it names
+  `event.looks` or `time.looks` in the message about non-positive looks;
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  names the breakpoint argument (`d.time`, `h01.time`, and so on) in the
+  messages about piecewise hazards and requires a whole-number `nsim`;
+  [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  rejects missing group values.
 
 - The weighted Kaplan-Meier test
   ([`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
@@ -51,8 +154,10 @@ article on the package. It adds no new features.
 
 - The speed-comparison vignette now gives the ratio of the time per
   simulated trial with simtrial or TrialSimulator to that with
-  FastSurvival as one to two orders of magnitude, because the ratio
-  varies between runs.
+  FastSurvival as about two orders of magnitude, because the ratio
+  varies between runs, and states that the one-second timing of 10,000
+  trials comes from a separate benchmark with a delayed treatment
+  effect.
 
 - The page ranges of Cox (1972) and Gehan (1965) follow the publishers’
   records (187-202 and 203-224), and the `mrct-regional-consistency`
@@ -64,6 +169,83 @@ article on the package. It adds no new features.
   Estimator is removed. The documentation of
   [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
   describes the computation.
+
+- The documentation of
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+  and the README describe the correction as a Halley correction expanded
+  to second order, and no longer cite Berry, Kitchin, and Mock (1991)
+  for the statement that the error of the Pike anchor does not vanish
+  with the sample size (their simulation has a fixed sample size). The
+  README no longer quotes a result on the `pharmacoSmoking` data that
+  has no source in the package, and describes
+  [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md)
+  as more than an order of magnitude faster than
+  [`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) plus
+  [`summary()`](https://rdrr.io/r/base/summary.html).
+
+- [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+  defines its three test statistics. The `"mover"` statistic is obtained
+  by inverting the interval at `conf.level`, so the statistic and its
+  p-value depend on `conf.level` (a code comment said the opposite), and
+  the `"loglog"` statistic is negative when treatment is better. The
+  print methods of
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
+  [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
+  [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md),
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+  and
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  label the p-value of a one-sided test `Pr(<z)` or `Pr(>z)`, and their
+  documentation no longer calls the p-value two-sided.
+
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  states that no warning is given when `tau`, `t.eval`, or `wmst.tau2`
+  exceeds the follow-up of a group at a look (the stand-alone functions
+  warn), that `conf.level` applies to every confidence interval, that
+  `maxcombo.stat` and `rmw.stat` depend on `side`, that all events at
+  the calendar time of the target event are included, and when the
+  stratified test reduces to the ordinary one within a subgroup.
+
+- [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  and
+  [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
+  describe the random numbers used when `seed` is not supplied, which
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) does not control.
+  The package now requires dqrng 0.4.0 or later, whose default generator
+  is the Xoroshiro128++ generator described in the documentation.
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  also states the rounding rule of `fixed.alloc = TRUE` and cites
+  Fleischer, Gaschler-Markefski, and Bluhmki (2009) for the
+  maximal-independence model.
+
+- [`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
+  explains that the constant and square-root weights can be biased when
+  follow-up differs between the groups, because the curve of the group
+  with shorter follow-up is carried forward.
+
+- Vignettes: `compare-logrank-rmst` says that the sample size comes from
+  the Lachin and Foulkes method of
+  [`gsDesign::nSurv()`](https://keaven.github.io/gsDesign//reference/nSurv.html)
+  (not the Schoenfeld formula); `group-sequential-design` says that the
+  trial planned to enroll 482 patients, gives the section of the
+  protocol, and states the type I error for overall survival;
+  `correlated-pfs-os-gsd` requires a median overall survival longer than
+  the median progression-free survival; and the computing times are
+  described as they were measured.
+
+- Smaller corrections: the variances of the two group shares of
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  are equal algebraically (code comments); the example of a zero
+  variance in
+  [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
+  and
+  [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md);
+  “orthant” instead of “half-space” for the one-sided max-combo and rMW
+  regions; the left-continuous form of the modestly-weighted weight;
+  “Kalbfleisch and Prentice” and the spelling “Öhrn”; the print-edition
+  ISBN of Collett (2014) in `DESCRIPTION`; the issue numbers of
+  Gehan (1965) and Tarone and Ware (1977); and the formatting of several
+  references.
 
 ### Tests
 
@@ -82,6 +264,16 @@ article on the package. It adds no new features.
   switching, and the dropout hazard of the illness-death model of
   [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
   can differ by subgroup.
+
+- New tests cover each bug fix above. The comparisons of the max-combo
+  p-values with the pure-R reference set the seed and use an absolute
+  tolerance, so that they no longer depend on the state left by earlier
+  tests. The rMW p-value is compared with an independent one-dimensional
+  integral. The data generated without `stream` are compared with data
+  printed by FastSurvival 1.0.0, before `stream` existed. A test no
+  longer turns an error of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  into a skip, and the error expectations give the expected messages.
 
 ## FastSurvival 1.1.0
 

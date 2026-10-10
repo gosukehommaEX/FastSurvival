@@ -99,17 +99,24 @@ analysis_fast(
   A single positive numeric value, the restriction horizon for `"rmst"`,
   the truncation time for `"ahsw"` and `"ahr"`, and the milestone
   timepoint for `"milestone"`. Required only when `"rmst"`, `"ahsw"`,
-  `"milestone"`, or `"ahr"` is requested.
+  `"milestone"`, or `"ahr"` is requested. No warning is given when it
+  exceeds the largest observed time of a group at a look (for example at
+  an early interim analysis); the Kaplan-Meier curve of that group is
+  then carried forward flat, whereas the stand-alone functions such as
+  [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
+  give a warning.
 
 - t.eval:
 
   A single positive numeric value, the landmark time for `"km"`.
-  Required only when `"km"` is requested.
+  Required only when `"km"` is requested. As for `tau`, no warning is
+  given when it exceeds the follow-up of a group at a look.
 
 - conf.level:
 
-  A single numeric value in (0, 1), the confidence level for `"coxph"`,
-  `"rmst"`, and `"ahsw"`. Defaults to 0.95.
+  A single numeric value in (0, 1), the confidence level of all the
+  confidence-interval columns (and of the `"mover"` milestone
+  statistic). Defaults to 0.95.
 
 - side:
 
@@ -119,13 +126,15 @@ analysis_fast(
   p-value in the direction of treatment benefit is reported for each of
   those statistics, and the one-sided max-combo test is used. The test
   statistics themselves are always reported with their natural sign, so
-  the choice of `side` affects only the p-value columns. For log-rank
-  and Cox the benefit direction is a negative Z (the one-sided p-value
-  is the lower tail `pnorm(z)`); for RMST it is a positive Z (the upper
-  tail `pnorm(-z)`). The other statistics follow the benefit directions
-  given in Details. For group-sequential boundary comparisons (for
-  example with gsDesign or rpact), align the sign of the reported Z with
-  the boundary convention before comparing.
+  the choice of `side` affects only the p-value columns, except
+  `maxcombo.stat` and `rmw.stat`, whose definition depends on `side`
+  (see Details). For log-rank and Cox the benefit direction is a
+  negative Z (the one-sided p-value is the lower tail `pnorm(z)`); for
+  RMST it is a positive Z (the upper tail `pnorm(-z)`). The other
+  statistics follow the benefit directions given in Details. For
+  group-sequential boundary comparisons (for example with gsDesign or
+  rpact), align the sign of the reported Z with the boundary convention
+  before comparing.
 
 - by.subgroup:
 
@@ -158,7 +167,10 @@ analysis_fast(
 
   A single non-negative numeric value, the timepoint of the
   modestly-weighted log-rank test. Required only when
-  `weight = "mwlrt"`.
+  `weight = "mwlrt"`. The weight is capped at the reciprocal of the
+  pooled Kaplan-Meier value just before `t_star`, and is not capped when
+  that value is 0 (see
+  [`survdiff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)).
 
 - strata:
 
@@ -174,7 +186,8 @@ analysis_fast(
 
   A character string naming the inference method for the `"milestone"`
   statistic, one of `"wald"` (default), `"loglog"`, or `"mover"`. See
-  [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+  [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md);
+  the `"mover"` statistic and its p-value depend on `conf.level`.
 
 - s_star:
 
@@ -230,7 +243,9 @@ analysis_fast(
   A character string naming the weight for the `"wkm"` statistic, one of
   `"PF"` (default, Pepe-Fleming combined censoring weight), `"sqrtPF"`,
   or `"constant"`. See
-  [`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md).
+  [`wkm_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md),
+  which explains why the `"PF"` weight is recommended when follow-up
+  differs between the groups.
 
 - wmst.tau1:
 
@@ -242,7 +257,8 @@ analysis_fast(
   A single positive numeric value, the upper window limit for the
   `"wmst"` statistic, which must exceed `wmst.tau1`. `NULL` (default)
   falls back to `tau`. Required (through either argument) only when
-  `"wmst"` is requested.
+  `"wmst"` is requested. As for `tau`, no warning is given when it
+  exceeds the follow-up of a group at a look.
 
 - cutoff.looks:
 
@@ -308,10 +324,11 @@ and the p-value columns follow `side`.
 The input `data` is the data frame returned by
 [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 for a two-group trial. The columns `sim`, `group`, `accrual_time`,
-`tte`, and `event` are required, must not contain missing values, and
-`group` must have exactly two distinct values, one of which is
-`control`. For a multi-arm trial, subset the data to two arms first or
-use
+`tte`, and `event` are required and must not contain missing values. The
+`tte` column must be numeric and non-negative, `event` must be numeric
+or logical and coded as 0 or 1, and `group` must have exactly two
+distinct values, one of which is `control`. For a multi-arm trial,
+subset the data to two arms first or use
 [`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md).
 
 For a look at calendar time `cutoff`, each subject with accrual time `a`
@@ -326,7 +343,9 @@ events is the calendar time of the `d`-th event in that simulated trial,
 counted over the whole trial population. If a simulation contains fewer
 than `d` events, the target is never reached: the full data are used, so
 the statistics are those of the final data, `reached` is `FALSE`, and
-`cutoff` is `NA`. When `time.looks` is supplied, the cutoff is the
+`cutoff` is `NA`. When several events occur at the calendar time of the
+`d`-th event, all of them are included, so the number of events analyzed
+can exceed the target. When `time.looks` is supplied, the cutoff is the
 specified calendar time and `reached` is always `TRUE`. In both cases
 the cutoff is determined once on the whole population and then used for
 the overall analysis and for every subgroup analysis at that look.
@@ -350,7 +369,9 @@ supplied.
 
 The statistics are selected with `stat`, which may name one or more of
 `"logrank"`, `"coxph"`, `"rmst"`, `"km"`, `"maxcombo"`, `"ahsw"`,
-`"milestone"`, `"rmw"`, `"ahr"`, `"medsurv"`, `"wkm"`, and `"wmst"`.
+`"milestone"`, `"rmw"`, `"ahr"`, `"medsurv"`, `"wkm"`, and `"wmst"`. The
+references for each statistic are given on the help page of the
+corresponding function listed under See Also.
 
 The `"logrank"` statistic is configurable. By default it is the ordinary
 unweighted, unstratified two-group log-rank test and reproduces the
@@ -367,11 +388,12 @@ single-stratum degenerate form of the general statistic. The columns
 one or more subgroup columns of `data` used as the stratification
 variable. The stratification is determined on the whole cut data,
 independently of the `population` marginalization, so a stratified
-overall analysis is the canonical primary test; in a single-subgroup
-population the stratum is constant and the stratified test degenerates
-to the ordinary one within that subset. The same `strata` also stratify
-the `"coxph"` statistic, which is then the stratified Pike-Halley
-estimate of
+overall analysis is the canonical primary test. When `strata` names the
+subgroup column that defines a subgroup population, the stratum is
+constant within that population and the stratified test there reduces to
+the ordinary one. Several columns define their combinations as strata.
+The same `strata` also stratify the `"coxph"` statistic, which is then
+the stratified Pike-Halley estimate of
 [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
 (a common hazard ratio with a separate baseline hazard in each stratum).
 
@@ -422,9 +444,10 @@ average hazards, the ratio (RAH) and difference (DAH) contrasts with
 their confidence intervals, and p-values for both contrasts that follow
 `side`, matching
 [`ahsw_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md).
-The benefit direction is a ratio below 1 (a negative log ratio) and a
-negative difference, so the one-sided p-values are lower-tail
-probabilities.
+As there, a group without an event up to `tau` has an average hazard of
+0, and the contrasts are then `NA`. The benefit direction is a ratio
+below 1 (a negative log ratio) and a negative difference, so the
+one-sided p-values are lower-tail probabilities.
 
 The `"milestone"` statistic compares the Kaplan-Meier survival
 probabilities of the two groups at the milestone timepoint `tau`. It
@@ -439,12 +462,16 @@ survival). For `"wald"` and `"mover"` a positive Z favors treatment; for
 transforms, so a negative Z favors treatment, and the one-sided p-value
 is the lower tail as in
 [`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md).
+The `"mover"` statistic is obtained by inverting the MOVER interval at
+`conf.level`, so its p-value depends on `conf.level`, consistently with
+the interval (see
+[`milestone_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)).
 When the Kaplan-Meier estimate of a group is 0 or 1 at `tau`, its
 one-sample interval degenerates to the estimate, so the interval of the
 difference is still reported, while the `"loglog"` statistic is `NA`.
 
 The `"rmw"` statistic is the robust modestly-weighted log-rank test of
-Magirr and Ohrn, the maximum of the standard log-rank component and a
+Magirr and Öhrn, the maximum of the standard log-rank component and a
 single modestly-weighted component with survival-threshold `s_star`. Its
 `rmw.stat` is the most extreme standardized component (the minimum when
 `side = 1`, so a negative value favors treatment, and the maximum
@@ -469,6 +496,10 @@ method is selected with `medsurv.method` (`"km"` or `"nph"`), matching
 `medsurv.bw` optionally overrides the kernel bandwidth used by
 `medsurv.method = "km"`. The benefit direction is a positive difference
 (a longer median under treatment), so a positive Z favors treatment.
+When the Kaplan-Meier estimate of a group stays at 0.5 up to an infinite
+observed time, as for subjects with `tte = Inf` at a look that is not
+reached, the median of that group is not defined and the `"medsurv"`
+columns that depend on it are `NA`.
 
 The `"wkm"` statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
 It reports the weighted integrated survival difference (treatment minus

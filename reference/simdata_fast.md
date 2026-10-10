@@ -121,7 +121,15 @@ simdata_fast(
 
 - seed:
 
-  Optional integer seed for the `dqrng` generator.
+  Optional integer seed for the `dqrng` generator. If `NULL` (default),
+  the data are drawn from the current state of that generator, which
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) does not control:
+  the state is initialized from R's random-number generator when `dqrng`
+  is loaded, so repeated calls give different data, and processes forked
+  from one R session (for example by
+  [`parallel::mclapply()`](https://rdrr.io/r/parallel/mclapply.html))
+  start from the same state. Supply `seed` (and `stream` for parallel
+  batches) for reproducible data.
 
 - prevalence:
 
@@ -133,7 +141,9 @@ simdata_fast(
 - fixed.alloc:
 
   Logical; when `TRUE` subgroup sizes are deterministic rather than
-  drawn.
+  drawn. In a group of `n` subjects, each cell with probability `p`
+  receives `floor(n * p)` subjects, and the remaining subjects are added
+  one at a time to the cells in order, starting from the first cell.
 
 - h01.hazard:
 
@@ -170,10 +180,15 @@ simdata_fast(
 
   Transition hazard(s) for the terminal event after an intermediate
   event (state 1 to state 2) for subjects who do not switch. Defaults to
-  `h02.hazard`, which gives the Fleischer maximal-independence model
-  (Fleischer Theorem 1 when there is no switching and the hazards are
-  constant; with a piecewise `h02.hazard` the clock-reset `h12` restarts
-  the piecewise profile at the intermediate event).
+  `h02.hazard`, which gives the maximal-independence model of Fleischer,
+  Gaschler-Markefski, and Bluhmki (2009): with constant hazards and no
+  switching, the time to the intermediate event and the time to the
+  terminal event are independent exponential variables, and their
+  Theorem 1 gives the correlation of the two endpoints (PFS and OS) as
+  the ratio of their medians. A different constant `h12.hazard` gives
+  their more general model. With a piecewise `h02.hazard` the
+  clock-reset `h12` restarts the piecewise profile at the intermediate
+  event.
 
 - h12.median:
 
@@ -358,6 +373,12 @@ with four or more weights (or a two-sided test) are computed with R's
 own random-number generator, so a batch should also call
 [`set.seed()`](https://rdrr.io/r/base/Random.html) before the analysis
 for p-values that are identical across runs.
+
+## References
+
+Fleischer, F., Gaschler-Markefski, B., & Bluhmki, E. (2009). A
+statistical model for the dependence between progression-free survival
+and overall survival. *Statistics in Medicine*, *28*(21), 2669-2686.
 
 ## See also
 
@@ -550,8 +571,9 @@ head(df5)
 #> 5     1      11.31682
 #> 6     1      18.57670
 
-# Two correlated endpoints, no switching (reduces to Fleischer Theorem 1
-# because h12 defaults to h02). In oncology e1 is PFS and e2 is OS; here the
+# Two correlated endpoints, no switching (the maximal-independence model of
+# Fleischer et al., 2009, because h12 defaults to h02). In oncology e1 is PFS
+# and e2 is OS; here the
 # control has faster intermediate events and faster direct terminal events.
 dfid <- simdata_fast(
   nsim       = 100,

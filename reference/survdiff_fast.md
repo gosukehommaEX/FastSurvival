@@ -89,10 +89,12 @@ survdiff_fast(
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
   log-rank test of Magirr and Burman with weight
-  `1 / max(S(t-), S(t_star-))`. `"gehan"` is the Gehan-Breslow test with
-  weight equal to the at-risk count, and `"tarone-ware"` uses the square
-  root of the at-risk count. Here `S(t-)` is the left-continuous pooled
-  Kaplan-Meier estimate just prior to each event time.
+  `1 / max(S(t-), S(t_star-))`, the left-continuous form used by nphRCT
+  (Magirr and Burman define the weight with `S(t)` and `S(t_star)`).
+  `"gehan"` is the Gehan-Breslow test with weight equal to the at-risk
+  count, and `"tarone-ware"` uses the square root of the at-risk count.
+  Here `S(t-)` is the left-continuous pooled Kaplan-Meier estimate just
+  prior to each event time.
 
 - rho:
 
@@ -113,7 +115,9 @@ survdiff_fast(
   `weight = "mwlrt"`. The weight is capped at `1 / S(t_star-)`, where
   `S(t_star-)` is the pooled Kaplan-Meier value just before `t_star`
   (the product over event times strictly less than `t_star`, as in
-  nphRCT). A value of 0 yields the ordinary log-rank test.
+  nphRCT). When that value is 0 (the pooled curve reaches 0 before
+  `t_star`), the weight is not capped. A value of 0 yields the ordinary
+  log-rank test.
 
 ## Value
 
@@ -127,7 +131,7 @@ statistic when `side = 2`. For a weighted test the value is U / sqrt(V)
 the raw observed event counts, and `E0` and `E1` are `NA` because a
 single unweighted expected count is not defined for a weighted test.
 Returns `NA_real_` (still with class `"survdiff_fast"`) when the
-variance is zero (e.g., all events in one group).
+variance is zero (e.g., no event time at which both groups are at risk).
 
 ## Details
 
@@ -196,14 +200,14 @@ expected event counts for both the control and treatment groups.
 ## References
 
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
-arbitrarily singly-censored samples. *Biometrika*, *52*, 203-224.
+arbitrarily singly-censored samples. *Biometrika*, *52*(1-2), 203-224.
 
 Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. *Cancer Chemotherapy Reports*,
 *50*(3), 163-170.
 
 Tarone, R. E., & Ware, J. (1977). On distribution-free tests for
-equality of survival distributions. *Biometrika*, *64*, 156-160.
+equality of survival distributions. *Biometrika*, *64*(1), 156-160.
 
 Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
 Survival Analysis*. New York: John Wiley & Sons.
@@ -341,11 +345,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min       lq       mean   median        uq      max neval
-#>  survdiff_fast  55.574  64.2900   87.98911  76.6835   80.1245 8830.897  1000
-#>       survdiff 935.046 981.0265 1019.22617 991.3305 1010.1265 6721.500  1000
-#>  cld
-#>   a 
-#>    b
+#>           expr     min      lq       mean   median       uq     max neval cld
+#>  survdiff_fast  54.212  64.886   79.44909  77.5045   80.470 4798.60  1000  a 
+#>       survdiff 949.233 988.886 1026.70915 998.3690 1012.346 6587.32  1000   b
 # }
 ```

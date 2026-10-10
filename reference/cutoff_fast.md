@@ -85,13 +85,13 @@ cutoff_fast(
 
 - tte.col:
 
-  A single character string naming the observed-time column used to
-  count events. Defaults to `"tte"`.
+  A single character string naming the observed-time column (numeric and
+  non-negative) used to count events. Defaults to `"tte"`.
 
 - event.col:
 
-  A single character string naming the event-indicator column (0 or 1)
-  used to count events. Defaults to `"event"`.
+  A single character string naming the event-indicator column (numeric
+  or logical, 0 or 1) used to count events. Defaults to `"event"`.
 
 ## Value
 

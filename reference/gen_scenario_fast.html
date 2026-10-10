@@ -105,7 +105,11 @@ every scenario. Scenario-specific arguments take precedence.</p></dd>
 scenario. Those arguments override the shared arguments in <code>shared</code>, so
 that parameters held constant across scenarios (sample size, accrual, dropout)
 are written once in <code>shared</code> and only the varying parameters are written
-per scenario. The survival specification follows <code><a href="simdata_fast.html">simdata_fast</a></code>
+per scenario. A hazard and a median are alternative specifications of the
+same quantity, so a scenario that gives one of them also replaces the other
+in <code>shared</code>: <code>e.median</code> in a scenario removes a shared
+<code>e.hazard</code>, and likewise for <code>d.*</code>, <code>h01.*</code>, <code>h02.*</code>,
+<code>h12.*</code>, and <code>h12.switch.*</code>. The survival specification follows <code><a href="simdata_fast.html">simdata_fast</a></code>
 exactly: <code>e.hazard</code> or <code>e.median</code> given as a two-element list
 (control first, treatment second) for the two groups, with <code>e.time</code>
 supplying the breakpoints of a piecewise-exponential hazard (last element

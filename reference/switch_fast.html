@@ -178,7 +178,10 @@ ending with <code>Inf</code>, measured from the switch.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional integer seed for the <code>dqrng</code> generator.</p></dd>
+<dd><p>Optional integer seed for the <code>dqrng</code> generator. If
+<code>NULL</code> (default), the draws come from the current state of that
+generator, which <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> does not control; supply <code>seed</code>
+for reproducible results (see <code><a href="simdata_fast.html">simdata_fast</a></code>).</p></dd>
 
 
 <dt id="arg-stream">stream<a class="anchor" aria-label="anchor" href="#arg-stream"></a></dt>
@@ -251,9 +254,10 @@ with <code>dqrng</code>, in row order, so the result is reproducible from
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Robins, J. M. and Tsiatis, A. A. (1991). Correcting for non-compliance in
+    <p>Robins, J. M., &amp; Tsiatis, A. A. (1991). Correcting for non-compliance in
 randomized trials using rank preserving structural failure time models.
-<em>Communications in Statistics - Theory and Methods</em>, 20(8), 2609-2631.</p>
+<em>Communications in Statistics - Theory and Methods</em>, <em>20</em>(8),
+2609-2631.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -162,6 +162,21 @@ The order is checked, and an error is given when it does not hold.</p></dd>
   estimate with its confidence interval, the test statistic, and the p-value.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The <code>"wald"</code> statistic is the difference divided by its Greenwood
+standard error. The <code>"loglog"</code> statistic is the difference of the
+complementary log-log transforms of the two estimates divided by its
+standard error, so it is negative when the treatment group has the higher
+milestone survival, and its one-sided p-value is the lower tail. The
+<code>"mover"</code> statistic is the normal quantile of <code>conf.level</code> times
+the difference divided by the half-width of the MOVER interval on the side
+of zero. It is obtained by inverting the interval at <code>conf.level</code>, so
+the statistic and its p-value depend on <code>conf.level</code>, and the
+two-sided p-value is below <code>1 - conf.level</code> exactly when the interval
+excludes zero. For <code>"wald"</code> and <code>"mover"</code> a positive statistic
+favors treatment and the one-sided p-value is the upper tail.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
 estimators from one and two sample survival data. <em>Statistics in

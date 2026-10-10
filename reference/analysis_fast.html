@@ -171,17 +171,23 @@ of <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"
 <code>"rmst"</code>, the truncation time for <code>"ahsw"</code> and <code>"ahr"</code>, and
 the milestone timepoint for <code>"milestone"</code>. Required only when
 <code>"rmst"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, or <code>"ahr"</code> is
-requested.</p></dd>
+requested. No warning is given when it exceeds the largest observed time
+of a group at a look (for example at an early interim analysis); the
+Kaplan-Meier curve of that group is then carried forward flat, whereas the
+stand-alone functions such as <code><a href="rmst_fast.html">rmst_fast</a></code> give a warning.</p></dd>
 
 
 <dt id="arg-t-eval">t.eval<a class="anchor" aria-label="anchor" href="#arg-t-eval"></a></dt>
 <dd><p>A single positive numeric value, the landmark time for
-<code>"km"</code>. Required only when <code>"km"</code> is requested.</p></dd>
+<code>"km"</code>. Required only when <code>"km"</code> is requested. As for
+<code>tau</code>, no warning is given when it exceeds the follow-up of a group
+at a look.</p></dd>
 
 
 <dt id="arg-conf-level">conf.level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
-<dd><p>A single numeric value in (0, 1), the confidence level for
-<code>"coxph"</code>, <code>"rmst"</code>, and <code>"ahsw"</code>. Defaults to 0.95.</p></dd>
+<dd><p>A single numeric value in (0, 1), the confidence level of
+all the confidence-interval columns (and of the <code>"mover"</code> milestone
+statistic). Defaults to 0.95.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -191,7 +197,9 @@ RMST, and the two-sided max-combo test is used. When <code>side = 1</code>, the
 one-sided p-value in the direction of treatment benefit is reported for
 each of those statistics, and the one-sided max-combo test is used. The
 test statistics themselves are always reported with their natural sign, so
-the choice of <code>side</code> affects only the p-value columns. For log-rank
+the choice of <code>side</code> affects only the p-value columns, except
+<code>maxcombo.stat</code> and <code>rmw.stat</code>, whose definition depends on
+<code>side</code> (see Details). For log-rank
 and Cox the benefit direction is a negative Z (the one-sided p-value is the
 lower tail <code>pnorm(z)</code>); for RMST it is a positive Z (the upper tail
 <code>pnorm(-z)</code>). The other statistics follow the benefit directions
@@ -231,7 +239,9 @@ is Tarone-Ware. See <code><a href="survdiff_fast.html">survdiff_fast</a></code>.
 <dt id="arg-t-star">t_star<a class="anchor" aria-label="anchor" href="#arg-t-star"></a></dt>
 <dd><p>A single non-negative numeric value, the timepoint of the
 modestly-weighted log-rank test. Required only when <code>weight =
-"mwlrt"</code>.</p></dd>
+"mwlrt"</code>. The weight is capped at the reciprocal of the pooled
+Kaplan-Meier value just before <code>t_star</code>, and is not capped when that
+value is 0 (see <code><a href="survdiff_fast.html">survdiff_fast</a></code>).</p></dd>
 
 
 <dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
@@ -247,7 +257,9 @@ values. Stratification applies only to the <code>"logrank"</code> and
 <dt id="arg-ms-method">ms.method<a class="anchor" aria-label="anchor" href="#arg-ms-method"></a></dt>
 <dd><p>A character string naming the inference method for the
 <code>"milestone"</code> statistic, one of <code>"wald"</code> (default),
-<code>"loglog"</code>, or <code>"mover"</code>. See <code><a href="milestone_fast.html">milestone_fast</a></code>.</p></dd>
+<code>"loglog"</code>, or <code>"mover"</code>. See <code><a href="milestone_fast.html">milestone_fast</a></code>;
+the <code>"mover"</code> statistic and its p-value depend on
+<code>conf.level</code>.</p></dd>
 
 
 <dt id="arg-s-star">s_star<a class="anchor" aria-label="anchor" href="#arg-s-star"></a></dt>
@@ -301,7 +313,9 @@ computed per group from the cut data, matching <code><a href="medsurv_fast.html"
 <dt id="arg-wkm-weight">wkm.weight<a class="anchor" aria-label="anchor" href="#arg-wkm-weight"></a></dt>
 <dd><p>A character string naming the weight for the <code>"wkm"</code>
 statistic, one of <code>"PF"</code> (default, Pepe-Fleming combined censoring
-weight), <code>"sqrtPF"</code>, or <code>"constant"</code>. See <code><a href="wkm_fast.html">wkm_fast</a></code>.</p></dd>
+weight), <code>"sqrtPF"</code>, or <code>"constant"</code>. See <code><a href="wkm_fast.html">wkm_fast</a></code>,
+which explains why the <code>"PF"</code> weight is recommended when follow-up
+differs between the groups.</p></dd>
 
 
 <dt id="arg-wmst-tau-">wmst.tau1<a class="anchor" aria-label="anchor" href="#arg-wmst-tau-"></a></dt>
@@ -313,7 +327,8 @@ for the <code>"wmst"</code> statistic. Defaults to 0.</p></dd>
 <dd><p>A single positive numeric value, the upper window limit for
 the <code>"wmst"</code> statistic, which must exceed <code>wmst.tau1</code>. <code>NULL</code>
 (default) falls back to <code>tau</code>. Required (through either argument) only
-when <code>"wmst"</code> is requested.</p></dd>
+when <code>"wmst"</code> is requested. As for <code>tau</code>, no warning is given
+when it exceeds the follow-up of a group at a look.</p></dd>
 
 
 <dt id="arg-cutoff-looks">cutoff.looks<a class="anchor" aria-label="anchor" href="#arg-cutoff-looks"></a></dt>
@@ -388,8 +403,10 @@ integration only when the Bonferroni bounds do not decide the comparison
     <p>The input <code>data</code> is the data frame returned by
 <code><a href="simdata_fast.html">simdata_fast</a></code> for a two-group trial. The columns <code>sim</code>,
 <code>group</code>, <code>accrual_time</code>, <code>tte</code>, and <code>event</code> are
-required, must not contain missing values, and <code>group</code> must have
-exactly two distinct values, one of which is <code>control</code>. For a
+required and must not contain missing values. The <code>tte</code> column must be
+numeric and non-negative, <code>event</code> must be numeric or logical and coded
+as 0 or 1, and <code>group</code> must have exactly two distinct values, one of
+which is <code>control</code>. For a
 multi-arm trial, subset the data to two arms first or use
 <code><a href="pairwise_fast.html">pairwise_fast</a></code>.</p>
 <p>For a look at calendar time <code>cutoff</code>, each subject with accrual time
@@ -403,7 +420,9 @@ zero otherwise (administrative censoring at the look).</p>
 simulated trial, counted over the whole trial population. If a simulation
 contains fewer than <code>d</code> events, the target is never reached: the full
 data are used, so the statistics are those of the final data, <code>reached</code>
-is <code>FALSE</code>, and <code>cutoff</code> is <code>NA</code>. When <code>time.looks</code> is supplied, the cutoff is the specified
+is <code>FALSE</code>, and <code>cutoff</code> is <code>NA</code>. When several events occur
+at the calendar time of the <code>d</code>-th event, all of them are included, so
+the number of events analyzed can exceed the target. When <code>time.looks</code> is supplied, the cutoff is the specified
 calendar time and <code>reached</code> is always <code>TRUE</code>. In both cases the
 cutoff is determined once on the whole population and then used for the
 overall analysis and for every subgroup analysis at that look.</p>
@@ -424,7 +443,9 @@ final data.</p>
 <p>The statistics are selected with <code>stat</code>, which may name one or more of
 <code>"logrank"</code>, <code>"coxph"</code>, <code>"rmst"</code>, <code>"km"</code>,
 <code>"maxcombo"</code>, <code>"ahsw"</code>, <code>"milestone"</code>, <code>"rmw"</code>,
-<code>"ahr"</code>, <code>"medsurv"</code>, <code>"wkm"</code>, and <code>"wmst"</code>.</p>
+<code>"ahr"</code>, <code>"medsurv"</code>, <code>"wkm"</code>, and <code>"wmst"</code>. The
+references for each statistic are given on the help page of the
+corresponding function listed under See Also.</p>
 <p>The <code>"logrank"</code> statistic is configurable. By default it is the
 ordinary unweighted, unstratified two-group log-rank test and reproduces the
 behavior of earlier versions of this function exactly. A non-default
@@ -440,9 +461,11 @@ single-stratum degenerate form of the general statistic. The columns
 <code>strata</code> names one or more subgroup columns of <code>data</code> used as the
 stratification variable. The stratification is determined on the whole cut
 data, independently of the <code>population</code> marginalization, so a stratified
-overall analysis is the canonical primary test; in a single-subgroup
-population the stratum is constant and the stratified test degenerates to the
-ordinary one within that subset. The same <code>strata</code> also stratify the
+overall analysis is the canonical primary test. When <code>strata</code> names
+the subgroup column that defines a subgroup population, the stratum is
+constant within that population and the stratified test there reduces to
+the ordinary one. Several columns define their combinations as strata.
+The same <code>strata</code> also stratify the
 <code>"coxph"</code> statistic, which is then the stratified Pike-Halley estimate
 of <code><a href="coxph_fast.html">coxph_fast</a></code> (a common hazard ratio with a separate baseline
 hazard in each stratum).</p>
@@ -488,7 +511,9 @@ are needed.</p>
 and Horiguchi on the window from 0 to <code>tau</code>. It reports the per-group
 average hazards, the ratio (RAH) and difference (DAH) contrasts with their
 confidence intervals, and p-values for both contrasts that follow
-<code>side</code>, matching <code><a href="ahsw_fast.html">ahsw_fast</a></code>. The benefit direction is a
+<code>side</code>, matching <code><a href="ahsw_fast.html">ahsw_fast</a></code>. As there, a group without
+an event up to <code>tau</code> has an average hazard of 0, and the contrasts
+are then <code>NA</code>. The benefit direction is a
 ratio below 1 (a negative log ratio) and a negative difference, so the
 one-sided p-values are lower-tail probabilities.</p>
 <p>The <code>"milestone"</code> statistic compares the Kaplan-Meier survival
@@ -501,13 +526,17 @@ is a positive difference (higher treatment survival). For <code>"wald"</code> an
 <code>"mover"</code> a positive Z favors treatment; for <code>"loglog"</code> the
 statistic is the difference of the complementary log-log transforms, so a
 negative Z favors treatment, and the one-sided p-value is the lower tail as
-in <code><a href="milestone_fast.html">milestone_fast</a></code>. When the Kaplan-Meier estimate of a group
+in <code><a href="milestone_fast.html">milestone_fast</a></code>. The <code>"mover"</code> statistic is obtained
+by inverting the MOVER interval at <code>conf.level</code>, so its p-value depends
+on <code>conf.level</code>, consistently with the interval (see
+<code><a href="milestone_fast.html">milestone_fast</a></code>). When the Kaplan-Meier estimate of a group
 is 0 or 1 at <code>tau</code>, its one-sample interval degenerates to the
 estimate, so the interval of the difference is still reported, while the
 <code>"loglog"</code> statistic is <code>NA</code>.</p>
 <p>The <code>"rmw"</code> statistic is the robust modestly-weighted log-rank test of
-Magirr and Ohrn, the maximum of the standard log-rank component and a single
-modestly-weighted component with survival-threshold <code>s_star</code>. Its
+Magirr and Öhrn, the maximum of the standard log-rank component
+and a single modestly-weighted component with survival-threshold
+<code>s_star</code>. Its
 <code>rmw.stat</code> is the most extreme standardized component (the minimum when
 <code>side = 1</code>, so a negative value favors treatment, and the maximum
 absolute component when <code>side = 2</code>), and <code>rmw.p</code> is the joint
@@ -527,7 +556,10 @@ selected with <code>medsurv.method</code> (<code>"km"</code> or <code>"nph"</cod
 <code><a href="medsurv_fast.html">medsurv_fast</a></code>; <code>medsurv.bw</code> optionally overrides the kernel
 bandwidth used by <code>medsurv.method = "km"</code>. The benefit direction is a
 positive difference (a longer median under treatment), so a positive Z favors
-treatment.</p>
+treatment. When the Kaplan-Meier estimate of a group stays at 0.5 up to an
+infinite observed time, as for subjects with <code>tte = Inf</code> at a look
+that is not reached, the median of that group is not defined and the
+<code>"medsurv"</code> columns that depend on it are <code>NA</code>.</p>
 <p>The <code>"wkm"</code> statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
 It reports the weighted integrated survival difference (treatment minus
 control) with its confidence interval, the Wald statistic, and the p-value.

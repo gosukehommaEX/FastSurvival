@@ -88,6 +88,21 @@ milestone survival estimates and standard errors, the difference
 estimate with its confidence interval, the test statistic, and the
 p-value.
 
+## Details
+
+The `"wald"` statistic is the difference divided by its Greenwood
+standard error. The `"loglog"` statistic is the difference of the
+complementary log-log transforms of the two estimates divided by its
+standard error, so it is negative when the treatment group has the
+higher milestone survival, and its one-sided p-value is the lower tail.
+The `"mover"` statistic is the normal quantile of `conf.level` times the
+difference divided by the half-width of the MOVER interval on the side
+of zero. It is obtained by inverting the interval at `conf.level`, so
+the statistic and its p-value depend on `conf.level`, and the two-sided
+p-value is below `1 - conf.level` exactly when the interval excludes
+zero. For `"wald"` and `"mover"` a positive statistic favors treatment
+and the one-sided p-value is the upper tail.
+
 ## References
 
 Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based

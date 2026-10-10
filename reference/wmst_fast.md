@@ -56,7 +56,10 @@ wmst_fast(
   groups is used (the minimum over groups of the maximum observed time),
   or the maximum observed time for a single group. A supplied value
   larger than that gives a warning, because the Kaplan-Meier curve is
-  not estimated beyond it.
+  not estimated beyond it. The window must be finite: when that default
+  is infinite (for example when each group has a subject without a
+  finite event or dropout time in simulated data), `tau2` must be
+  supplied.
 
 - side:
 
@@ -97,7 +100,7 @@ treatment.
 ## References
 
 Paukner, M., & Chappell, R. (2021). Window mean survival time.
-Statistics in Medicine, 40(25), 5521-5533.
+*Statistics in Medicine*, *40*(25), 5521-5533.
 
 ## Examples
 

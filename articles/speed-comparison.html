@@ -312,11 +312,12 @@ to reproduce it.</p>
 <h2 id="ahr_fast-vs-ahrahrkm">ahr_fast vs AHR::ahrKM<a class="anchor" aria-label="anchor" href="#ahr_fast-vs-ahrahrkm"></a>
 </h2>
 <p>The Kalbfleisch-Prentice average hazard ratio is benchmarked against
-<code>ahrKM()</code> from the AHR package, which Dormuth et al. (2024)
-used to compute the average hazard ratio. Because AHR has been archived
-on CRAN, this benchmark is shown as a static block rather than a live
-chunk. Install AHR with <code>remotes::install_github("cran/AHR")</code>
-and run the block to reproduce it.</p>
+<code>ahrKM()</code> from the AHR package (Dormuth et al. (2024)
+computed the average hazard ratio with the AHR package). Because AHR has
+been archived on CRAN, this benchmark is shown as a static block rather
+than a live chunk. Install AHR with
+<code>remotes::install_github("cran/AHR")</code> and run the block to
+reproduce it.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
 <span>  fast <span class="op">=</span> <span class="fu"><a href="../reference/ahr_fast.html">ahr_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, <span class="va">g_s</span>, control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="va">tau</span>, side <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -435,18 +436,19 @@ scripts in <code>tools/paper/</code> of the package’s GitHub repository
 run the same designs with FastSurvival and with other simulation
 packages and record the operating characteristics and the elapsed time.
 For a two-arm group-sequential design with 600 subjects and two
-event-driven log-rank analyses, the time per simulated trial was one to
+event-driven log-rank analyses, the time per simulated trial was about
 two orders of magnitude longer with simtrial and with TrialSimulator
 than with FastSurvival, and for a crossover after a positive
 progression-free survival analysis in an illness-death model it was more
 than an order of magnitude longer with TrialSimulator. The ratios varied
 between runs on the same computer. The power and the analysis times
-agreed within Monte Carlo error. With FastSurvival, generating 10,000
-such trials and computing the log-rank and RMST statistics at the two
-looks each took on the order of one second. The max-combo p-values, one
-multivariate normal integral per trial and look, take most of the
-computing time; when only the decisions at given nominal levels are
-needed, the <code>mc.alpha</code> argument of
+agreed within Monte Carlo error. In a separate benchmark with the same
+sample size and looks and a delayed treatment effect, generating 10,000
+trials and computing the log-rank and RMST statistics at the two looks
+with FastSurvival each took on the order of one second. The max-combo
+p-values, one multivariate normal integral per trial and look, take most
+of the computing time; when only the decisions at given nominal levels
+are needed, the <code>mc.alpha</code> argument of
 <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> restricts the integration to the p-values
 near those levels.</p>
 </div>

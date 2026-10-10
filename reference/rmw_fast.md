@@ -1,7 +1,7 @@
 # Robust Modestly-Weighted Log-Rank Test for Two-Group Survival Data
 
 Computes the robust modestly-weighted (rMW) log-rank test of Magirr and
-Ohrn, which combines the standard log-rank test with a single
+Öhrn, which combines the standard log-rank test with a single
 modestly-weighted log-rank test. The test statistic is the maximum of
 the two standardized components, evaluated against their joint null
 distribution. Because the standard log-rank statistic is included as one
@@ -77,7 +77,8 @@ Z-scores `c(logrank, mwlrt)`), `corr` (the 2 by 2 null correlation
 matrix of the two components), `s_star`, `O1` (the observed number of
 events in the treatment group), `side`, and `n` (the total sample size).
 Returns `NA` statistic and p-value (still with class `"rmw_fast"`) when
-either component variance is zero (e.g., all events in one group).
+either component variance is zero (e.g., no event time at which both
+groups are at risk).
 
 ## Details
 
@@ -106,8 +107,9 @@ the statistic is `max(abs(Z_lr), abs(Z_mw))` and the two-sided p-value
 is `P(max(abs(Z_lr), abs(Z_mw)) >= observed)`. The joint normal
 probability is evaluated with
 [`mvtnorm::pmvnorm`](https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html),
-using the exact `TVPACK` algorithm for the one-sided half-space and the
-deterministic `Miwa` algorithm for the two-sided rectangle.
+using the exact `TVPACK` algorithm for the one-sided region, an orthant
+(all upper limits infinite), and the deterministic `Miwa` algorithm for
+the two-sided rectangle.
 
 When `presorted = TRUE`, the input vectors are assumed to be sorted by
 ascending `time` and the internal

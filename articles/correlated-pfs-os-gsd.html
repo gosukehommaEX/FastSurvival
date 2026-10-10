@@ -117,7 +117,7 @@ exponentials, <code>PFS</code> is exponential with hazard
 OS hazard is <code>lam2 = log(2) / median_OS</code> and the PFS hazard
 is <code>Lambda = log(2) / median_PFS</code>, so the implied TTP hazard
 is <code>lam1 = Lambda - lam2</code>, which must be positive (median OS
-at least median PFS in each group). The dependence between the two
+longer than median PFS in each group). The dependence between the two
 endpoints is induced entirely through the shared <code>OS</code>
 component.</p>
 </div>
@@ -393,10 +393,14 @@ overall row is the power of that endpoint considered on its own.</p>
 <span><span class="co">#&gt;   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'logrank.z'</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.50      200.0      490.9         NA     0.0000           0.0000</span></span>
-<span><span class="co">#&gt;     2        0.75      300.0      599.9    -2.3397         NA           0.8668</span></span>
-<span><span class="co">#&gt;     3        1.00      400.0      600.0    -2.0118         NA           0.9766</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Futility Bound</span></span>
+<span><span class="co">#&gt;     1        0.50      200.0      490.9             NA         0.0000</span></span>
+<span><span class="co">#&gt;     2        0.75      300.0      599.9        -2.3397             NA</span></span>
+<span><span class="co">#&gt;     3        1.00      400.0      600.0        -2.0118             NA</span></span>
+<span><span class="co">#&gt;  Cum. Cross. Eff.</span></span>
+<span><span class="co">#&gt;            0.0000</span></span>
+<span><span class="co">#&gt;            0.8668</span></span>
+<span><span class="co">#&gt;            0.9766</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
 <span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
@@ -426,10 +430,10 @@ overall row is the power of that endpoint considered on its own.</p>
 <span><span class="co">#&gt;   Boundaries: efficacy on 'logrank.z' (direction = lower)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
-<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Z Cum. Cross. Eff.</span></span>
-<span><span class="co">#&gt;     1        0.45      111.7      490.9         NA           0.0000</span></span>
-<span><span class="co">#&gt;     2        0.70      174.7      599.9    -2.0599           0.3376</span></span>
-<span><span class="co">#&gt;     3        1.00      250.4      600.0    -2.2516           0.4604</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Cum. Cross. Eff.</span></span>
+<span><span class="co">#&gt;     1        0.45      111.7      490.9             NA           0.0000</span></span>
+<span><span class="co">#&gt;     2        0.70      174.7      599.9        -2.0599           0.3376</span></span>
+<span><span class="co">#&gt;     3        1.00      250.4      600.0        -2.2516           0.4604</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
 <span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
@@ -625,16 +629,16 @@ estimates at a proportional cost.</p>
 <div class="section level3">
 <h3 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
-<p>Fleischer, F., Gaschler-Markefski, B., and Bluhmki, E. (2009). A
+<p>Fleischer, F., Gaschler-Markefski, B., &amp; Bluhmki, E. (2009). A
 statistical model for the dependence between progression-free survival
 and overall survival. <em>Statistics in Medicine</em>, 28(21),
 2669-2686.</p>
-<p>Glimm, E., Maurer, W., and Bretz, F. (2010). Hierarchical testing of
-multiple endpoints in group-sequential trials. <em>Statistics in
+<p>Glimm, E., Maurer, W., &amp; Bretz, F. (2010). Hierarchical testing
+of multiple endpoints in group-sequential trials. <em>Statistics in
 Medicine</em>, 29(2), 219-228.</p>
-<p>Lan, K. K. G. and DeMets, D. L. (1983). Discrete sequential
+<p>Lan, K. K. G., &amp; DeMets, D. L. (1983). Discrete sequential
 boundaries for clinical trials. <em>Biometrika</em>, 70(3), 659-663.</p>
-<p>O’Brien, P. C. and Fleming, T. R. (1979). A multiple testing
+<p>O’Brien, P. C., &amp; Fleming, T. R. (1979). A multiple testing
 procedure for clinical trials. <em>Biometrics</em>, 35(3), 549-556.</p>
 <p>Pocock, S. J. (1977). Group sequential methods in the design and
 analysis of clinical trials. <em>Biometrika</em>, 64(2), 191-199.</p>

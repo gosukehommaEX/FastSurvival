@@ -256,7 +256,7 @@ in every trial dilutes the OS comparison more.</p>
 <h2 id="computing-time">Computing time<a class="anchor" aria-label="anchor" href="#computing-time"></a>
 </h2>
 <p>The whole study, from data generation to the OS analysis of one
-scenario, runs in a few seconds.</p>
+scenario, runs in about a second.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="va">d0</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span>nsim <span class="op">=</span> <span class="va">nsim</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">300</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">18</span><span class="op">)</span>,</span>
@@ -273,7 +273,7 @@ scenario, runs in a few seconds.</p>
 <span>  <span class="va">r1</span>  <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">d1</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.452   0.041   0.493</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.425   0.033   0.458</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="a-check-with-the-rank-preserving-structural-failure-time-model">A check with the rank-preserving structural failure time model<a class="anchor" aria-label="anchor" href="#a-check-with-the-rank-preserving-structural-failure-time-model"></a>
@@ -356,7 +356,7 @@ approach.</p>
 <p>Allison, A., White, I. R., &amp; Bond, S. (2017). rpsftm: an R
 package for rank preserving structural failure time models. <em>The R
 Journal</em>, 9(2), 342-353.</p>
-<p>Robins, J. M. and Tsiatis, A. A. (1991). Correcting for
+<p>Robins, J. M., &amp; Tsiatis, A. A. (1991). Correcting for
 non-compliance in randomized trials using rank preserving structural
 failure time models. <em>Communications in Statistics - Theory and
 Methods</em>, 20(8), 2609-2631.</p>

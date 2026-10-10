@@ -23,9 +23,9 @@ size.
 
 The control group has a median survival of 12 months. The sample size is
 set so that the proportional-hazards scenario, with a hazard ratio of
-0.75, has 90% power at a one-sided 0.025 level. The events are obtained
-from the Schoenfeld formula and inflated to a sample size with the
-Lachin-Foulkes method through
+0.75, has 90% power at a one-sided 0.025 level. The sample size and the
+expected number of events are computed with the method of Lachin and
+Foulkes (1986), the default of
 [`gsDesign::nSurv`](https://keaven.github.io/gsDesign//reference/nSurv.html),
 given 12 months of accrual, 36 months of minimum follow-up, and a 5%
 annual dropout. The same sample size is then applied unchanged to all
@@ -229,9 +229,6 @@ Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of
 randomized trials with a time-to-event outcome. *BMC Medical Research
 Methodology*, 13, 152.
-
-Schoenfeld, D. A. (1983). Sample-size formula for the
-proportional-hazards regression model. *Biometrics*, 39(2), 499-503.
 
 Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
 ratio in quantifying the between-group difference in survival analysis.

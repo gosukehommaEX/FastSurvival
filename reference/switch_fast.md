@@ -110,7 +110,11 @@ switch_fast(
 
 - seed:
 
-  Optional integer seed for the `dqrng` generator.
+  Optional integer seed for the `dqrng` generator. If `NULL` (default),
+  the draws come from the current state of that generator, which
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) does not control;
+  supply `seed` for reproducible results (see
+  [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)).
 
 - stream:
 
@@ -198,10 +202,9 @@ call.
 
 ## References
 
-Robins, J. M. and Tsiatis, A. A. (1991). Correcting for non-compliance
-in randomized trials using rank preserving structural failure time
-models. *Communications in Statistics - Theory and Methods*, 20(8),
-2609-2631.
+Robins, J. M., & Tsiatis, A. A. (1991). Correcting for non-compliance in
+randomized trials using rank preserving structural failure time models.
+*Communications in Statistics - Theory and Methods*, *20*(8), 2609-2631.
 
 ## See also
 

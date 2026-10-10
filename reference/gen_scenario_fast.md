@@ -52,7 +52,11 @@ Each element of `scenarios` is a named list of arguments that defines
 one scenario. Those arguments override the shared arguments in `shared`,
 so that parameters held constant across scenarios (sample size, accrual,
 dropout) are written once in `shared` and only the varying parameters
-are written per scenario. The survival specification follows
+are written per scenario. A hazard and a median are alternative
+specifications of the same quantity, so a scenario that gives one of
+them also replaces the other in `shared`: `e.median` in a scenario
+removes a shared `e.hazard`, and likewise for `d.*`, `h01.*`, `h02.*`,
+`h12.*`, and `h12.switch.*`. The survival specification follows
 [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 exactly: `e.hazard` or `e.median` given as a two-element list (control
 first, treatment second) for the two groups, with `e.time` supplying the

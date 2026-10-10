@@ -164,8 +164,9 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 mean survival time at <code>tau</code>. It can be read as a general censoring-free
 incidence rate on the window from 0 to <code>tau</code> and stays interpretable
 under non-proportional hazards. This is a different quantity from the average
-hazard ratio of Kalbfleisch, which averages the time-varying ratio of hazards
-rather than forming a single average hazard per group and then contrasting.</p>
+hazard ratio of Kalbfleisch and Prentice (see <code><a href="ahr_fast.html">ahr_fast</a></code>), which
+averages the time-varying ratio of hazards rather than forming a single
+average hazard per group and then contrasting.</p>
 <p>Writing the treatment and control average hazards as a1 and a0, the ratio
 contrast is RAH = a1 / a0, formed on the log scale with variance
 v_Q1 / n1 + v_Q0 / n0, and the difference contrast is DAH = a1 - a0, with

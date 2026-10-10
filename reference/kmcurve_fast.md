@@ -34,8 +34,8 @@ kmcurve_fast(time, event, group = NULL, control = NULL)
 - group:
 
   A vector identifying the groups, aligned with `time`, with one or two
-  distinct values. If `NULL` (default), all subjects are treated as a
-  single group.
+  distinct values and no missing values. If `NULL` (default), all
+  subjects are treated as a single group.
 
 - control:
 

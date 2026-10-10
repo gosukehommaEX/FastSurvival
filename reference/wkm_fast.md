@@ -81,6 +81,14 @@ which case the numerator reduces to the difference in restricted mean
 survival time over the observed range. With `weight = "PF"` the result
 reproduces `nphsim::wkm.Stat` for data without tied times.
 
+Because the integral extends to the largest observed time of the pooled
+data, the curve of a group whose follow-up ends earlier with a censored
+time is carried forward flat beyond that time. The Pepe-Fleming weight
+is zero there, but the constant and square-root weights are not, so with
+these weights the statistic can be biased, even under the null
+hypothesis, when follow-up differs between the groups. The Pepe-Fleming
+weight is recommended in that case.
+
 The integral runs up to the largest observed time, so it is not defined
 when a time is infinite (for example a subject without a finite event or
 dropout time in simulated data), and all the statistics are then `NA`.
@@ -92,12 +100,12 @@ treatment.
 ## References
 
 Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics:
-a class of distance tests for censored survival data. Biometrics, 45(2),
-497-507.
+a class of distance tests for censored survival data. *Biometrics*,
+*45*(2), 497-507.
 
 Pepe, M. S., & Fleming, T. R. (1991). Weighted Kaplan-Meier statistics:
-large sample and optimality considerations. Journal of the Royal
-Statistical Society. Series B (Methodological), 53(2), 341-352.
+large sample and optimality considerations. *Journal of the Royal
+Statistical Society. Series B (Methodological)*, *53*(2), 341-352.
 
 ## Examples
 

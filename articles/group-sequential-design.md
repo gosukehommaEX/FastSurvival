@@ -19,8 +19,8 @@ under proportional hazards, where gsDesign and similar packages are
 accurate, but that once the simulation agrees on a case they can handle,
 the same machinery can be trusted for cases they cannot, such as
 non-proportional hazards or data-dependent analysis timing. The whole
-vignette, with 10,000 simulated trials for the main design, runs in a
-few seconds.
+vignette, with 10,000 simulated trials for the main design, runs in well
+under a minute.
 
 ``` r
 
@@ -35,16 +35,17 @@ patients with recurrent or metastatic cervical cancer (Vergote et al.,
 2024). The primary end point was overall survival, with patients
 randomly assigned in a 1:1 ratio.
 
-The design enrolled approximately 482 patients and was powered at 90% on
-the occurrence of 336 total deaths, with one prespecified interim
-efficacy analysis at about 75% of information (252 of 336 events). The
-overall two-sided type I error was controlled at 5% using the Lan-DeMets
-spending function with an O’Brien-Fleming boundary. For planning we take
-an exponential overall survival with a median of 12.9 months in the
-tisotumab vedotin group and 9.0 months in the chemotherapy group (a
-hazard ratio of about 0.70), accrual over 23 months, and a 5% annual
-dropout rate in each group, the assumptions of the trial protocol in the
-supplementary appendix of Vergote et al. (2024).
+The design planned to enroll approximately 482 patients and was powered
+at 90% on the occurrence of 336 total deaths, with one prespecified
+interim efficacy analysis at about 75% of information (252 of 336
+events). Overall survival was tested at a two-sided 5% level with the
+Lan-DeMets spending function with an O’Brien-Fleming boundary. For
+planning we take an exponential overall survival with a median of 12.9
+months in the tisotumab vedotin group and 9.0 months in the chemotherapy
+group (a hazard ratio of about 0.70), accrual over 23 months, and a 5%
+annual dropout rate in each group, the assumptions in Section 9.2 of the
+trial protocol, which is available with the full text of Vergote et al.
+(2024) at NEJM.org.
 
 ## Simulating the trial
 

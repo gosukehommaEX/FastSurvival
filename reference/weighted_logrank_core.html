@@ -142,7 +142,8 @@ when <code>scheme = 1</code>).</p></dd>
 with weight <code>min(1 / S_minus, max_weight)</code>, where <code>max_weight</code>
 is the reciprocal of the pooled Kaplan-Meier value just before
 <code>t_star</code>, i.e. the product over event times strictly less than
-<code>t_star</code> as in nphRCT (and is 1 when <code>t_star = 0</code>);
+<code>t_star</code> as in nphRCT (and is 1 when <code>t_star = 0</code>, and infinite,
+so that the weights are not capped, when that product is 0);
 2 = Gehan-Breslow with weight <code>n_j</code>; 3 = Tarone-Ware with weight
 <code>sqrt(n_j)</code>. Here <code>S_minus</code> is the left-continuous pooled
 Kaplan-Meier estimate just prior to each event time, initialized at 1.

@@ -95,7 +95,10 @@ Kaplan-Meier estimate drops to 0.5 or below. When the estimate equals
 exists, closes the interval). This is the convention used by `survfit`,
 including its tolerance of `sqrt(.Machine$double.eps)` when comparing
 the estimate with 0.5. The point estimate is the same for both variance
-methods.
+methods. When the estimate stays at 0.5 up to an infinite observed time
+(for example a subject without a finite event or dropout time in
+simulated data), the midpoint is not defined, and the median of that
+group and the statistics that depend on it are `NA`.
 
 Two variance methods are available through the `method` argument. With
 `method = "km"` the variance of the estimated median follows the
@@ -118,8 +121,8 @@ difference indicates a longer median survival time under treatment.
 
 ## References
 
-Fleming, T. R., & Harrington, D. P. (1991). Counting Processes and
-Survival Analysis. New York: John Wiley & Sons.
+Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
+Survival Analysis*. New York: John Wiley & Sons.
 
 ## Examples
 

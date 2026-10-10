@@ -100,7 +100,7 @@ rejection rate, `prob.stop.futility` the total futility rate,
 rate; its timing columns are the expected counts and calendar time at
 the stopping look. The number of simulations is stored in the attribute
 `nsim` (one value per block when the blocks differ) and the boundary
-settings in the attribute `boundary`.
+settings, with the look labels, in the attribute `boundary`.
 
 ## Details
 
@@ -208,10 +208,14 @@ simsummary_fast(res,
 #>   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'cox.coef'
 #> 
 #> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.
-#>     1        0.40       60.0      286.1         NA     0.1823           0.0000
-#>     2        0.70      105.0      300.0    -2.9600         NA           0.1300
-#>     3        1.00      150.0      300.0    -1.9700         NA           0.5700
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Futility Bound
+#>     1        0.40       60.0      286.1             NA         0.1823
+#>     2        0.70      105.0      300.0        -2.9600             NA
+#>     3        1.00      150.0      300.0        -1.9700             NA
+#>  Cum. Cross. Eff.
+#>            0.0000
+#>            0.1300
+#>            0.5700
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
 #>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time

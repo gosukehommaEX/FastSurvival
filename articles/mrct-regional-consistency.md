@@ -335,10 +335,14 @@ gs
 #>   Boundaries: efficacy on 'logrank.z' (direction = lower), futility on 'logrank.z'
 #> 
 #> Stopping Boundaries: Look by Look
-#>  Look Info. Frac. Events (s) Sample (n) Efficacy Z Futility Z Cum. Cross. Eff.
-#>     1        0.40      142.0      344.8         NA     0.3810           0.0000
-#>     2        0.70      248.0      485.5    -2.4370         NA           0.4711
-#>     3        1.00      354.0      500.0    -2.0000    -2.0000           0.8011
+#>  Look Info. Frac. Events (s) Sample (n) Efficacy Bound Futility Bound
+#>     1        0.40      142.0      344.8             NA         0.3810
+#>     2        0.70      248.0      485.5        -2.4370             NA
+#>     3        1.00      354.0      500.0        -2.0000        -2.0000
+#>  Cum. Cross. Eff.
+#>            0.0000
+#>            0.4711
+#>            0.8011
 #> 
 #> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
 #>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
