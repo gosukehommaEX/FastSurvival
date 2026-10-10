@@ -147,9 +147,9 @@ weights, or of any set that contains these three, is therefore singular,
 and the quasi-Monte-Carlo integral converges slowly. With the default
 `maxpts` the absolute error of the p-value is typically of the order of
 1e-4 rather than `abseps`: in a check with the default weights and a
-one-sided test, two integrations of the same p-values with different
-seeds differed by up to about 1e-3. A larger `maxpts` reduces the error
-at a higher computing cost. In a simulation study, the integration error
+one-sided test, the same p-values computed twice with different seeds
+differed by up to about 1e-3. A larger `maxpts` reduces the error at a
+higher computing cost. In a simulation study, the integration error
 affects only the decisions for p-values within about that error of the
 nominal level.
 
