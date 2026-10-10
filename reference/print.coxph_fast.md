@@ -5,7 +5,7 @@ Formats and prints a `coxph_fast` object similarly to
 hazard ratio, the hazard ratio, the standard error on the log scale, the
 Wald z-statistic, the p-value that follows the `side` recorded in the
 object, and the Wald confidence interval for the hazard ratio. The
-p-value column is labelled `Pr(>|z|)` for a two-sided test and `Pr(<z)`
+p-value column is labeled `Pr(>|z|)` for a two-sided test and `Pr(<z)`
 for a one-sided test, whose p-value is the lower tail in the direction
 of treatment benefit.
 

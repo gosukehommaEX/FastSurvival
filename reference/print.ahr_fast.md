@@ -1,6 +1,6 @@
 # Print an ahr_fast object
 
-The p-value column is labelled `Pr(>|z|)` for a two-sided test and
+The p-value column is labeled `Pr(>|z|)` for a two-sided test and
 `Pr(<z)` for a one-sided test, whose p-value is the lower tail in the
 direction of treatment benefit.
 
