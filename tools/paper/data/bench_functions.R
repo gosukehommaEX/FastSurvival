@@ -20,12 +20,23 @@
 # Results are written to tools/paper/output/bench_functions_agreement.csv,
 # bench_functions_speed.csv, and bench_functions_data.csv.
 #
-# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# Run from the package root after installing FastSurvival 1.2.0 from CRAN
 # (checked by machine_info.R):
 #   source("tools/paper/data/bench_functions.R")
+# or from the article folder with source("scripts/bench_functions.R").
 
 library(FastSurvival)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
 for (p in c("survival", "survRM2", "nph", "nphRCT", "survAH", "simtrial",
             "microbenchmark")) {
@@ -35,8 +46,7 @@ for (p in c("survival", "survRM2", "nph", "nphRCT", "survAH", "simtrial",
 }
 library(survival)
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 # ---- Part 1: agreement with the references ----------------------------------
 agree <- list()
@@ -306,7 +316,7 @@ df_rmw <- data.frame(
                  levels = c("control", "treatment"))
 )
 
-B <- 1000
+B <- paper_n(1000, 20)
 
 write.csv(data.frame(n = length(t_s), events = sum(e_s), tau = tau,
                      replicates = B),

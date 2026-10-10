@@ -12,15 +12,25 @@
 # Results are written to tools/paper/output/check_mc_alpha_summary.csv and
 # check_mc_alpha_rows.csv.
 #
-# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# Run from the package root after installing FastSurvival 1.2.0 from CRAN
 # (checked by machine_info.R):
 #   source("tools/paper/data/check_mc_alpha.R")
+# or from the article folder with source("scripts/check_mc_alpha.R").
 
 library(FastSurvival)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 # Design, looks, and nominal levels as in bench_scaling.R.
 design <- list(n = c(300, 300), a.time = c(0, 12), a.rate = 600 / 12,
@@ -31,7 +41,7 @@ mc_alpha <- stats::pnorm(-gsDesign::gsDesign(
   k = 2, test.type = 1, alpha = 0.025, timing = looks / max(looks),
   sfu = gsDesign::sfLDOF)$upper$bound)
 
-nsim <- 10000
+nsim <- paper_n(10000, 300)
 d <- do.call(simdata_fast, c(list(nsim = nsim, seed = 1), design))
 set.seed(1)
 r1 <- analysis_fast(d, control = 1, event.looks = looks, stat = "maxcombo",
@@ -50,18 +60,23 @@ differ <- which(dec1 != decb)
 
 # Integrate the analyses whose decisions differ again with a smaller
 # tolerance and more points.
-sims <- unique(r1$sim[differ])
-set.seed(3)
-rp <- analysis_fast(d[d$sim %in% sims, ], control = 1, event.looks = looks,
-                    stat = "maxcombo", side = 1, abseps = 1e-7, maxpts = 1e6)
-key  <- paste(r1$sim, r1$look)
-keyp <- paste(rp$sim, rp$look)
+p_precise <- numeric(0)
+if (length(differ) > 0L) {
+  sims <- unique(r1$sim[differ])
+  set.seed(3)
+  rp <- analysis_fast(d[d$sim %in% sims, ], control = 1, event.looks = looks,
+                      stat = "maxcombo", side = 1, abseps = 1e-7,
+                      maxpts = 1e6)
+  key  <- paste(r1$sim, r1$look)
+  keyp <- paste(rp$sim, rp$look)
+  p_precise <- rp$maxcombo.p[match(key[differ], keyp)]
+}
 rows <- data.frame(
   sim = r1$sim[differ], look = r1$look[differ], level = a[differ],
   p_seed1 = r1$maxcombo.p[differ], p_seed2 = r2$maxcombo.p[differ],
   p_mc_alpha = rb$maxcombo.p[differ],
   integrated = rb$maxcombo.p.exact[differ],
-  p_precise = rp$maxcombo.p[match(key[differ], keyp)]
+  p_precise = p_precise
 )
 noise <- abs(r1$maxcombo.p - r2$maxcombo.p)
 summ <- data.frame(

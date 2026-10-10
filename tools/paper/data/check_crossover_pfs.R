@@ -13,15 +13,25 @@
 # Results are written to tools/paper/output/check_crossover_pfs_ts.csv and
 # check_crossover_pfs_fs.csv.
 #
-# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# Run from the package root after installing FastSurvival 1.2.0 from CRAN
 # (checked by machine_info.R):
 #   source("tools/paper/data/check_crossover_pfs.R")
+# or from the article folder with source("scripts/check_crossover_pfs.R").
 
 library(FastSurvival)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 # ---- Design (as in bench_crossover.R) ---------------------------------------
 n_arm    <- 300
@@ -41,8 +51,9 @@ ep <- function(d, k) {
              tte = d[[paste0("e", k, "_tte")]],
              event = d[[paste0("e", k, "_event")]])
 }
-fs <- do.call(rbind, lapply(1:10, function(b) {
-  df <- simdata_fast(nsim = 10000, n = c(n_arm, n_arm),
+fs_batches <- paper_n(10, 2)
+fs <- do.call(rbind, lapply(seq_len(fs_batches), function(b) {
+  df <- simdata_fast(nsim = paper_n(10000, 200), n = c(n_arm, n_arm),
                      a.time = c(0, acc_dur), a.rate = acc_rate,
                      h01.hazard = list(h_ctrl[["h01"]], h_trt[["h01"]]),
                      h02.hazard = list(h_ctrl[["h02"]], h_trt[["h02"]]),
@@ -156,7 +167,8 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
                z = out$chk_z, p = out$chk_p, log_hr = out$chk_log_hr,
                p_os = out$chk_p_os)
   }
-  ts <- rbind(run_ts(FALSE, 2000), run_ts(TRUE, 2000))
+  n_ts <- paper_n(2000, 50)
+  ts <- rbind(run_ts(FALSE, n_ts), run_ts(TRUE, n_ts))
   write.csv(ts, file.path(out_dir, "check_crossover_pfs_ts.csv"),
             row.names = FALSE)
   print(tapply(ts$p <= alpha, ts$crossover, mean))

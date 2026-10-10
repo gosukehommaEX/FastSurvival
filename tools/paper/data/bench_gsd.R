@@ -7,17 +7,29 @@
 # characteristics should agree within Monte Carlo error; the elapsed time per
 # simulated trial is the benchmark. The column distinct_trials counts the
 # distinct calendar times of the final look, to confirm that the simulated
-# trials are distinct.
+# trials are distinct. The time per simulated trial is the median over n_runs
+# runs of the whole FastSurvival study and over batches of batch_size trials
+# for simtrial and TrialSimulator.
 #
 # Run from the package root (FastSurvival.Rproj) after installing FastSurvival
-# 1.1.0 from CRAN (checked by machine_info.R):
+# 1.2.0 from CRAN (checked by machine_info.R):
 #   source("tools/paper/data/bench_gsd.R")
+# or from the article folder with source("scripts/bench_gsd.R").
 
 library(FastSurvival)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 # ---- Design ---------------------------------------------------------------
 n_arm      <- 300                       # per arm
@@ -42,9 +54,10 @@ reject_gs <- function(zmat, bound) {
 
 # One row of operating characteristics: the power and the mean Z statistic and
 # calendar time of each look, each with its Monte Carlo standard error, and the
-# elapsed time.
+# timing. per_trial holds the time per simulated trial of each timed run or
+# batch, whose median is the benchmark; elapsed is the total timed seconds.
 mean_se <- function(x) sd(x) / sqrt(length(x))
-oc_row <- function(package, z, cut1, cut2, elapsed) {
+oc_row <- function(package, z, cut1, cut2, per_trial, elapsed) {
   rej <- reject_gs(z, bnd)
   power <- mean(rej)
   data.frame(
@@ -54,56 +67,78 @@ oc_row <- function(package, z, cut1, cut2, elapsed) {
     mean_z_look2 = mean(z[, 2]), mean_z_look2_se = mean_se(z[, 2]),
     cutoff_look1 = mean(cut1), cutoff_look1_se = mean_se(cut1),
     cutoff_look2 = mean(cut2), cutoff_look2_se = mean_se(cut2),
-    elapsed = elapsed, sec_per_trial = elapsed / nrow(z),
+    elapsed = elapsed, sec_per_trial = median(per_trial),
+    sec_per_trial_min = min(per_trial), sec_per_trial_max = max(per_trial),
+    timing_units = length(per_trial),
     distinct_trials = length(unique(round(cut2, 8)))
   )
 }
 
-nsim_fast <- 10000
-nsim_simtrial <- 2000
-nsim_ts <- 2000
+nsim_fast     <- paper_n(10000, 500)
+nsim_simtrial <- paper_n(5000, 100)
+nsim_ts       <- paper_n(5000, 100)
+# Timing: the whole FastSurvival study is run n_runs times, and simtrial and
+# TrialSimulator are timed in batches of batch_size trials.
+n_runs     <- paper_n(5, 2)
+batch_size <- paper_n(1000, 50)
+stopifnot(nsim_simtrial %% batch_size == 0, nsim_ts %% batch_size == 0)
 
 results <- list()
 
 # ---- FastSurvival -----------------------------------------------------------
-t_fast <- system.time({
-  df <- simdata_fast(nsim = nsim_fast, n = c(n_arm, n_arm),
-                     a.time = c(0, acc_dur), a.rate = acc_rate,
-                     e.median = list(med_ctrl, med_ctrl / hr),
-                     d.hazard = drop_haz, seed = 1)
-  res <- analysis_fast(df, control = 1, event.looks = looks, side = 1)
-})[["elapsed"]]
+# Every run simulates the same trials (seed = 1); only the time differs.
+t_fast <- numeric(n_runs)
+for (r in seq_len(n_runs)) {
+  t_fast[r] <- system.time({
+    df <- simdata_fast(nsim = nsim_fast, n = c(n_arm, n_arm),
+                       a.time = c(0, acc_dur), a.rate = acc_rate,
+                       e.median = list(med_ctrl, med_ctrl / hr),
+                       d.hazard = drop_haz, seed = 1)
+    res <- analysis_fast(df, control = 1, event.looks = looks, side = 1)
+  })[["elapsed"]]
+}
 # logrank.z is negative for benefit; flip to the benefit-positive scale.
 z_fast <- -matrix(res$logrank.z, ncol = length(looks), byrow = TRUE)
 results$FastSurvival <- oc_row("FastSurvival", z_fast,
                                res$cutoff[res$look == 1],
-                               res$cutoff[res$look == 2], t_fast)
+                               res$cutoff[res$look == 2],
+                               t_fast / nsim_fast, sum(t_fast))
 
 # ---- simtrial ---------------------------------------------------------------
 if (requireNamespace("simtrial", quietly = TRUE)) {
   # Run simtrial sequentially, as the other packages, and reproducibly.
   if (requireNamespace("future", quietly = TRUE)) future::plan("sequential")
-  set.seed(1)
-  t_st <- system.time({
-    st <- simtrial::sim_gs_n(
-      n_sim = nsim_simtrial, sample_size = 2 * n_arm,
-      enroll_rate = data.frame(duration = acc_dur, rate = acc_rate),
-      fail_rate = data.frame(stratum = "All", duration = 1000,
-                             fail_rate = log(2) / med_ctrl, hr = hr,
-                             dropout_rate = drop_haz),
-      test = simtrial::wlr,
-      cut = list(ia = simtrial::create_cut(target_event_overall = looks[1]),
-                 fa = simtrial::create_cut(target_event_overall = looks[2])),
-      weight = simtrial::fh(rho = 0, gamma = 0)
-    )
-  })[["elapsed"]]
+  # Batch b is simulated after set.seed(b), and its trials are numbered after
+  # those of the earlier batches.
+  n_bt <- nsim_simtrial / batch_size
+  t_st <- numeric(n_bt)
+  st_b <- vector("list", n_bt)
+  for (b in seq_len(n_bt)) {
+    set.seed(b)
+    t_st[b] <- system.time({
+      st_b[[b]] <- simtrial::sim_gs_n(
+        n_sim = batch_size, sample_size = 2 * n_arm,
+        enroll_rate = data.frame(duration = acc_dur, rate = acc_rate),
+        fail_rate = data.frame(stratum = "All", duration = 1000,
+                               fail_rate = log(2) / med_ctrl, hr = hr,
+                               dropout_rate = drop_haz),
+        test = simtrial::wlr,
+        cut = list(ia = simtrial::create_cut(target_event_overall = looks[1]),
+                   fa = simtrial::create_cut(target_event_overall = looks[2])),
+        weight = simtrial::fh(rho = 0, gamma = 0)
+      )
+    })[["elapsed"]]
+    st_b[[b]]$sim_id <- st_b[[b]]$sim_id + (b - 1) * batch_size
+  }
+  st <- as.data.frame(do.call(rbind, st_b))
   st <- st[order(st$sim_id, st$analysis), ]
   z_st <- matrix(st$z, ncol = length(looks), byrow = TRUE)
   # simtrial reports z = -estimate / se; check that benefit is positive.
   if (mean(z_st[, 2]) < 0) z_st <- -z_st
   results$simtrial <- oc_row("simtrial", z_st,
                              st$cut_date[st$analysis == 1],
-                             st$cut_date[st$analysis == 2], t_st)
+                             st$cut_date[st$analysis == 2],
+                             t_st / batch_size, sum(t_st))
 }
 
 # ---- TrialSimulator ---------------------------------------------------------
@@ -148,20 +183,24 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
     )
     controller(tr, lst)
   }
-  t_ts <- 0
+  t_ts <- numeric(nsim_ts)
   outs <- vector("list", nsim_ts)
   for (i in seq_len(nsim_ts)) {
     ctl <- make_ctl(i)
-    t_ts <- t_ts + system.time(
+    t_ts[i] <- system.time(
       ctl$run(n = 1, plot_event = FALSE, silent = TRUE))[["elapsed"]]
     outs[[i]] <- ctl$get_output()
   }
+  # Mean time per trial in consecutive batches of batch_size trials.
+  per_ts <- as.numeric(tapply(t_ts, ceiling(seq_len(nsim_ts) / batch_size),
+                              mean))
   out <- as.data.frame(dplyr::bind_rows(outs))
   # fitLogrank's z has the sign of the log hazard ratio (negative for benefit).
   z_ts <- -cbind(out$z_ia, out$z_fa)
   results$TrialSimulator <- oc_row("TrialSimulator", z_ts,
                                    out[["milestone_time_<ia>"]],
-                                   out[["milestone_time_<fa>"]], t_ts)
+                                   out[["milestone_time_<fa>"]],
+                                   per_ts, sum(t_ts))
 }
 
 tab <- do.call(rbind, results)

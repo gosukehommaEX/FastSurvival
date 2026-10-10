@@ -11,16 +11,26 @@
 # cluster, and checks that the combined results are identical.
 # Results are written to tools/paper/output/.
 #
-# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# Run from the package root after installing FastSurvival 1.2.0 from CRAN
 # (checked by machine_info.R):
 #   source("tools/paper/data/bench_scaling.R")
+# or from the article folder with source("scripts/bench_scaling.R").
 
 library(FastSurvival)
 library(parallel)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 design <- list(n = c(300, 300), a.time = c(0, 12), a.rate = 600 / 12,
                e.hazard = list(c(0.06, 0.06), c(0.06, 0.035)),
@@ -45,15 +55,26 @@ run_once <- function(nsim, seed, stream = NULL) {
 # loop) and the max-combo test (whose four-weight p-value is a multivariate
 # normal integral evaluated by mvtnorm in R, one call per simulated trial and
 # look) are timed separately.
-grid <- c(1000, 2500, 5000, 10000)
+grid   <- paper_n(c(1000, 2500, 5000, 10000), c(200, 400))
+n_runs <- paper_n(5, 2)
+# The first calls of a session are slower, so a small study is run first and
+# discarded. The generation and the deterministic statistics take seconds and
+# are timed n_runs times (median); each max-combo run is timed once.
+invisible(run_once(200, seed = 99))
 part1 <- do.call(rbind, lapply(grid, function(ns) {
-  t_gen <- system.time(
-    d <- do.call(simdata_fast, c(list(nsim = ns, seed = 1), design))
-  )[["elapsed"]]
-  t_det <- system.time(
-    analysis_fast(d, control = 1, event.looks = looks,
-                  stat = c("logrank", "rmst"), tau = 18, side = 1)
-  )[["elapsed"]]
+  t_gen <- numeric(n_runs)
+  for (r in seq_len(n_runs)) {
+    t_gen[r] <- system.time(
+      d <- do.call(simdata_fast, c(list(nsim = ns, seed = 1), design))
+    )[["elapsed"]]
+  }
+  t_det <- numeric(n_runs)
+  for (r in seq_len(n_runs)) {
+    t_det[r] <- system.time(
+      analysis_fast(d, control = 1, event.looks = looks,
+                    stat = c("logrank", "rmst"), tau = 18, side = 1)
+    )[["elapsed"]]
+  }
   set.seed(1)
   t_mc <- system.time(
     r_mc <- analysis_fast(d, control = 1, event.looks = looks,
@@ -67,7 +88,8 @@ part1 <- do.call(rbind, lapply(grid, function(ns) {
   a_row <- mc_alpha[r_mc$look]
   data.frame(nsim = ns, rows = nrow(d),
              data_mb = as.numeric(object.size(d)) / 2^20,
-             generate_sec = t_gen, logrank_rmst_sec = t_det,
+             generate_sec = median(t_gen),
+             logrank_rmst_sec = median(t_det), timing_runs = n_runs,
              maxcombo_sec = t_mc, maxcombo_mc_alpha_sec = t_mb,
              share_integrated = mean(r_mb$maxcombo.p.exact, na.rm = TRUE),
              decisions_differ = sum((r_mb$maxcombo.p <= a_row) !=
@@ -82,7 +104,7 @@ write.csv(part1, file.path(out_dir, "bench_scaling.csv"), row.names = FALSE)
 # GenzBretz integration of the max-combo p-value, so that every column is
 # reproducible whatever worker runs the batch.
 n_batch   <- 8
-per_batch <- 2500
+per_batch <- paper_n(2500, 100)
 run_batch <- function(b) {
   set.seed(b)
   r <- run_once(per_batch, seed = 2026, stream = b)

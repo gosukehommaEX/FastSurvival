@@ -10,17 +10,29 @@
 # PFS power, the proportion of trials with crossover, the OS power, and the
 # elapsed time, and writes them to tools/paper/output/bench_crossover.csv.
 # The column distinct_trials counts the distinct calendar times of the PFS
-# analysis, to confirm that the simulated trials are distinct.
+# analysis, to confirm that the simulated trials are distinct. The time per
+# simulated trial is the median over n_runs runs of the whole FastSurvival
+# study and over batches of batch_size trials for TrialSimulator.
 #
-# Run from the package root after installing FastSurvival 1.1.0 from CRAN
+# Run from the package root after installing FastSurvival 1.2.0 from CRAN
 # (checked by machine_info.R):
 #   source("tools/paper/data/bench_crossover.R")
+# or from the article folder with source("scripts/bench_crossover.R").
 
 library(FastSurvival)
-source(file.path("tools", "paper", "data", "machine_info.R"))
+# The scripts are in tools/paper/data of the package or in scripts of the
+# article folder; machine_info.R sets the output folder paper_out_dir.
+paper_script_dir <- if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "data")
+} else if (file.exists(file.path("scripts", "machine_info.R"))) {
+  "scripts"
+} else {
+  stop("Run the script from the package root or from the article folder.",
+       call. = FALSE)
+}
+source(file.path(paper_script_dir, "machine_info.R"))
 
-out_dir <- file.path("tools", "paper", "output")
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir <- paper_out_dir
 
 # ---- Design ---------------------------------------------------------------
 n_arm    <- 300
@@ -34,12 +46,18 @@ d_os     <- 350
 aft      <- 1.3
 alpha    <- 0.025
 
-nsim_fast <- 10000
-nsim_ts   <- 2000
+nsim_fast <- paper_n(10000, 500)
+nsim_ts   <- paper_n(5000, 100)
+# Timing: the whole FastSurvival study is run n_runs times, and
+# TrialSimulator is timed in batches of batch_size trials.
+n_runs     <- paper_n(5, 2)
+batch_size <- paper_n(1000, 50)
+stopifnot(nsim_ts %% batch_size == 0)
 
 # One row of operating characteristics: the PFS and OS power and the mean
 # calendar time of the two analyses, each with its Monte Carlo standard error
-# over the simulated trials in which it is available, and the elapsed time.
+# over the simulated trials in which it is available, and the timing
+# (per_trial and elapsed as in bench_gsd.R).
 prop_se <- function(x) {
   x <- x[!is.na(x)]
   sqrt(mean(x) * (1 - mean(x)) / length(x))
@@ -48,7 +66,8 @@ mean_se <- function(x) {
   x <- x[!is.na(x)]
   sd(x) / sqrt(length(x))
 }
-oc_row <- function(package, nsim, pfs_rej, os_rej, pfs_cut, os_cut, elapsed) {
+oc_row <- function(package, nsim, pfs_rej, os_rej, pfs_cut, os_cut,
+                   per_trial, elapsed) {
   data.frame(
     package = package, nsim = nsim,
     pfs_power = mean(pfs_rej, na.rm = TRUE), pfs_power_se = prop_se(pfs_rej),
@@ -56,7 +75,9 @@ oc_row <- function(package, nsim, pfs_rej, os_rej, pfs_cut, os_cut, elapsed) {
     os_analyzed = sum(!is.na(os_rej)),
     pfs_month = mean(pfs_cut, na.rm = TRUE), pfs_month_se = mean_se(pfs_cut),
     os_month = mean(os_cut, na.rm = TRUE), os_month_se = mean_se(os_cut),
-    elapsed = elapsed, sec_per_trial = elapsed / nsim,
+    elapsed = elapsed, sec_per_trial = median(per_trial),
+    sec_per_trial_min = min(per_trial), sec_per_trial_max = max(per_trial),
+    timing_units = length(per_trial),
     distinct_trials = length(unique(round(pfs_cut[!is.na(pfs_cut)], 8)))
   )
 }
@@ -69,26 +90,30 @@ ep <- function(d, k) {
              tte = d[[paste0("e", k, "_tte")]],
              event = d[[paste0("e", k, "_event")]])
 }
-t_fast <- system.time({
-  df <- simdata_fast(nsim = nsim_fast, n = c(n_arm, n_arm),
-                     a.time = c(0, acc_dur), a.rate = acc_rate,
-                     h01.hazard = list(h_ctrl[["h01"]], h_trt[["h01"]]),
-                     h02.hazard = list(h_ctrl[["h02"]], h_trt[["h02"]]),
-                     h12.hazard = list(h_ctrl[["h12"]], h_trt[["h12"]]),
-                     d.hazard = drop_haz, seed = 1)
-  pc  <- cutoff_fast(df, event.looks = d_pfs, tte.col = "e1_tte",
-                     event.col = "e1_event")
-  pr  <- analysis_fast(ep(df, 1), control = 1, cutoff.looks = pc, side = 1)
-  pos <- (pr$reached & pr$logrank.p <= alpha) %in% TRUE
-  sw  <- switch_fast(df, group = 1, when = "later", cutoff = pc, sims = pos,
-                     aft.factor = aft)
-  oc  <- cutoff_fast(sw, event.looks = d_os, tte.col = "e2_tte",
-                     event.col = "e2_event")
-  orr <- analysis_fast(ep(sw, 2), control = 1, cutoff.looks = oc, side = 1)
-})[["elapsed"]]
+# Every run simulates the same trials (seed = 1); only the time differs.
+t_fast <- numeric(n_runs)
+for (r in seq_len(n_runs)) {
+  t_fast[r] <- system.time({
+    df <- simdata_fast(nsim = nsim_fast, n = c(n_arm, n_arm),
+                       a.time = c(0, acc_dur), a.rate = acc_rate,
+                       h01.hazard = list(h_ctrl[["h01"]], h_trt[["h01"]]),
+                       h02.hazard = list(h_ctrl[["h02"]], h_trt[["h02"]]),
+                       h12.hazard = list(h_ctrl[["h12"]], h_trt[["h12"]]),
+                       d.hazard = drop_haz, seed = 1)
+    pc  <- cutoff_fast(df, event.looks = d_pfs, tte.col = "e1_tte",
+                       event.col = "e1_event")
+    pr  <- analysis_fast(ep(df, 1), control = 1, cutoff.looks = pc, side = 1)
+    pos <- (pr$reached & pr$logrank.p <= alpha) %in% TRUE
+    sw  <- switch_fast(df, group = 1, when = "later", cutoff = pc, sims = pos,
+                       aft.factor = aft)
+    oc  <- cutoff_fast(sw, event.looks = d_os, tte.col = "e2_tte",
+                       event.col = "e2_event")
+    orr <- analysis_fast(ep(sw, 2), control = 1, cutoff.looks = oc, side = 1)
+  })[["elapsed"]]
+}
 results$FastSurvival <- oc_row("FastSurvival", nsim_fast, pos,
                                orr$logrank.p <= alpha, pc[, 1], oc[, 1],
-                               t_fast)
+                               t_fast / nsim_fast, sum(t_fast))
 
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
@@ -157,19 +182,23 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
     )
     controller(tr, lst)
   }
-  t_ts <- 0
+  t_ts <- numeric(nsim_ts)
   outs <- vector("list", nsim_ts)
   for (i in seq_len(nsim_ts)) {
     ctl <- make_ctl(i)
-    t_ts <- t_ts + system.time(
+    t_ts[i] <- system.time(
       ctl$run(n = 1, plot_event = FALSE, silent = TRUE))[["elapsed"]]
     outs[[i]] <- ctl$get_output()
   }
+  # Mean time per trial in consecutive batches of batch_size trials.
+  per_ts <- as.numeric(tapply(t_ts, ceiling(seq_len(nsim_ts) / batch_size),
+                              mean))
   out <- as.data.frame(dplyr::bind_rows(outs))
   results$TrialSimulator <- oc_row("TrialSimulator", nsim_ts,
                                    out$p_pfs <= alpha, out$p_os <= alpha,
                                    out[["milestone_time_<pfs>"]],
-                                   out[["milestone_time_<os>"]], t_ts)
+                                   out[["milestone_time_<os>"]],
+                                   per_ts, sum(t_ts))
 }
 
 tab <- do.call(rbind, results)

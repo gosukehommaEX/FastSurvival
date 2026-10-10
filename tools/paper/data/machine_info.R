@@ -2,11 +2,14 @@
 #
 # It stops unless the installed FastSurvival is the version described in the
 # article, and writes the computing environment (CPU, cores, memory, operating
-# system, R and package versions) to tools/paper/output/machine_info.csv for
+# system, R and package versions) to machine_info.csv in the output folder for
 # the computational details of the article. Run the scripts from the package
-# root (FastSurvival.Rproj).
+# root (FastSurvival.Rproj), where they write to tools/paper/output, or from
+# the article folder of the supplementary material, where they write to data.
+# With options(paper.smoke = TRUE) the scripts run with few simulated trials
+# and write to a temporary folder, as a quick check before a full run.
 
-paper_fs_version <- "1.1.0"
+paper_fs_version <- "1.2.0"
 
 if (packageVersion("FastSurvival") != paper_fs_version) {
   stop("The paper scripts expect FastSurvival ", paper_fs_version,
@@ -14,6 +17,21 @@ if (packageVersion("FastSurvival") != paper_fs_version) {
        "Install it from CRAN with install.packages(\"FastSurvival\", ",
        "type = \"source\") and restart R.", call. = FALSE)
 }
+
+paper_smoke <- isTRUE(getOption("paper.smoke"))
+paper_out_dir <- if (paper_smoke) {
+  file.path(tempdir(), "paper_smoke")
+} else if (dir.exists(file.path("tools", "paper", "data"))) {
+  file.path("tools", "paper", "output")
+} else {
+  "data"
+}
+dir.create(paper_out_dir, showWarnings = FALSE, recursive = TRUE)
+if (paper_smoke) message("Smoke test: results are written to ", paper_out_dir)
+
+# Number of simulated trials (or of timed runs): full in a full run, smoke in a
+# smoke test.
+paper_n <- function(full, smoke) if (paper_smoke) smoke else full
 
 local({
   # First non-empty line of a system command, or NA if it fails.
@@ -68,7 +86,6 @@ local({
               round(mem / 2^30, 1), ver),
     stringsAsFactors = FALSE
   )
-  out <- file.path("tools", "paper", "output")
-  dir.create(out, showWarnings = FALSE, recursive = TRUE)
-  utils::write.csv(info, file.path(out, "machine_info.csv"), row.names = FALSE)
+  utils::write.csv(info, file.path(paper_out_dir, "machine_info.csv"),
+                   row.names = FALSE)
 })
