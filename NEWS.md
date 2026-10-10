@@ -13,7 +13,7 @@ article on the package. It adds no new features.
   boundaries and information fractions with the wrong looks or failed; it is
   now also printed as an ordinary data frame, and the report is printed only
   when every block keeps all its looks in their original order. The boundary
-  columns are labelled `Efficacy Bound` and `Futility Bound`, because the
+  columns are labeled `Efficacy Bound` and `Futility Bound`, because the
   statistic need not be a Z-score.
 
 * The median survival time of `medsurv_fast()` and of the `"medsurv"`

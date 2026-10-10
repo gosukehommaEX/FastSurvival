@@ -52,7 +52,7 @@ with a median of 12.9 months in the tisotumab vedotin group and 9.0 months in
 the chemotherapy group (a hazard ratio of about 0.70), accrual over 23 months,
 and a 5% annual dropout rate in each group, the assumptions in Section 9.2 of
 the trial protocol, which is available with the full text of Vergote et al.
-(2024) at NEJM.org.
+(2024).
 
 # Simulating the trial
 

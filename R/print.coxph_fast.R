@@ -6,7 +6,7 @@
 #' log hazard ratio, the hazard ratio, the standard error on the log scale,
 #' the Wald z-statistic, the p-value that follows the \code{side} recorded in
 #' the object, and the Wald confidence interval for the hazard ratio.
-#' The p-value column is labelled \code{Pr(>|z|)} for a two-sided test and
+#' The p-value column is labeled \code{Pr(>|z|)} for a two-sided test and
 #' \code{Pr(<z)} for a one-sided test, whose p-value is the lower tail in the
 #' direction of treatment benefit.
 #'

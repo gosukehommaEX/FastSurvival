@@ -25,7 +25,7 @@ control label and the inference settings. The body shows the per-group
 median survival with its confidence interval, followed, for a two-group
 object, by the difference contrast (treatment minus control) with a
 confidence interval, the test statistic, and the p-value.
-The p-value column is labelled \code{Pr(>|z|)} for a two-sided test and
+The p-value column is labeled \code{Pr(>|z|)} for a two-sided test and
 \code{Pr(>z)} for a one-sided test, whose p-value is the upper tail in the
 direction of treatment benefit.
 }

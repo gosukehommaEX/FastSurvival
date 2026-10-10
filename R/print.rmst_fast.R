@@ -8,7 +8,7 @@
 #' difference (treatment minus control) and ratio (treatment over control)
 #' contrasts, each with a Wald z-statistic and a p-value that follows the
 #' \code{side} recorded in the object.
-#' The p-value column is labelled \code{Pr(>|z|)} for a two-sided test and
+#' The p-value column is labeled \code{Pr(>|z|)} for a two-sided test and
 #' \code{Pr(>z)} for a one-sided test, whose p-value is the upper tail in the
 #' direction of treatment benefit.
 #'
