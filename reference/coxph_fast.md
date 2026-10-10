@@ -184,7 +184,7 @@ method formats the result similarly to `summary(coxph(...))`.
 ## References
 
 Cox, D. R. (1972). Regression models and life-tables. *Journal of the
-Royal Statistical Society. Series B (Methodological)*, *34*(2), 187-220.
+Royal Statistical Society. Series B (Methodological)*, *34*(2), 187-202.
 
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. *Statistics in
@@ -276,8 +276,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min       lq      mean   median       uq      max neval cld
-#>  coxph_fast   36.104   43.024   59.4287   57.610   64.801 4832.626  1000  a 
-#>       coxph 1031.068 1067.678 1115.2049 1081.544 1101.528 6888.053  1000   b
+#>        expr      min        lq     mean    median       uq      max neval cld
+#>  coxph_fast   60.022   70.0905   80.707   85.9505   88.395  221.203  1000  a 
+#>       coxph 1487.547 1518.5000 1569.307 1535.3815 1552.719 6111.019  1000   b
 # }
 ```

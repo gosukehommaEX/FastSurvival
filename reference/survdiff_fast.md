@@ -196,7 +196,7 @@ expected event counts for both the control and treatment groups.
 ## References
 
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
-arbitrarily singly-censored samples. *Biometrika*, *52*, 203-223.
+arbitrarily singly-censored samples. *Biometrika*, *52*, 203-224.
 
 Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. *Cancer Chemotherapy Reports*,
@@ -341,8 +341,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min       lq      mean  median      uq      max neval cld
-#>  survdiff_fast  35.362  40.8105  63.11954  51.191  55.752 8532.180  1000  a 
-#>       survdiff 612.068 654.9660 692.23910 667.495 685.256 6160.964  1000   b
+#>           expr     min       lq       mean   median       uq      max neval cld
+#>  survdiff_fast  55.264  63.9090   78.20224  76.4530   79.388 4874.691  1000  a 
+#>       survdiff 938.342 978.9925 1019.97985 988.1395 1003.619 7838.594  1000   b
 # }
 ```

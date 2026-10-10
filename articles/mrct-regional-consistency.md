@@ -19,15 +19,16 @@ conditional on the overall test being significant.
 
 Closed-form formulas for these probabilities exist for continuous
 endpoints and have been extended to other endpoint types under a normal
-approximation of the treatment effect (Teng et al., 2018; see Homma,
-2024, for binary outcomes). Those formulas are convenient but they
-assume a fixed design, a single final analysis, and balanced,
-simultaneous accrual across regions. Real oncology MRCTs routinely break
-those assumptions: the design is group-sequential with interim looks,
-and one region (here, Japan) starts enrolling later than the others, so
-its information accrues on a different calendar. When the assumptions
-behind the closed-form formulas no longer hold, simulation is the
-natural way to obtain the consistency probabilities.
+approximation of the treatment effect (Teng et al., 2018), although for
+binary outcomes Homma (2024) showed by simulation that these formulas
+are inaccurate and gave alternative formulas. Closed-form formulas are
+convenient but they assume a fixed design, a single final analysis, and
+balanced, simultaneous accrual across regions. Real oncology MRCTs
+routinely break those assumptions: the design is group-sequential with
+interim looks, and one region (here, Japan) starts enrolling later than
+the others, so its information accrues on a different calendar. When the
+assumptions behind the closed-form formulas no longer hold, simulation
+is the natural way to obtain the consistency probabilities.
 
 FastSurvival does not provide a regional-consistency function, and it is
 not meant to: consistency criteria are outside its scope. What it does

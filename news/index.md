@@ -54,6 +54,11 @@ article on the package. It adds no new features.
   FastSurvival as one to two orders of magnitude, because the ratio
   varies between runs.
 
+- The page ranges of Cox (1972) and Gehan (1965) follow the publishers’
+  records (187-202 and 203-224), and the mrct-regional-consistency
+  vignette states the result of Homma (2024) for binary outcomes more
+  precisely.
+
 ### Tests
 
 - The one-sided max-combo p-values with three and four weights, whose
