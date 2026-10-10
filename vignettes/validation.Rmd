@@ -567,7 +567,7 @@ Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and Survival
 Analysis*. New York: John Wiley & Sons.
  
 Cox, D. R. (1972). Regression models and life-tables. *Journal of the Royal
-Statistical Society. Series B (Methodological)*, 34(2), 187-220.
+Statistical Society. Series B (Methodological)*, 34(2), 187-202.
  
 Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
 estimator. *Manuscript under review.*

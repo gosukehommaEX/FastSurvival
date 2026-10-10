@@ -220,7 +220,7 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
 }
 \references{
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
-singly-censored samples. \emph{Biometrika}, \emph{52}, 203-223.
+singly-censored samples. \emph{Biometrika}, \emph{52}, 203-224.
 
 Mantel, N. (1966). Evaluation of survival data and two new rank order
 statistics arising in its consideration. \emph{Cancer Chemotherapy

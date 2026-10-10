@@ -187,7 +187,7 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
 \references{
 Cox, D. R. (1972). Regression models and life-tables. \emph{Journal of the
 Royal Statistical Society. Series B (Methodological)}, \emph{34}(2),
-187-220.
+187-202.
 
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two simple
 hazard ratio estimators based on the logrank test. \emph{Statistics in

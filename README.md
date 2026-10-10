@@ -465,7 +465,7 @@ statistics arising in its consideration. *Cancer Chemotherapy Reports*,
 50(3), 163-170.
  
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
-singly-censored samples. *Biometrika*, 52, 203-223.
+singly-censored samples. *Biometrika*, 52, 203-224.
  
 Tarone, R. E., & Ware, J. (1977). On distribution-free tests for equality of
 survival distributions. *Biometrika*, 64, 156-160.
@@ -485,7 +485,7 @@ Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, 38(20), 3782-3790.
  
 Cox, D. R. (1972). Regression models and life-tables. *Journal of the Royal
-Statistical Society. Series B (Methodological)*, 34(2), 187-220.
+Statistical Society. Series B (Methodological)*, 34(2), 187-202.
  
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two simple
 hazard ratio estimators based on the logrank test. *Statistics in Medicine*,
