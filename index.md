@@ -189,13 +189,13 @@ modestly-weighted, Gehan-Breslow, and Tarone-Ware weighted tests, as
 well as stratified and stratified-weighted variants, all sharing the
 same single-scan backend.
 
-**coxph_fast** implements the Pike-Halley Estimator proposed by Homma
-(2025), a closed-form approximation to the Cox partial likelihood
-maximizer. The estimator anchors at the Pike closed-form estimate, the
-ratio of the observed-to-expected event ratios of the two groups from
-the log-rank computation (Berry, Kitchin, and Mock, 1991), and applies a
-single analytic Halley correction to the Cox score. Because the Halley
-step converges cubically, the residual error relative to the Cox maximum
+**coxph_fast** implements the Pike-Halley Estimator, a closed-form
+approximation to the Cox partial likelihood maximizer. The estimator
+anchors at the Pike closed-form estimate, the ratio of the
+observed-to-expected event ratios of the two groups from the log-rank
+computation (Berry, Kitchin, and Mock, 1991), and applies a single
+analytic Halley correction to the Cox score. Because the Halley step
+converges cubically, the residual error relative to the Cox maximum
 likelihood estimate is of the order of the cube of the error of the Pike
 anchor. It is negligible near the null hypothesis. At a fixed hazard
 ratio away from 1 the Pike anchor keeps a bias that does not vanish with
@@ -530,9 +530,6 @@ Royal Statistical Society. Series B (Methodological)*, 34(2), 187-202.
 Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. *Statistics in
 Medicine*, 10(5), 749-755.
-
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. *Manuscript under review.*
 
 Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of

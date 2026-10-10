@@ -1,10 +1,10 @@
 # Fast Closed-Form Hazard Ratio Estimation via the Pike-Halley Estimator
 
 Estimates the hazard ratio for a two-group parallel trial using the
-Pike-Halley Estimator (Homma, 2025), a pure closed-form approximation to
-the Cox partial likelihood maximizer. The function returns the point
-estimate, its standard error on the log scale, and a Wald-type
-confidence interval, using output names consistent with
+Pike-Halley Estimator, a pure closed-form approximation to the Cox
+partial likelihood maximizer. The function returns the point estimate,
+its standard error on the log scale, and a Wald-type confidence
+interval, using output names consistent with
 `summary(survival::coxph(...))`. The C++ backend accepts pooled sorted
 vectors directly, performing group splitting and all accumulation in a
 single C++ pass without intermediate R-level vector copies.
@@ -190,9 +190,6 @@ Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
 simple hazard ratio estimators based on the logrank test. *Statistics in
 Medicine*, *10*(5), 749-755.
 
-Homma, G. (2025). One step from Pike to Cox: a closed-form hazard ratio
-estimator. Manuscript under review.
-
 ## See also
 
 [`coxph`](https://rdrr.io/pkg/survival/man/coxph.html) for the standard
@@ -276,8 +273,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min        lq     mean    median       uq      max neval cld
-#>  coxph_fast   60.022   70.0905   80.707   85.9505   88.395  221.203  1000  a 
-#>       coxph 1487.547 1518.5000 1569.307 1535.3815 1552.719 6111.019  1000   b
+#>        expr      min       lq      mean   median        uq      max neval cld
+#>  coxph_fast   59.671   68.463   84.7206   84.713   87.7235 5020.292  1000  a 
+#>       coxph 1479.142 1515.820 1566.0117 1532.827 1552.0425 6845.441  1000   b
 # }
 ```

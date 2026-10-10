@@ -43,7 +43,8 @@ spending function with an O’Brien-Fleming boundary. For planning we take
 an exponential overall survival with a median of 12.9 months in the
 tisotumab vedotin group and 9.0 months in the chemotherapy group (a
 hazard ratio of about 0.70), accrual over 23 months, and a 5% annual
-dropout rate in each group.
+dropout rate in each group, the assumptions of the trial protocol in the
+supplementary appendix of Vergote et al. (2024).
 
 ## Simulating the trial
 

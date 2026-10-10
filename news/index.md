@@ -55,9 +55,15 @@ article on the package. It adds no new features.
   varies between runs.
 
 - The page ranges of Cox (1972) and Gehan (1965) follow the publishers’
-  records (187-202 and 203-224), and the mrct-regional-consistency
+  records (187-202 and 203-224), and the `mrct-regional-consistency`
   vignette states the result of Homma (2024) for binary outcomes more
-  precisely.
+  precisely. The `group-sequential-design` vignette attributes its
+  planning assumptions to the trial protocol.
+
+- The reference to an unpublished manuscript on the Pike-Halley
+  Estimator is removed. The documentation of
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+  describes the computation.
 
 ### Tests
 
@@ -71,6 +77,11 @@ article on the package. It adds no new features.
   tests of
   [`print.simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md)
   are moved to their own file.
+
+- A test checks that the switching proportion, the hazard after
+  switching, and the dropout hazard of the illness-death model of
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  can differ by subgroup.
 
 ## FastSurvival 1.1.0
 
