@@ -255,8 +255,9 @@ article on the package. It adds no new features.
   protocol, and states the type I error for overall survival;
   `correlated-pfs-os-gsd` requires a median overall survival longer than
   the median progression-free survival; `investigate-freidlin-and-korn`
-  takes its scenario from Fig. A1 of Freidlin and Korn (2019); and the
-  computing times are described as they were measured.
+  attributes the parameters of its strong null scenario to Fig. A1 of
+  Freidlin and Korn (2019), which the `simtrial` documentation also
+  uses; and the computing times are described as they were measured.
 
 - Smaller corrections: the variances of the two group shares of
   [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)

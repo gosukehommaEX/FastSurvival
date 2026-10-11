@@ -124,12 +124,15 @@ different order, is printed as an ordinary data frame, because the
 boundaries and the information fractions refer to all the looks of the
 design. A selection of columns keeps the class but not the boundary
 settings, and is printed as an ordinary data frame, as is a selection
-without any look row. Results combined by <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> keep the attributes
-of the first result only, which include a copy of its rows. The report is
-therefore printed only when the rows of every block are those of the first
-result; rows from another result, such as a population summarized with
-other boundaries, make the whole object print as an ordinary data frame,
-even when the block has the same name in both results.</p>
+without any look row. Only a selection by <code>x[i, ]</code> keeps the boundary
+settings; a selection by <code><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset()</a></code> or by <code>x[i, j]</code>, even with all
+the columns, is printed as an ordinary data frame. Results combined by
+<code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> keep the attributes of the first result only, which include a
+copy of its rows. The report is therefore printed only when the rows of
+every block equal those of the first result; rows that differ, such as
+those of a population summarized with other boundaries, make the whole
+object print as an ordinary data frame, even when the block has the same
+name in both results.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
