@@ -50,12 +50,15 @@ different order, is printed as an ordinary data frame, because the
 boundaries and the information fractions refer to all the looks of the
 design. A selection of columns keeps the class but not the boundary
 settings, and is printed as an ordinary data frame, as is a selection
-without any look row. Results combined by \code{rbind()} keep the attributes
-of the first result only, which include a copy of its rows. The report is
-therefore printed only when the rows of every block are those of the first
-result; rows from another result, such as a population summarized with
-other boundaries, make the whole object print as an ordinary data frame,
-even when the block has the same name in both results.
+without any look row. Only a selection by \code{x[i, ]} keeps the boundary
+settings; a selection by \code{subset()} or by \code{x[i, j]}, even with all
+the columns, is printed as an ordinary data frame. Results combined by
+\code{rbind()} keep the attributes of the first result only, which include a
+copy of its rows. The report is therefore printed only when the rows of
+every block equal those of the first result; rows that differ, such as
+those of a population summarized with other boundaries, make the whole
+object print as an ordinary data frame, even when the block has the same
+name in both results.
 }
 \seealso{
 \code{\link{simsummary_fast}}.

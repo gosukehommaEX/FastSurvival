@@ -134,6 +134,8 @@ test_that("print.simsummary_fast checks the rows of each block against the resul
   combo <- rbind(resA[resA$population == "overall", ],
                  resB[resB$population == "subgroup", ])
   expect_false(is_report(combo))
+  expect_true(any(grepl("cum.reject", utils::capture.output(print(combo)),
+                        fixed = TRUE)))
   # One population of either result stays a report with its own boundaries.
   expect_true(is_report(resB[resB$population == "subgroup", ]))
   out3 <- utils::capture.output(print(resA[resA$population == "subgroup", ]))
@@ -163,4 +165,23 @@ test_that("print.simsummary_fast prints arm results and old attributes as report
   bd$rows <- NULL
   attr(old, "boundary") <- bd
   expect_output(print(old), "Group-Sequential Operating Characteristics")
+})
+
+test_that("print.simsummary_fast checks the overall rows against the result", {
+  # z1 and z2 stop different trials at look 1 with the same probabilities, so
+  # the look rows agree and only the overall rows differ.
+  df <- data.frame(sim = rep(1:4, each = 2), look = rep(1:2, 4),
+                   z1 = c(-3.0, -1.0, -1.0, -1.0, -1.0, -2.5, 0.5, 0.5),
+                   z2 = c(-1.0, -1.0, -3.0, -1.0, -1.0, -2.5, 0.5, 0.5),
+                   n.event = rep(c(50, 100), 4),
+                   cutoff = c(10, 24, 14, 24, 12, 24, 12, 24))
+  r1 <- simsummary_fast(df, eff.col = "z1", efficacy = c(-2.8, -1.96))
+  r2 <- simsummary_fast(df, eff.col = "z2", efficacy = c(-2.8, -1.96))
+  expect_equal(r1$cum.reject, r2$cum.reject)
+  expect_equal(r1$cutoff.mean, c(12, 24, 20.5))
+  expect_equal(r2$cutoff.mean, c(12, 24, 21.5))
+  out <- utils::capture.output(
+    print(rbind(r1[r1$look != "overall", ], r2[r2$look == "overall", ])))
+  expect_false(any(grepl("Group-Sequential", out, fixed = TRUE)))
+  expect_true(any(grepl("cum.reject", out, fixed = TRUE)))
 })
