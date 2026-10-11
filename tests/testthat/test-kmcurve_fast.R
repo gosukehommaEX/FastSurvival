@@ -172,7 +172,8 @@ test_that("plot and print methods run for both single and two-group objects", {
          conf.type = "log-log", ahr_line = TRUE),
     NA)
   expect_error(plot(fit1, rmst = TRUE, tau = 18, conf.type = "plain"), NA)
-  expect_warning(plot(fit1, hr = TRUE))   # hazard ratio ignored for one group
+  # The hazard ratio is ignored for one group.
+  expect_warning(plot(fit1, hr = TRUE), "requires two groups")
 })
 
 test_that("kmcurve_fast: time and event are validated", {

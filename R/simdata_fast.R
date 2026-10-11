@@ -468,6 +468,8 @@ simdata_fast <- function(nsim       = 1000,
         abs(stream - round(stream)) > 1e-8) {
       stop("'stream' must be a single non-negative whole number")
     }
+    # dqrng would truncate a value such as 100 * 0.29 to the integer below.
+    stream <- round(stream)
   }
   if (!is.null(seed)) dqrng::dqset.seed(seed, stream = stream)
 
@@ -751,6 +753,9 @@ simdata_fast <- function(nsim       = 1000,
 
   n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
   check_output_size(nsim, n_grp_int)
+  # As for 'n', a whole number up to rounding error (such as 100 * 0.29) is
+  # rounded rather than truncated.
+  nsim <- round(nsim)
 
   # Deterministic per-interval accrual counts for each group. Each group's
   # counts sum to its size exactly (largest-remainder rounding), and the kernel
@@ -1082,6 +1087,9 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
   n_groups  <- if (is_two_group) 2L else 1L
   n_grp_int <- if (n_groups == 1L) as.integer(n_grp[1L]) else as.integer(n_grp[1:2])
   check_output_size(nsim, n_grp_int)
+  # As for 'n', a whole number up to rounding error (such as 100 * 0.29) is
+  # rounded rather than truncated.
+  nsim <- round(nsim)
   g2        <- (n_groups == 2L)
 
   # As with subgroups (simdata_fast_id_sub()), a list is per group and must
@@ -1094,7 +1102,8 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
     for (nm in names(spec_args)) {
       x <- spec_args[[nm]]
       if (is.list(x) && length(x) != 2L) {
-        stop("For a two-group simulation, '", nm, "' must be a single ",
+        stop("For a two-group simulation, ", spec_arg_label(nm),
+             " must be a single ",
              "(shared) specification or a list of length 2 (one element per ",
              "group); it is a list of length ", length(x), ".")
       }

@@ -259,7 +259,8 @@ test_that("input validation catches bad arguments", {
   bad_status[1] <- 2L
   expect_error(ahr_fast(obs, bad_status, group), "must be 0 or 1")
   # a factor event indicator
-  expect_error(ahr_fast(obs, factor(status), group, control = 0), "factor")
+  expect_error(ahr_fast(obs, factor(status), group, control = 0),
+               "numeric or logical")
   # invalid confidence level
   expect_error(ahr_fast(obs, status, group, conf.level = 1.5), "conf.level")
   # non-positive null.ahr

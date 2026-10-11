@@ -32,7 +32,10 @@
 #' boundaries and the information fractions refer to all the looks of the
 #' design. A selection of columns keeps the class but not the boundary
 #' settings, and is printed as an ordinary data frame, as is a selection
-#' without any look row.
+#' without any look row. Results combined by \code{rbind()} keep the attributes
+#' of the first result only, so a block that the first result does not have
+#' (for example a population summarized with other boundaries) makes the whole
+#' object print as an ordinary data frame.
 #'
 #' @param x An object of class \code{"simsummary_fast"} from
 #'   \code{\link{simsummary_fast}}.
@@ -67,7 +70,18 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
 
   # The boundaries are stored per look of the design, so the report is printed
   # only when every block keeps all the looks in their original order; any
-  # other selection of rows is printed as an ordinary data frame.
+  # other selection of rows is printed as an ordinary data frame. So is an
+  # object with a block that the result did not create, such as one added by
+  # rbind() from another result, whose boundaries are not stored.
+  block_known <- function(key) {
+    if (is.null(bd$blocks)) return(TRUE)
+    if (!all(names(key) %in% names(bd$blocks))) return(FALSE)
+    hit <- rep(TRUE, nrow(bd$blocks))
+    for (nm in names(key)) {
+      hit <- hit & as.character(bd$blocks[[nm]]) == as.character(key[[nm]])
+    }
+    any(hit)
+  }
   if (!is.null(bd$looks)) {
     blk_cols <- c(if ("arm" %in% names(dat)) "arm", "population")
     blk_keys <- unique(dat[, blk_cols, drop = FALSE])
@@ -75,7 +89,8 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
       in_blk <- dat$population == blk_keys$population[b]
       if ("arm" %in% names(dat)) in_blk <- in_blk & dat$arm == blk_keys$arm[b]
       blk_looks <- as.character(dat$look[in_blk & dat$look != "overall"])
-      if (!identical(blk_looks, bd$looks)) {
+      if (!identical(blk_looks, bd$looks) ||
+          !block_known(blk_keys[b, , drop = FALSE])) {
         print(dat, ...)
         return(invisible(x))
       }

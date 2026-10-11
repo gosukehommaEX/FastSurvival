@@ -19,13 +19,15 @@
 #' complementary log-log transforms of the two estimates divided by its
 #' standard error, so it is negative when the treatment group has the higher
 #' milestone survival, and its one-sided p-value is the lower tail. The
-#' \code{"mover"} statistic is the normal quantile of \code{conf.level} times
-#' the difference divided by the half-width of the MOVER interval on the side
-#' of zero. It is obtained by inverting the interval at \code{conf.level}, so
-#' the statistic and its p-value depend on \code{conf.level}, and the
-#' two-sided p-value is below \code{1 - conf.level} exactly when the interval
-#' excludes zero. For \code{"wald"} and \code{"mover"} a positive statistic
-#' favors treatment and the one-sided p-value is the upper tail.
+#' \code{"mover"} statistic is the upper \code{(1 - conf.level) / 2} quantile
+#' of the standard normal distribution (1.96 for \code{conf.level = 0.95})
+#' times the difference divided by the half-width of the MOVER interval on the
+#' side of zero. It is obtained by inverting the interval at
+#' \code{conf.level}, so the statistic and its p-value depend on
+#' \code{conf.level}, and the two-sided p-value is below
+#' \code{1 - conf.level} exactly when the interval excludes zero. For
+#' \code{"wald"} and \code{"mover"} a positive statistic favors treatment and
+#' the one-sided p-value is the upper tail.
 #'
 #' @param time A numeric vector of follow-up times.
 #' @param event An integer vector of event indicators, 1 for an event and 0

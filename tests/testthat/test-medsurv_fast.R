@@ -231,7 +231,7 @@ test_that("medsurv_fast: time and event must be numeric and time non-negative", 
   ee <- rbinom(40, 1, 0.7)
   expect_error(medsurv_fast(as.character(tt), ee), "numeric")
   expect_error(medsurv_fast(c(-1, tt[-1]), ee), "non-negative")
-  expect_error(medsurv_fast(tt, factor(ee)), "factor")
+  expect_error(medsurv_fast(tt, factor(ee)), "numeric or logical")
   # A logical event indicator is accepted and gives the same result.
   expect_equal(unclass(medsurv_fast(tt, ee == 1)), unclass(medsurv_fast(tt, ee)))
 })

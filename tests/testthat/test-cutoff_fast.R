@@ -182,6 +182,6 @@ test_that("cutoff_fast: the time and event columns are validated", {
   expect_error(cutoff_fast(df_neg, event.looks = 2), "non-negative")
   df_fac <- df
   df_fac$event <- factor(df_fac$event)
-  expect_error(cutoff_fast(df_fac, event.looks = 2), "factor")
+  expect_error(cutoff_fast(df_fac, event.looks = 2), "numeric or logical")
   expect_equal(as.numeric(cutoff_fast(df, event.looks = 2)), 2)
 })

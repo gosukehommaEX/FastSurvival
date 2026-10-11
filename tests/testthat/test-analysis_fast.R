@@ -652,7 +652,8 @@ test_that("analysis_fast: tte must be non-negative and -0 is treated as 0", {
                "numeric and non-negative")
   d_fac <- d
   d_fac$event <- factor(d_fac$event)
-  expect_error(analysis_fast(d_fac, control = 0, time.looks = 100), "factor")
+  expect_error(analysis_fast(d_fac, control = 0, time.looks = 100),
+               "numeric or logical")
 })
 
 test_that("analysis_fast: no warning when tau exceeds the follow-up at a look", {

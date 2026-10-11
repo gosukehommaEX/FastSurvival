@@ -311,6 +311,8 @@ switch_fast <- function(data, group, prob = 1,
          abs(stream - round(stream)) > 1e-8)) {
       stop("'stream' must be a single non-negative whole number")
     }
+    # dqrng would truncate a value such as 100 * 0.29 to the integer below.
+    if (!is.null(stream)) stream <- round(stream)
     dqrng::dqset.seed(seed, stream = stream)
   }
 

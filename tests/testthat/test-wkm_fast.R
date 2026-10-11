@@ -247,5 +247,6 @@ test_that("wkm_fast: time and event must be numeric and time non-negative", {
   gg <- rep(0:1, 20)
   expect_error(wkm_fast(as.character(tt), ee, gg, control = 0), "numeric")
   expect_error(wkm_fast(c(-1, tt[-1]), ee, gg, control = 0), "non-negative")
-  expect_error(wkm_fast(tt, factor(ee), gg, control = 0), "factor")
+  expect_error(wkm_fast(tt, factor(ee), gg, control = 0),
+               "numeric or logical")
 })

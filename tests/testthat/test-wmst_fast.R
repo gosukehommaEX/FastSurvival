@@ -214,5 +214,6 @@ test_that("wmst_fast: time and event must be numeric and time non-negative", {
                "numeric")
   expect_error(wmst_fast(c(-1, tt[-1]), ee, gg, control = 0, tau2 = 5),
                "non-negative")
-  expect_error(wmst_fast(tt, factor(ee), gg, control = 0, tau2 = 5), "factor")
+  expect_error(wmst_fast(tt, factor(ee), gg, control = 0, tau2 = 5),
+               "numeric or logical")
 })

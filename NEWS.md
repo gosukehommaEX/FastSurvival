@@ -12,9 +12,13 @@ article on the package. It adds no new features.
   keeps only some of the looks, or rows in a different order, paired the
   boundaries and information fractions with the wrong looks or failed; it is
   now also printed as an ordinary data frame, and the report is printed only
-  when every block keeps all its looks in their original order. The boundary
-  columns are labeled `Efficacy Bound` and `Futility Bound`, because the
-  statistic need not be a Z-score.
+  when every block keeps all its looks in their original order. Results
+  combined by `rbind()`, which keep the boundary settings of the first result
+  only, are printed as an ordinary data frame when they contain a block that
+  the first result does not have, instead of pairing the other blocks with
+  the boundaries of the first. The boundary columns are labeled
+  `Efficacy Bound` and `Futility Bound`, because the statistic need not be a
+  Z-score.
 
 * The median survival time of `medsurv_fast()` and of the `"medsurv"`
   statistic of `analysis_fast()` was infinite when the Kaplan-Meier estimate
@@ -29,7 +33,9 @@ article on the package. It adds no new features.
   below, so the group had one subject fewer, and with `fixed.alloc = TRUE` and
   subgroups the C++ kernel wrote past the end of a buffer. The sizes are now
   rounded, and the kernels check that the fixed subgroup counts add up to the
-  group size. The data simulated for such sizes change.
+  group size. The data simulated for such sizes change. The `nsim` argument
+  of `simdata_fast()` and the `stream` argument of `simdata_fast()` and
+  `switch_fast()`, which were truncated in the same way, are now rounded too.
 
 * The modestly-weighted log-rank test (`weight = "mwlrt"` in
   `survdiff_fast()` and `analysis_fast()`) capped the weights at 1, which
@@ -39,9 +45,9 @@ article on the package. It adds no new features.
   `1 / max(S(t-), S(t_star-))` and nphRCT imply.
 
 * `analysis_fast()` and `cutoff_fast()` accepted negative event times, which
-  the analysis kernel sorted after all positive times, and they placed a
-  negative zero (`-0`) last, unlike the stand-alone functions. Negative times
-  are now an error, and `-0` is treated as 0.
+  the analysis kernel sorted after all positive times, and `analysis_fast()`
+  placed a negative zero (`-0`) last, unlike the stand-alone functions.
+  Negative times are now an error, and `-0` is treated as 0.
 
 * An event indicator given as a factor with the levels "0" and "1" passed the
   checks of most functions and was then replaced by its integer codes 1 and
@@ -49,7 +55,10 @@ article on the package. It adds no new features.
   `milestone_fast()`, `ahr_fast()`, `analysis_fast()`, and `cutoff_fast()`).
   Factor and character event indicators are now an error. `medsurv_fast()`,
   `wmst_fast()`, and `wkm_fast()` now also reject non-numeric and negative
-  times, which they sorted as text or accepted.
+  times, which they sorted as text or accepted. Times of class `difftime`,
+  which `is.numeric()` does not count as numeric, are rejected by these
+  functions and in the `tte` column of `analysis_fast()` and `cutoff_fast()`;
+  convert them with `as.numeric()` in the intended unit.
 
 * `wmst_fast()` returned infinite or `NaN` values when `tau2` was not
   supplied and each group had an infinite observed time. `tau2` must now be
@@ -137,9 +146,9 @@ article on the package. It adds no new features.
   statistic and its p-value depend on `conf.level` (a code comment said the
   opposite), and the `"loglog"` statistic is negative when treatment is
   better. The print methods of `coxph_fast()`, `rmst_fast()`,
-  `milestone_fast()`, `medsurv_fast()`, and `ahr_fast()` label the p-value of
-  a one-sided test `Pr(<z)` or `Pr(>z)`, and their documentation no longer
-  calls the p-value two-sided.
+  `milestone_fast()`, `medsurv_fast()`, `ahr_fast()`, `wkm_fast()`, and
+  `wmst_fast()` label the p-value of a one-sided test `Pr(<z)` or `Pr(>z)`,
+  and their documentation no longer calls the p-value two-sided.
 
 * `analysis_fast()` states that no warning is given when `tau`, `t.eval`, or
   `wmst.tau2` exceeds the follow-up of a group at a look (the stand-alone

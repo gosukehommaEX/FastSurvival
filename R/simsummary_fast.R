@@ -123,8 +123,8 @@
 #'   sum, and \code{cum.reject} again the total rejection rate; its timing columns
 #'   are the expected counts and calendar time at the stopping look. The number of
 #'   simulations is stored in the attribute \code{nsim} (one value per block when
-#'   the blocks differ) and the boundary settings, with the look labels, in the
-#'   attribute \code{boundary}.
+#'   the blocks differ) and the boundary settings, with the look labels and the
+#'   blocks (arm and population), in the attribute \code{boundary}.
 #'
 #' @examples
 #' df <- simdata_fast(
@@ -401,6 +401,12 @@ simsummary_fast <- function(data,
 
   out <- do.call(rbind, blocks)
   rownames(out) <- NULL
+
+  # The blocks (arm and population) of this result, so that the print method
+  # can recognize blocks added from another result, for example by rbind().
+  blk <- unique(out[, c(if (has_arm) "arm", "population"), drop = FALSE])
+  rownames(blk) <- NULL
+  bdesc$blocks <- blk
 
   structure(out,
             nsim = if (length(unique(nsim_v)) == 1L) nsim_v[1L] else nsim_v,

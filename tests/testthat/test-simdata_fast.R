@@ -563,3 +563,17 @@ test_that("simdata_fast: nsim must be a whole number", {
                             a.prop = 1, e.median = list(10, 10)),
                "'nsim' must be a positive whole number")
 })
+
+test_that("simdata_fast rounds nsim and stream within rounding error of a whole number", {
+  ns <- 100 * 0.29  # 28.999999999999996, truncated to 28 before 1.2.0
+  d <- simdata_fast(nsim = ns, n = c(5, 5), a.time = c(0, 1), a.prop = 1,
+                    e.median = list(10, 10), seed = 1)
+  expect_equal(length(unique(d$sim)), 29L)
+  args <- list(nsim = 2, n = c(5, 5), a.time = c(0, 1), a.prop = 1,
+               e.median = list(10, 10), seed = 1)
+  s_f  <- do.call(simdata_fast, c(args, list(stream = ns)))
+  s_29 <- do.call(simdata_fast, c(args, list(stream = 29)))
+  s_28 <- do.call(simdata_fast, c(args, list(stream = 28)))
+  expect_identical(s_f, s_29)
+  expect_false(identical(s_f, s_28))
+})

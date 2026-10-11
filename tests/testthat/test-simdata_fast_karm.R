@@ -139,3 +139,13 @@ test_that("simdata_fast: length(n) > 2 without a per-arm list gives the length e
                  e.hazard = log(2) / 12),
     "scalar .total N., a vector of length 2")
 })
+
+test_that("simdata_fast: multi-arm n and nsim within rounding error are rounded", {
+  n <- 90 * c(0.3, 0.7)  # 63 is 62.99999999999999
+  d <- simdata_fast(nsim = 100 * 0.29, n = c(n, n[2]), a.time = c(0, 12),
+                    a.prop = 1, e.median = list(12, 18, 18), seed = 1)
+  tab <- table(d$sim, d$group)
+  expect_equal(nrow(tab), 29L)
+  expect_true(all(tab[, "1"] == 27L) && all(tab[, "2"] == 63L) &&
+                all(tab[, "3"] == 63L))
+})

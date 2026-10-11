@@ -91,3 +91,27 @@ test_that("print.simsummary_fast pairs each look with its own boundary", {
   sub <- res[res$population == res$population[1L], ]
   expect_output(print(sub), "Stopping Boundaries: Look by Look")
 })
+
+test_that("print.simsummary_fast prints results combined by rbind() as a data frame", {
+  # Two results with different boundaries: rbind() keeps the attributes of the
+  # first, so the second block would be printed with the wrong boundaries.
+  df <- data.frame(sim = rep(1:4, each = 2), look = rep(1:2, 4),
+                   logrank.z = c(-2.5, -3.1, -1.0, -1.5, -3.0, -2.2, 0.5, -0.4),
+                   n.event = rep(c(50, 100), 4), cutoff = rep(c(12, 24), 4))
+  dA <- df
+  dA$population <- "overall"
+  dB <- df
+  dB$population <- "subgroup"
+  resA <- simsummary_fast(dA, eff.col = "logrank.z", efficacy = c(-2.8, -1.96))
+  resB <- simsummary_fast(dB, eff.col = "logrank.z", efficacy = c(-3.5, -2.5))
+  out1 <- utils::capture.output(print(rbind(resA, resB)))
+  expect_false(any(grepl("Group-Sequential", out1, fixed = TRUE)))
+  # The same result twice duplicates the looks of its block.
+  out2 <- utils::capture.output(print(rbind(resA, resA)))
+  expect_false(any(grepl("Group-Sequential", out2, fixed = TRUE)))
+  # One result with both populations is still printed as a report.
+  res2 <- simsummary_fast(rbind(dA, dB), eff.col = "logrank.z",
+                          efficacy = c(-2.8, -1.96))
+  out3 <- utils::capture.output(print(res2))
+  expect_true(any(grepl("Population: subgroup", out3, fixed = TRUE)))
+})

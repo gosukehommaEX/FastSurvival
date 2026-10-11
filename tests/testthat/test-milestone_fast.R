@@ -277,7 +277,7 @@ test_that("milestone_fast: a factor event indicator is rejected", {
   ee <- rbinom(40, 1, 0.7)
   gg <- rep(0:1, 20)
   expect_error(milestone_fast(tt, factor(ee), gg, control = 0, tau = 8),
-               "factor")
+               "numeric or logical")
   expect_equal(milestone_fast(tt, ee == 1, gg, control = 0, tau = 8)$statistic,
                milestone_fast(tt, ee, gg, control = 0, tau = 8)$statistic)
 })

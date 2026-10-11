@@ -55,11 +55,14 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
   n_grp <- if (length(n) == 2L) n else if (two) split_total(n, alloc) else n
   n_grp_int <- if (two) as.integer(n_grp[1:2]) else as.integer(n_grp[1L])
   check_output_size(nsim, n_grp_int)
+  # As for 'n', a whole number up to rounding error is rounded.
+  nsim <- round(nsim)
   if (two) {
     for (nm in names(spec_args)) {
       x <- spec_args[[nm]]
       if (is.list(x) && length(x) != 2L) {
-        stop("For a two-group simulation, '", nm, "' must be a single ",
+        stop("For a two-group simulation, ", spec_arg_label(nm),
+             " must be a single ",
              "(shared) specification or a list of length 2 (one element per ",
              "group); it is a list of length ", length(x), ".")
       }
@@ -72,7 +75,8 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
   pick_c <- function(x, cc, nm) {
     if (!is.list(x)) return(x)
     if (length(x) != n_cell) {
-      stop("A per-cell list for '", nm, "' must have one element per ",
+      stop("A per-cell list for ", spec_arg_label(nm),
+           " must have one element per ",
            "subgroup cell (", n_cell, " here) but has ", length(x), ".")
     }
     x[[cc]]

@@ -512,5 +512,5 @@ test_that("survdiff_fast: mwlrt is not capped when the pooled curve reaches 0 be
 
 test_that("survdiff_fast: a factor event indicator is rejected", {
   expect_error(survdiff_fast(1:6, factor(c(1, 0, 1, 1, 0, 1)), rep(0:1, 3),
-                             control = 0), "factor")
+                             control = 0), "numeric or logical")
 })
