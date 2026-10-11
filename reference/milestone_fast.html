@@ -168,13 +168,15 @@ standard error. The <code>"loglog"</code> statistic is the difference of the
 complementary log-log transforms of the two estimates divided by its
 standard error, so it is negative when the treatment group has the higher
 milestone survival, and its one-sided p-value is the lower tail. The
-<code>"mover"</code> statistic is the normal quantile of <code>conf.level</code> times
-the difference divided by the half-width of the MOVER interval on the side
-of zero. It is obtained by inverting the interval at <code>conf.level</code>, so
-the statistic and its p-value depend on <code>conf.level</code>, and the
-two-sided p-value is below <code>1 - conf.level</code> exactly when the interval
-excludes zero. For <code>"wald"</code> and <code>"mover"</code> a positive statistic
-favors treatment and the one-sided p-value is the upper tail.</p>
+<code>"mover"</code> statistic is the upper <code>(1 - conf.level) / 2</code> quantile
+of the standard normal distribution (1.96 for <code>conf.level = 0.95</code>)
+times the difference divided by the half-width of the MOVER interval on the
+side of zero. It is obtained by inverting the interval at
+<code>conf.level</code>, so the statistic and its p-value depend on
+<code>conf.level</code>, and the two-sided p-value is below
+<code>1 - conf.level</code> exactly when the interval excludes zero. For
+<code>"wald"</code> and <code>"mover"</code> a positive statistic favors treatment and
+the one-sided p-value is the upper tail.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

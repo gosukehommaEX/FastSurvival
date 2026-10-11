@@ -4,7 +4,10 @@ Formats and prints a `wkm_fast` object in the same layout as the other
 two-group summaries in the package. The header shows the control label
 and the inference settings. The body shows the weighted integrated
 survival difference (treatment minus control) with a confidence
-interval, the test statistic, and the p-value.
+interval, the test statistic, and the p-value. The p-value column is
+labeled `Pr(>|z|)` for a two-sided test and `Pr(>z)` for a one-sided
+test, whose p-value is the upper tail in the direction of treatment
+benefit.
 
 ## Usage
 

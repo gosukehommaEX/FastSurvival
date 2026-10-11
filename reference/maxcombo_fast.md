@@ -146,12 +146,14 @@ is the sum of the other two. The correlation matrix of the default
 weights, or of any set that contains these three, is therefore singular,
 and the quasi-Monte-Carlo integral converges slowly. With the default
 `maxpts` the absolute error of the p-value is typically of the order of
-1e-4 rather than `abseps`: in a check with the default weights and a
-one-sided test, the same p-values computed twice with different seeds
-differed by up to about 1e-3. A larger `maxpts` reduces the error at a
-higher computing cost. In a simulation study, the integration error
-affects only the decisions for p-values within about that error of the
-nominal level.
+1e-4 rather than `abseps`. In a check with the default weights and a
+one-sided test, the p-values of 20,000 simulated analyses (two looks of
+10,000 trials with a delayed treatment effect) were computed twice with
+different seeds; the two values differed by less than 1e-3 in every
+analysis and by at most about 3e-4 in 99 percent of them. A larger
+`maxpts` reduces the error at a higher computing cost. In a simulation
+study, the integration error affects only the decisions for p-values
+within about that error of the nominal level.
 
 When `presorted = TRUE`, the inputs are assumed to be sorted in
 ascending order of `time` and the internal
