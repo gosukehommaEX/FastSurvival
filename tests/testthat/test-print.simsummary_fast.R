@@ -115,3 +115,52 @@ test_that("print.simsummary_fast prints results combined by rbind() as a data fr
   out3 <- utils::capture.output(print(res2))
   expect_true(any(grepl("Population: subgroup", out3, fixed = TRUE)))
 })
+
+test_that("print.simsummary_fast checks the rows of each block against the result", {
+  # One data set with two populations summarized with two sets of boundaries:
+  # both results have blocks of the same names.
+  df <- data.frame(sim = rep(1:4, each = 2), look = rep(1:2, 4),
+                   logrank.z = c(-2.5, -3.1, -1.0, -1.5, -3.0, -2.2, 0.5, -0.4),
+                   n.event = rep(c(50, 100), 4), cutoff = rep(c(12, 24), 4))
+  d2 <- rbind(transform(df, population = "overall"),
+              transform(df, population = "subgroup"))
+  resA <- simsummary_fast(d2, eff.col = "logrank.z", efficacy = c(-2.8, -1.96))
+  resB <- simsummary_fast(d2, eff.col = "logrank.z", efficacy = c(-3.5, -2.5))
+  is_report <- function(x) {
+    any(grepl("Group-Sequential", utils::capture.output(print(x)),
+              fixed = TRUE))
+  }
+  # Rows of the subgroup from the other boundaries.
+  combo <- rbind(resA[resA$population == "overall", ],
+                 resB[resB$population == "subgroup", ])
+  expect_false(is_report(combo))
+  # One population of either result stays a report with its own boundaries.
+  expect_true(is_report(resB[resB$population == "subgroup", ]))
+  out3 <- utils::capture.output(print(resA[resA$population == "subgroup", ]))
+  expect_true(any(grepl("-2.8000", out3, fixed = TRUE)))
+  # Without the overall rows the looks are still checked.
+  expect_true(is_report(resA[resA$look != "overall", ]))
+  # The rows of the first result, combined again in the same order.
+  expect_true(is_report(rbind(resA[resA$population == "overall", ],
+                              resA[resA$population == "subgroup", ])))
+})
+
+test_that("print.simsummary_fast prints arm results and old attributes as reports", {
+  df <- data.frame(sim = rep(1:4, each = 2), look = rep(1:2, 4),
+                   logrank.z = c(-2.5, -3.1, -1.0, -1.5, -3.0, -2.2, 0.5, -0.4),
+                   n.event = rep(c(50, 100), 4), cutoff = rep(c(12, 24), 4))
+  da <- rbind(transform(df, arm = 2),
+              transform(df, arm = 3, logrank.z = -logrank.z))
+  resC <- simsummary_fast(da, eff.col = "logrank.z", efficacy = c(-2.8, -1.96))
+  out4 <- utils::capture.output(print(resC))
+  expect_true(any(grepl("Arm: 3", out4, fixed = TRUE)))
+  out4b <- utils::capture.output(print(resC[resC$arm == 3, ]))
+  expect_true(any(grepl("Group-Sequential", out4b, fixed = TRUE)))
+  # A boundary attribute without 'looks' and 'rows', as before 1.2.0.
+  old <- make_summary()
+  bd <- attr(old, "boundary")
+  bd$looks <- NULL
+  bd$rows <- NULL
+  attr(old, "boundary") <- bd
+  expect_output(print(old), "Group-Sequential Operating Characteristics")
+})

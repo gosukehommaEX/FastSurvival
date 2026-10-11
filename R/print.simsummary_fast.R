@@ -33,9 +33,11 @@
 #' design. A selection of columns keeps the class but not the boundary
 #' settings, and is printed as an ordinary data frame, as is a selection
 #' without any look row. Results combined by \code{rbind()} keep the attributes
-#' of the first result only, so a block that the first result does not have
-#' (for example a population summarized with other boundaries) makes the whole
-#' object print as an ordinary data frame.
+#' of the first result only, which include a copy of its rows. The report is
+#' therefore printed only when the rows of every block are those of the first
+#' result; rows from another result, such as a population summarized with
+#' other boundaries, make the whole object print as an ordinary data frame,
+#' even when the block has the same name in both results.
 #'
 #' @param x An object of class \code{"simsummary_fast"} from
 #'   \code{\link{simsummary_fast}}.
@@ -71,16 +73,24 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
   # The boundaries are stored per look of the design, so the report is printed
   # only when every block keeps all the looks in their original order; any
   # other selection of rows is printed as an ordinary data frame. So is an
-  # object with a block that the result did not create, such as one added by
-  # rbind() from another result, whose boundaries are not stored.
-  block_known <- function(key) {
-    if (is.null(bd$blocks)) return(TRUE)
-    if (!all(names(key) %in% names(bd$blocks))) return(FALSE)
-    hit <- rep(TRUE, nrow(bd$blocks))
+  # object whose rows differ from the copy stored with the boundaries, such as
+  # one combined by rbind() with rows of another result, even when the blocks
+  # have the same names. 'rows' are the rows of one block (looks and, when
+  # kept, the overall row) and 'key' its arm and population.
+  rows_known <- function(rows, key) {
+    if (is.null(bd$rows)) return(TRUE)
+    ref <- bd$rows
     for (nm in names(key)) {
-      hit <- hit & as.character(bd$blocks[[nm]]) == as.character(key[[nm]])
+      if (!(nm %in% names(ref))) return(FALSE)
+      ref <- ref[as.character(ref[[nm]]) == as.character(key[[nm]]), ,
+                 drop = FALSE]
     }
-    any(hit)
+    ref <- ref[match(as.character(rows$look), as.character(ref$look)), ,
+               drop = FALSE]
+    if (anyNA(ref$look)) return(FALSE)
+    cols <- intersect(names(rows), names(ref))
+    isTRUE(all.equal(ref[, cols, drop = FALSE], rows[, cols, drop = FALSE],
+                     check.attributes = FALSE))
   }
   if (!is.null(bd$looks)) {
     blk_cols <- c(if ("arm" %in% names(dat)) "arm", "population")
@@ -90,7 +100,8 @@ print.simsummary_fast <- function(x, digits = 4, ...) {
       if ("arm" %in% names(dat)) in_blk <- in_blk & dat$arm == blk_keys$arm[b]
       blk_looks <- as.character(dat$look[in_blk & dat$look != "overall"])
       if (!identical(blk_looks, bd$looks) ||
-          !block_known(blk_keys[b, , drop = FALSE])) {
+          !rows_known(dat[in_blk, , drop = FALSE],
+                      blk_keys[b, , drop = FALSE])) {
         print(dat, ...)
         return(invisible(x))
       }

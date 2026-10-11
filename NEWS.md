@@ -14,11 +14,12 @@ article on the package. It adds no new features.
   now also printed as an ordinary data frame, and the report is printed only
   when every block keeps all its looks in their original order. Results
   combined by `rbind()`, which keep the boundary settings of the first result
-  only, are printed as an ordinary data frame when they contain a block that
-  the first result does not have, instead of pairing the other blocks with
-  the boundaries of the first. The boundary columns are labeled
-  `Efficacy Bound` and `Futility Bound`, because the statistic need not be a
-  Z-score.
+  only, are printed as an ordinary data frame when the rows of a block differ
+  from those of the first result (for example rows of a population summarized
+  with other boundaries, even under the same population name), instead of
+  pairing them with the boundaries of the first. The boundary columns are
+  labeled `Efficacy Bound` and `Futility Bound`, because the statistic need
+  not be a Z-score.
 
 * The median survival time of `medsurv_fast()` and of the `"medsurv"`
   statistic of `analysis_fast()` was infinite when the Kaplan-Meier estimate
@@ -174,8 +175,10 @@ article on the package. It adds no new features.
   formula); `group-sequential-design` says that the trial planned to enroll
   482 patients, gives the section of the protocol, and states the type I
   error for overall survival; `correlated-pfs-os-gsd` requires a median
-  overall survival longer than the median progression-free survival; and the
-  computing times are described as they were measured.
+  overall survival longer than the median progression-free survival;
+  `investigate-freidlin-and-korn` takes its scenario from Fig. A1 of Freidlin
+  and Korn (2019); and the computing times are described as they were
+  measured.
 
 * Smaller corrections: the variances of the two group shares of `ahr_fast()`
   are equal algebraically (code comments); the example of a zero variance in
