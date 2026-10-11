@@ -108,10 +108,11 @@ arm that is uniformly worse is one point in this strong null.</p>
 year. In the weak null the experimental arm is identical to the control
 arm. In the strong null the experimental arm has a very large hazard for
 a short initial period (early harm) and a slightly lower hazard
-thereafter; the parameters follow the Freidlin and Korn (2019) example
-as implemented in the <code>simtrial</code> package documentation,
-namely an experimental hazard ratio of 16 for the first 0.1 year
-followed by 0.76 afterwards. The analysis is at 5 years.</p>
+thereafter; the parameters are those of Fig. A1 in the Appendix of
+Freidlin and Korn (2019), which the <code>simtrial</code> package
+documentation also uses, namely an experimental hazard ratio of 16 for
+the first 0.1 year (1.2 months) followed by 0.76 afterwards. The
+analysis is at 5 years.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">e_time</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span><span class="op">)</span>         <span class="co"># change point at 0.1 year</span></span>
 <span><span class="va">cut</span>    <span class="op">&lt;-</span> <span class="fl">5</span>                      <span class="co"># analysis at 5 years</span></span>
@@ -303,13 +304,13 @@ to this failure.</p>
 <div class="section level2">
 <h2 id="notes">Notes<a class="anchor" aria-label="anchor" href="#notes"></a>
 </h2>
-<p>The strong null parameters follow the Freidlin and Korn (2019)
-example as given in the <code>simtrial</code> package documentation. The
-modestly-weighted log-rank delay <code>T_STAR</code> and the number of
-simulated trials <code>NSIM</code> are set at the top of the design
-chunk and can be changed; <code>NSIM</code> is kept modest so the
-vignette builds quickly, and a larger value tightens the Monte Carlo
-error on the reported rates.</p>
+<p>The strong null parameters are those of Fig. A1 in the Appendix of
+Freidlin and Korn (2019), which the <code>simtrial</code> package
+documentation also uses. The modestly-weighted log-rank delay
+<code>T_STAR</code> and the number of simulated trials <code>NSIM</code>
+are set at the top of the design chunk and can be changed;
+<code>NSIM</code> is kept modest so the vignette builds quickly, and a
+larger value tightens the Monte Carlo error on the reported rates.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

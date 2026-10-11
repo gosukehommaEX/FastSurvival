@@ -100,7 +100,7 @@ rejection rate, `prob.stop.futility` the total futility rate,
 rate; its timing columns are the expected counts and calendar time at
 the stopping look. The number of simulations is stored in the attribute
 `nsim` (one value per block when the blocks differ) and the boundary
-settings, with the look labels and the blocks (arm and population), in
+settings, with the look labels and a copy of the rows of the result, in
 the attribute `boundary`.
 
 ## Details
