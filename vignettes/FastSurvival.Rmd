@@ -81,6 +81,33 @@ coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
            control = 1, side = 1)
 ```
 
+# Formulas, data frames, and plots
+
+For the analysis of a single data set the functions also accept a model
+formula with a data frame, as the functions of the survival package do. The
+control group is then the first level of the group variable, unless
+`control` is given. Inside simulation loops the vector interface remains the
+faster choice. Every result has an `as.data.frame()` method that returns its
+estimates and tests with the same columns, and `coef()` and `confint()`
+methods for the estimates; ratios are reported on the log scale.
+
+```{r formula, eval = requireNamespace("survival", quietly = TRUE)}
+fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+as.data.frame(fit)
+exp(confint(fit))
+
+as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
+                        tau = 500))
+```
+
+`kmcurve_fast()` builds the Kaplan-Meier curves of a data set, and its
+`plot()` method can add the numbers at risk below the curves.
+
+```{r km-plot, eval = requireNamespace("survival", quietly = TRUE), fig.width = 7, fig.height = 5}
+km <- kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+plot(km, risk_table = TRUE, conf.style = "band")
+```
+
 # Where to go next
 
 Several further vignettes cover the package in depth. *Validation of

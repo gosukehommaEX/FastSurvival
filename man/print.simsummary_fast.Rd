@@ -61,5 +61,5 @@ object print as an ordinary data frame, even when the block has the same
 name in both results.
 }
 \seealso{
-\code{\link{simsummary_fast}}.
+\code{\link{simsummary_fast}}, \code{\link{plot.simsummary_fast}}.
 }

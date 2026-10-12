@@ -122,6 +122,13 @@ oc <- simsummary_fast(res, p.col = "logrank.p", alpha = spend_alpha)
 oc
 ```
 
+`plot()` draws the cumulative probability of stopping for efficacy at each
+look, here against the expected number of events.
+
+```{r summary-plot, eval = has_gsd, fig.width = 6, fig.height = 4.5}
+plot(oc, xaxis = "events")
+```
+
 # Comparison with the closed-form design
 
 The closed-form reference uses the usual large-sample approximation for the

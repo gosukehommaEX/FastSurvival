@@ -14,11 +14,14 @@ maxcombo_fast(
   gamma = c(0, 1, 0, 1),
   presorted = FALSE,
   abseps = 1e-05,
-  maxpts = 25000
+  maxpts = 25000,
+  data = NULL
 )
 }
 \arguments{
-\item{time}{A numeric vector of follow-up times for all subjects.}
+\item{time}{A numeric vector of follow-up times for all subjects.
+Alternatively, a formula \code{Surv(time, event) ~ group}, with the
+variables in \code{data}; see \code{\link{formula_interface}}.}
 
 \item{event}{An integer or numeric vector of event indicators
 (1 = event, 0 = censored), aligned with \code{time}.}
@@ -26,7 +29,9 @@ maxcombo_fast(
 \item{group}{A vector of group labels aligned with \code{time}.}
 
 \item{control}{A scalar value indicating which level of \code{group}
-represents the control group.}
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.}
 
 \item{side}{An integer, either 1 or 2. If \code{side = 1}, the
 one-sided max-combo test for treatment benefit is computed. If
@@ -59,6 +64,10 @@ values can stop it earlier at the cost of p-value precision.}
 evaluations for the quasi-Monte-Carlo integration used with four or more
 weights or with a two-sided test (see Details). Defaults to 25000. Larger
 values reduce the integration error at a higher computing cost.}
+
+\item{data}{A data frame in which the variables of a formula given as
+\code{time} are evaluated. Used only with the formula interface; see
+\code{\link{formula_interface}}.}
 }
 \value{
 An object of class \code{"maxcombo_fast"}, a named numeric vector of
@@ -70,6 +79,9 @@ An object of class \code{"maxcombo_fast"}, a named numeric vector of
   \code{gamma}, the requested \code{side}, and the total sample size in
   \code{n}. Returns \code{NA} values (still with class
   \code{"maxcombo_fast"}) when any component variance is zero or not finite.
+  The object also has the class \code{"fastsurv"}, whose
+  \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+  are described in \code{\link{as.data.frame.fastsurv}}.
 }
 \description{
 Computes the max-combo test, the maximum over a set of Fleming-Harrington
@@ -153,6 +165,9 @@ maxcombo_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 1,
 ord <- order(ovarian$futime)
 maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
               control = 1, presorted = TRUE)
+
+# Formula interface
+maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 
 \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)

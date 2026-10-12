@@ -12,11 +12,14 @@ ahsw_fast(
   side = 2,
   conf.level = 0.95,
   tau,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 }
 \arguments{
-\item{time}{A numeric vector of follow-up times for all subjects.}
+\item{time}{A numeric vector of follow-up times for all subjects.
+Alternatively, a formula \code{Surv(time, event) ~ group}, with the
+variables in \code{data}; see \code{\link{formula_interface}}.}
 
 \item{event}{An integer or numeric vector of event indicators
 (1 = event, 0 = censored), aligned with \code{time}.}
@@ -24,7 +27,9 @@ ahsw_fast(
 \item{group}{A vector of group labels aligned with \code{time}.}
 
 \item{control}{A scalar value indicating which level of \code{group}
-represents the control group.}
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.}
 
 \item{side}{1 for a one-sided test in the direction of treatment benefit
 (lower average hazard in the treatment group, i.e. a ratio below 1 and a
@@ -45,6 +50,10 @@ and \code{group} are assumed to be sorted in ascending order of
 \code{time}, and the internal \code{order()} call is skipped. If
 \code{FALSE} (default), sorting is handled internally.
 The order is checked, and an error is given when it does not hold.}
+
+\item{data}{A data frame in which the variables of a formula given as
+\code{time} are evaluated. Used only with the formula interface; see
+\code{\link{formula_interface}}.}
 }
 \value{
 An object of class \code{"ahsw_fast"}, a named numeric vector
@@ -56,6 +65,9 @@ An object of class \code{"ahsw_fast"}, a named numeric vector
   \code{control} label is also stored. Returns \code{NA} values (still with
   class \code{"ahsw_fast"}) when either group has no events up to \code{tau}
   (a zero average hazard) or a non-finite variance.
+  The object also has the class \code{"fastsurv"}, whose
+  \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+  are described in \code{\link{as.data.frame.fastsurv}}.
 }
 \description{
 Computes the average hazard with survival weight (AHSW) of Uno and Horiguchi
@@ -108,6 +120,9 @@ ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1, tau = 600)
 ord <- order(ovarian$futime)
 ahsw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
           control = 1, tau = 600, presorted = TRUE)
+
+# Formula interface
+ahsw_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 600)
 
 \donttest{
 # Validation against survAH

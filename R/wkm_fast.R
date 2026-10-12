@@ -36,9 +36,13 @@
 #' positive value and a positive z indicate longer survival under treatment.
 #'
 #' @param time Numeric vector of event or censoring times.
+#'   Alternatively, a formula \code{Surv(time, event) ~ group}, with the
+#'   variables in \code{data}; see \code{\link{formula_interface}}.
 #' @param event Integer vector, 1 for an event and 0 for censoring.
 #' @param group Grouping vector with exactly two distinct levels.
 #' @param control The level of \code{group} that denotes the control group.
+#'   With the formula interface it defaults to the first level of the
+#'   group variable.
 #' @param side Either 2 for a two-sided test or 1 for a one-sided test of
 #'   treatment superiority (weighted difference greater than 0).
 #' @param conf.level Confidence level for the interval of the weighted
@@ -50,10 +54,16 @@
 #'   and \code{group} are already sorted in ascending order of \code{time}, to
 #'   skip the internal sort. Defaults to \code{FALSE}.
 #'   The order is checked, and an error is given when it does not hold.
+#' @param data A data frame in which the variables of a formula given as
+#'   \code{time} are evaluated. Used only with the formula interface; see
+#'   \code{\link{formula_interface}}.
 #'
 #' @return A named numeric vector of class \code{"wkm_fast"} with the weighted
 #'   integrated difference, its standard error and confidence limits, and the
 #'   Wald statistics for the test.
+#'   The object also has the class \code{"fastsurv"}, whose
+#'   \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+#'   are described in \code{\link{as.data.frame.fastsurv}}.
 #'
 #' @examples
 #' set.seed(1)
@@ -64,6 +74,10 @@
 #' time <- pmin(tt, cc)
 #' event <- as.integer(tt <= cc)
 #' wkm_fast(time, event, group = g, control = 0)
+#'
+#' # Formula interface
+#' d <- data.frame(time, event, g)
+#' wkm_fast(Surv(time, event) ~ g, data = d)
 #'
 #' @references
 #' Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics: a
@@ -79,7 +93,20 @@
 wkm_fast <- function(time, event, group, control = NULL,
                      side = 2, conf.level = 0.95,
                      weight = c("PF", "sqrtPF", "constant"),
-                     presorted = FALSE) {
+                     presorted = FALSE, data = NULL) {
+  # Formula interface: Surv(time, event) ~ group evaluated in 'data'
+  if (inherits(time, "formula")) {
+    f <- fastsurv_formula(time, data,
+                          event = if (!missing(event)) event,
+                          group = if (!missing(group)) group,
+                          group_mode = "required", fun = "wkm_fast()")
+    if (is.null(control)) control <- f$control
+    return(wkm_fast(f$time, f$event, f$group, control = control,
+                    side = side, conf.level = conf.level, weight = weight,
+                    presorted = presorted))
+  }
+  if (!is.null(data)) stop("'data' is used only with a formula")
+
   weight <- match.arg(weight)
 
   n_obs <- length(time)
@@ -175,6 +202,6 @@ wkm_fast <- function(time, event, group, control = NULL,
   attr(out, "nevent") <- event_g
   attr(out, "control") <- control
   attr(out, "treatment") <- treatment_label
-  class(out) <- "wkm_fast"
+  class(out) <- c("wkm_fast", "fastsurv")
   out
 }

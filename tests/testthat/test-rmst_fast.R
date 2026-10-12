@@ -141,3 +141,20 @@ test_that("rmst_fast: presorted = TRUE checks the order", {
   expect_error(rmst_fast(time, event, tau = 3, presorted = TRUE), "presorted = FALSE")
   expect_error(rmst_fast(time, event, group, control = 0, tau = 3, presorted = TRUE), "presorted = FALSE")
 })
+
+test_that("rmst_fast: the formula interface gives the vector result", {
+  set.seed(64)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  ref2 <- rmst_fast(d$tt, d$ee, group = d$g, control = 0, tau = 5)
+  expect_identical(rmst_fast(Surv(tt, ee) ~ g, data = d, tau = 5), ref2)
+  expect_identical(rmst_fast(Surv(tt, ee) ~ g, data = d, tau = 5,
+                             control = 1),
+                   rmst_fast(d$tt, d$ee, group = d$g, control = 1, tau = 5))
+  ref1 <- rmst_fast(d$tt, d$ee, tau = 5)
+  expect_identical(rmst_fast(Surv(tt, ee) ~ 1, data = d, tau = 5), ref1)
+  expect_identical(class(ref1), c("rmst_fast", "fastsurv"))
+  expect_identical(class(ref2), c("rmst_fast", "fastsurv"))
+  expect_error(rmst_fast(d$tt, d$ee, tau = 5, data = d), "only with a formula")
+})

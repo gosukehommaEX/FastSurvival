@@ -153,7 +153,7 @@
 #'                 alpha = c(0.0006, 0.0151, 0.0245))
 #'
 #' @seealso \code{\link{analysis_fast}}, \code{\link{simdata_fast}},
-#'   \code{\link{print.simsummary_fast}}.
+#'   \code{\link{print.simsummary_fast}}, \code{\link{plot.simsummary_fast}}.
 #'
 #' @export
 simsummary_fast <- function(data,

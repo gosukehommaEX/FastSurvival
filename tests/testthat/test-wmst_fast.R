@@ -217,3 +217,20 @@ test_that("wmst_fast: time and event must be numeric and time non-negative", {
   expect_error(wmst_fast(tt, factor(ee), gg, control = 0, tau2 = 5),
                "numeric or logical")
 })
+
+test_that("wmst_fast: the formula interface gives the vector result", {
+  set.seed(65)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  ref2 <- wmst_fast(d$tt, d$ee, group = d$g, control = 0, tau1 = 1,
+                    tau2 = 5)
+  expect_identical(wmst_fast(Surv(tt, ee) ~ g, data = d, tau1 = 1, tau2 = 5),
+                   ref2)
+  ref1 <- wmst_fast(d$tt, d$ee, tau1 = 1, tau2 = 5)
+  expect_identical(wmst_fast(Surv(tt, ee) ~ 1, data = d, tau1 = 1, tau2 = 5),
+                   ref1)
+  expect_identical(class(ref2), c("wmst_fast", "fastsurv"))
+  expect_error(wmst_fast(d$tt, d$ee, tau2 = 5, data = d),
+               "only with a formula")
+})

@@ -12,12 +12,16 @@ coxph_fast(
   side = 2,
   conf.level = 0.95,
   presorted = FALSE,
-  strata = NULL
+  strata = NULL,
+  data = NULL
 )
 }
 \arguments{
 \item{time}{A numeric vector of follow-up times for all subjects (pooled
-over both groups).}
+over both groups).
+Alternatively, a formula \code{Surv(time, event) ~ group}, optionally with
+\code{strata()} terms, with the variables in
+\code{data}; see \code{\link{formula_interface}}.}
 
 \item{event}{An integer or numeric vector of event indicators
 (1 = event, 0 = censored), aligned with \code{time}.}
@@ -27,7 +31,9 @@ that supports equality comparison is accepted.}
 
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group. Subjects with \code{group != control} are
-treated as the treatment group.}
+treated as the treatment group.
+With the formula interface it defaults to the first level of the
+group variable.}
 
 \item{side}{1 for a one-sided test in the direction of treatment benefit
 (hazard ratio below 1, i.e. a negative coefficient) or 2 for a two-sided
@@ -52,6 +58,10 @@ The order is checked, and an error is given when it does not hold.}
 estimator described in Details is computed. Several stratification
 factors can be combined with \code{interaction()}. \code{NULL} (default)
 gives the unstratified estimator.}
+
+\item{data}{A data frame in which the variables of a formula given as
+\code{time} are evaluated. Used only with the formula interface; see
+\code{\link{formula_interface}}.}
 }
 \value{
 An object of class \code{"coxph_fast"}, which is a named numeric
@@ -73,6 +83,9 @@ With \code{strata}, the number of strata is stored in the attribute
 Returns a vector of \code{NA_real_} values (still with class
 \code{"coxph_fast"}) when the estimate cannot be computed (e.g., no
 events, all events in one group, or \code{I_0 = 0}).
+  The object also has the class \code{"fastsurv"}, whose
+  \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+  are described in \code{\link{as.data.frame.fastsurv}}.
 }
 \description{
 Estimates the hazard ratio for a two-group parallel trial using the
@@ -172,6 +185,11 @@ coef(coxph(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian,
 ord <- order(ovarian$futime)
 coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
            control = 1, presorted = TRUE)
+
+# Formula interface, and the result as a data frame (log hazard ratio)
+fit_f <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+as.data.frame(fit_f)
+exp(confint(fit_f))
 
 \donttest{
 # Speed comparison against coxph()

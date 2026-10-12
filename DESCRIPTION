@@ -20,8 +20,10 @@ Description: Provides fast alternatives to standard survival analysis functions
     test (maxcombo_fast()), the robust modestly-weighted log-rank test
     (rmw_fast()), the weighted Kaplan-Meier (Pepe-Fleming) test (wkm_fast()),
     the average hazard with survival weight (ahsw_fast()), and the
-    Kalbfleisch-Prentice average hazard ratio (ahr_fast()). The simulation
-    layer generates individual patient data (simdata_fast()), determines the
+    Kalbfleisch-Prentice average hazard ratio (ahr_fast()). Besides vectors,
+    these functions accept a model formula with a data frame, and their
+    results can be returned as data frames. The simulation layer generates
+    individual patient data (simdata_fast()), determines the
     calendar time of each analysis from combined event and calendar-time
     rules (cutoff_fast()), performs interim or sequential analyses
     (analysis_fast()), compares several experimental arms with a shared

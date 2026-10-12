@@ -197,3 +197,16 @@ test_that("kmcurve_fast: missing group values are rejected", {
                             group = c(1, 2, NA, 2), control = 1),
                "missing values")
 })
+
+test_that("kmcurve_fast: the formula interface gives the vector result", {
+  set.seed(73)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  expect_identical(kmcurve_fast(Surv(tt, ee) ~ g, data = d),
+                   kmcurve_fast(d$tt, d$ee, d$g, control = 0))
+  expect_identical(kmcurve_fast(Surv(tt, ee) ~ 1, data = d),
+                   kmcurve_fast(d$tt, d$ee))
+  expect_identical(class(kmcurve_fast(d$tt, d$ee)), "kmcurve_fast")
+  expect_error(kmcurve_fast(d$tt, d$ee, data = d), "only with a formula")
+})

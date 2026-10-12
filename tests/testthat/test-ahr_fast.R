@@ -319,3 +319,16 @@ test_that("ahr_fast: event values are validated before conversion", {
   expect_error(ahr_fast(c(1, 2, 3, 4), c(1, 0.7, 0, 1), c(0, 0, 1, 1),
                         control = 0), "0 or 1")
 })
+
+test_that("ahr_fast: the formula interface gives the vector result", {
+  set.seed(72)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  ref <- ahr_fast(d$tt, d$ee, d$g, control = 0, tau = 5, null.ahr = 0.9)
+  expect_identical(ahr_fast(Surv(tt, ee) ~ g, data = d, tau = 5,
+                            null.ahr = 0.9), ref)
+  expect_identical(class(ref), c("ahr_fast", "fastsurv"))
+  expect_error(ahr_fast(d$tt, d$ee, d$g, 0, tau = 5, data = d),
+               "only with a formula")
+})

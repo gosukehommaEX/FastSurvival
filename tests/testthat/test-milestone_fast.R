@@ -281,3 +281,21 @@ test_that("milestone_fast: a factor event indicator is rejected", {
   expect_equal(milestone_fast(tt, ee == 1, gg, control = 0, tau = 8)$statistic,
                milestone_fast(tt, ee, gg, control = 0, tau = 8)$statistic)
 })
+
+test_that("milestone_fast: the formula interface gives the vector result", {
+  set.seed(66)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  for (m in c("wald", "loglog", "mover")) {
+    expect_identical(
+      milestone_fast(Surv(tt, ee) ~ g, data = d, tau = 5, method = m),
+      milestone_fast(d$tt, d$ee, d$g, control = 0, tau = 5, method = m))
+  }
+  expect_identical(class(milestone_fast(Surv(tt, ee) ~ g, d, tau = 5)),
+                   c("milestone_fast", "fastsurv"))
+  expect_error(milestone_fast(Surv(tt, ee) ~ 1, data = d, tau = 5),
+               "must name the group")
+  expect_error(milestone_fast(d$tt, d$ee, d$g, 0, tau = 5, data = d),
+               "only with a formula")
+})

@@ -235,3 +235,19 @@ test_that("medsurv_fast: time and event must be numeric and time non-negative", 
   # A logical event indicator is accepted and gives the same result.
   expect_equal(unclass(medsurv_fast(tt, ee == 1)), unclass(medsurv_fast(tt, ee)))
 })
+
+test_that("medsurv_fast: the formula interface gives the vector result", {
+  set.seed(67)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  for (m in c("km", "nph")) {
+    expect_identical(
+      medsurv_fast(Surv(tt, ee) ~ g, data = d, method = m),
+      medsurv_fast(d$tt, d$ee, group = d$g, control = 0, method = m))
+  }
+  ref1 <- medsurv_fast(d$tt, d$ee)
+  expect_identical(medsurv_fast(Surv(tt, ee) ~ 1, data = d), ref1)
+  expect_identical(class(ref1), c("medsurv_fast", "fastsurv"))
+  expect_error(medsurv_fast(d$tt, d$ee, data = d), "only with a formula")
+})

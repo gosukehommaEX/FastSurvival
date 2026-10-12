@@ -514,3 +514,36 @@ test_that("survdiff_fast: a factor event indicator is rejected", {
   expect_error(survdiff_fast(1:6, factor(c(1, 0, 1, 1, 0, 1)), rep(0:1, 3),
                              control = 0), "numeric or logical")
 })
+
+test_that("survdiff_fast: the formula interface gives the vector result", {
+  set.seed(62)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  arm = factor(rep(c("ctl", "exp"), n / 2)),
+                  s1 = rep(c("a.b", "a"), each = n / 2),
+                  s2 = rep(c("c", "b.c", "c"), n / 3))
+  ref <- survdiff_fast(d$tt, d$ee, d$arm, control = "ctl")
+  expect_identical(survdiff_fast(Surv(tt, ee) ~ arm, data = d), ref)
+  expect_identical(survdiff_fast(Surv(tt, ee) ~ arm, d), ref)
+  expect_identical(class(ref), c("survdiff_fast", "fastsurv"))
+  expect_identical(
+    survdiff_fast(Surv(tt, ee) ~ arm, data = d, control = "exp", side = 1,
+                  weight = "fh", rho = 0, gamma = 1),
+    survdiff_fast(d$tt, d$ee, d$arm, control = "exp", side = 1,
+                  weight = "fh", rho = 0, gamma = 1))
+  # Strata: the stratum labels only order the strata, so the sums can differ
+  # in the last bits from those of other labels
+  expect_equal(survdiff_fast(Surv(tt, ee) ~ arm + strata(s1), data = d),
+               survdiff_fast(d$tt, d$ee, d$arm, "ctl", strata = d$s1),
+               tolerance = 1e-12)
+  st12 <- interaction(d$s1, d$s2, sep = "|")
+  res12 <- survdiff_fast(Surv(tt, ee) ~ arm + strata(s1, s2), data = d)
+  expect_equal(res12, survdiff_fast(d$tt, d$ee, d$arm, "ctl", strata = st12),
+               tolerance = 1e-12)
+  # Four strata, although pasting the labels with "." would give three
+  expect_identical(attr(res12, "strata"), 4L)
+  expect_error(survdiff_fast(Surv(tt, ee) ~ arm, data = d, strata = d$s1),
+               "strata\\(\\) in the formula")
+  expect_error(survdiff_fast(d$tt, d$ee, d$arm, "ctl", data = d),
+               "only with a formula")
+})

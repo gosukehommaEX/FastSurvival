@@ -179,5 +179,5 @@ simsummary_fast(res, p.col = "logrank.p",
 }
 \seealso{
 \code{\link{analysis_fast}}, \code{\link{simdata_fast}},
-  \code{\link{print.simsummary_fast}}.
+  \code{\link{print.simsummary_fast}}, \code{\link{plot.simsummary_fast}}.
 }

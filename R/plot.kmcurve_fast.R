@@ -8,7 +8,8 @@
 #' Cox proportional-hazards estimate and, optionally, the average hazard ratio,
 #' in the style of stylized nonproportional-hazards figures. For a single-group
 #' object only one survival curve is drawn; \code{hr = TRUE} is ignored because a
-#' hazard ratio requires two groups.
+#' hazard ratio requires two groups. With \code{risk_table = TRUE} the numbers at
+#' risk are printed below the survival panel.
 #'
 #' @details
 #' The smoothed hazard ratio is obtained by kernel smoothing the Nelson-Aalen
@@ -25,6 +26,14 @@
 #' average hazard ratio from \code{\link{ahr_fast}}, and the restricted mean
 #' survival time difference from \code{\link{rmst_fast}}.
 #'
+#' The number at risk at a time is the number of subjects whose observed time is
+#' at or after it, as reported by \code{summary()} of a
+#' \code{survival::survfit()} object. The table has one row per group, in the
+#' colors of the curves, at the tick marks of the time axis or at
+#' \code{risk_times}; the bottom margin (and, for long group labels, the left
+#' margin) is enlarged to hold it. The curves themselves are available as a data
+#' frame from \code{\link{as.data.frame.kmcurve_fast}}.
+#'
 #' @param x A \code{kmcurve_fast} object from \code{\link{kmcurve_fast}}.
 #' @param hr Logical. If \code{TRUE}, add a hazard-ratio panel to the right.
 #' @param rmst Logical. If \code{TRUE}, shade the area under each curve up to
@@ -36,7 +45,7 @@
 #'   derived from the spread of the event times.
 #' @param n_grid Number of grid points for the smoothed hazard ratio.
 #' @param conf.int Logical. If \code{TRUE}, add pointwise confidence limits to
-#'   the survival curves.
+#'   the survival curves, drawn as set by \code{conf.style}.
 #' @param hr_max Upper limit of the hazard-ratio axis. Defaults to a value
 #'   derived from the estimated hazard ratio.
 #' @param cox_line Logical. If \code{TRUE}, add the constant Cox hazard ratio as
@@ -62,12 +71,22 @@
 #' @param xlab,ylab Axis labels for the survival panel.
 #' @param main_km,main_hr Panel titles.
 #' @param group_labels Optional length-two character vector of legend labels for
-#'   the control and treatment groups.
+#'   the control and treatment groups. They also label the rows of the
+#'   number-at-risk table, which are otherwise labeled \code{Control} and
+#'   \code{Treatment} (or by the group label for a single group).
+#' @param risk_table Logical. If \code{TRUE}, print the numbers at risk below
+#'   the survival panel. Defaults to \code{FALSE}.
+#' @param risk_times Times at which the numbers at risk are given. Defaults to
+#'   the tick marks of the time axis.
+#' @param conf.style How the pointwise confidence limits are drawn when
+#'   \code{conf.int = TRUE}: \code{"lines"} (default) as dashed step functions,
+#'   or \code{"band"} as a shaded band.
 #' @param ... Further arguments, currently ignored.
 #'
 #' @return The input \code{x}, invisibly.
 #'
-#' @seealso \code{\link{kmcurve_fast}}, \code{\link{print.kmcurve_fast}}
+#' @seealso \code{\link{kmcurve_fast}}, \code{\link{print.kmcurve_fast}},
+#'   \code{\link{as.data.frame.kmcurve_fast}}
 #'
 #' @export
 plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
@@ -84,8 +103,15 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
                               xlab = "Time", ylab = "Survival probability",
                               main_km = "Kaplan-Meier",
                               main_hr = "Hazard ratio",
-                              group_labels = NULL, ...) {
+                              group_labels = NULL, risk_table = FALSE,
+                              risk_times = NULL,
+                              conf.style = c("lines", "band"), ...) {
   conf.type <- match.arg(conf.type, c("plain", "log", "log-log"))
+  conf.style <- match.arg(conf.style)
+  if (!is.null(risk_times) &&
+      (!is.numeric(risk_times) || anyNA(risk_times) || any(risk_times < 0))) {
+    stop("'risk_times' must be a vector of non-negative times")
+  }
   two  <- isTRUE(x$two_group)
   km_c <- x$km$control
   km_t <- x$km$treat
@@ -105,11 +131,28 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
   xmax_km   <- if (two) max(km_c$tmax, km_t$tmax, na.rm = TRUE) else km_c$tmax
   if (is.null(tau)) tau <- tmax_both
 
+  # The number-at-risk table takes a heading and one line per group below the
+  # axis title, and its row labels are written in the left margin
+  rt_lab <- if (!is.null(group_labels)) {
+    rep_len(as.character(group_labels), if (two) 2L else 1L)
+  } else if (two) {
+    c("Control", "Treatment")
+  } else {
+    x$labels[["control"]]
+  }
+  rt_cex <- 0.8 * base_size
+  mar_b  <- if (isTRUE(risk_table)) 4 + (if (two) 2 else 1) + 2 else 4
+  mar_l  <- if (isTRUE(risk_table)) {
+    max(4, 0.6 * max(nchar(as.character(rt_lab))) * rt_cex + 1.5)
+  } else {
+    4
+  }
+
   if (isTRUE(hr)) {
-    op <- graphics::par(mfrow = c(1, 2), mar = c(4, 4, 3, 4),
+    op <- graphics::par(mfrow = c(1, 2), mar = c(mar_b, mar_l, 3, 4),
                         cex.lab = base_size, cex.axis = base_size)
   } else {
-    op <- graphics::par(mar = c(4, 4, 3, 2),
+    op <- graphics::par(mar = c(mar_b, mar_l, 3, 2),
                         cex.lab = base_size, cex.axis = base_size)
   }
   on.exit(graphics::par(op), add = TRUE)
@@ -132,7 +175,14 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
     graphics::abline(v = tau, col = "grey60", lty = 3)
   }
 
-  if (isTRUE(conf.int)) {
+  if (isTRUE(conf.int) && conf.style == "band") {
+    km_band_step(km_c, conf.level, conf.type,
+                 grDevices::adjustcolor(col_control, 0.2))
+    if (two) {
+      km_band_step(km_t, conf.level, conf.type,
+                   grDevices::adjustcolor(col_treat, 0.2))
+    }
+  } else if (isTRUE(conf.int)) {
     km_ci_step(km_c, conf.level, conf.type,
                grDevices::adjustcolor(col_control, 0.5))
     if (two) {
@@ -185,6 +235,28 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
     legend_fixed(legend_pos, bty = "n", cex = 0.8 * base_size, seg.len = 2.5,
                  legend = lab, col = col_control,
                  lwd = lwd_control, lty = lty_control)
+  }
+
+  ## ---- Number-at-risk table below the survival panel ----
+  if (isTRUE(risk_table)) {
+    usr <- graphics::par("usr")
+    rt_times <- if (is.null(risk_times)) graphics::axTicks(1L) else risk_times
+    rt_times <- sort(unique(rt_times[rt_times >= usr[1L] &
+                                     rt_times <= usr[2L]]))
+    counts  <- km_risk_counts(x, rt_times)
+    rt_cols <- if (two) c(col_control, col_treat) else col_control
+    graphics::mtext("Number at risk", side = 1, line = 4.2, at = usr[1L],
+                    adj = 0, cex = rt_cex, font = 2)
+    for (r in seq_len(nrow(counts))) {
+      graphics::mtext(rt_lab[r], side = 1, line = 4.2 + r,
+                      at = usr[1L] - 0.02 * (usr[2L] - usr[1L]), adj = 1,
+                      cex = rt_cex, col = rt_cols[r])
+      if (length(rt_times) > 0L) {
+        graphics::mtext(format(counts[r, ], trim = TRUE), side = 1,
+                        line = 4.2 + r, at = rt_times, cex = rt_cex,
+                        col = rt_cols[r])
+      }
+    }
   }
 
   ## ---- Hazard-ratio panel ----

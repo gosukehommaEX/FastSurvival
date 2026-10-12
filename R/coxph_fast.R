@@ -77,6 +77,9 @@
 #'
 #' @param time A numeric vector of follow-up times for all subjects (pooled
 #'   over both groups).
+#'   Alternatively, a formula \code{Surv(time, event) ~ group}, optionally with
+#'   \code{strata()} terms, with the variables in
+#'   \code{data}; see \code{\link{formula_interface}}.
 #' @param event An integer or numeric vector of event indicators
 #'   (1 = event, 0 = censored), aligned with \code{time}.
 #' @param group A vector of group labels aligned with \code{time}. Any type
@@ -84,6 +87,8 @@
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group. Subjects with \code{group != control} are
 #'   treated as the treatment group.
+#'   With the formula interface it defaults to the first level of the
+#'   group variable.
 #' @param side 1 for a one-sided test in the direction of treatment benefit
 #'   (hazard ratio below 1, i.e. a negative coefficient) or 2 for a two-sided
 #'   test (default 2). The returned vector has no p-value: \code{side} is
@@ -104,6 +109,9 @@
 #'   estimator described in Details is computed. Several stratification
 #'   factors can be combined with \code{interaction()}. \code{NULL} (default)
 #'   gives the unstratified estimator.
+#' @param data A data frame in which the variables of a formula given as
+#'   \code{time} are evaluated. Used only with the formula interface; see
+#'   \code{\link{formula_interface}}.
 #'
 #' @return An object of class \code{"coxph_fast"}, which is a named numeric
 #'   vector of length 5 with elements matching the column names of
@@ -124,6 +132,9 @@
 #' Returns a vector of \code{NA_real_} values (still with class
 #' \code{"coxph_fast"}) when the estimate cannot be computed (e.g., no
 #' events, all events in one group, or \code{I_0 = 0}).
+#'   The object also has the class \code{"fastsurv"}, whose
+#'   \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+#'   are described in \code{\link{as.data.frame.fastsurv}}.
 #'
 #' @examples
 #' library(survival)
@@ -148,6 +159,11 @@
 #' ord <- order(ovarian$futime)
 #' coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #'            control = 1, presorted = TRUE)
+#'
+#' # Formula interface, and the result as a data frame (log hazard ratio)
+#' fit_f <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+#' as.data.frame(fit_f)
+#' exp(confint(fit_f))
 #'
 #' \donttest{
 #' # Speed comparison against coxph()
@@ -176,7 +192,23 @@
 #' @importFrom stats qnorm setNames
 #' @export
 coxph_fast <- function(time, event, group, control, side = 2,
-                       conf.level = 0.95, presorted = FALSE, strata = NULL) {
+                       conf.level = 0.95, presorted = FALSE, strata = NULL,
+                       data = NULL) {
+
+  # Formula interface: Surv(time, event) ~ group + strata(s) evaluated in
+  # 'data'
+  if (inherits(time, "formula")) {
+    f <- fastsurv_formula(time, data,
+                          event = if (!missing(event)) event,
+                          group = if (!missing(group)) group,
+                          strata = strata, group_mode = "required",
+                          strata_ok = TRUE, fun = "coxph_fast()")
+    if (missing(control) || is.null(control)) control <- f$control
+    return(coxph_fast(f$time, f$event, f$group, control = control,
+                      side = side, conf.level = conf.level,
+                      presorted = presorted, strata = f$strata))
+  }
+  if (!is.null(data)) stop("'data' is used only with a formula")
 
   if (!side %in% c(1L, 2L)) {
     stop("'side' must be either 1 (one-sided) or 2 (two-sided)")
@@ -213,7 +245,7 @@ coxph_fast <- function(time, event, group, control, side = 2,
   # Attach the attributes of a result (the number of strata when stratified)
   wrap <- function(v, n_strata = NULL) {
     out <- structure(v, conf.level = conf.level, side = side,
-                     control = control, class = "coxph_fast")
+                     control = control, class = c("coxph_fast", "fastsurv"))
     if (use_strata) attr(out, "strata") <- n_strata
     out
   }

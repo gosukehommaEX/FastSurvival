@@ -50,7 +50,7 @@
 #'
 #' @return The object \code{x}, invisibly.
 #'
-#' @seealso \code{\link{simsummary_fast}}.
+#' @seealso \code{\link{simsummary_fast}}, \code{\link{plot.simsummary_fast}}.
 #'
 #' @export
 print.simsummary_fast <- function(x, digits = 4, ...) {

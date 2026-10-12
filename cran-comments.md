@@ -3,8 +3,9 @@
 This is an update from version 1.1.0 to 1.2.0. It is submitted soon after
 version 1.1.0 (published on 2026-10-08) because it corrects results that the
 published version returns without a warning, found in an independent review
-of the package while preparing an article on it. It adds no new features. The
-main corrections are:
+of the package while preparing an article on it. It also adds a formula
+interface to the estimation and testing functions, methods that return their
+results as data frames, and two plots. The main corrections are:
 
 * the median survival time of `medsurv_fast()` and `analysis_fast()` was
   infinite, with a p-value of 0, when a Kaplan-Meier curve stayed at 0.5 up

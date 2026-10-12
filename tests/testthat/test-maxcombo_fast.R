@@ -392,3 +392,22 @@ test_that("one-sided p-values with singular weight sets match an independent int
   expect_gt(abs(ref_singular_p(m3 + 0.05, attr(f3, "corr"))$p - r3$p), 2e-3)
   expect_gt(abs(ref_singular_p(m4 + 0.05, attr(f4, "corr"))$p - r4$p), 2e-3)
 })
+
+test_that("maxcombo_fast: the formula interface gives the vector result", {
+  set.seed(68)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  # The quasi-Monte-Carlo p-value of four weights uses R's random numbers
+  set.seed(1)
+  f4 <- maxcombo_fast(Surv(tt, ee) ~ g, data = d, side = 1)
+  set.seed(1)
+  v4 <- maxcombo_fast(d$tt, d$ee, d$g, control = 0, side = 1)
+  expect_identical(f4, v4)
+  expect_identical(
+    maxcombo_fast(Surv(tt, ee) ~ g, d, rho = c(0, 0), gamma = c(0, 1)),
+    maxcombo_fast(d$tt, d$ee, d$g, 0, rho = c(0, 0), gamma = c(0, 1)))
+  expect_identical(class(v4), c("maxcombo_fast", "fastsurv"))
+  expect_error(maxcombo_fast(d$tt, d$ee, d$g, 0, data = d),
+               "only with a formula")
+})

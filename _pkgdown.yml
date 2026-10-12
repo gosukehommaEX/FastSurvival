@@ -26,6 +26,8 @@ reference:
   - wkm_fast
   - ahsw_fast
   - ahr_fast
+  - formula_interface
+  - as.data.frame.fastsurv
 
 - title: Simulation
   desc: >
@@ -38,6 +40,7 @@ reference:
   - pairwise_fast
   - switch_fast
   - simsummary_fast
+  - plot.simsummary_fast
 
 - title: Design and visualization
   desc: >
@@ -48,6 +51,7 @@ reference:
   - kmcurve_fast
   - plot.scenario_fast
   - plot.kmcurve_fast
+  - as.data.frame.kmcurve_fast
 
 - title: Print methods
   desc: Display methods for the returned S3 objects.

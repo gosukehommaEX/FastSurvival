@@ -63,11 +63,15 @@
 #' useful inside simulation loops where the data are generated in sorted order.
 #'
 #' @param time A numeric vector of follow-up times for all subjects.
+#'   Alternatively, a formula \code{Surv(time, event) ~ group}, with the
+#'   variables in \code{data}; see \code{\link{formula_interface}}.
 #' @param event An integer or numeric vector of event indicators
 #'   (1 = event, 0 = censored), aligned with \code{time}.
 #' @param group A vector of group labels aligned with \code{time}.
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
+#'   With the formula interface it defaults to the first level of the
+#'   group variable.
 #' @param side An integer, either 1 or 2. If \code{side = 1}, the
 #'   one-sided max-combo test for treatment benefit is computed. If
 #'   \code{side = 2} (default), the two-sided test based on the maximum absolute
@@ -94,6 +98,9 @@
 #'   evaluations for the quasi-Monte-Carlo integration used with four or more
 #'   weights or with a two-sided test (see Details). Defaults to 25000. Larger
 #'   values reduce the integration error at a higher computing cost.
+#' @param data A data frame in which the variables of a formula given as
+#'   \code{time} are evaluated. Used only with the formula interface; see
+#'   \code{\link{formula_interface}}.
 #'
 #' @return An object of class \code{"maxcombo_fast"}, a named numeric vector of
 #'   length two with elements \code{statistic} (the max-combo statistic;
@@ -104,6 +111,9 @@
 #'   \code{gamma}, the requested \code{side}, and the total sample size in
 #'   \code{n}. Returns \code{NA} values (still with class
 #'   \code{"maxcombo_fast"}) when any component variance is zero or not finite.
+#'   The object also has the class \code{"fastsurv"}, whose
+#'   \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+#'   are described in \code{\link{as.data.frame.fastsurv}}.
 #'
 #' @examples
 #' library(survival)
@@ -125,6 +135,9 @@
 #' ord <- order(ovarian$futime)
 #' maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #'               control = 1, presorted = TRUE)
+#'
+#' # Formula interface
+#' maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 #'
 #' \donttest{
 #' # Cross-check against simtrial::maxcombo (one-sided)
@@ -158,7 +171,22 @@
 #' @export
 maxcombo_fast <- function(time, event, group, control, side = 2,
                           rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
-                          presorted = FALSE, abseps = 1e-5, maxpts = 25000) {
+                          presorted = FALSE, abseps = 1e-5, maxpts = 25000,
+                          data = NULL) {
+  # Formula interface: Surv(time, event) ~ group evaluated in 'data'
+  if (inherits(time, "formula")) {
+    f <- fastsurv_formula(time, data,
+                          event = if (!missing(event)) event,
+                          group = if (!missing(group)) group,
+                          group_mode = "required", fun = "maxcombo_fast()")
+    if (missing(control) || is.null(control)) control <- f$control
+    return(maxcombo_fast(f$time, f$event, f$group, control = control,
+                         side = side, rho = rho, gamma = gamma,
+                         presorted = presorted, abseps = abseps,
+                         maxpts = maxpts))
+  }
+  if (!is.null(data)) stop("'data' is used only with a formula")
+
   # Input validation
   n_total <- length(time)
   if (length(event) != n_total || length(group) != n_total) {
@@ -211,7 +239,7 @@ maxcombo_fast <- function(time, event, group, control, side = 2,
     return(structure(na_out, z = z_na, corr = NULL,
                      rho = rho, gamma = gamma, side = side, n = n_total,
                      control = control,
-                     class = "maxcombo_fast"))
+                     class = c("maxcombo_fast", "fastsurv")))
   }
 
   z_vec <- Umat / sqrt(dV)
@@ -257,5 +285,5 @@ maxcombo_fast <- function(time, event, group, control, side = 2,
   structure(out, z = z_vec, corr = corr_mat,
             rho = rho, gamma = gamma, side = side, n = n_total,
             control = control,
-            class = "maxcombo_fast")
+            class = c("maxcombo_fast", "fastsurv"))
 }

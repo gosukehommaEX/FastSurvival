@@ -250,3 +250,15 @@ test_that("wkm_fast: time and event must be numeric and time non-negative", {
   expect_error(wkm_fast(tt, factor(ee), gg, control = 0),
                "numeric or logical")
 })
+
+test_that("wkm_fast: the formula interface gives the vector result", {
+  set.seed(70)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  ref <- wkm_fast(d$tt, d$ee, d$g, control = 0, weight = "sqrtPF")
+  expect_identical(wkm_fast(Surv(tt, ee) ~ g, data = d, weight = "sqrtPF"),
+                   ref)
+  expect_identical(class(ref), c("wkm_fast", "fastsurv"))
+  expect_error(wkm_fast(d$tt, d$ee, d$g, 0, data = d), "only with a formula")
+})

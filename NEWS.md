@@ -1,7 +1,40 @@
 # FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an
-article on the package. It adds no new features.
+article on the package. It also adds a formula interface, methods that return
+the results as data frames, and two plots.
+
+## New features
+
+* The estimation and testing functions and `kmcurve_fast()` accept a model
+  formula `Surv(time, event) ~ group` (or `~ 1` for the functions that allow
+  a single group) with a data frame, in place of the vectors of times, event
+  indicators, and group labels; `survdiff_fast()` and `coxph_fast()` also
+  accept `strata()` terms. The control group defaults to the first level of
+  the group variable. The result is that of the vector interface, which is
+  unchanged and remains the choice inside simulation loops. See
+  `?formula_interface`.
+
+* The results of the estimation and testing functions have the additional
+  class `"fastsurv"`. Its `as.data.frame()` method returns the estimates and
+  tests of any result, including the lists returned by `milestone_fast()` and
+  `ahr_fast()`, as rows of a data frame with the columns `term`, `estimate`,
+  `std.error`, `conf.low`, `conf.high`, `statistic`, and `p.value`, so that
+  the results of a loop can be stacked with `rbind()`. Its `coef()` and
+  `confint()` methods return the estimates and their confidence limits.
+  Ratios are reported on the log scale. The results are otherwise unchanged;
+  code that compares `class()` of a result with a single class name should
+  use `inherits()` instead.
+
+* `plot.kmcurve_fast()` can print the numbers at risk below the survival
+  panel (`risk_table` and `risk_times`) and draw the pointwise confidence
+  limits as a shaded band (`conf.style = "band"`). `as.data.frame()` returns
+  the Kaplan-Meier curves of a `kmcurve_fast` object as a data frame, with the
+  numbers at risk, events, and censored times at each observed time.
+
+* `simsummary_fast()` results have a `plot()` method, which draws the
+  cumulative probabilities of stopping for efficacy and for futility by look,
+  or the stopping probabilities at each look, for every arm and population.
 
 ## Bug fixes
 
@@ -191,6 +224,13 @@ article on the package. It adds no new features.
   several references.
 
 ## Tests
+
+* New tests cover the formula interface of every function (compared with the
+  vector interface), the `as.data.frame()`, `coef()`, and `confint()`
+  methods, the numbers at risk and the Kaplan-Meier table of a
+  `kmcurve_fast` object (compared with `summary()` of a
+  `survival::survfit()` object and with a hand calculation), and the plot
+  methods.
 
 * The one-sided max-combo p-values with three and four weights, whose
   correlation matrices are singular, are compared with an independent

@@ -223,3 +223,15 @@ test_that("rmw_fast: presorted = TRUE checks the order", {
   group <- c(0, 1, 0, 1, 0, 1)
   expect_error(rmw_fast(time, event, group, control = 0, presorted = TRUE), "presorted = FALSE")
 })
+
+test_that("rmw_fast: the formula interface gives the vector result", {
+  set.seed(69)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
+                  g = rep(c(1, 0), n / 2))
+  ref <- rmw_fast(d$tt, d$ee, d$g, control = 0, side = 1, s_star = 0.6)
+  expect_identical(rmw_fast(Surv(tt, ee) ~ g, data = d, side = 1,
+                            s_star = 0.6), ref)
+  expect_identical(class(ref), c("rmw_fast", "fastsurv"))
+  expect_error(rmw_fast(d$tt, d$ee, d$g, 0, data = d), "only with a formula")
+})

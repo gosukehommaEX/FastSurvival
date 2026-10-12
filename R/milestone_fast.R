@@ -30,6 +30,8 @@
 #' the one-sided p-value is the upper tail.
 #'
 #' @param time A numeric vector of follow-up times.
+#'   Alternatively, a formula \code{Surv(time, event) ~ group}, with the
+#'   variables in \code{data}; see \code{\link{formula_interface}}.
 #' @param event An integer vector of event indicators, 1 for an event and 0
 #'   for a censored observation.
 #' @param group A vector with exactly two distinct values identifying the
@@ -37,6 +39,8 @@
 #' @param control The value of \code{group} that denotes the control group. The
 #'   other value is the treatment group and the difference is reported as
 #'   treatment minus control.
+#'   With the formula interface it defaults to the first level of the
+#'   group variable.
 #' @param side 1 for a one-sided test in the direction of treatment benefit
 #'   (treatment milestone survival larger than control) or 2 for a two-sided
 #'   test (default 2). The confidence interval is always reported as a
@@ -52,10 +56,16 @@
 #'   by \code{time} in ascending order and the internal sort is skipped. This
 #'   is intended for repeated calls inside simulation loops.
 #'   The order is checked, and an error is given when it does not hold.
+#' @param data A data frame in which the variables of a formula given as
+#'   \code{time} are evaluated. Used only with the formula interface; see
+#'   \code{\link{formula_interface}}.
 #'
 #' @return An object of class \code{"milestone_fast"}, a list with the
 #'   per-group milestone survival estimates and standard errors, the difference
 #'   estimate with its confidence interval, the test statistic, and the p-value.
+#'   The object also has the class \code{"fastsurv"}, whose
+#'   \code{as.data.frame()}, \code{coef()}, and \code{confint()} methods
+#'   are described in \code{\link{as.data.frame.fastsurv}}.
 #'
 #' @references
 #' Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
@@ -72,11 +82,28 @@
 #' group <- rep(c(0, 1), each = 50)
 #' milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 #'
+#' # Formula interface
+#' d <- data.frame(time, event, group)
+#' milestone_fast(Surv(time, event) ~ group, data = d, tau = 10)
+#'
 #' @export
 milestone_fast <- function(time, event, group, control, side = 2,
                            conf.level = 0.95, tau,
                            method = c("wald", "loglog", "mover"),
-                           presorted = FALSE) {
+                           presorted = FALSE, data = NULL) {
+  # Formula interface: Surv(time, event) ~ group evaluated in 'data'
+  if (inherits(time, "formula")) {
+    f <- fastsurv_formula(time, data,
+                          event = if (!missing(event)) event,
+                          group = if (!missing(group)) group,
+                          group_mode = "required", fun = "milestone_fast()")
+    if (missing(control) || is.null(control)) control <- f$control
+    return(milestone_fast(f$time, f$event, f$group, control = control,
+                          side = side, conf.level = conf.level, tau = tau,
+                          method = method, presorted = presorted))
+  }
+  if (!is.null(data)) stop("'data' is used only with a formula")
+
   method <- match.arg(method)
   if (!side %in% c(1L, 2L)) {
     stop("'side' must be either 1 (one-sided) or 2 (two-sided).")
@@ -228,6 +255,6 @@ milestone_fast <- function(time, event, group, control, side = 2,
       group.labels = c(control = as.character(control),
                        treatment = as.character(trt))
     ),
-    class = "milestone_fast"
+    class = c("milestone_fast", "fastsurv")
   )
 }
