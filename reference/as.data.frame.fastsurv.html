@@ -137,9 +137,10 @@ for that quantity, following its <code>side</code>, as printed by the
     <code>log.rah</code>, <code>dah</code></td></tr><tr><td><code><a href="ahr_fast.html">ahr_fast</a></code></td><td><code>log.ahr</code>, <code>theta</code></td></tr></table><p>Ratios are reported on the log scale, on which their confidence intervals
 are symmetric and their tests are computed: <code>coef</code> of
 <code><a href="coxph_fast.html">coxph_fast()</a></code> is the log hazard ratio (as from <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> of
-<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code>), and <code>log.ratio</code>, <code>log.rah</code>, and
-<code>log.ahr</code> are the logarithms of the ratio of restricted mean survival
-times, the ratio of average hazards, and the average hazard ratio. Take
+<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code> with the group variable as a factor), and
+<code>log.ratio</code>, <code>log.rah</code>, and <code>log.ahr</code> are the logarithms of
+the ratio of restricted mean survival times, the ratio of average hazards,
+and the average hazard ratio. Take
 <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp()</a></code> of the estimate and of the confidence limits for the ratio.
 <code><a href="rmst_fast.html">rmst_fast()</a></code> and <code><a href="ahsw_fast.html">ahsw_fast()</a></code> do not store the standard error of
 a log ratio or of the difference of average hazards; it is recovered from

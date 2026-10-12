@@ -12,22 +12,24 @@ response and a data frame, as the functions of the survival package do:
     survdiff_fast(Surv(time, status) ~ arm + strata(region), data = d)
     rmst_fast(Surv(time, status) ~ 1, data = d, tau = 12)
 
-The formula is given as the first argument, and the data frame as `data`
-or as the second argument. The other arguments (`side`, `tau`,
-`conf.level`, and so on) are given by name as with the vector interface,
-and the result is the same as that of the vector interface with the
-vectors evaluated from the formula.
+The formula is given as the first argument (by position, or by the name
+of that argument, such as `time`; there is no argument named `formula`),
+and the data frame as `data` or as the second argument. The other
+arguments (`side`, `tau`, `conf.level`, and so on) are given by name as
+with the vector interface, and the result is the same as that of the
+vector interface with the vectors evaluated from the formula.
 
 ## Details
 
 The response must be `Surv(time, event)` with right-censored data, where
 `event` is 1 (or `TRUE`) for an event and 0 (or `FALSE`) for a censored
-time; an expression such as `Surv(time, status == 2)` may be used. The
-call to [`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html) is read
-from the formula and not evaluated, so the survival package need not be
-attached. Other forms of
-[`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html), such as
-counting-process data, are not supported.
+time; an expression such as `Surv(time, status == 2)` may be used. A
+status coded 1 (censored) and 2 (event), as in data sets of the survival
+package, gives an error that suggests this expression. The call to
+[`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html) is read from the
+formula and not evaluated, so the survival package need not be attached.
+Other forms of [`Surv()`](https://rdrr.io/pkg/survival/man/Surv.html),
+such as counting-process data, are not supported.
 
 The right-hand side is `1` for a single group, or a single group
 variable with exactly two distinct values for a two-group comparison.
@@ -53,10 +55,16 @@ operators are not supported, because the functions compare two groups
 without adjustment.
 
 With a group variable, `control` defaults to its first level: the first
-level of a factor, and otherwise the smallest value. This is the
-reference level that a model formula uses, for example in
-[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html).
-`control` can be given to choose the other group as the control group.
+level of a factor that occurs in the data, and otherwise the smallest
+value. This is the reference level of a model formula with the group
+variable as a factor. `control` can be given to choose the other group
+as the control group. A numeric group variable is treated as two groups,
+whereas
+[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
+treats it as a continuous covariate, so the coefficient of
+[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
+equals the log hazard ratio of the two groups only when the two values
+differ by 1.
 
 The variables are evaluated in `data`, and variables not found there in
 the environment of the formula. Missing values in the variables of the

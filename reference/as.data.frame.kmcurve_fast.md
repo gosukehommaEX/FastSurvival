@@ -69,9 +69,13 @@ by [`summary()`](https://rdrr.io/r/base/summary.html) of a
 object, and `lower` and `upper` are the pointwise confidence limits of
 the type `conf.type`, as drawn by
 [`plot.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md).
-Apart from the row at time 0, the times, counts, and survival estimates
-are those reported by [`summary()`](https://rdrr.io/r/base/summary.html)
-of a
+At a time at which every subject at risk fails, the estimate is 0 and
+`std.err` and the limits are 0, as in
+[`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
+where [`summary()`](https://rdrr.io/r/base/summary.html) reports a `NaN`
+standard error and `NA` limits. Apart from the row at time 0, the times,
+counts, and survival estimates are those reported by
+[`summary()`](https://rdrr.io/r/base/summary.html) of a
 [`survival::survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
 object with `censored = TRUE`.
 

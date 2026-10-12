@@ -37,10 +37,19 @@ return the results as data frames, and two plots.
   [`coef()`](https://rdrr.io/r/stats/coef.html) and
   [`confint()`](https://rdrr.io/r/stats/confint.html) methods return the
   estimates and their confidence limits. Ratios are reported on the log
-  scale. The results are otherwise unchanged; code that compares
+  scale. The results are otherwise unchanged. Code that compares
   [`class()`](https://rdrr.io/r/base/class.html) of a result with a
   single class name should use
-  [`inherits()`](https://rdrr.io/r/base/class.html) instead.
+  [`inherits()`](https://rdrr.io/r/base/class.html) instead, and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
+  [`data.frame()`](https://rdrr.io/r/base/data.frame.html) of a result,
+  and functions that call them such as
+  [`write.csv()`](https://rdrr.io/r/utils/write.table.html), now return
+  the table described in
+  [`?as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md);
+  with R 4.3.0 or later they returned the elements of a numeric result
+  as a one-column data frame, which `as.data.frame(unclass(x))` still
+  gives.
 
 - [`plot.kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md)
   can print the numbers at risk below the survival panel (`risk_table`

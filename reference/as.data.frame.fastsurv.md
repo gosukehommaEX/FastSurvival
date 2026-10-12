@@ -93,11 +93,12 @@ intervals are symmetric and their tests are computed: `coef` of
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
 is the log hazard ratio (as from
 [`coef()`](https://rdrr.io/r/stats/coef.html) of
-[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)), and
-`log.ratio`, `log.rah`, and `log.ahr` are the logarithms of the ratio of
-restricted mean survival times, the ratio of average hazards, and the
-average hazard ratio. Take [`exp()`](https://rdrr.io/r/base/Log.html) of
-the estimate and of the confidence limits for the ratio.
+[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) with
+the group variable as a factor), and `log.ratio`, `log.rah`, and
+`log.ahr` are the logarithms of the ratio of restricted mean survival
+times, the ratio of average hazards, and the average hazard ratio. Take
+[`exp()`](https://rdrr.io/r/base/Log.html) of the estimate and of the
+confidence limits for the ratio.
 [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
 and
 [`ahsw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahsw_fast.md)

@@ -10,8 +10,10 @@ survdiff_fast(Surv(time, status) ~ arm + strata(region), data = d)
 rmst_fast(Surv(time, status) ~ 1, data = d, tau = 12)
 
 
-The formula is given as the first argument, and the data frame as
-data or as the second argument. The other arguments (side,
+The formula is given as the first argument (by position, or by the name of
+that argument, such as time; there is no argument named
+formula), and the data frame as data or as the second
+argument. The other arguments (side,
 tau, conf.level, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
 interface with the vectors evaluated from the formula."><meta property="og:description" content="The estimation and testing functions and kmcurve_fast take
@@ -25,8 +27,10 @@ survdiff_fast(Surv(time, status) ~ arm + strata(region), data = d)
 rmst_fast(Surv(time, status) ~ 1, data = d, tau = 12)
 
 
-The formula is given as the first argument, and the data frame as
-data or as the second argument. The other arguments (side,
+The formula is given as the first argument (by position, or by the name of
+that argument, such as time; there is no argument named
+formula), and the data frame as data or as the second
+argument. The other arguments (side,
 tau, conf.level, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
 interface with the vectors evaluated from the formula."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
@@ -87,8 +91,10 @@ data frame, as the functions of the <span class="pkg">survival</span> package do
 <span><span class="fu"><a href="../reference/survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">arm</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">region</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">d</span>, tau <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
 
-<p>The formula is given as the first argument, and the data frame as
-<code>data</code> or as the second argument. The other arguments (<code>side</code>,
+<p>The formula is given as the first argument (by position, or by the name of
+that argument, such as <code>time</code>; there is no argument named
+<code>formula</code>), and the data frame as <code>data</code> or as the second
+argument. The other arguments (<code>side</code>,
 <code>tau</code>, <code>conf.level</code>, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
 interface with the vectors evaluated from the formula.</p>
@@ -100,7 +106,9 @@ interface with the vectors evaluated from the formula.</p>
     <p>The response must be <code>Surv(time, event)</code> with right-censored data,
 where <code>event</code> is 1 (or <code>TRUE</code>) for an event and 0 (or
 <code>FALSE</code>) for a censored time; an expression such as
-<code>Surv(time, status == 2)</code> may be used. The call to <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code> is
+<code>Surv(time, status == 2)</code> may be used. A status coded 1 (censored)
+and 2 (event), as in data sets of the <span class="pkg">survival</span> package, gives an
+error that suggests this expression. The call to <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code> is
 read from the formula and not evaluated, so the <span class="pkg">survival</span> package
 need not be attached. Other forms of <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv()</a></code>, such as counting-process
 data, are not supported.</p>
@@ -118,10 +126,13 @@ values. Interactions, further covariates, and other formula operators are
 not supported, because the functions compare two groups without
 adjustment.</p>
 <p>With a group variable, <code>control</code> defaults to its first level: the
-first level of a factor, and otherwise the smallest value. This is the
-reference level that a model formula uses, for example in
-<code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code>. <code>control</code> can be given to choose the other
-group as the control group.</p>
+first level of a factor that occurs in the data, and otherwise the smallest
+value. This is the reference level of a model formula with the group
+variable as a factor. <code>control</code> can be given to choose the other group
+as the control group. A numeric group variable is treated as two groups,
+whereas <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code> treats it as a continuous covariate, so
+the coefficient of <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code> equals the log hazard ratio of
+the two groups only when the two values differ by 1.</p>
 <p>The variables are evaluated in <code>data</code>, and variables not found there in
 the environment of the formula. Missing values in the variables of the
 formula are an error, as in the vector interface; remove the incomplete rows
