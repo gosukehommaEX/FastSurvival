@@ -411,3 +411,25 @@ test_that("maxcombo_fast: the formula interface gives the vector result", {
   expect_error(maxcombo_fast(d$tt, d$ee, d$g, 0, data = d),
                "only with a formula")
 })
+
+test_that("maxcombo_fast: the formula interface passes every argument", {
+  set.seed(60)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1) + 0.1, ee = rbinom(n, 1, 0.8),
+                  g = rep(c("b", "a"), n / 2), s = rep(c("x", "y", "z"), n / 3))
+  d1 <- d[order(d$tt), ]
+  d2 <- d[order(d$s, d$tt), ]
+  # The quasi-Monte-Carlo p-value of four weights uses R's random numbers
+  set.seed(1)
+  mc_f <- maxcombo_fast(Surv(tt, ee) ~ g, d1, control = "b", side = 1,
+                        presorted = TRUE, abseps = 1e-4, maxpts = 5000)
+  set.seed(1)
+  mc_v <- maxcombo_fast(d1$tt, d1$ee, d1$g, "b", side = 1, presorted = TRUE,
+                        abseps = 1e-4, maxpts = 5000)
+  expect_identical(mc_f, mc_v)
+  expect_identical(
+    maxcombo_fast(Surv(tt, ee) ~ g, d, control = "b", side = 1,
+                  rho = c(0, 1), gamma = c(1, 0), abseps = 1e-7),
+    maxcombo_fast(d$tt, d$ee, d$g, "b", side = 1, rho = c(0, 1),
+                  gamma = c(1, 0), abseps = 1e-7))
+})

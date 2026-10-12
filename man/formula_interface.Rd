@@ -16,8 +16,10 @@ survdiff_fast(Surv(time, status) ~ arm + strata(region), data = d)
 rmst_fast(Surv(time, status) ~ 1, data = d, tau = 12)
 }
 
-The formula is given as the first argument, and the data frame as
-\code{data} or as the second argument. The other arguments (\code{side},
+The formula is given as the first argument (by position, or by the name of
+that argument, such as \code{time}; there is no argument named
+\code{formula}), and the data frame as \code{data} or as the second
+argument. The other arguments (\code{side},
 \code{tau}, \code{conf.level}, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
 interface with the vectors evaluated from the formula.
@@ -26,7 +28,9 @@ interface with the vectors evaluated from the formula.
 The response must be \code{Surv(time, event)} with right-censored data,
 where \code{event} is 1 (or \code{TRUE}) for an event and 0 (or
 \code{FALSE}) for a censored time; an expression such as
-\code{Surv(time, status == 2)} may be used. The call to \code{Surv()} is
+\code{Surv(time, status == 2)} may be used. A status coded 1 (censored)
+and 2 (event), as in data sets of the \pkg{survival} package, gives an
+error that suggests this expression. The call to \code{Surv()} is
 read from the formula and not evaluated, so the \pkg{survival} package
 need not be attached. Other forms of \code{Surv()}, such as counting-process
 data, are not supported.
@@ -46,10 +50,13 @@ not supported, because the functions compare two groups without
 adjustment.
 
 With a group variable, \code{control} defaults to its first level: the
-first level of a factor, and otherwise the smallest value. This is the
-reference level that a model formula uses, for example in
-\code{survival::coxph()}. \code{control} can be given to choose the other
-group as the control group.
+first level of a factor that occurs in the data, and otherwise the smallest
+value. This is the reference level of a model formula with the group
+variable as a factor. \code{control} can be given to choose the other group
+as the control group. A numeric group variable is treated as two groups,
+whereas \code{survival::coxph()} treats it as a continuous covariate, so
+the coefficient of \code{survival::coxph()} equals the log hazard ratio of
+the two groups only when the two values differ by 1.
 
 The variables are evaluated in \code{data}, and variables not found there in
 the environment of the formula. Missing values in the variables of the

@@ -141,7 +141,17 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
     x$labels[["control"]]
   }
   rt_cex <- 0.8 * base_size
-  mar_b  <- if (isTRUE(risk_table)) 4 + (if (two) 2 else 1) + 2 else 4
+  # The heading goes below the axis title (at line mgp[1] = 3, of size
+  # base_size) and the rows follow at a spacing that grows with the text, so
+  # that the table keeps its layout when base_size is changed (with
+  # base_size = 1: heading at line 4.2, rows 1 line apart, 8 or 7 lines)
+  rt_line <- 3 + 1.2 * base_size
+  rt_step <- max(1, 1.1 * rt_cex)
+  mar_b   <- if (isTRUE(risk_table)) {
+    ceiling(rt_line + rt_step * ((if (two) 2L else 1L) + 1L) + 0.5)
+  } else {
+    4
+  }
   # The left margin holds the row labels and half of the widest count, which
   # is centered at the first time of the table
   mar_l  <- if (isTRUE(risk_table)) {
@@ -248,7 +258,7 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
                                      rt_times <= usr[2L]]))
     counts  <- km_risk_counts(x, rt_times)
     rt_cols <- if (two) c(col_control, col_treat) else col_control
-    graphics::mtext("Number at risk", side = 1, line = 4.2, at = usr[1L],
+    graphics::mtext("Number at risk", side = 1, line = rt_line, at = usr[1L],
                     adj = 0, cex = rt_cex, font = 2)
     # The labels end left of the widest count centered at the left edge (the
     # cex of mtext() is absolute, that of strwidth() relative to par("cex"))
@@ -258,12 +268,12 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
                              cex = sw_cex)) / 2 -
       graphics::strwidth("m", units = "user", cex = sw_cex)
     for (r in seq_len(nrow(counts))) {
-      graphics::mtext(rt_lab[r], side = 1, line = 4.2 + r, at = lab_at,
-                      adj = 1, cex = rt_cex, col = rt_cols[r])
+      graphics::mtext(rt_lab[r], side = 1, line = rt_line + r * rt_step,
+                      at = lab_at, adj = 1, cex = rt_cex, col = rt_cols[r])
       if (length(rt_times) > 0L) {
         graphics::mtext(format(counts[r, ], trim = TRUE), side = 1,
-                        line = 4.2 + r, at = rt_times, cex = rt_cex,
-                        col = rt_cols[r])
+                        line = rt_line + r * rt_step, at = rt_times,
+                        cex = rt_cex, col = rt_cols[r])
       }
     }
   }

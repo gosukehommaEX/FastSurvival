@@ -167,6 +167,14 @@ fastsurv_formula <- function(formula, data = NULL, event = NULL, group = NULL,
     stop("the variables of the formula must not contain missing values; ",
          "remove the incomplete rows first, for example with na.omit()")
   }
+  # A status coded 1 (censored) and 2 (event), as in data sets of the
+  # survival package, is not an event indicator; Surv(time, status == 2) is
+  if (is.numeric(event) && length(event) > 0L && all(event %in% c(1, 2)) &&
+      any(event == 2)) {
+    stop("the event indicator in Surv() must be 0 (censored) or 1 (event); ",
+         "for a status coded 1 and 2, as in the survival package, use ",
+         "Surv(time, status == 2)")
+  }
 
   # Several stratification variables are combined through their integer
   # codes, so that labels containing the separator cannot merge two strata

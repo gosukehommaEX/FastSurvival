@@ -32,7 +32,7 @@ test_that("fastsurv_formula accepts the forms of Surv() for right censoring", {
   expect_identical(f_ns$event, c(TRUE, FALSE, TRUE, TRUE))
   # The second argument is the data frame, and without data the variables
   # come from the environment of the formula
-  expect_identical(fastsurv_formula(Surv(tt, st) ~ g, event = d,
+  expect_identical(fastsurv_formula(Surv(tt, st == 2) ~ g, event = d,
                                     group_mode = "required")$time, d$tt)
   tt2 <- c(9, 8)
   ee2 <- c(1, 1)
@@ -41,8 +41,7 @@ test_that("fastsurv_formula accepts the forms of Surv() for right censoring", {
 
 test_that("fastsurv_formula combines several strata without merging them", {
   # Pasting the labels with "." would merge ("a.b", "c") and ("a", "b.c");
-  # the four distinct pairs must stay four strata (hand count, and the
-  # independent check in Planning/python_checks/formula_methods_check.py)
+  # the four distinct pairs must stay four strata (hand count)
   n <- 80
   d <- data.frame(tt = seq_len(n), ee = 1, g = rep(0:1, n / 2),
                   s1 = rep(c("a.b", "a"), each = n / 2),
@@ -109,4 +108,19 @@ test_that("fastsurv_formula checks the data and the other arguments", {
   expect_error(fastsurv_formula(Surv(tt, ee) ~ short, d,
                                 group_mode = "required"),
                "same length")
+})
+
+test_that("fastsurv_formula points a status coded 1 and 2 to status == 2", {
+  d <- data.frame(tt = 1:6, st = c(2, 1, 2, 2, 1, 2), g = rep(0:1, 3))
+  expect_error(fastsurv_formula(Surv(tt, st) ~ g, d,
+                                group_mode = "required"),
+               "Surv\\(time, status == 2\\)")
+  expect_error(coxph_fast(Surv(tt, st) ~ g, d), "status == 2")
+  expect_identical(fastsurv_formula(Surv(tt, st == 2) ~ g, d,
+                                    group_mode = "required")$event,
+                   d$st == 2)
+  # A status of all 1 is a valid 0/1 indicator (all events)
+  expect_identical(fastsurv_formula(Surv(tt, rep(1, 6)) ~ g, d,
+                                    group_mode = "required")$event,
+                   rep(1, 6))
 })

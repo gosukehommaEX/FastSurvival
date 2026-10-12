@@ -210,3 +210,14 @@ test_that("kmcurve_fast: the formula interface gives the vector result", {
   expect_identical(class(kmcurve_fast(d$tt, d$ee)), "kmcurve_fast")
   expect_error(kmcurve_fast(d$tt, d$ee, data = d), "only with a formula")
 })
+
+test_that("kmcurve_fast: the formula interface passes every argument", {
+  set.seed(60)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1) + 0.1, ee = rbinom(n, 1, 0.8),
+                  g = rep(c("b", "a"), n / 2), s = rep(c("x", "y", "z"), n / 3))
+  d1 <- d[order(d$tt), ]
+  d2 <- d[order(d$s, d$tt), ]
+  expect_identical(kmcurve_fast(Surv(tt, ee) ~ g, d, control = "b"),
+                   kmcurve_fast(d$tt, d$ee, d$g, control = "b"))
+})

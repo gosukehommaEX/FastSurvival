@@ -52,7 +52,10 @@ number of subjects with an observed time at or after it, \code{n.event} and
 the Greenwood standard error on the survival scale, the \code{std.err}
 reported by \code{summary()} of a \code{survival::survfit()} object, and
 \code{lower} and \code{upper} are the pointwise confidence limits of the type
-\code{conf.type}, as drawn by \code{\link{plot.kmcurve_fast}}. Apart from the
+\code{conf.type}, as drawn by \code{\link{plot.kmcurve_fast}}. At a time at
+which every subject at risk fails, the estimate is 0 and \code{std.err} and
+the limits are 0, as in \code{\link{survfit_fast}}, where \code{summary()}
+reports a \code{NaN} standard error and \code{NA} limits. Apart from the
 row at time 0, the times, counts, and survival estimates are those reported
 by \code{summary()} of a \code{survival::survfit()} object with
 \code{censored = TRUE}.

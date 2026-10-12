@@ -547,3 +547,21 @@ test_that("survdiff_fast: the formula interface gives the vector result", {
   expect_error(survdiff_fast(d$tt, d$ee, d$arm, "ctl", data = d),
                "only with a formula")
 })
+
+test_that("survdiff_fast: the formula interface passes every argument", {
+  set.seed(60)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1) + 0.1, ee = rbinom(n, 1, 0.8),
+                  g = rep(c("b", "a"), n / 2), s = rep(c("x", "y", "z"), n / 3))
+  d1 <- d[order(d$tt), ]
+  d2 <- d[order(d$s, d$tt), ]
+  expect_identical(
+    survdiff_fast(Surv(tt, ee) ~ g + strata(s), d2, control = "b", side = 1,
+                  presorted = TRUE, weight = "mwlrt", t_star = 5),
+    survdiff_fast(d2$tt, d2$ee, d2$g, "b", side = 1, presorted = TRUE,
+                  strata = d2$s, weight = "mwlrt", t_star = 5))
+  expect_identical(
+    survdiff_fast(Surv(tt, ee) ~ g, d, control = "b", weight = "fh",
+                  rho = 1, gamma = 0.5),
+    survdiff_fast(d$tt, d$ee, d$g, "b", weight = "fh", rho = 1, gamma = 0.5))
+})

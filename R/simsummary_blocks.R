@@ -4,8 +4,9 @@
 #' \code{simsummary_fast()} into its blocks (arms and populations) and returns
 #' the look rows of each block, provided that every block keeps all the looks
 #' of the design in their original order and that its rows are those of the
-#' result stored with the boundary settings, the condition under which the
-#' print method prints the report.
+#' result stored with the boundary settings. This is the condition under which
+#' the print method prints the report, except that the overall rows, which the
+#' plot does not use, are not compared.
 #'
 #' @param x An object of class \code{"simsummary_fast"}.
 #'

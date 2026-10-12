@@ -12,9 +12,13 @@
 #'
 #' @details
 #' The plot uses the look rows of each block, which must keep all the looks of
-#' the design in their original order: a selection of rows or columns that the
-#' print method prints as an ordinary data frame (see
-#' \code{\link{print.simsummary_fast}}) gives an error. The cumulative
+#' the design in their original order and equal the rows of the stored result,
+#' as in the print method (see \code{\link{print.simsummary_fast}}): a
+#' selection of columns or of some of the looks, rows in a different order, or
+#' rows of another result combined by \code{rbind()} give an error. The overall
+#' rows are not used, so they are not compared. A result created by
+#' FastSurvival 1.1.0, which does not store the looks and rows, gives an error
+#' that asks for \code{simsummary_fast()} to be run again. The cumulative
 #' probability of stopping for futility is the cumulative sum of
 #' \code{prob.stop.futility} over the looks.
 #'
@@ -75,12 +79,18 @@ plot.simsummary_fast <- function(x, what = c("cumulative", "stage"),
   what  <- match.arg(what)
   xaxis <- match.arg(xaxis)
 
+  # A result of FastSurvival 1.1.0 stores the boundary settings without the
+  # looks and rows that the blocks are checked against
+  bd <- attr(x, "boundary")
+  if (!is.null(bd) && is.null(bd$looks)) {
+    stop("this result was created by an earlier version of FastSurvival; ",
+         "call simsummary_fast() again to plot it")
+  }
   blocks <- simsummary_blocks(x)
   if (is.null(blocks)) {
     stop("plot() needs a simsummary_fast() result whose blocks keep all ",
          "their looks in the original order")
   }
-  bd      <- attr(x, "boundary")
   has_fut <- identical(bd$mode, "z") && !is.null(bd$futility)
 
   xcol <- switch(xaxis, look = NULL, events = "n.event.mean",

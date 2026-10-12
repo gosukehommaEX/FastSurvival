@@ -144,3 +144,17 @@ test_that("survfit_fast: the formula interface gives the vector result", {
   expect_error(survfit_fast(t_raw[ord], e_raw[ord], t_eval = 8, data = d),
                "only with a formula")
 })
+
+test_that("survfit_fast: the formula interface passes every argument", {
+  set.seed(60)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1) + 0.1, ee = rbinom(n, 1, 0.8),
+                  g = rep(c("b", "a"), n / 2), s = rep(c("x", "y", "z"), n / 3))
+  d1 <- d[order(d$tt), ]
+  d2 <- d[order(d$s, d$tt), ]
+  expect_identical(
+    survfit_fast(Surv(tt, ee) ~ 1, d1, t_eval = 5, conf.level = 0.9,
+                 conf.type = "log-log", presorted = TRUE),
+    survfit_fast(d1$tt, d1$ee, 5, conf.level = 0.9, conf.type = "log-log",
+                 presorted = TRUE))
+})

@@ -80,9 +80,10 @@ for that quantity, following its \code{side}, as printed by the
 Ratios are reported on the log scale, on which their confidence intervals
 are symmetric and their tests are computed: \code{coef} of
 \code{coxph_fast()} is the log hazard ratio (as from \code{coef()} of
-\code{survival::coxph()}), and \code{log.ratio}, \code{log.rah}, and
-\code{log.ahr} are the logarithms of the ratio of restricted mean survival
-times, the ratio of average hazards, and the average hazard ratio. Take
+\code{survival::coxph()} with the group variable as a factor), and
+\code{log.ratio}, \code{log.rah}, and \code{log.ahr} are the logarithms of
+the ratio of restricted mean survival times, the ratio of average hazards,
+and the average hazard ratio. Take
 \code{exp()} of the estimate and of the confidence limits for the ratio.
 \code{rmst_fast()} and \code{ahsw_fast()} do not store the standard error of
 a log ratio or of the difference of average hazards; it is recovered from

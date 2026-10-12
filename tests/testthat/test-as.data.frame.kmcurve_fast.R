@@ -1,6 +1,6 @@
 test_that("as.data.frame.kmcurve_fast matches a hand calculation", {
-  # Exact values from Planning/python_checks/formula_methods_check.py:
-  # S = 5/6, 2/3, 4/9, 4/9, 0 and Greenwood sums 1/30, 1/12, 1/4, 1/4, 1/4
+  # Hand calculation with exact fractions: S = 5/6, 2/3, 4/9, 4/9, 0 and
+  # Greenwood sums 1/30, 1/12, 1/4, 1/4, 1/4
   # (no term when all subjects at risk fail)
   fit <- kmcurve_fast(c(1, 2, 2, 3, 4, 5), c(1, 1, 0, 1, 0, 1))
   tab <- as.data.frame(fit)

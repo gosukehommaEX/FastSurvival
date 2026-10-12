@@ -1,5 +1,5 @@
 test_that("km_risk_counts counts the subjects at risk (hand calculation)", {
-  # Counts from Planning/python_checks/formula_methods_check.py
+  # Hand counts of the subjects with an observed time at or after each time
   time  <- c(1, 2, 2, 3, 4, 5, 0.5, 2, 6, 7)
   event <- c(1, 1, 0, 1, 0, 1, 1, 0, 1, 1)
   group <- rep(c(0, 1), c(6, 4))

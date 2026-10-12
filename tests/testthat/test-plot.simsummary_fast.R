@@ -52,4 +52,11 @@ test_that("plot.simsummary_fast rejects incomplete results", {
   res_na <- simsummary_fast(df_na, eff.col = "logrank.z",
                             efficacy = c(-2.8, -1.96))
   expect_error(plot(res_na, xaxis = "time"), "finite values")
+  # A result of FastSurvival 1.1.0 stores no looks or rows
+  old <- res
+  bd <- attr(old, "boundary")
+  bd$looks <- NULL
+  bd$rows <- NULL
+  attr(old, "boundary") <- bd
+  expect_error(plot(old), "earlier version of FastSurvival")
 })

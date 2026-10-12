@@ -58,9 +58,13 @@ look.
 }
 \details{
 The plot uses the look rows of each block, which must keep all the looks of
-the design in their original order: a selection of rows or columns that the
-print method prints as an ordinary data frame (see
-\code{\link{print.simsummary_fast}}) gives an error. The cumulative
+the design in their original order and equal the rows of the stored result,
+as in the print method (see \code{\link{print.simsummary_fast}}): a
+selection of columns or of some of the looks, rows in a different order, or
+rows of another result combined by \code{rbind()} give an error. The overall
+rows are not used, so they are not compared. A result created by
+FastSurvival 1.1.0, which does not store the looks and rows, gives an error
+that asks for \code{simsummary_fast()} to be run again. The cumulative
 probability of stopping for futility is the cumulative sum of
 \code{prob.stop.futility} over the looks.
 

@@ -22,9 +22,13 @@ the results as data frames, and two plots.
   `std.error`, `conf.low`, `conf.high`, `statistic`, and `p.value`, so that
   the results of a loop can be stacked with `rbind()`. Its `coef()` and
   `confint()` methods return the estimates and their confidence limits.
-  Ratios are reported on the log scale. The results are otherwise unchanged;
-  code that compares `class()` of a result with a single class name should
-  use `inherits()` instead.
+  Ratios are reported on the log scale. The results are otherwise unchanged.
+  Code that compares `class()` of a result with a single class name should
+  use `inherits()` instead, and `as.data.frame()` and `data.frame()` of a
+  result, and functions that call them such as `write.csv()`, now return the
+  table described in `?as.data.frame.fastsurv`; with R 4.3.0 or later they
+  returned the elements of a numeric result as a one-column data frame, which
+  `as.data.frame(unclass(x))` still gives.
 
 * `plot.kmcurve_fast()` can print the numbers at risk below the survival
   panel (`risk_table` and `risk_times`) and draw the pointwise confidence

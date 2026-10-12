@@ -30,6 +30,7 @@ test_that("plot.kmcurve_fast draws the number-at-risk table and a band", {
   expect_error(plot(fit1, risk_table = TRUE, conf.style = "band",
                     conf.type = "log-log"), NA)
   expect_error(plot(fit2, conf.int = FALSE, conf.style = "band"), NA)
+  expect_error(plot(fit2, risk_table = TRUE, base_size = 2, hr = TRUE), NA)
   expect_equal(graphics::par("mar"), mar0)
 
   expect_error(plot(fit2, conf.style = "shade"), "should be one of")

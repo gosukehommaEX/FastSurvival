@@ -235,3 +235,17 @@ test_that("rmw_fast: the formula interface gives the vector result", {
   expect_identical(class(ref), c("rmw_fast", "fastsurv"))
   expect_error(rmw_fast(d$tt, d$ee, d$g, 0, data = d), "only with a formula")
 })
+
+test_that("rmw_fast: the formula interface passes every argument", {
+  set.seed(60)
+  n <- 120
+  d <- data.frame(tt = round(rexp(n, 0.1), 1) + 0.1, ee = rbinom(n, 1, 0.8),
+                  g = rep(c("b", "a"), n / 2), s = rep(c("x", "y", "z"), n / 3))
+  d1 <- d[order(d$tt), ]
+  d2 <- d[order(d$s, d$tt), ]
+  expect_identical(
+    rmw_fast(Surv(tt, ee) ~ g, d1, control = "b", side = 1, s_star = 0.7,
+             presorted = TRUE),
+    rmw_fast(d1$tt, d1$ee, d1$g, "b", side = 1, s_star = 0.7,
+             presorted = TRUE))
+})
