@@ -142,8 +142,11 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
   }
   rt_cex <- 0.8 * base_size
   mar_b  <- if (isTRUE(risk_table)) 4 + (if (two) 2 else 1) + 2 else 4
+  # The left margin holds the row labels and half of the widest count, which
+  # is centered at the first time of the table
   mar_l  <- if (isTRUE(risk_table)) {
-    max(4, 0.6 * max(nchar(as.character(rt_lab))) * rt_cex + 1.5)
+    max(4, 0.6 * rt_cex * (max(nchar(as.character(rt_lab))) +
+                             max(nchar(as.character(x$n))) / 2 + 1) + 1)
   } else {
     4
   }
@@ -247,10 +250,16 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
     rt_cols <- if (two) c(col_control, col_treat) else col_control
     graphics::mtext("Number at risk", side = 1, line = 4.2, at = usr[1L],
                     adj = 0, cex = rt_cex, font = 2)
+    # The labels end left of the widest count centered at the left edge (the
+    # cex of mtext() is absolute, that of strwidth() relative to par("cex"))
+    sw_cex <- rt_cex / graphics::par("cex")
+    lab_at <- usr[1L] -
+      max(graphics::strwidth(as.character(x$n), units = "user",
+                             cex = sw_cex)) / 2 -
+      graphics::strwidth("m", units = "user", cex = sw_cex)
     for (r in seq_len(nrow(counts))) {
-      graphics::mtext(rt_lab[r], side = 1, line = 4.2 + r,
-                      at = usr[1L] - 0.02 * (usr[2L] - usr[1L]), adj = 1,
-                      cex = rt_cex, col = rt_cols[r])
+      graphics::mtext(rt_lab[r], side = 1, line = 4.2 + r, at = lab_at,
+                      adj = 1, cex = rt_cex, col = rt_cols[r])
       if (length(rt_times) > 0L) {
         graphics::mtext(format(counts[r, ], trim = TRUE), side = 1,
                         line = 4.2 + r, at = rt_times, cex = rt_cex,
@@ -295,6 +304,8 @@ plot.kmcurve_fast <- function(x, hr = FALSE, rmst = FALSE, tau = NULL,
     hr_plot <- hr_t
     hr_plot[!valid | hr_plot > hr_max] <- NA
 
+    # The hazard-ratio panel has no table, so it keeps the usual left margin
+    if (isTRUE(risk_table)) graphics::par(mar = c(mar_b, 4, 3, 4))
     graphics::plot.default(grid, hr_plot, type = "l", col = col_hr, lwd = lwd_hr,
                            lty = lty_hr,
                            xlim = c(0, hr_upper), ylim = c(0, hr_max),
