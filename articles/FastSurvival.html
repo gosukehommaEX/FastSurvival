@@ -180,6 +180,42 @@ survival package, with a one-sided test of treatment benefit
 <span><span class="co">#&gt; group    0.5508     1.8155    0.1744    1.7399</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="formulas-data-frames-and-plots">Formulas, data frames, and plots<a class="anchor" aria-label="anchor" href="#formulas-data-frames-and-plots"></a>
+</h2>
+<p>For the analysis of a single data set the functions also accept a
+model formula with a data frame, as the functions of the survival
+package do. The control group is then the first level of the group
+variable, unless <code>control</code> is given. Inside simulation loops
+the vector interface remains the faster choice. Every result has an
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method that returns its estimates and tests
+with the same columns, and <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods for the estimates; ratios are reported on
+the log scale.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   term estimate std.error  conf.low conf.high statistic   p.value</span></span>
+<span><span class="co">#&gt; 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.1547553</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          2.5 %   97.5 %</span></span>
+<span><span class="co">#&gt; coef 0.1743704 1.739875</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>,</span>
+<span>                        tau <span class="op">=</span> <span class="fl">500</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        term    estimate  std.error    conf.low   conf.high statistic    p.value</span></span>
+<span><span class="co">#&gt; 1 rmst.ctrl 373.6923077         NA          NA          NA        NA         NA</span></span>
+<span><span class="co">#&gt; 2  rmst.trt 472.5726496         NA          NA          NA        NA         NA</span></span>
+<span><span class="co">#&gt; 3      diff  98.8803419 47.0605014  6.64345409 191.1172297  2.101132 0.03562935</span></span>
+<span><span class="co">#&gt; 4 log.ratio   0.2347587  0.1238482 -0.00797928   0.4774968  1.895536 0.05802142</span></span></code></pre></div>
+<p><code><a href="../reference/kmcurve_fast.html">kmcurve_fast()</a></code> builds the Kaplan-Meier curves of a data
+set, and its <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method can add the numbers at risk
+below the curves.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">km</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kmcurve_fast.html">kmcurve_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">km</span>, risk_table <span class="op">=</span> <span class="cn">TRUE</span>, conf.style <span class="op">=</span> <span class="st">"band"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FastSurvival_files/figure-html/km-plot-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
 <p>Several further vignettes cover the package in depth. <em>Validation

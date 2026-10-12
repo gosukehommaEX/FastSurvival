@@ -22,7 +22,8 @@ rmst_fast(
   side = 2,
   conf.level = 0.95,
   tau,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -30,7 +31,10 @@ rmst_fast(
 
 - time:
 
-  A numeric vector of event or censoring times.
+  A numeric vector of event or censoring times. Alternatively, a formula
+  `Surv(time, event) ~ group` or `Surv(time, event) ~ 1`, with the
+  variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -46,7 +50,8 @@ rmst_fast(
 - control:
 
   A scalar value indicating which level of `group` represents the
-  control group. Required when `group` is supplied.
+  control group. Required when `group` is supplied. With the formula
+  interface it defaults to the first level of the group variable.
 
 - side:
 
@@ -74,6 +79,12 @@ rmst_fast(
   internally. The order is checked, and an error is given when it does
   not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"rmst_fast"`, a named numeric vector. In
@@ -85,7 +96,13 @@ single-group mode it has length 4 with elements `rmst`, `std.err`,
 restriction horizon, confidence level, and test side are stored as
 attributes `tau`, `conf.level`, and `side`; in two-group mode the
 `control` label is also stored. Returns `NA_real_` values (still with
-class `"rmst_fast"`) when `n` is zero in single-group mode.
+class `"rmst_fast"`) when `n` is zero in single-group mode. The object
+also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -181,6 +198,15 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 #> ratio (treatment / control)      1.1600    1.0572    1.2729 3.133  0.00173 **
 #> ---
 #> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# Formula interface, and the result as a data frame
+d <- data.frame(time, event, group)
+as.data.frame(rmst_fast(Surv(time, event) ~ group, data = d, tau = 10))
+#>        term  estimate  std.error   conf.low conf.high statistic     p.value
+#> 1 rmst.ctrl 6.7571810         NA         NA        NA        NA          NA
+#> 2  rmst.trt 7.8384416         NA         NA        NA        NA          NA
+#> 3      diff 1.0812605 0.34278492 0.40941442 1.7531066  3.154341 0.001608610
+#> 4 log.ratio 0.1484342 0.04737151 0.05558778 0.2412807  3.133407 0.001727894
 
 # \donttest{
 # Validation against survRM2

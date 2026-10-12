@@ -7,7 +7,9 @@ panel shows the smoothed time-varying hazard ratio together with the
 constant Cox proportional-hazards estimate and, optionally, the average
 hazard ratio, in the style of stylized nonproportional-hazards figures.
 For a single-group object only one survival curve is drawn; `hr = TRUE`
-is ignored because a hazard ratio requires two groups.
+is ignored because a hazard ratio requires two groups. With
+`risk_table = TRUE` the numbers at risk are printed below the survival
+panel.
 
 ## Usage
 
@@ -45,6 +47,9 @@ plot(
   main_km = "Kaplan-Meier",
   main_hr = "Hazard ratio",
   group_labels = NULL,
+  risk_table = FALSE,
+  risk_times = NULL,
+  conf.style = c("lines", "band"),
   ...
 )
 ```
@@ -83,7 +88,7 @@ plot(
 - conf.int:
 
   Logical. If `TRUE`, add pointwise confidence limits to the survival
-  curves.
+  curves, drawn as set by `conf.style`.
 
 - hr_max:
 
@@ -156,7 +161,25 @@ plot(
 - group_labels:
 
   Optional length-two character vector of legend labels for the control
-  and treatment groups.
+  and treatment groups. They also label the rows of the number-at-risk
+  table, which are otherwise labeled `Control` and `Treatment` (or by
+  the group label for a single group).
+
+- risk_table:
+
+  Logical. If `TRUE`, print the numbers at risk below the survival
+  panel. Defaults to `FALSE`.
+
+- risk_times:
+
+  Times at which the numbers at risk are given. Defaults to the tick
+  marks of the time axis.
+
+- conf.style:
+
+  How the pointwise confidence limits are drawn when `conf.int = TRUE`:
+  `"lines"` (default) as dashed step functions, or `"band"` as a shaded
+  band.
 
 - ...:
 
@@ -186,7 +209,18 @@ the average hazard ratio from
 and the restricted mean survival time difference from
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md).
 
+The number at risk at a time is the number of subjects whose observed
+time is at or after it, as reported by
+[`summary()`](https://rdrr.io/r/base/summary.html) of a
+[`survival::survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
+object. The table has one row per group, in the colors of the curves, at
+the tick marks of the time axis or at `risk_times`; the bottom margin
+(and, for long group labels, the left margin) is enlarged to hold it.
+The curves themselves are available as a data frame from
+[`as.data.frame.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md).
+
 ## See also
 
 [`kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md),
-[`print.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md)
+[`print.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md),
+[`as.data.frame.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md)

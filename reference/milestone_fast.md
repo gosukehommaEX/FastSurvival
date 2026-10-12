@@ -26,7 +26,8 @@ milestone_fast(
   conf.level = 0.95,
   tau,
   method = c("wald", "loglog", "mover"),
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -34,7 +35,9 @@ milestone_fast(
 
 - time:
 
-  A numeric vector of follow-up times.
+  A numeric vector of follow-up times. Alternatively, a formula
+  `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -49,7 +52,8 @@ milestone_fast(
 
   The value of `group` that denotes the control group. The other value
   is the treatment group and the difference is reported as treatment
-  minus control.
+  minus control. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -81,12 +85,23 @@ milestone_fast(
   repeated calls inside simulation loops. The order is checked, and an
   error is given when it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"milestone_fast"`, a list with the per-group
 milestone survival estimates and standard errors, the difference
 estimate with its confidence interval, the test statistic, and the
-p-value.
+p-value. The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -132,4 +147,19 @@ milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 #> 
 #>                                      Est. lower 95% upper 95%      z Pr(>|z|)
 #> difference (treatment - control)  0.14000  -0.05738   0.32500 -1.395    0.163
+
+# Formula interface
+d <- data.frame(time, event, group)
+milestone_fast(Surv(time, event) ~ group, data = d, tau = 10)
+#> Milestone survival (two-group)
+#> 
+#>   tau = 10,  control = 0
+#>   method = wald,  alternative = two.sided
+#> 
+#>           survival std.err lower 95% upper 95%
+#> control       0.42  0.0698    0.2832    0.5568
+#> treatment     0.56  0.0702    0.4224    0.6976
+#> 
+#>                                      Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  0.14000  -0.05403   0.33403 1.414    0.157
 ```

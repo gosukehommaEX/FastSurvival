@@ -89,7 +89,8 @@ their null covariance are computed in a single pass by the C++ core
 <span>  <span class="va">control</span>,</span>
 <span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  s_star <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,7 +99,9 @@ their null covariance are computed in a single pass by the C++ core
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>A numeric vector of follow-up times for all subjects.</p></dd>
+<dd><p>A numeric vector of follow-up times for all subjects.
+Alternatively, a formula <code>Surv(time, event) ~ group</code>, with the
+variables in <code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -112,7 +115,9 @@ their null covariance are computed in a single pass by the C++ core
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>A scalar value indicating which level of <code>group</code>
-represents the control group.</p></dd>
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -137,6 +142,12 @@ and the internal <code><a href="https://rdrr.io/r/base/order.html" class="extern
 sorting is handled internally.
 The order is checked, and an error is given when it does not hold.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -147,7 +158,10 @@ The order is checked, and an error is given when it does not hold.</p></dd>
   observed number of events in the treatment group), <code>side</code>, and
   <code>n</code> (the total sample size). Returns <code>NA</code> statistic and p-value
   (still with class <code>"rmw_fast"</code>) when either component variance is zero
-  (e.g., no event time at which both groups are at risk).</p>
+  (e.g., no event time at which both groups are at risk).
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -244,6 +258,21 @@ tests.
 <span class="r-in"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rmw_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>         control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">1</span>, s_star <span class="op">=</span> <span class="fl">0.5</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Robust modestly-weighted log-rank test (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1,  s_star = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Z</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> log-rank          -1.0309</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> modestly-weighted -0.7583</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Null correlation = 0.9821</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  min Z = -1.031,  one-sided p-value = 0.169  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface</span></span></span>
+<span class="r-in"><span><span class="fu">rmw_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Robust modestly-weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1,  s_star = 0.5</span>

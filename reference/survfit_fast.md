@@ -16,7 +16,8 @@ survfit_fast(
   t_eval,
   conf.level = 0.95,
   conf.type = "log",
-  presorted = TRUE
+  presorted = TRUE,
+  data = NULL
 )
 ```
 
@@ -25,7 +26,9 @@ survfit_fast(
 - t_sorted:
 
   A numeric vector of event or censoring times. Must be sorted in
-  ascending order when `presorted = TRUE`.
+  ascending order when `presorted = TRUE`. Alternatively, a formula
+  `Surv(time, event) ~ 1`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - e_sorted:
 
@@ -51,7 +54,14 @@ survfit_fast(
 
   A logical value. If `TRUE` (default), `t_sorted` and `e_sorted` are
   assumed to be sorted in ascending order of time. If `FALSE`, the
-  vectors are sorted internally before computation.
+  vectors are sorted internally before computation. With the formula
+  interface the default is `FALSE`.
+
+- data:
+
+  A data frame in which the variables of a formula given as `t_sorted`
+  are evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 ## Value
 
@@ -62,7 +72,12 @@ error SE\[S(t)\], and the lower and upper confidence limits at `t_eval`.
 The evaluation time, confidence level, and confidence interval type are
 stored as attributes `t_eval`, `conf.level`, and `conf.type`. Returns a
 vector of `NA_real_` values (still with class `"survfit_fast"`) when `n`
-is zero.
+is zero. The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -180,4 +195,14 @@ summary(fit, times = 10)
 #> 
 #>  time n.risk n.event survival std.err lower 95% CI upper 95% CI
 #>    10     37      46    0.474  0.0543        0.368        0.581
+
+# Formula interface (the data are sorted internally)
+d <- data.frame(time = t_raw, status = e_raw)
+survfit_fast(Surv(time, status) ~ 1, data = d, t_eval = 10)
+#> Kaplan-Meier survival estimate (single time point)
+#> 
+#>        survival std.err lower 95% upper 95%
+#> t = 10   0.4744  0.0543     0.379    0.5938
+#> 
+#>  Confidence interval type: log
 ```

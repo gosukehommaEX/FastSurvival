@@ -20,7 +20,8 @@ coxph_fast(
   side = 2,
   conf.level = 0.95,
   presorted = FALSE,
-  strata = NULL
+  strata = NULL,
+  data = NULL
 )
 ```
 
@@ -29,7 +30,11 @@ coxph_fast(
 - time:
 
   A numeric vector of follow-up times for all subjects (pooled over both
-  groups).
+  groups). Alternatively, a formula `Surv(time, event) ~ group`,
+  optionally with
+  [`strata()`](https://rdrr.io/pkg/survival/man/strata.html) terms, with
+  the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -45,7 +50,8 @@ coxph_fast(
 
   A scalar value indicating which level of `group` represents the
   control group. Subjects with `group != control` are treated as the
-  treatment group.
+  treatment group. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -79,6 +85,12 @@ coxph_fast(
   with [`interaction()`](https://rdrr.io/r/base/interaction.html).
   `NULL` (default) gives the unstratified estimator.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"coxph_fast"`, which is a named numeric vector of
@@ -110,7 +122,12 @@ length 5 with elements matching the column names of
 With `strata`, the number of strata is stored in the attribute `strata`.
 Returns a vector of `NA_real_` values (still with class `"coxph_fast"`)
 when the estimate cannot be computed (e.g., no events, all events in one
-group, or `I_0 = 0`).
+group, or `I_0 = 0`). The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -264,6 +281,15 @@ coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #>       exp(coef) exp(-coef) lower .95 upper .95
 #> group    0.5508     1.8155    0.1744    1.7399
 
+# Formula interface, and the result as a data frame (log hazard ratio)
+fit_f <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+as.data.frame(fit_f)
+#>   term estimate std.error  conf.low conf.high statistic   p.value
+#> 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.3095107
+exp(confint(fit_f))
+#>          2.5 %   97.5 %
+#> coef 0.1743704 1.739875
+
 # \donttest{
 # Speed comparison against coxph()
 if (requireNamespace("microbenchmark", quietly = TRUE)) {
@@ -274,8 +300,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min       lq       mean   median       uq      max neval cld
-#>  coxph_fast   62.056   72.720   89.66029   88.615   91.791 4999.191  1000  a 
-#>       coxph 1532.637 1578.283 1664.40127 1596.773 1617.020 6994.832  1000   b
+#>        expr      min       lq       mean    median       uq      max neval cld
+#>  coxph_fast   37.866   45.167   58.30642   62.7835   67.775  243.452  1000  a 
+#>       coxph 1044.010 1075.367 1149.29432 1089.2575 1107.094 6945.544  1000   b
 # }
 ```

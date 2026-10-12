@@ -22,7 +22,8 @@ wmst_fast(
   tau2 = NULL,
   side = 2,
   conf.level = 0.95,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -30,7 +31,10 @@ wmst_fast(
 
 - time:
 
-  Numeric vector of event or censoring times.
+  Numeric vector of event or censoring times. Alternatively, a formula
+  `Surv(time, event) ~ group` or `Surv(time, event) ~ 1`, with the
+  variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -44,7 +48,8 @@ wmst_fast(
 - control:
 
   The level of `group` that denotes the control group. Required when
-  `group` is supplied.
+  `group` is supplied. With the formula interface it defaults to the
+  first level of the group variable.
 
 - tau1:
 
@@ -77,13 +82,25 @@ wmst_fast(
   Defaults to `FALSE`. The order is checked, and an error is given when
   it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 A named numeric vector of class `"wmst_fast"`. For a single group the
 elements are the WMST, its standard error and confidence limits. For two
 groups the elements are the control and treatment WMST values, their
 difference, the standard errors, the confidence limits and the Wald
-statistics for the difference.
+statistics for the difference. The object also has the class
+`"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -113,6 +130,21 @@ cc <- rexp(n, rate = 0.02)
 time <- pmin(tt, cc)
 event <- as.integer(tt <= cc)
 wmst_fast(time, event, group = g, control = 0, tau1 = 2, tau2 = 12)
+#> Window mean survival time (two-group)
+#> 
+#>   window = [2, 12],  control = 0
+#>   alternative = two.sided
+#> 
+#>             wmst std.err lower 95% upper 95%
+#> control   5.8371   0.402    5.0491    6.6251
+#> treatment 6.6057   0.402    5.8177    7.3936
+#> 
+#>                                     Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  0.7686   -0.3458    1.8829 1.352    0.176
+
+# Formula interface
+d <- data.frame(time, event, g)
+wmst_fast(Surv(time, event) ~ g, data = d, tau1 = 2, tau2 = 12)
 #> Window mean survival time (two-group)
 #> 
 #>   window = [2, 12],  control = 0

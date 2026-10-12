@@ -22,7 +22,8 @@ rmw_fast(
   control,
   side = 2,
   s_star = 0.5,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -30,7 +31,9 @@ rmw_fast(
 
 - time:
 
-  A numeric vector of follow-up times for all subjects.
+  A numeric vector of follow-up times for all subjects. Alternatively, a
+  formula `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -44,7 +47,8 @@ rmw_fast(
 - control:
 
   A scalar value indicating which level of `group` represents the
-  control group.
+  control group. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -69,6 +73,12 @@ rmw_fast(
   `FALSE` (default), sorting is handled internally. The order is
   checked, and an error is given when it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"rmw_fast"`, a length-two numeric vector
@@ -78,7 +88,12 @@ matrix of the two components), `s_star`, `O1` (the observed number of
 events in the treatment group), `side`, and `n` (the total sample size).
 Returns `NA` statistic and p-value (still with class `"rmw_fast"`) when
 either component variance is zero (e.g., no event time at which both
-groups are at risk).
+groups are at risk). The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -182,6 +197,21 @@ rmw_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 ord <- order(ovarian$futime)
 rmw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
          control = 1, side = 1, s_star = 0.5, presorted = TRUE)
+#> Robust modestly-weighted log-rank test (two-group)
+#> 
+#>   N = 26,  control = 1,  s_star = 0.5
+#> 
+#>                         Z
+#> log-rank          -1.0309
+#> modestly-weighted -0.7583
+#> 
+#>   Null correlation = 0.9821
+#>  min Z = -1.031,  one-sided p-value = 0.169  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Formula interface
+rmw_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
 #>   N = 26,  control = 1,  s_star = 0.5

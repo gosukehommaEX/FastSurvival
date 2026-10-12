@@ -76,7 +76,8 @@ use inside simulation loops.</p>
 <span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  null.ahr <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,7 +86,9 @@ use inside simulation loops.</p>
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>vector of right-censored event times</p></dd>
+<dd><p>vector of right-censored event times
+Alternatively, a formula <code>Surv(time, event) ~ group</code>, with the
+variables in <code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -99,7 +102,9 @@ use inside simulation loops.</p>
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>the value of <code>group</code> that denotes the reference (control)
 group. The average hazard ratio is reported for the other group relative to
-it.</p></dd>
+it.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -130,6 +135,12 @@ ascending order so that each group's observations are also ascending; this
 skips the internal sort (default <code>FALSE</code>)
 The order is checked, and an error is given when it does not hold.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -142,7 +153,10 @@ The order is checked, and an error is given when it does not hold.</p></dd>
   <code>log(ahr)</code> scale), <code>se.theta</code> (standard error of the tested
   comparison-group share), <code>null.share</code>, <code>null.ahr</code>, <code>theta</code>
   (the two group shares), <code>var.theta1</code>, <code>var.theta2</code>,
-  <code>side</code>, <code>tau</code>, <code>n</code> (the two group sizes) and <code>groups</code>.</p>
+  <code>side</code>, <code>tau</code>, <code>n</code> (the two group sizes) and <code>groups</code>.
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -196,6 +210,26 @@ calculation under nonproportional hazards using average hazard ratios.
 <span class="r-in"><span><span class="va">event</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">time1</span>, <span class="va">time2</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="va">cens</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ahr_fast</span><span class="op">(</span><span class="va">obs</span>, <span class="va">event</span>, <span class="va">group</span>, control <span class="op">=</span> <span class="fl">0</span>, tau <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Kalbfleisch-Prentice average hazard ratio (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 8,  control = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            theta   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0.3079 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 0.6921 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                             Est. lower 95% upper 95%     z</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> average hazard ratio (treatment / control) 2.248     1.699     2.973 6.317</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            Pr(&gt;|z|)    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> average hazard ratio (treatment / control) 2.66e-10 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   (log scale: z = 5.676, p = 1.379e-08)</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">obs</span>, <span class="va">event</span>, <span class="va">group</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ahr_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">obs</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, data <span class="op">=</span> <span class="va">d</span>, tau <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Kalbfleisch-Prentice average hazard ratio (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 8,  control = 0</span>

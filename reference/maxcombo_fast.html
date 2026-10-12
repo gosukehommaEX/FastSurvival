@@ -86,7 +86,8 @@ through the joint distribution.</p>
 <span>  gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  abseps <span class="op">=</span> <span class="fl">1e-05</span>,</span>
-<span>  maxpts <span class="op">=</span> <span class="fl">25000</span></span>
+<span>  maxpts <span class="op">=</span> <span class="fl">25000</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,7 +96,9 @@ through the joint distribution.</p>
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>A numeric vector of follow-up times for all subjects.</p></dd>
+<dd><p>A numeric vector of follow-up times for all subjects.
+Alternatively, a formula <code>Surv(time, event) ~ group</code>, with the
+variables in <code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -109,7 +112,9 @@ through the joint distribution.</p>
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>A scalar value indicating which level of <code>group</code>
-represents the control group.</p></dd>
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -155,6 +160,12 @@ evaluations for the quasi-Monte-Carlo integration used with four or more
 weights or with a two-sided test (see Details). Defaults to 25000. Larger
 values reduce the integration error at a higher computing cost.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -166,7 +177,10 @@ values reduce the integration error at a higher computing cost.</p></dd>
   <code>corr</code>, the Fleming-Harrington parameters in <code>rho</code> and
   <code>gamma</code>, the requested <code>side</code>, and the total sample size in
   <code>n</code>. Returns <code>NA</code> values (still with class
-  <code>"maxcombo_fast"</code>) when any component variance is zero or not finite.</p>
+  <code>"maxcombo_fast"</code>) when any component variance is zero or not finite.
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -294,6 +308,22 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface</span></span></span>
+<span class="r-in"><span><span class="fu">maxcombo_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Max-combo weighted log-rank test (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Z</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,0) -1.0309</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FH(0,1)  0.0101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,0) -1.2980</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FH(1,1) -0.0576</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Cross-check against simtrial::maxcombo (one-sided)</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"simtrial"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -306,7 +336,7 @@ comparative analysis. <em>Statistics in Biopharmaceutical Research</em>,
 <span class="r-in"><span>  <span class="fu">simtrial</span><span class="fu">::</span><span class="fu"><a href="https://merck.github.io/simtrial/reference/maxcombo.html" class="external-link">maxcombo</a></span><span class="op">(</span><span class="va">df</span>, rho <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                     return_corr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">p_value</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1512057</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1512311</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

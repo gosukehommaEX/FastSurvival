@@ -48,19 +48,27 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) | Interim or sequential analysis of simulated data at one or more looks, defined by target event counts, calendar times, or per-simulation cutoffs from [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md). |
 | [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md) | Treatment switching in simulated data: switching at an intermediate event (such as progression), at an opening time after an interim analysis, or at the later of the two, optionally only in the trials selected by an interim decision, with an accelerated-failure-time or new-hazard effect after the switch. |
 | [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | Pairwise comparison of each experimental arm against a shared control on multi-arm data, at fixed calendar looks, a primary contrast’s event-driven cutoffs, or supplied per-simulation cutoffs, with an optional Bonferroni adjustment. |
-| [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries. |
+| [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md) | Operating-characteristic summary (rejection and futility rates, stopping-look distribution, expected timing) from [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md) output and supplied boundaries, with [`print()`](https://rdrr.io/r/base/print.html) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods. |
 
 ### Visualization
 
 | Function | Description |
 |----|----|
 | [`gen_scenario_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/gen_scenario_fast.md) | Assemble one or more two-group scenarios into a `scenario_fast` object for design-stage exploration, with [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (analytic survival curves and the piecewise hazard ratio) and [`print()`](https://rdrr.io/r/base/print.html) methods. |
-| [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md) | Build the Kaplan-Meier curves of a single trial realization into a `kmcurve_fast` object, with [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (curves, restricted-mean shading, and a smoothed time-varying hazard-ratio panel) and [`print()`](https://rdrr.io/r/base/print.html) methods. |
+| [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md) | Build the Kaplan-Meier curves of a single trial realization into a `kmcurve_fast` object, with [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (curves, confidence limits or band, restricted-mean shading, a smoothed time-varying hazard-ratio panel, and a number-at-risk table), [`print()`](https://rdrr.io/r/base/print.html), and [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods. |
 
 The estimation and testing functions return S3-class objects with
 [`print()`](https://rdrr.io/r/base/print.html) methods that display the
 results in a format similar to the corresponding `survival` package
-functions.
+functions. Besides vectors, they accept a model formula
+`Surv(time, event) ~ group` with a data frame (see
+[`?formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md)),
+and [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+returns any of their results as a data frame with the same columns,
+while [`coef()`](https://rdrr.io/r/stats/coef.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) give the estimates
+and their confidence limits (see
+[`?as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md)).
 
 ## Installation
 
@@ -100,6 +108,11 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 # coxph_fast(): hazard ratio via the Pike-Halley Estimator (closed-form)
 # ----------------------------------------------------------------
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+
+# The same with a formula (the control group is the first level of rx),
+# and the result as a data frame with the log hazard ratio
+fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+as.data.frame(fit)
 
 # ----------------------------------------------------------------
 # rmst_fast(): restricted mean survival time (two-group)
@@ -469,6 +482,9 @@ oc <- simsummary_fast(
   alpha = c(0.0060, 0.0231)
 )
 oc
+
+# 4. Plot the cumulative stopping probabilities against the expected events
+plot(oc, xaxis = "events")
 ```
 
 The estimation functions can also be used directly inside a loop. Except
@@ -493,6 +509,20 @@ for (s in seq_len(1000L)) {
 
 hr_mat <- do.call(rbind, lapply(results, unclass))
 colMeans(hr_mat)
+```
+
+Alternatively,
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
+every result, including the lists of
+[`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+and
+[`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+as rows with the same columns, which stack into one data frame:
+
+``` r
+
+hr_df <- do.call(rbind, lapply(results, as.data.frame))
+head(hr_df)
 ```
 
 ## References

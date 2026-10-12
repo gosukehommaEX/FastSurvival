@@ -17,14 +17,17 @@ remains the tool for repeated evaluation inside loops.
 ## Usage
 
 ``` r
-kmcurve_fast(time, event, group = NULL, control = NULL)
+kmcurve_fast(time, event, group = NULL, control = NULL, data = NULL)
 ```
 
 ## Arguments
 
 - time:
 
-  A numeric vector of follow-up times for all subjects.
+  A numeric vector of follow-up times for all subjects. Alternatively, a
+  formula `Surv(time, event) ~ group` or `Surv(time, event) ~ 1`, with
+  the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -41,14 +44,23 @@ kmcurve_fast(time, event, group = NULL, control = NULL)
 
   The value of `group` that denotes the reference (control) group; the
   other value is treated as the treatment group. Required in the
-  two-group case and ignored in the single-group case.
+  two-group case and ignored in the single-group case. With the formula
+  interface it defaults to the first level of the group variable.
+
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 ## Value
 
 An object of class `kmcurve_fast`: a list with a logical `two_group`
 flag, the group values and their labels, the per-group Kaplan-Meier
 summaries in element `km`, the pooled `data`, and the per-group sample
-sizes `n` and event counts `events`.
+sizes `n` and event counts `events`. The curves are returned as a data
+frame by
+[`as.data.frame.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md).
 
 ## Details
 
@@ -71,6 +83,7 @@ one survival curve with no hazard ratio.
 
 [`plot.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md),
 [`print.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md),
+[`as.data.frame.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md),
 [`survfit_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
 [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
 [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md),
@@ -101,6 +114,27 @@ plot(fit)
 
 plot(fit, hr = TRUE, rmst = TRUE, tau = 18)
 
+plot(fit, risk_table = TRUE, conf.style = "band")
+
+head(as.data.frame(fit))
+#>   group      time n.risk n.event n.censor      surv     std.err     lower upper
+#> 1     0 0.0000000    150       0        0 1.0000000 0.000000000 1.0000000     1
+#> 2     0 0.3310821    150       0        1 1.0000000 0.000000000 1.0000000     1
+#> 3     0 0.3505820    149       1        0 0.9932886 0.006688850 0.9802648     1
+#> 4     0 0.6431928    148       1        0 0.9865772 0.009427451 0.9682717     1
+#> 5     0 0.6452054    147       1        0 0.9798658 0.011506882 0.9575703     1
+#> 6     0 0.8813150    146       0        1 0.9798658 0.011506882 0.9575703     1
+
+# Formula interface
+d <- data.frame(time, event, group)
+kmcurve_fast(Surv(time, event) ~ group, data = d)
+#> A kmcurve_fast object (two groups)
+#> 
+#>  Group      Role   N Events Median
+#>      0   control 150     81  13.19
+#>      1 treatment 150     58  19.14
+#> 
+#> Cox PH hazard ratio (treatment vs control): 0.609
 
 # Single-group object: pass group = NULL (or a single-level group)
 fit1 <- kmcurve_fast(time[group == 0], event[group == 0])

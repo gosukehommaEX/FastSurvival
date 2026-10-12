@@ -122,6 +122,51 @@ coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 #> group    0.5508     1.8155    0.1744    1.7399
 ```
 
+## Formulas, data frames, and plots
+
+For the analysis of a single data set the functions also accept a model
+formula with a data frame, as the functions of the survival package do.
+The control group is then the first level of the group variable, unless
+`control` is given. Inside simulation loops the vector interface remains
+the faster choice. Every result has an
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
+that returns its estimates and tests with the same columns, and
+[`coef()`](https://rdrr.io/r/stats/coef.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods for the
+estimates; ratios are reported on the log scale.
+
+``` r
+
+fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+as.data.frame(fit)
+#>   term estimate std.error  conf.low conf.high statistic   p.value
+#> 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.1547553
+exp(confint(fit))
+#>          2.5 %   97.5 %
+#> coef 0.1743704 1.739875
+
+as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
+                        tau = 500))
+#>        term    estimate  std.error    conf.low   conf.high statistic    p.value
+#> 1 rmst.ctrl 373.6923077         NA          NA          NA        NA         NA
+#> 2  rmst.trt 472.5726496         NA          NA          NA        NA         NA
+#> 3      diff  98.8803419 47.0605014  6.64345409 191.1172297  2.101132 0.03562935
+#> 4 log.ratio   0.2347587  0.1238482 -0.00797928   0.4774968  1.895536 0.05802142
+```
+
+[`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+builds the Kaplan-Meier curves of a data set, and its
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method can add
+the numbers at risk below the curves.
+
+``` r
+
+km <- kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian)
+plot(km, risk_table = TRUE, conf.style = "band")
+```
+
+![](FastSurvival_files/figure-html/km-plot-1.png)
+
 ## Where to go next
 
 Several further vignettes cover the package in depth. *Validation of

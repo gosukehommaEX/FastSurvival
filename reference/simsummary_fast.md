@@ -179,7 +179,8 @@ row per simulation and look.
 
 [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
 [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
-[`print.simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md).
+[`print.simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/print.simsummary_fast.md),
+[`plot.simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.simsummary_fast.md).
 
 ## Examples
 

@@ -20,7 +20,8 @@ medsurv_fast(
   conf.type = "log",
   method = c("km", "nph"),
   bw = NULL,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -28,7 +29,10 @@ medsurv_fast(
 
 - time:
 
-  Numeric vector of event or censoring times.
+  Numeric vector of event or censoring times. Alternatively, a formula
+  `Surv(time, event) ~ group` or `Surv(time, event) ~ 1`, with the
+  variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -42,7 +46,8 @@ medsurv_fast(
 - control:
 
   The level of `group` that denotes the control group. Required when
-  `group` is supplied.
+  `group` is supplied. With the formula interface it defaults to the
+  first level of the group variable.
 
 - side:
 
@@ -78,13 +83,25 @@ medsurv_fast(
   Defaults to `FALSE`. The order is checked, and an error is given when
   it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 A named numeric vector of class `"medsurv_fast"`. For a single group the
 elements are the median, its standard error and confidence limits. For
 two groups the elements are the control and treatment medians, their
 difference, the standard errors, the confidence limits and the Wald
-statistics for the difference.
+statistics for the difference. The object also has the class
+`"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -158,4 +175,19 @@ medsurv_fast(time, event, group = g, control = 0, method = "nph")
 #> 
 #>                                    Est. lower 95% upper 95%     z Pr(>|z|)
 #> difference (treatment - control)  2.540    -1.169     6.249 1.342     0.18
+
+# Formula interface
+d <- data.frame(time, event, g)
+medsurv_fast(Surv(time, event) ~ g, data = d)
+#> Median survival time (two-group)
+#> 
+#>   control = 0
+#>   method = km,  alternative = two.sided
+#> 
+#>            median std.err lower 95% upper 95%
+#> control    8.1851  0.9708    6.4873   10.3273
+#> treatment 10.7251  1.4586    8.2156   14.0012
+#> 
+#>                                     Est. lower 95% upper 95%    z Pr(>|z|)
+#> difference (treatment - control)  2.5400   -0.8942    5.9742 1.45    0.147
 ```

@@ -77,7 +77,8 @@ C++.</p>
 <span>  conf.type <span class="op">=</span> <span class="st">"log"</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"km"</span>, <span class="st">"nph"</span><span class="op">)</span>,</span>
 <span>  bw <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,7 +87,10 @@ C++.</p>
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>Numeric vector of event or censoring times.</p></dd>
+<dd><p>Numeric vector of event or censoring times.
+Alternatively, a formula <code>Surv(time, event) ~ group</code> or
+<code>Surv(time, event) ~ 1</code>, with the variables in
+<code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -100,7 +104,9 @@ two-group comparison. If omitted, a single-group median is returned.</p></dd>
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>The level of <code>group</code> that denotes the control group.
-Required when <code>group</code> is supplied.</p></dd>
+Required when <code>group</code> is supplied.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -136,6 +142,12 @@ and <code>group</code> are already sorted in ascending order of <code>time</code
 skip the internal sort. Defaults to <code>FALSE</code>.
 The order is checked, and an error is given when it does not hold.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -143,7 +155,10 @@ The order is checked, and an error is given when it does not hold.</p></dd>
   group the elements are the median, its standard error and confidence
   limits. For two groups the elements are the control and treatment medians,
   their difference, the standard errors, the confidence limits and the Wald
-  statistics for the difference.</p>
+  statistics for the difference.
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -214,6 +229,21 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                    Est. lower 95% upper 95%     z Pr(&gt;|z|)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control)  2.540    -1.169     6.249 1.342     0.18</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span>, <span class="va">g</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">medsurv_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">g</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Median survival time (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   control = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   method = km,  alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            median std.err lower 95% upper 95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control    8.1851  0.9708    6.4873   10.3273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 10.7251  1.4586    8.2156   14.0012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     Est. lower 95% upper 95%    z Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control)  2.5400   -0.8942    5.9742 1.45    0.147</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

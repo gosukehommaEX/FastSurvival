@@ -90,7 +90,8 @@ is suitable for simulation loops with <code>presorted = TRUE</code>.</p>
 <span>  side <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  <span class="va">tau</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,7 +100,9 @@ is suitable for simulation loops with <code>presorted = TRUE</code>.</p>
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>A numeric vector of follow-up times for all subjects.</p></dd>
+<dd><p>A numeric vector of follow-up times for all subjects.
+Alternatively, a formula <code>Surv(time, event) ~ group</code>, with the
+variables in <code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -113,7 +116,9 @@ is suitable for simulation loops with <code>presorted = TRUE</code>.</p>
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>A scalar value indicating which level of <code>group</code>
-represents the control group.</p></dd>
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -143,6 +148,12 @@ and <code>group</code> are assumed to be sorted in ascending order of
 <code>FALSE</code> (default), sorting is handled internally.
 The order is checked, and an error is given when it does not hold.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -154,7 +165,10 @@ The order is checked, and an error is given when it does not hold.</p></dd>
   are stored as attributes <code>tau</code> and <code>conf.level</code>, and the
   <code>control</code> label is also stored. Returns <code>NA</code> values (still with
   class <code>"ahsw_fast"</code>) when either group has no events up to <code>tau</code>
-  (a zero average hazard) or a non-finite variance.</p>
+  (a zero average hazard) or a non-finite variance.
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -216,6 +230,21 @@ survival weight: new measures to quantify survival benefit of new therapy.
 <span class="r-in"><span><span class="va">ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ahsw_fast</span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span><span class="op">[</span><span class="va">ord</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>          control <span class="op">=</span> <span class="fl">1</span>, tau <span class="op">=</span> <span class="fl">600</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Average hazard with survival weight (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 600,  control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               AH</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0.0011</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 0.0008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        Est.  lower 95%  upper 95% p.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ratio (treatment / control)       0.7548735  0.2622750  2.1726579   0.602</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control) -0.0002646 -0.0012914  0.0007622   0.613</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface</span></span></span>
+<span class="r-in"><span><span class="fu">ahsw_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, tau <span class="op">=</span> <span class="fl">600</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Average hazard with survival weight (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 600,  control = 1</span>

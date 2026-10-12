@@ -20,7 +20,8 @@ wkm_fast(
   side = 2,
   conf.level = 0.95,
   weight = c("PF", "sqrtPF", "constant"),
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -28,7 +29,9 @@ wkm_fast(
 
 - time:
 
-  Numeric vector of event or censoring times.
+  Numeric vector of event or censoring times. Alternatively, a formula
+  `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -40,7 +43,8 @@ wkm_fast(
 
 - control:
 
-  The level of `group` that denotes the control group.
+  The level of `group` that denotes the control group. With the formula
+  interface it defaults to the first level of the group variable.
 
 - side:
 
@@ -63,11 +67,23 @@ wkm_fast(
   Defaults to `FALSE`. The order is checked, and an error is given when
   it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 A named numeric vector of class `"wkm_fast"` with the weighted
 integrated difference, its standard error and confidence limits, and the
-Wald statistics for the test.
+Wald statistics for the test. The object also has the class
+`"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -118,6 +134,21 @@ cc <- rexp(n, rate = 0.02)
 time <- pmin(tt, cc)
 event <- as.integer(tt <= cc)
 wkm_fast(time, event, group = g, control = 0)
+#> Weighted Kaplan-Meier test (Pepe-Fleming, two-group)
+#> 
+#>   control = 0
+#>   weight = PF,  alternative = two.sided
+#> 
+#>                                             Est. lower 95% upper 95%     z
+#> weighted difference (treatment - control) 2.8030    0.4869    5.1192 2.372
+#>                                           Pr(>|z|)  
+#> weighted difference (treatment - control)   0.0177 *
+#> ---
+#> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+# Formula interface
+d <- data.frame(time, event, g)
+wkm_fast(Surv(time, event) ~ g, data = d)
 #> Weighted Kaplan-Meier test (Pepe-Fleming, two-group)
 #> 
 #>   control = 0

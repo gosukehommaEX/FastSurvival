@@ -90,7 +90,8 @@ hazards.</p>
 <span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"fh"</span>, <span class="st">"mwlrt"</span>, <span class="st">"gehan"</span>, <span class="st">"tarone-ware"</span><span class="op">)</span>,</span>
 <span>  rho <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  gamma <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  t_star <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  t_star <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,7 +100,10 @@ hazards.</p>
 
 
 <dl><dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>A numeric vector of follow-up times for all subjects.</p></dd>
+<dd><p>A numeric vector of follow-up times for all subjects.
+Alternatively, a formula <code>Surv(time, event) ~ group</code>, optionally with
+<code><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata()</a></code> terms, with the variables in
+<code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-event">event<a class="anchor" aria-label="anchor" href="#arg-event"></a></dt>
@@ -113,7 +117,9 @@ hazards.</p>
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>A scalar value indicating which level of <code>group</code>
-represents the control group.</p></dd>
+represents the control group.
+With the formula interface it defaults to the first level of the
+group variable.</p></dd>
 
 
 <dt id="arg-side">side<a class="anchor" aria-label="anchor" href="#arg-side"></a></dt>
@@ -181,6 +187,12 @@ modestly-weighted log-rank test. Required only when <code>weight =
 reaches 0 before <code>t_star</code>), the weight is not capped.
 A value of 0 yields the ordinary log-rank test.</p></dd>
 
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>time</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -195,7 +207,10 @@ A value of 0 yields the ordinary log-rank test.</p></dd>
   observed event counts, and <code>E0</code> and <code>E1</code> are <code>NA</code> because a
   single unweighted expected count is not defined for a weighted test.
   Returns <code>NA_real_</code> (still with class <code>"survdiff_fast"</code>) when the
-  variance is zero (e.g., no event time at which both groups are at risk).</p>
+  variance is zero (e.g., no event time at which both groups are at risk).
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -383,6 +398,20 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface (the first level of rx, 1, is the control group)</span></span></span>
+<span class="r-in"><span><span class="fu">survdiff_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">resid.ds</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stratified log-rank test (two-group, 2 strata)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Observed Expected (O-E)^2/E (O-E)^2/V</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control          7   5.0952    0.7121    1.2796</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment        5   6.9048    0.5255    1.2796</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.28 on 1 df,  p-value = 0.258  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Speed comparison against survdiff()</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"microbenchmark"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -394,12 +423,9 @@ Survival Analysis</em>. New York: John Wiley &amp; Sons.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean    median       uq      max neval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  56.305  65.3220   74.36037   77.6855   80.886  172.150  1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 972.403 999.4335 1042.43082 1011.1660 1025.988 5989.798  1000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq      mean  median       uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  36.344  42.1680  50.83091  52.978  57.1445  185.135  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 621.513 656.3545 717.62810 670.761 691.0865 9274.753  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

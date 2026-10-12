@@ -76,4 +76,5 @@ frame, even when the block has the same name in both results.
 
 ## See also
 
-[`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md).
+[`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md),
+[`plot.simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.simsummary_fast.md).

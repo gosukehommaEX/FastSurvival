@@ -27,7 +27,8 @@ survdiff_fast(
   weight = c("logrank", "fh", "mwlrt", "gehan", "tarone-ware"),
   rho = 0,
   gamma = 0,
-  t_star = NULL
+  t_star = NULL,
+  data = NULL
 )
 ```
 
@@ -35,7 +36,11 @@ survdiff_fast(
 
 - time:
 
-  A numeric vector of follow-up times for all subjects.
+  A numeric vector of follow-up times for all subjects. Alternatively, a
+  formula `Surv(time, event) ~ group`, optionally with
+  [`strata()`](https://rdrr.io/pkg/survival/man/strata.html) terms, with
+  the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -49,7 +54,8 @@ survdiff_fast(
 - control:
 
   A scalar value indicating which level of `group` represents the
-  control group.
+  control group. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -119,6 +125,12 @@ survdiff_fast(
   `t_star`), the weight is not capped. A value of 0 yields the ordinary
   log-rank test.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"survdiff_fast"`, which is a length-one numeric
@@ -132,6 +144,12 @@ the raw observed event counts, and `E0` and `E1` are `NA` because a
 single unweighted expected count is not defined for a weighted test.
 Returns `NA_real_` (still with class `"survdiff_fast"`) when the
 variance is zero (e.g., no event time at which both groups are at risk).
+The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -334,6 +352,20 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+# Formula interface (the first level of rx, 1, is the control group)
+survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)
+#> Stratified log-rank test (two-group, 2 strata)
+#> 
+#>   N = 26,  control = 1
+#> 
+#>           Observed Expected (O-E)^2/E (O-E)^2/V
+#> control          7   5.0952    0.7121    1.2796
+#> treatment        5   6.9048    0.5255    1.2796
+#> 
+#>  Chi-square = 1.28 on 1 df,  p-value = 0.258  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
 # \donttest{
 # Speed comparison against survdiff()
 if (requireNamespace("microbenchmark", quietly = TRUE)) {
@@ -345,11 +377,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min       lq       mean    median       uq      max neval
-#>  survdiff_fast  56.305  65.3220   74.36037   77.6855   80.886  172.150  1000
-#>       survdiff 972.403 999.4335 1042.43082 1011.1660 1025.988 5989.798  1000
-#>  cld
-#>   a 
-#>    b
+#>           expr     min       lq      mean  median       uq      max neval cld
+#>  survdiff_fast  36.344  42.1680  50.83091  52.978  57.1445  185.135  1000  a 
+#>       survdiff 621.513 656.3545 717.62810 670.761 691.0865 9274.753  1000   b
 # }
 ```

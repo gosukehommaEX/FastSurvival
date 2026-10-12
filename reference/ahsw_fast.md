@@ -23,7 +23,8 @@ ahsw_fast(
   side = 2,
   conf.level = 0.95,
   tau,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -31,7 +32,9 @@ ahsw_fast(
 
 - time:
 
-  A numeric vector of follow-up times for all subjects.
+  A numeric vector of follow-up times for all subjects. Alternatively, a
+  formula `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -45,7 +48,8 @@ ahsw_fast(
 - control:
 
   A scalar value indicating which level of `group` represents the
-  control group.
+  control group. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -75,6 +79,12 @@ ahsw_fast(
   `FALSE` (default), sorting is handled internally. The order is
   checked, and an error is given when it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"ahsw_fast"`, a named numeric vector containing the
@@ -84,7 +94,13 @@ per-group average hazards (`ah.ctrl`, `ah.trt`), the ratio contrast
 confidence level are stored as attributes `tau` and `conf.level`, and
 the `control` label is also stored. Returns `NA` values (still with
 class `"ahsw_fast"`) when either group has no events up to `tau` (a zero
-average hazard) or a non-finite variance.
+average hazard) or a non-finite variance. The object also has the class
+`"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -154,6 +170,21 @@ ahsw_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1, tau = 600)
 ord <- order(ovarian$futime)
 ahsw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
           control = 1, tau = 600, presorted = TRUE)
+#> Average hazard with survival weight (two-group)
+#> 
+#>   tau = 600,  control = 1
+#>   alternative = two.sided
+#> 
+#>               AH
+#> control   0.0011
+#> treatment 0.0008
+#> 
+#>                                        Est.  lower 95%  upper 95% p.value
+#> ratio (treatment / control)       0.7548735  0.2622750  2.1726579   0.602
+#> difference (treatment - control) -0.0002646 -0.0012914  0.0007622   0.613
+
+# Formula interface
+ahsw_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 600)
 #> Average hazard with survival weight (two-group)
 #> 
 #>   tau = 600,  control = 1

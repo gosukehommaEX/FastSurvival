@@ -78,7 +78,13 @@ arithmetic, subsetting, and aggregation after stripping the class with
 and <code><a href="ahr_fast.html">ahr_fast</a></code>, which return named lists whose elements are
 extracted with <code>$</code>. Each class has a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that
 formats the result similarly to the corresponding <span class="pkg">survival</span> package
-output.</p>
+output. All these results also have the class <code>"fastsurv"</code>, whose
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method returns any of them as a data frame with the
+same columns, and whose <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods return
+the estimates and their confidence limits
+(<code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>). Besides vectors, the functions
+accept a model formula <code>Surv(time, event) ~ group</code> with a data frame
+(<code><a href="formula_interface.html">formula_interface</a></code>).</p>
 <p>Estimation and testing:</p><dl><dt><code><a href="survfit_fast.html">survfit_fast</a></code></dt>
 <dd><p>Kaplan-Meier survival probability,
     standard error, and confidence interval at a single specified time
@@ -173,7 +179,8 @@ output.</p>
   <dt><code><a href="simsummary_fast.html">simsummary_fast</a></code></dt>
 <dd><p>Aggregation of replicate-level
     results into operating characteristics, given efficacy and futility
-    boundaries computed elsewhere.</p></dd>
+    boundaries computed elsewhere, with <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
+    methods.</p></dd>
 
 
 </dl><p>Visualization:</p><dl><dt><code><a href="gen_scenario_fast.html">gen_scenario_fast</a></code></dt>
@@ -184,8 +191,8 @@ output.</p>
   <dt><code><a href="kmcurve_fast.html">kmcurve_fast</a></code></dt>
 <dd><p>Analysis-stage Kaplan-Meier curves of a
     single data set, with <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> (optionally with restricted-mean
-    shading and a smoothed hazard-ratio panel) and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>
-    methods.</p></dd>
+    shading, a smoothed hazard-ratio panel, and a number-at-risk table),
+    <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods.</p></dd>
 
 
 </dl></div>

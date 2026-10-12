@@ -32,6 +32,12 @@ inside simulation loops.
   : Fast Average Hazard with Survival Weight (Two-Group Comparison)
 - [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
   : Fast Kalbfleisch-Prentice average hazard ratio for two groups
+- [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md)
+  : Formula Interface of the Estimation and Testing Functions
+- [`as.data.frame(`*`<fastsurv>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md)
+  [`coef(`*`<fastsurv>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md)
+  [`confint(`*`<fastsurv>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md)
+  : Data Frame, Estimates, and Confidence Limits of a Result
 
 ## Simulation
 
@@ -51,6 +57,8 @@ operating characteristics.
   : Fast Treatment Switching in Simulated Trial Data
 - [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
   : Summarize Operating Characteristics from Sequential Analysis Output
+- [`plot(`*`<simsummary_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.simsummary_fast.md)
+  : Plot Method for Sequential Analysis Summaries
 
 ## Design and visualization
 
@@ -65,6 +73,8 @@ curves, each with plot and print methods.
   : Plot Method for Scenario Sets
 - [`plot(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md)
   : Plot Method for Kaplan-Meier Curves
+- [`as.data.frame(`*`<kmcurve_fast>`*`)`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md)
+  : Kaplan-Meier Curves as a Data Frame
 
 ## Print methods
 

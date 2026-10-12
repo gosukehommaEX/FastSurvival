@@ -24,7 +24,8 @@ maxcombo_fast(
   gamma = c(0, 1, 0, 1),
   presorted = FALSE,
   abseps = 1e-05,
-  maxpts = 25000
+  maxpts = 25000,
+  data = NULL
 )
 ```
 
@@ -32,7 +33,9 @@ maxcombo_fast(
 
 - time:
 
-  A numeric vector of follow-up times for all subjects.
+  A numeric vector of follow-up times for all subjects. Alternatively, a
+  formula `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -46,7 +49,8 @@ maxcombo_fast(
 - control:
 
   A scalar value indicating which level of `group` represents the
-  control group.
+  control group. With the formula interface it defaults to the first
+  level of the group variable.
 
 - side:
 
@@ -91,6 +95,12 @@ maxcombo_fast(
   or with a two-sided test (see Details). Defaults to 25000. Larger
   values reduce the integration error at a higher computing cost.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"maxcombo_fast"`, a named numeric vector of length
@@ -101,7 +111,12 @@ attribute `z`, their correlation matrix in `corr`, the
 Fleming-Harrington parameters in `rho` and `gamma`, the requested
 `side`, and the total sample size in `n`. Returns `NA` values (still
 with class `"maxcombo_fast"`) when any component variance is zero or not
-finite.
+finite. The object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -241,6 +256,22 @@ maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+# Formula interface
+maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+#> Max-combo weighted log-rank test (two-group)
+#> 
+#>   N = 26,  control = 1
+#> 
+#>               Z
+#> FH(0,0) -1.0309
+#> FH(0,1)  0.0101
+#> FH(1,0) -1.2980
+#> FH(1,1) -0.0576
+#> 
+#>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
 # \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)
 if (requireNamespace("simtrial", quietly = TRUE)) {
@@ -253,6 +284,6 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
   simtrial::maxcombo(df, rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
                      return_corr = TRUE)$p_value
 }
-#> [1] 0.1512057
+#> [1] 0.1512311
 # }
 ```

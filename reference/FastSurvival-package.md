@@ -20,7 +20,16 @@ and
 which return named lists whose elements are extracted with `$`. Each
 class has a [`print()`](https://rdrr.io/r/base/print.html) method that
 formats the result similarly to the corresponding survival package
-output.
+output. All these results also have the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
+returns any of them as a data frame with the same columns, and whose
+[`coef()`](https://rdrr.io/r/stats/coef.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods return the
+estimates and their confidence limits
+([`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md)).
+Besides vectors, the functions accept a model formula
+`Surv(time, event) ~ group` with a data frame
+([`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md)).
 
 Estimation and testing:
 
@@ -131,7 +140,9 @@ Simulation and sequential analysis:
 - [`simsummary_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md):
 
   Aggregation of replicate-level results into operating characteristics,
-  given efficacy and futility boundaries computed elsewhere.
+  given efficacy and futility boundaries computed elsewhere, with
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods.
 
 Visualization:
 
@@ -145,8 +156,10 @@ Visualization:
 
   Analysis-stage Kaplan-Meier curves of a single data set, with
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (optionally
-  with restricted-mean shading and a smoothed hazard-ratio panel) and
-  [`print()`](https://rdrr.io/r/base/print.html) methods.
+  with restricted-mean shading, a smoothed hazard-ratio panel, and a
+  number-at-risk table), [`print()`](https://rdrr.io/r/base/print.html),
+  and [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  methods.
 
 ## References
 

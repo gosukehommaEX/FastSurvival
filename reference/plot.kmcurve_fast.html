@@ -6,14 +6,16 @@ panel shows the smoothed time-varying hazard ratio together with the constant
 Cox proportional-hazards estimate and, optionally, the average hazard ratio,
 in the style of stylized nonproportional-hazards figures. For a single-group
 object only one survival curve is drawn; hr = TRUE is ignored because a
-hazard ratio requires two groups."><meta property="og:description" content="Draws the Kaplan-Meier curves of a kmcurve_fast object. With
+hazard ratio requires two groups. With risk_table = TRUE the numbers at
+risk are printed below the survival panel."><meta property="og:description" content="Draws the Kaplan-Meier curves of a kmcurve_fast object. With
 rmst = TRUE the area under each curve up to tau is shaded to
 visualize the restricted mean survival time. With hr = TRUE a second
 panel shows the smoothed time-varying hazard ratio together with the constant
 Cox proportional-hazards estimate and, optionally, the average hazard ratio,
 in the style of stylized nonproportional-hazards figures. For a single-group
 object only one survival curve is drawn; hr = TRUE is ignored because a
-hazard ratio requires two groups."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
+hazard ratio requires two groups. With risk_table = TRUE the numbers at
+risk are printed below the survival panel."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -68,7 +70,8 @@ panel shows the smoothed time-varying hazard ratio together with the constant
 Cox proportional-hazards estimate and, optionally, the average hazard ratio,
 in the style of stylized nonproportional-hazards figures. For a single-group
 object only one survival curve is drawn; <code>hr = TRUE</code> is ignored because a
-hazard ratio requires two groups.</p>
+hazard ratio requires two groups. With <code>risk_table = TRUE</code> the numbers at
+risk are printed below the survival panel.</p>
     </div>
 
     <div class="section level2">
@@ -106,6 +109,9 @@ hazard ratio requires two groups.</p>
 <span>  main_km <span class="op">=</span> <span class="st">"Kaplan-Meier"</span>,</span>
 <span>  main_hr <span class="op">=</span> <span class="st">"Hazard ratio"</span>,</span>
 <span>  group_labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  risk_table <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  risk_times <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  conf.style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lines"</span>, <span class="st">"band"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -144,7 +150,7 @@ derived from the spread of the event times.</p></dd>
 
 <dt id="arg-conf-int">conf.int<a class="anchor" aria-label="anchor" href="#arg-conf-int"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, add pointwise confidence limits to
-the survival curves.</p></dd>
+the survival curves, drawn as set by <code>conf.style</code>.</p></dd>
 
 
 <dt id="arg-hr-max">hr_max<a class="anchor" aria-label="anchor" href="#arg-hr-max"></a></dt>
@@ -218,7 +224,25 @@ average-hazard-ratio line.</p></dd>
 
 <dt id="arg-group-labels">group_labels<a class="anchor" aria-label="anchor" href="#arg-group-labels"></a></dt>
 <dd><p>Optional length-two character vector of legend labels for
-the control and treatment groups.</p></dd>
+the control and treatment groups. They also label the rows of the
+number-at-risk table, which are otherwise labeled <code>Control</code> and
+<code>Treatment</code> (or by the group label for a single group).</p></dd>
+
+
+<dt id="arg-risk-table">risk_table<a class="anchor" aria-label="anchor" href="#arg-risk-table"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, print the numbers at risk below
+the survival panel. Defaults to <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-risk-times">risk_times<a class="anchor" aria-label="anchor" href="#arg-risk-times"></a></dt>
+<dd><p>Times at which the numbers at risk are given. Defaults to
+the tick marks of the time axis.</p></dd>
+
+
+<dt id="arg-conf-style">conf.style<a class="anchor" aria-label="anchor" href="#arg-conf-style"></a></dt>
+<dd><p>How the pointwise confidence limits are drawn when
+<code>conf.int = TRUE</code>: <code>"lines"</code> (default) as dashed step functions,
+or <code>"band"</code> as a shaded band.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -243,10 +267,18 @@ effectively zero are dropped.</p>
 <p>The constant Cox hazard ratio is taken from <code><a href="coxph_fast.html">coxph_fast</a></code>, the
 average hazard ratio from <code><a href="ahr_fast.html">ahr_fast</a></code>, and the restricted mean
 survival time difference from <code><a href="rmst_fast.html">rmst_fast</a></code>.</p>
+<p>The number at risk at a time is the number of subjects whose observed time is
+at or after it, as reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a
+<code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survival::survfit()</a></code> object. The table has one row per group, in the
+colors of the curves, at the tick marks of the time axis or at
+<code>risk_times</code>; the bottom margin (and, for long group labels, the left
+margin) is enlarged to hold it. The curves themselves are available as a data
+frame from <code><a href="as.data.frame.kmcurve_fast.html">as.data.frame.kmcurve_fast</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="kmcurve_fast.html">kmcurve_fast</a></code>, <code><a href="print.kmcurve_fast.html">print.kmcurve_fast</a></code></p></div>
+    <div class="dont-index"><p><code><a href="kmcurve_fast.html">kmcurve_fast</a></code>, <code><a href="print.kmcurve_fast.html">print.kmcurve_fast</a></code>,
+  <code><a href="as.data.frame.kmcurve_fast.html">as.data.frame.kmcurve_fast</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

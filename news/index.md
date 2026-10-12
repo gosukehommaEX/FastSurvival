@@ -3,7 +3,60 @@
 ## FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an
-article on the package. It adds no new features.
+article on the package. It also adds a formula interface, methods that
+return the results as data frames, and two plots.
+
+### New features
+
+- The estimation and testing functions and
+  [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  accept a model formula `Surv(time, event) ~ group` (or `~ 1` for the
+  functions that allow a single group) with a data frame, in place of
+  the vectors of times, event indicators, and group labels;
+  [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
+  and
+  [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
+  also accept [`strata()`](https://rdrr.io/pkg/survival/man/strata.html)
+  terms. The control group defaults to the first level of the group
+  variable. The result is that of the vector interface, which is
+  unchanged and remains the choice inside simulation loops. See
+  [`?formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
+- The results of the estimation and testing functions have the
+  additional class `"fastsurv"`. Its
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
+  returns the estimates and tests of any result, including the lists
+  returned by
+  [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
+  and
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md),
+  as rows of a data frame with the columns `term`, `estimate`,
+  `std.error`, `conf.low`, `conf.high`, `statistic`, and `p.value`, so
+  that the results of a loop can be stacked with
+  [`rbind()`](https://rdrr.io/r/base/cbind.html). Its
+  [`coef()`](https://rdrr.io/r/stats/coef.html) and
+  [`confint()`](https://rdrr.io/r/stats/confint.html) methods return the
+  estimates and their confidence limits. Ratios are reported on the log
+  scale. The results are otherwise unchanged; code that compares
+  [`class()`](https://rdrr.io/r/base/class.html) of a result with a
+  single class name should use
+  [`inherits()`](https://rdrr.io/r/base/class.html) instead.
+
+- [`plot.kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md)
+  can print the numbers at risk below the survival panel (`risk_table`
+  and `risk_times`) and draw the pointwise confidence limits as a shaded
+  band (`conf.style = "band"`).
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
+  the Kaplan-Meier curves of a `kmcurve_fast` object as a data frame,
+  with the numbers at risk, events, and censored times at each observed
+  time.
+
+- [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  results have a
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method, which
+  draws the cumulative probabilities of stopping for efficacy and for
+  futility by look, or the stopping probabilities at each look, for
+  every arm and population.
 
 ### Bug fixes
 
@@ -274,6 +327,16 @@ article on the package. It adds no new features.
   references.
 
 ### Tests
+
+- New tests cover the formula interface of every function (compared with
+  the vector interface), the
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+  [`coef()`](https://rdrr.io/r/stats/coef.html), and
+  [`confint()`](https://rdrr.io/r/stats/confint.html) methods, the
+  numbers at risk and the Kaplan-Meier table of a `kmcurve_fast` object
+  (compared with [`summary()`](https://rdrr.io/r/base/summary.html) of a
+  [`survival::survfit()`](https://rdrr.io/pkg/survival/man/survfit.html)
+  object and with a hand calculation), and the plot methods.
 
 - The one-sided max-combo p-values with three and four weights, whose
   correlation matrices are singular, are compared with an independent

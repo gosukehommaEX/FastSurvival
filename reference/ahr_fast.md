@@ -19,7 +19,8 @@ ahr_fast(
   conf.level = 0.95,
   tau = NULL,
   null.ahr = 1,
-  presorted = FALSE
+  presorted = FALSE,
+  data = NULL
 )
 ```
 
@@ -27,7 +28,9 @@ ahr_fast(
 
 - time:
 
-  vector of right-censored event times
+  vector of right-censored event times Alternatively, a formula
+  `Surv(time, event) ~ group`, with the variables in `data`; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
 
 - event:
 
@@ -41,6 +44,8 @@ ahr_fast(
 
   the value of `group` that denotes the reference (control) group. The
   average hazard ratio is reported for the other group relative to it.
+  With the formula interface it defaults to the first level of the group
+  variable.
 
 - side:
 
@@ -70,6 +75,12 @@ ahr_fast(
   sort (default `FALSE`) The order is checked, and an error is given
   when it does not hold.
 
+- data:
+
+  A data frame in which the variables of a formula given as `time` are
+  evaluated. Used only with the formula interface; see
+  [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+
 ## Value
 
 An object of class `"ahr_fast"`, a list with elements `ahr` (the average
@@ -79,7 +90,13 @@ hazard ratio, comparison vs reference), `log.ahr`, `se.loghr`, `lower`,
 `p.value.loghr` (the equivalent test on the `log(ahr)` scale),
 `se.theta` (standard error of the tested comparison-group share),
 `null.share`, `null.ahr`, `theta` (the two group shares), `var.theta1`,
-`var.theta2`, `side`, `tau`, `n` (the two group sizes) and `groups`.
+`var.theta2`, `side`, `tau`, `n` (the two group sizes) and `groups`. The
+object also has the class `"fastsurv"`, whose
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html), and
+[`confint()`](https://rdrr.io/r/stats/confint.html) methods are
+described in
+[`as.data.frame.fastsurv`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.fastsurv.md).
 
 ## Details
 
@@ -137,6 +154,26 @@ obs <- pmin(c(time1, time2), cens)
 event <- as.integer(c(time1, time2) <= cens)
 group <- rep(c(0, 1), each = n)
 ahr_fast(obs, event, group, control = 0, tau = 8)
+#> Kalbfleisch-Prentice average hazard ratio (two-group)
+#> 
+#>   tau = 8,  control = 0
+#>   alternative = two.sided
+#> 
+#>            theta   n
+#> control   0.3079 200
+#> treatment 0.6921 200
+#> 
+#>                                             Est. lower 95% upper 95%     z
+#> average hazard ratio (treatment / control) 2.248     1.699     2.973 6.317
+#>                                            Pr(>|z|)    
+#> average hazard ratio (treatment / control) 2.66e-10 ***
+#> ---
+#> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#>   (log scale: z = 5.676, p = 1.379e-08)
+
+# Formula interface
+d <- data.frame(obs, event, group)
+ahr_fast(Surv(obs, event) ~ group, data = d, tau = 8)
 #> Kalbfleisch-Prentice average hazard ratio (two-group)
 #> 
 #>   tau = 8,  control = 0

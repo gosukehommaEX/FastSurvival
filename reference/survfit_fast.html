@@ -73,7 +73,8 @@ vectors.</p>
 <span>  <span class="va">t_eval</span>,</span>
 <span>  conf.level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  conf.type <span class="op">=</span> <span class="st">"log"</span>,</span>
-<span>  presorted <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  presorted <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,7 +84,9 @@ vectors.</p>
 
 <dl><dt id="arg-t-sorted">t_sorted<a class="anchor" aria-label="anchor" href="#arg-t-sorted"></a></dt>
 <dd><p>A numeric vector of event or censoring times. Must be
-sorted in ascending order when <code>presorted = TRUE</code>.</p></dd>
+sorted in ascending order when <code>presorted = TRUE</code>.
+Alternatively, a formula <code>Surv(time, event) ~ 1</code>, with the
+variables in <code>data</code>; see <code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 
 <dt id="arg-e-sorted">e_sorted<a class="anchor" aria-label="anchor" href="#arg-e-sorted"></a></dt>
@@ -110,7 +113,14 @@ Defaults to <code>"log"</code>.</p></dd>
 <dt id="arg-presorted">presorted<a class="anchor" aria-label="anchor" href="#arg-presorted"></a></dt>
 <dd><p>A logical value. If <code>TRUE</code> (default), <code>t_sorted</code>
 and <code>e_sorted</code> are assumed to be sorted in ascending order of time.
-If <code>FALSE</code>, the vectors are sorted internally before computation.</p></dd>
+If <code>FALSE</code>, the vectors are sorted internally before computation.
+With the formula interface the default is <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A data frame in which the variables of a formula given as
+<code>t_sorted</code> are evaluated. Used only with the formula interface; see
+<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -123,7 +133,10 @@ If <code>FALSE</code>, the vectors are sorted internally before computation.</p>
   level, and confidence interval type are stored as attributes
   <code>t_eval</code>, <code>conf.level</code>, and <code>conf.type</code>.
   Returns a vector of <code>NA_real_</code> values (still with class
-  <code>"survfit_fast"</code>) when <code>n</code> is zero.</p>
+  <code>"survfit_fast"</code>) when <code>n</code> is zero.
+  The object also has the class <code>"fastsurv"</code>, whose
+  <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> methods
+  are described in <code><a href="as.data.frame.fastsurv.html">as.data.frame.fastsurv</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -224,6 +237,16 @@ observations. <em>Journal of the American Statistical Association</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  time n.risk n.event survival std.err lower 95% CI upper 95% CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    10     37      46    0.474  0.0543        0.368        0.581</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface (the data are sorted internally)</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">t_raw</span>, status <span class="op">=</span> <span class="va">e_raw</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">survfit_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">d</span>, t_eval <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Kaplan-Meier survival estimate (single time point)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        survival std.err lower 95% upper 95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> t = 10   0.4744  0.0543     0.379    0.5938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Confidence interval type: log</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

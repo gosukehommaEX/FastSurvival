@@ -147,6 +147,17 @@ oc
 #>   Expected analysis time at stop: 27.31
 ```
 
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+cumulative probability of stopping for efficacy at each look, here
+against the expected number of events.
+
+``` r
+
+plot(oc, xaxis = "events")
+```
+
+![](group-sequential-design_files/figure-html/summary-plot-1.png)
+
 ## Comparison with the closed-form design
 
 The closed-form reference uses the usual large-sample approximation for
