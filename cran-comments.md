@@ -27,11 +27,12 @@ max-combo p-value. See NEWS.md for the full list of changes.
 
 ## Notes for the reviewer
 
-The checks below reported no NOTE. If the incoming check reports possibly
-misspelled words in the DESCRIPTION, "Kalbfleisch" and "Pepe" are author
-surnames, used to name the
-Kalbfleisch-Prentice average hazard ratio and the Pepe-Fleming weighted
-Kaplan-Meier test. The spelling is correct.
+The win-builder checks, run on 2026-10-12, reported only the NOTE "Days since
+last update: 4". The other checks below reported no NOTE. If the incoming
+check reports possibly misspelled words in the DESCRIPTION, "Kalbfleisch" and
+"Pepe" are author surnames, used to name the Kalbfleisch-Prentice average
+hazard ratio and the Pepe-Fleming weighted Kaplan-Meier test. The spelling is
+correct.
 
 As in the previous releases, no example uses \dontrun{}. Examples that exceed
 the 5-second limit are wrapped in \donttest{}, and examples that use Suggests
@@ -42,7 +43,7 @@ requireNamespace(). The package was checked with --run-donttest.
 
 * Local: Windows 11 x64 (build 26200), R 4.6.0
 * win-builder: R-release (R 4.6.1)
-* win-builder: R-devel (2026-10-05 r90641)
+* win-builder: R-devel (2026-10-10 r90659)
 * GitHub Actions (R-CMD-check workflow):
   - ubuntu-latest (R release)
   - ubuntu-latest (R devel)
