@@ -2,6 +2,8 @@
 
 ## FastSurvival 1.2.0
 
+CRAN release: 2026-10-15
+
 This release corrects errors and documentation found while preparing an
 article on the package. It also adds a formula interface, methods that
 return the results as data frames, and two plots.
