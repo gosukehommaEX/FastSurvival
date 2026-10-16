@@ -5,9 +5,10 @@
 # survival package (686 patients, recurrence-free survival time in days,
 # hormonal therapy as the group), as in the validation vignette, and records
 # the largest absolute difference of the compared quantities. The window mean
-# survival time and the weighted Kaplan-Meier test, which have no reference on
-# CRAN, are compared with a Kaplan-Meier integral from survfit() and with the
-# restricted mean survival time identity. The simulation layer is checked by
+# survival time and the weighted Kaplan-Meier test with constant weight are
+# compared with integrals of the Kaplan-Meier curves from survfit(), and the
+# one-sided max-combo p-value with that of nph::logrank.maxtest() computed by
+# the same TVPACK algorithm. The simulation layer is checked by
 # comparing cutoff_fast() with simtrial::get_analysis_date(), and the log-rank
 # and RMST statistics of analysis_fast() with survival::survdiff() and
 # survRM2::rmst2() applied to the data censored at the same cutoffs.
@@ -15,7 +16,9 @@
 # Part 2 times each function against its reference on a simulated two-group
 # data set of 500 subjects with microbenchmark (1000 replicates), with the
 # pre-sorted fast path and one-sided tests where applicable, as in
-# tools/benchmark_speed.R. Only references on CRAN are timed.
+# tools/benchmark_speed.R. Only references on CRAN are timed. coxph_fast() is
+# also timed against survival::coxph.fit(), the fitting function of coxph(),
+# which takes the design matrix instead of a formula.
 #
 # Results are written to tools/paper/output/bench_functions_agreement.csv,
 # bench_functions_speed.csv, and bench_functions_data.csv.
@@ -150,17 +153,18 @@ add_agree("wmst_fast()", "Kaplan-Meier integral from survival::survfit()",
           unclass(fast)[c("wmst.control", "wmst.treatment")],
           c(km_window_area(0, 200, 1000), km_window_area(1, 200, 1000)))
 
-# Weighted Kaplan-Meier test with the constant weight against the RMST
-# difference over the observed range. rmst_fast() warns because tau extends
-# past the shorter group's follow-up, which is intended here.
+# Weighted Kaplan-Meier test with the constant weight: its weighted difference
+# equals the difference between the areas under the two Kaplan-Meier curves up
+# to the largest observed time, where the curve of the group whose follow-up
+# ends earlier stays at its last value. The areas are computed from survfit().
 tmax <- max(gbsg$rfstime)
 fast <- wkm_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
                  control = 0, side = 1, weight = "constant")
-ref  <- suppressWarnings(rmst_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
-                                   control = 0, tau = tmax, side = 1))
-add_agree('wkm_fast(weight = "constant")', "rmst_fast() at the largest time",
-          "weighted difference (identity with the RMST difference)",
-          unclass(fast)["wdiff"], unclass(ref)["diff"])
+add_agree('wkm_fast(weight = "constant")',
+          "Kaplan-Meier integral from survival::survfit()",
+          "weighted difference (difference in area up to the largest time)",
+          unclass(fast)["wdiff"],
+          km_window_area(1, 0, tmax) - km_window_area(0, 0, tmax))
 
 # Milestone survival at 1000 days.
 fast <- milestone_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
@@ -220,6 +224,18 @@ ref  <- nph::logrank.maxtest(gbsg$rfstime, gbsg$status, gbsg$hormon)
 add_agree("maxcombo_fast()", "nph::logrank.maxtest()",
           "absolute component Z statistics, FH(0,0), FH(0,1), FH(1,0)",
           abs(attr(fast, "z")), abs(ref$tests$z))
+
+# Max-combo test: one-sided p-value. With three weights maxcombo_fast() uses
+# the deterministic TVPACK algorithm of mvtnorm, which nph::logrank.maxtest()
+# is given here with the same tolerance. Its z has the opposite sign, so its
+# alternative "greater" is the direction of benefit tested by side = 1.
+ref_p <- nph::logrank.maxtest(gbsg$rfstime, gbsg$status, gbsg$hormon,
+                              alternative = "greater",
+                              algorithm = mvtnorm::TVPACK(abseps = 1e-5))
+stopifnot(abs(unclass(fast)[["p.value"]] - ref_p$pmult) < 1e-4)
+add_agree("maxcombo_fast()", "nph::logrank.maxtest()",
+          "one-sided p-value, FH(0,0), FH(0,1), FH(1,0)",
+          unclass(fast)["p.value"], ref_p$pmult)
 
 # Robust modestly-weighted log-rank test: component Z statistics.
 gbsg_df <- data.frame(
@@ -281,10 +297,10 @@ ref_a <- t(vapply(seq_len(nrow(res_a)), function(r) {
                    tau = 6)$unadjusted.result[1, 1])
 }, numeric(2)))
 add_agree("analysis_fast()", "survival::survdiff() on the censored data",
-          "log-rank chi-square at two event-driven looks in 50 trials",
+          "log-rank chi-square at two event-driven analyses in 50 trials",
           res_a$logrank.chisq, ref_a[, 1])
 add_agree("analysis_fast()", "survRM2::rmst2() on the censored data",
-          "difference in RMST at two event-driven looks in 50 trials",
+          "difference in RMST at two event-driven analyses in 50 trials",
           res_a$rmst.diff, ref_a[, 2])
 
 agreement <- do.call(rbind, agree)
@@ -305,6 +321,20 @@ g_s <- dataset$group[ord]
 
 # Control is group 1, treatment is group 2.
 arm <- as.integer(dataset$group == 2)
+
+# Design matrix and survival object for survival::coxph.fit(), the fitting
+# function that coxph() calls and that its documentation suggests calling
+# directly in a simulation, with the centering of coxph(). It must give the
+# coefficient of coxph().
+x_fit   <- matrix(as.numeric(dataset$group == 2), ncol = 1)
+y_fit   <- Surv(dataset$tte, dataset$event)
+ctl_fit <- coxph.control()
+fit_low <- coxph.fit(x_fit, y_fit, strata = NULL, offset = NULL, init = NULL,
+                     control = ctl_fit, weights = NULL, method = "breslow",
+                     rownames = NULL, resid = FALSE, nocenter = c(-1, 0, 1))
+fit_ref <- coxph(Surv(tte, event) ~ I(group == 2), data = dataset,
+                 ties = "breslow")
+stopifnot(abs(unname(fit_low$coefficients) - unname(coef(fit_ref))) < 1e-8)
 
 # Restriction horizon within both groups' follow-up, so survRM2 accepts it.
 tau <- floor(min(tapply(t_s, g_s, max)))
@@ -351,6 +381,11 @@ speed <- list(
     coxph_fast(t_s, e_s, g_s, control = 1, side = 1, presorted = TRUE),
     coxph(Surv(tte, event) ~ I(group == 2), data = dataset,
           ties = "breslow"))),
+  summarize_mb("coxph_fast()", "survival::coxph.fit()", mb(
+    coxph_fast(t_s, e_s, g_s, control = 1, side = 1, presorted = TRUE),
+    coxph.fit(x_fit, y_fit, strata = NULL, offset = NULL, init = NULL,
+              control = ctl_fit, weights = NULL, method = "breslow",
+              rownames = NULL, resid = FALSE, nocenter = c(-1, 0, 1)))),
   summarize_mb("rmst_fast()", "survRM2::rmst2()", mb(
     rmst_fast(t_s, e_s, g_s, control = 1, tau = tau, side = 1,
               presorted = TRUE),

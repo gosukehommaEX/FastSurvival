@@ -8,7 +8,9 @@
 # the decisions of (1) all p-values integrated with set.seed(1), (2) the run
 # with mc.alpha and set.seed(1), and (3) all p-values integrated again with
 # set.seed(2), and integrates the p-values of the analyses whose decisions
-# differ between (1) and (2) once more with a smaller error tolerance.
+# differ between (1) and (2) once more with a smaller error tolerance. It also
+# records the estimated power (rejection at any look) of the three runs and
+# the number of simulated trials whose overall decision differs.
 # Results are written to tools/paper/output/check_mc_alpha_summary.csv and
 # check_mc_alpha_rows.csv.
 #
@@ -58,6 +60,14 @@ decb <- rb$maxcombo.p <= a
 dec2 <- r2$maxcombo.p <= a
 differ <- which(dec1 != decb)
 
+# Overall decision of each simulated trial: rejection at any look.
+stopifnot(identical(r1$sim, rb$sim), identical(r1$sim, r2$sim),
+          identical(r1$look, rb$look), identical(r1$look, r2$look))
+any_reject <- function(dec) as.vector(tapply(dec %in% TRUE, r1$sim, any))
+rej1 <- any_reject(dec1)
+rejb <- any_reject(decb)
+rej2 <- any_reject(dec2)
+
 # Integrate the analyses whose decisions differ again with a smaller
 # tolerance and more points.
 p_precise <- numeric(0)
@@ -94,7 +104,11 @@ summ <- data.frame(
   precise_agrees_mc_alpha = sum((rows$p_precise <= rows$level) ==
                                   (rows$p_mc_alpha <= rows$level)),
   precise_agrees_seed1 = sum((rows$p_precise <= rows$level) ==
-                               (rows$p_seed1 <= rows$level))
+                               (rows$p_seed1 <= rows$level)),
+  power_seed1 = mean(rej1), power_mc_alpha = mean(rejb),
+  power_seed2 = mean(rej2),
+  trials_differ_mc_alpha = sum(rej1 != rejb),
+  trials_differ_seed = sum(rej1 != rej2)
 )
 print(summ)
 print(rows)

@@ -1,11 +1,12 @@
 "method","reference","fast_ms","ref_ms","speedup"
-"survfit_fast()","survival::survfit() + summary()",0.096751,3.4409015,35.5645057932218
-"survdiff_fast()","survival::survdiff()",0.0960505,2.325051,24.2065475973576
-"coxph_fast()","survival::coxph(ties = ""breslow"")",0.109701,3.495401,31.8629821059061
-"rmst_fast()","survRM2::rmst2()",0.125201,4.2392005,33.8591584731751
-"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.140401,37.120701,264.39057414121
-"milestone_fast()","survival::survfit() + summary()",0.266801,4.8065505,18.0154890723798
-"medsurv_fast()","nph::nphparams()",0.358551,12.0407015,33.5815588298457
-"maxcombo_fast()","nph::logrank.maxtest()",0.457251,156.916701,343.174101314158
-"rmw_fast()","nphRCT::wlrt() (two components)",0.273501,21.229151,77.6200123582729
-"ahsw_fast()","survAH::ah2()",0.1478015,50.387151,340.910958278502
+"survfit_fast()","survival::survfit() + summary()",0.115001,3.932501,34.1953635185781
+"survdiff_fast()","survival::survdiff()",0.0821505,1.9963515,24.3011485018351
+"coxph_fast()","survival::coxph(ties = ""breslow"")",0.0957005,2.877851,30.0714311837451
+"coxph_fast()","survival::coxph.fit()",0.0714,0.3445005,4.82493697478992
+"rmst_fast()","survRM2::rmst2()",0.1077505,3.478501,32.282922121011
+"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.118601,32.20315,271.525113616243
+"milestone_fast()","survival::survfit() + summary()",0.187751,3.2460505,17.2891249580561
+"medsurv_fast()","nph::nphparams()",0.273601,9.3377015,34.1289012101564
+"maxcombo_fast()","nph::logrank.maxtest()",0.354002,128.093152,361.843017836057
+"rmw_fast()","nphRCT::wlrt() (two components)",0.3161015,24.5900015,77.7914736247693
+"ahsw_fast()","survAH::ah2()",0.185151,79.3702515,428.678492149651
