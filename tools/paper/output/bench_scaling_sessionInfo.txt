@@ -16,8 +16,8 @@ attached base packages:
 [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] survival_3.8-12       TrialSimulator_1.35.8 doFuture_1.2.2        foreach_1.5.2         future_1.70.0        
-[6] dqrng_0.4.1           FastSurvival_1.1.0   
+[1] survival_3.8-12       TrialSimulator_1.39.0 doFuture_1.2.2        foreach_1.5.2         future_1.70.0        
+[6] dqrng_0.4.1           FastSurvival_1.2.0   
 
 loaded via a namespace (and not attached):
  [1] gtable_0.3.6         xfun_0.61            ggplot2_4.0.3        gMCPLite_0.1.7       lattice_0.22-9      

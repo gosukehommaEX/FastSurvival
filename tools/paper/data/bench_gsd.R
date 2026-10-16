@@ -144,6 +144,11 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
   suppressPackageStartupMessages(library(TrialSimulator))
+  # trial() has no duration argument since TrialSimulator 1.36.0; a trial ends
+  # at its last milestone.
+  if (packageVersion("TrialSimulator") < "1.36.0") {
+    stop("This script needs TrialSimulator 1.36.0 or later")
+  }
   # Each simulated trial is run by its own controller with seed = i, and only
   # the time of controller$run() is counted.
   make_ctl <- function(seed) {
@@ -153,7 +158,7 @@ if (requireNamespace("TrialSimulator", quietly = TRUE)) {
     trt <- arm(name = "treatment")
     trt$add_endpoints(endpoint(name = "os", type = "tte", generator = rexp,
                                rate = log(2) / med_ctrl * hr))
-    tr <- trial(name = "gsd", n_patients = 2 * n_arm, duration = 500,
+    tr <- trial(name = "gsd", n_patients = 2 * n_arm,
                 enroller = StaggeredRecruiter,
                 accrual_rate = data.frame(end_time = Inf,
                                           piecewise_rate = acc_rate),
