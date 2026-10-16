@@ -118,13 +118,8 @@ results$FastSurvival <- oc_row("FastSurvival", nsim_fast, pos,
 # ---- TrialSimulator ---------------------------------------------------------
 if (requireNamespace("TrialSimulator", quietly = TRUE)) {
   suppressPackageStartupMessages(library(TrialSimulator))
-  # TrialSimulator 1.35.8 draws the seed of each replicate of
-  # controller$run(n) from the random-number state left by the previous
-  # replicate, so the seeds follow a deterministic sequence that can repeat;
-  # with seed = 1 the replicates repeated after a few hundred trials
-  # (check_crossover_pfs.R). Each simulated trial is therefore run by its own
-  # controller with seed = i, and only the time of controller$run() is
-  # counted.
+  # Each simulated trial is run by its own controller with seed = i, and only
+  # the time of controller$run() is counted.
   make_ctl <- function(seed) {
     mk_arm <- function(name, h) {
       a <- arm(name = name)
