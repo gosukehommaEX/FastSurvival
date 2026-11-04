@@ -54,7 +54,7 @@ accumulation in a single C++ pass without intermediate R-level vector copies."><
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fast Closed-Form Hazard Ratio Estimation via the Pike-Halley Estimator</h1>
-      <small class="dont-index">Source: <a href="https://github.com/gosukehommaEX/FastSurvival/blob/v1.2.0/R/coxph_fast.R" class="external-link"><code>R/coxph_fast.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/gosukehommaEX/FastSurvival/blob/main/R/coxph_fast.R" class="external-link"><code>R/coxph_fast.R</code></a></small>
       <div class="d-none name"><code>coxph_fast.Rd</code></div>
     </div>
 
@@ -341,9 +341,12 @@ Medicine</em>, <em>10</em>(5), 749-755.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq     mean    median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   47.606   61.3645  101.965  100.6085  120.838 5157.636  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1486.375 1540.4065 1633.579 1562.8995 1594.912 7494.494  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq       mean    median        uq      max neval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   47.577   60.7135   84.02244   85.1245   89.4905 4538.002  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1436.318 1474.4850 1515.96285 1490.3305 1511.3150 6231.680  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -377,11 +377,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min       lq       mean   median       uq       max neval
-#>  survdiff_fast  44.240  56.6035   77.82748  79.2330   97.276   202.163  1000
-#>       survdiff 924.889 969.3705 1041.28381 986.4935 1011.499 10337.359  1000
-#>  cld
-#>   a 
-#>    b
+#>           expr     min       lq      mean   median      uq      max neval cld
+#>  survdiff_fast  44.649  55.5645  67.92641  71.8590  79.159  158.099  1000  a 
+#>       survdiff 895.800 936.8485 990.20806 950.6475 966.444 9093.752  1000   b
 # }
 ```
