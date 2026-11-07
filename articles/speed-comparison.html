@@ -97,12 +97,11 @@ for the data set of 500 subjects below, all of whom have an event. The
 FastSurvival functions are timed on presorted input, so the single sort
 of the data is excluded from their times, whereas the reference
 functions sort internally; in a simulation loop the sort is paid once
-per data set. <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> computes a closed-form
-approximation of the Cox estimate (the Pike-Halley Estimator) rather
-than the iterative maximum partial likelihood estimate, so its row
-compares two estimators of the same quantity. Absolute timings depend on
-hardware, sample size, and event rate, so the ratios matter more than
-the raw values.</p>
+per data set. <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> computes the same maximum
+partial likelihood estimate as <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code>, by Newton-Raphson
+iteration on the counts at the distinct event times. Absolute timings
+depend on hardware, sample size, and event rate, so the ratios matter
+more than the raw values.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gosukehommaEX/FastSurvival" class="external-link">FastSurvival</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>

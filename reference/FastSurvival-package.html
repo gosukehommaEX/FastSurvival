@@ -100,11 +100,11 @@ accept a model formula <code>Surv(time, event) ~ group</code> with a data frame
     sorted vectors.</p></dd>
 
   <dt><code><a href="coxph_fast.html">coxph_fast</a></code></dt>
-<dd><p>Closed-form hazard ratio estimator via
-    the Pike-Halley Estimator method, with Wald confidence interval. The
-    estimator anchors at the Pike estimate and applies a single analytic
-    Halley correction to the Cox partial likelihood score. A stratified
-    version approximates the stratified Cox model.</p></dd>
+<dd><p>Cox proportional hazards model for two
+    groups: the maximum partial likelihood estimate of the hazard ratio by
+    Newton-Raphson iteration on the counts at the distinct event times,
+    with the Efron or Breslow handling of tied event times, a Wald
+    confidence interval, and an optional stratified model.</p></dd>
 
   <dt><code><a href="rmst_fast.html">rmst_fast</a></code></dt>
 <dd><p>Restricted mean survival time for a single

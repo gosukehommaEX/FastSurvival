@@ -19,11 +19,11 @@ of the data is excluded from their times, whereas the reference
 functions sort internally; in a simulation loop the sort is paid once
 per data set.
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-computes a closed-form approximation of the Cox estimate (the
-Pike-Halley Estimator) rather than the iterative maximum partial
-likelihood estimate, so its row compares two estimators of the same
-quantity. Absolute timings depend on hardware, sample size, and event
-rate, so the ratios matter more than the raw values.
+computes the same maximum partial likelihood estimate as
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html), by
+Newton-Raphson iteration on the counts at the distinct event times.
+Absolute timings depend on hardware, sample size, and event rate, so the
+ratios matter more than the raw values.
 
 ``` r
 

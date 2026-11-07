@@ -133,54 +133,52 @@ family, including the ordinary log-rank test recovered at
 ## Cox hazard ratio
 
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-returns the Pike-Halley Estimator, a closed-form approximation to the
-maximizer of the Cox partial likelihood with the Breslow method for
-ties. The reference is therefore
-[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) with
-`ties = "breslow"` (its default is the Efron method). We report the log
-hazard ratio from both; the sign convention is the same and `side` does
-not affect the point estimate.
+returns the maximum partial likelihood estimate of the Cox model (Cox,
+1972), found by Newton-Raphson iteration with the starting value,
+convergence criterion, and maximum number of iterations of
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html), with the Efron
+(1977) handling of tied event times by default and the Breslow (1974)
+handling on request. We compare the log hazard ratio and its standard
+error with [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) for
+both handlings, without and with stratification by tumor grade (a
+separate baseline hazard in each stratum). The reference uses
+`timefix = FALSE`, so that, as in
+[`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
+only exactly equal times are tied.
 
 ``` r
 
-fast_hr <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
-                      control = 0, side = 1)
-
-ref_cox <- coxph(Surv(rfstime, status) ~ hormon, data = gbsg,
-                 ties = "breslow")
-
-c(fast = unclass(fast_hr)["coef"], cox = unname(coef(ref_cox)))
-#>  fast.coef        cox 
-#> -0.3640099 -0.3638988
-cox_diff <- abs(unname(unclass(fast_hr)["coef"]) - unname(coef(ref_cox)))
+cox_ctrl <- coxph.control(timefix = FALSE)
+cox_rows <- do.call(rbind, lapply(c("efron", "breslow"), function(tie) {
+  do.call(rbind, lapply(c(FALSE, TRUE), function(strat) {
+    fast <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon, control = 0,
+                       strata = if (strat) gbsg$grade, ties = tie)
+    ref <- if (strat) {
+      coxph(Surv(rfstime, status) ~ hormon + strata(grade), data = gbsg,
+            ties = tie, control = cox_ctrl)
+    } else {
+      coxph(Surv(rfstime, status) ~ hormon, data = gbsg, ties = tie,
+            control = cox_ctrl)
+    }
+    data.frame(ties = tie, strata = strat,
+               coef_fast = unname(fast["coef"]),
+               coef_cox = unname(coef(ref)),
+               se_fast = unname(fast["se(coef)"]),
+               se_cox = sqrt(ref$var[1, 1]))
+  }))
+}))
+cox_rows
+#>      ties strata  coef_fast   coef_cox   se_fast    se_cox
+#> 1   efron  FALSE -0.3640099 -0.3640099 0.1250446 0.1250446
+#> 2   efron   TRUE -0.3397231 -0.3397231 0.1255153 0.1255153
+#> 3 breslow  FALSE -0.3638988 -0.3638988 0.1250441 0.1250441
+#> 4 breslow   TRUE -0.3396679 -0.3396679 0.1255131 0.1255131
+cox_diff <- max(abs(cox_rows$coef_fast - cox_rows$coef_cox),
+                abs(cox_rows$se_fast - cox_rows$se_cox))
 ```
 
-Because the Pike-Halley Estimator is a closed-form approximation rather
-than the exact partial-likelihood maximizer, the two log hazard ratios
-are not expected to be identical. Their absolute difference here is
-0.00011, which reflects the approximation and is not a sign of error.
-
-With `strata`,
-[`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-approximates the stratified Cox model, in which each stratum has its own
-baseline hazard. Stratifying by tumor grade, the estimate is compared
-with [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) using
-[`strata()`](https://rdrr.io/pkg/survival/man/strata.html) and the
-Breslow method for ties, which is the partial likelihood that the
-Pike-Halley Estimator targets.
-
-``` r
-
-fast_hr_s <- coxph_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
-                        control = 0, strata = gbsg$grade)
-
-ref_cox_s <- coxph(Surv(rfstime, status) ~ hormon + strata(grade),
-                   data = gbsg, ties = "breslow")
-
-c(fast = unclass(fast_hr_s)["coef"], cox = unname(coef(ref_cox_s)))
-#>  fast.coef        cox 
-#> -0.3397231 -0.3396679
-```
+The estimates and standard errors agree to rounding error; the largest
+absolute difference is 2.2e-15.
 
 ## Restricted mean survival time
 
@@ -651,11 +649,12 @@ to numerical precision for the Kaplan-Meier, log-rank, weighted
 log-rank, RMST, milestone, median, and average-hazard quantities; the
 window mean survival time matches a Kaplan-Meier integral and the
 weighted Kaplan-Meier statistic matches the RMST identity; the average
-hazard ratio matches a survival-based reference; and the closed-form Cox
-hazard ratio, with or without strata, agrees with the partial-likelihood
-maximizer to the order expected for the Pike-Halley approximation. In
-the simulation layer, the analysis cutoffs agree with simtrial and the
-switched survival times follow their analytic distribution. This
+hazard ratio matches a survival-based reference; and the Cox hazard
+ratio and its standard error, with or without strata and with either
+handling of tied event times, agree with
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) to rounding
+error. In the simulation layer, the analysis cutoffs agree with simtrial
+and the switched survival times follow their analytic distribution. This
 agreement is verified continuously by the package test suite.
 
 ## References
@@ -673,6 +672,13 @@ Survival Analysis*. New York: John Wiley & Sons.
 
 Cox, D. R. (1972). Regression models and life-tables. *Journal of the
 Royal Statistical Society. Series B (Methodological)*, 34(2), 187-202.
+
+Breslow, N. (1974). Covariance analysis of censored survival data.
+*Biometrics*, 30(1), 89-99.
+
+Efron, B. (1977). The efficiency of Cox’s likelihood function for
+censored data. *Journal of the American Statistical Association*,
+72(359), 557-565.
 
 Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of

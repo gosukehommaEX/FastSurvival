@@ -102,7 +102,7 @@ return an S3 object with a <code><a href="https://rdrr.io/r/base/print.html" cla
 <code><a href="../reference/survfit_fast.html">survfit_fast()</a></code> evaluates the Kaplan-Meier estimate at a
 single time point. <code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code> computes the log-rank
 test and its weighted and stratified variants. <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code>
-returns a closed-form hazard ratio, the Pike-Halley Estimator.
+fits the Cox proportional hazards model for two groups.
 <code><a href="../reference/rmst_fast.html">rmst_fast()</a></code> returns the restricted mean survival time, and
 <code><a href="../reference/wmst_fast.html">wmst_fast()</a></code> the window mean survival time over an interval.
 <code><a href="../reference/milestone_fast.html">milestone_fast()</a></code> compares survival at a milestone
@@ -163,7 +163,7 @@ survival package, with a one-sided test of treatment benefit
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
 <span></span>
-<span><span class="co"># Hazard ratio via the Pike-Halley Estimator</span></span>
+<span><span class="co"># Hazard ratio from the Cox model</span></span>
 <span><span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
 <span>           control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Cox proportional hazards model for two groups</span></span>

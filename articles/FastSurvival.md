@@ -29,7 +29,7 @@ evaluates the Kaplan-Meier estimate at a single time point.
 [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
 computes the log-rank test and its weighted and stratified variants.
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-returns a closed-form hazard ratio, the Pike-Halley Estimator.
+fits the Cox proportional hazards model for two groups.
 [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
 returns the restricted mean survival time, and
 [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
@@ -105,7 +105,7 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-# Hazard ratio via the Pike-Halley Estimator
+# Hazard ratio from the Cox model
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
            control = 1, side = 1)
 #> Cox proportional hazards model for two groups

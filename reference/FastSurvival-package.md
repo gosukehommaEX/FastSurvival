@@ -50,11 +50,11 @@ Estimation and testing:
 
 - [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md):
 
-  Closed-form hazard ratio estimator via the Pike-Halley Estimator
-  method, with Wald confidence interval. The estimator anchors at the
-  Pike estimate and applies a single analytic Halley correction to the
-  Cox partial likelihood score. A stratified version approximates the
-  stratified Cox model.
+  Cox proportional hazards model for two groups: the maximum partial
+  likelihood estimate of the hazard ratio by Newton-Raphson iteration on
+  the counts at the distinct event times, with the Efron or Breslow
+  handling of tied event times, a Wald confidence interval, and an
+  optional stratified model.
 
 - [`rmst_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md):
 

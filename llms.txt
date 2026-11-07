@@ -28,7 +28,7 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 |----|----|
 | [`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md) | Single-time-point Kaplan-Meier estimate with Greenwood standard error and plain / log / log-log confidence intervals. |
 | [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md) | Log-rank test, including weighted (Fleming-Harrington, modestly-weighted, Gehan-Breslow, Tarone-Ware) and stratified variants. |
-| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | Closed-form hazard ratio via the Pike-Halley Estimator with a Wald confidence interval, optionally stratified. |
+| [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md) | Cox proportional hazards model for two groups: maximum partial likelihood hazard ratio with a Wald confidence interval, Efron or Breslow ties, optionally stratified. |
 | [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | Restricted mean survival time for a single group or a two-group comparison (difference and ratio). |
 | [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md) | Window mean survival time over an interval, generalizing the restricted mean survival time, for a single group or a two-group comparison. |
 | [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md) | Two-group comparison of Kaplan-Meier survival at a milestone timepoint (Wald, log-log, and MOVER methods). |
@@ -105,7 +105,7 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
               control = 1, side = 2)
 
 # ----------------------------------------------------------------
-# coxph_fast(): hazard ratio via the Pike-Halley Estimator (closed-form)
+# coxph_fast(): hazard ratio from the Cox model
 # ----------------------------------------------------------------
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 
@@ -203,26 +203,28 @@ modestly-weighted, Gehan-Breslow, and Tarone-Ware weighted tests, as
 well as stratified and stratified-weighted variants, all sharing the
 same single-scan backend.
 
-**coxph_fast** implements the Pike-Halley Estimator, a closed-form
-approximation to the Cox partial likelihood maximizer. The estimator
-anchors at the Pike closed-form estimate, the ratio of the
-observed-to-expected event ratios of the two groups from the log-rank
-computation (Berry, Kitchin, and Mock, 1991), and applies a single
-Halley correction to the Cox score, expanded to second order so that the
-result is in closed form. Because this correction converges cubically,
-the residual error relative to the Cox maximum likelihood estimate is of
-the order of the cube of the error of the Pike anchor. It is negligible
-near the null hypothesis. At a fixed hazard ratio away from 1 the Pike
-anchor keeps a bias that does not vanish with the sample size, so the
-residual error levels off at a small value. The validation vignette
-compares the estimate with `coxph(..., ties = "breslow")` on the `gbsg`
-data. The Wald confidence interval uses the observed information at the
-Pike anchor as the variance estimate. The C++ backend performs group
-splitting, at-risk counting, and per-distinct-event-time accumulation in
-a single pass. With `strata`, the risk sets are formed within each
-stratum and the Pike anchor, score, and information are summed over
-strata, which approximates the stratified Cox model
-`coxph(... + strata(s), ties = "breslow")`.
+**coxph_fast** fits the Cox (1972) proportional hazards model with a
+single treatment indicator and returns the maximum partial likelihood
+estimate of the hazard ratio, with the Efron (1977) handling of tied
+event times by default and the Breslow (1974) handling on request. The
+C++ backend forms the risk sets in one pass over the pooled sorted data
+and runs the Newton-Raphson iteration on the numbers at risk and of
+events at the distinct event times, with the starting value, convergence
+criterion, and maximum number of iterations of
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html). The estimate
+therefore agrees with that of
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) to rounding
+error, except in rare data in which a step of the iteration must be
+halved (see
+[`?coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)).
+The standard error comes from the observed information at the estimate,
+and the confidence interval is a Wald interval. An infinite estimate,
+for example when all events are in one group, is returned as `NA`. With
+`strata`, the risk sets are formed within each stratum, which gives the
+stratified Cox model `coxph(... + strata(s))`. The validation vignette
+compares the estimates and standard errors with
+[`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) on the `gbsg`
+data.
 
 **rmst_fast** integrates the Kaplan-Meier survival step function up to a
 horizon (Royston and Parmar, 2013) in a single C++ scan, reused once per
@@ -558,9 +560,12 @@ Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 Cox, D. R. (1972). Regression models and life-tables. *Journal of the
 Royal Statistical Society. Series B (Methodological)*, 34(2), 187-202.
 
-Berry, G., Kitchin, R. M., & Mock, P. A. (1991). A comparison of two
-simple hazard ratio estimators based on the logrank test. *Statistics in
-Medicine*, 10(5), 749-755.
+Breslow, N. (1974). Covariance analysis of censored survival data.
+*Biometrics*, 30(1), 89-99.
+
+Efron, B. (1977). The efficiency of Cox’s likelihood function for
+censored data. *Journal of the American Statistical Association*,
+72(359), 557-565.
 
 Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of
