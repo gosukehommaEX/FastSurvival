@@ -42,11 +42,11 @@ Estimation and testing:
     and Tarone-Ware weights, and stratified and stratified-weighted
     variants. The C++ backend uses a two-pointer merge scan over pooled
     sorted vectors.}
-  \item{\code{\link{coxph_fast}}}{Closed-form hazard ratio estimator via
-    the Pike-Halley Estimator method, with Wald confidence interval. The
-    estimator anchors at the Pike estimate and applies a single analytic
-    Halley correction to the Cox partial likelihood score. A stratified
-    version approximates the stratified Cox model.}
+  \item{\code{\link{coxph_fast}}}{Cox proportional hazards model for two
+    groups: the maximum partial likelihood estimate of the hazard ratio by
+    Newton-Raphson iteration on the counts at the distinct event times,
+    with the Efron or Breslow handling of tied event times, a Wald
+    confidence interval, and an optional stratified model.}
   \item{\code{\link{rmst_fast}}}{Restricted mean survival time for a single
     group or a two-group comparison, with difference and ratio contrasts.}
   \item{\code{\link{wmst_fast}}}{Window mean survival time over an

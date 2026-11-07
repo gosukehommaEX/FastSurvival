@@ -1,5 +1,34 @@
 # FastSurvival (development version)
 
+## Breaking changes
+
+* `coxph_fast()` now returns the maximum partial likelihood estimate of the
+  Cox model instead of the closed-form Pike-Halley approximation of earlier
+  versions. The estimate is found by Newton-Raphson iteration on the numbers
+  at risk and of events at the distinct event times, with the starting
+  value, convergence criterion, and maximum number of iterations of
+  `survival::coxph()`, and the standard error is computed from the observed
+  information at the estimate (earlier versions used the information at the
+  starting value of the approximation). The estimates and standard errors
+  therefore differ from those of earlier versions and agree with those of
+  `survival::coxph()`. The same holds for the `"coxph"` statistic of
+  `analysis_fast()` and `pairwise_fast()` and for the Cox hazard ratio shown
+  by the `plot()` and `print()` methods of `kmcurve_fast()`.
+
+* The new argument `ties` of `coxph_fast()` and `analysis_fast()` selects the
+  Efron handling of tied event times (the default, as in
+  `survival::coxph()`) or the Breslow handling, which earlier versions used.
+  Results without tied event times do not depend on it.
+
+* `coxph_fast()` returns `NA` whenever the estimate is infinite, which it
+  detects from the numbers at risk (for example, when all events are in one
+  group); earlier versions returned a finite approximation in some of these
+  cases. If the iteration does not converge in 20 iterations, the result is
+  `NA` with a warning; `analysis_fast()` then sets the `cox.` columns of the
+  row to `NA` and gives one warning for all such rows. The result of
+  `coxph_fast()` has the new attributes `ties`, `iter`, and `converged`, and
+  its `print()` method shows the handling of tied event times.
+
 # FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an

@@ -84,9 +84,6 @@ test_that("coxph_fast handles factor group correctly", {
 })
 
 test_that("coxph_fast agrees with survival::coxph() (estimate and SE)", {
-  # Report whether the external comparison below is run or skipped.
-  message("survival available for the coxph_fast comparison: ",
-          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   ctrl <- survival::coxph.control(timefix = FALSE)
   lung <- survival::lung
@@ -310,9 +307,6 @@ test_that("a single stratum gives the unstratified estimate", {
 })
 
 test_that("stratified coxph_fast agrees with survival::coxph(strata())", {
-  # Report whether the external comparison below is run or skipped.
-  message("survival available for the stratified coxph_fast comparison: ",
-          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   set.seed(402)
   n_s  <- 150

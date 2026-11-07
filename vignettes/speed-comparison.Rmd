@@ -31,10 +31,9 @@ measured on 2026-09-29 with R 4.6.0 on Windows 11 (x86_64) for the data set of
 500 subjects below, all of whom have an event. The FastSurvival functions are
 timed on presorted input, so the single sort of the data is excluded from
 their times, whereas the reference functions sort internally; in a simulation
-loop the sort is paid once per data set. `coxph_fast()` computes a closed-form
-approximation of the Cox estimate (the Pike-Halley Estimator) rather than the
-iterative maximum partial likelihood estimate, so its row compares two
-estimators of the same quantity. Absolute timings depend on hardware, sample
+loop the sort is paid once per data set. `coxph_fast()` computes the same
+maximum partial likelihood estimate as `coxph()`, by Newton-Raphson iteration
+on the counts at the distinct event times. Absolute timings depend on hardware, sample
 size, and event rate, so the ratios matter more than the raw values.
 
 ```{r load}

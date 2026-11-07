@@ -223,9 +223,6 @@ test_that("as.data.frame.fastsurv: tests carry the statistic and p-value", {
 test_that("as.data.frame.fastsurv: two-sided log-rank p-value of survival", {
   d <- fs_data(86)
   t2 <- as.data.frame(survdiff_fast(d$tt, d$ee, d$g, control = 0))
-  # Report whether the external comparison below is run or skipped.
-  message("survival available for the survdiff p-value comparison: ",
-          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   ref <- survival::survdiff(survival::Surv(tt, ee) ~ g, data = d)
   expect_equal(t2$statistic, ref$chisq, tolerance = 1e-10)

@@ -27,9 +27,6 @@ test_that("km_risk_counts matches survival::survfit", {
   group <- rep(c(1, 2), each = n)
   times <- c(0, 5, 10, 12.3, 20)
   cnt <- km_risk_counts(kmcurve_fast(time, event, group, control = 1), times)
-  # Report whether the external comparison below is run or skipped.
-  message("survival available for the number-at-risk comparison: ",
-          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   for (g in 1:2) {
     ref <- survival::survfit(survival::Surv(time[group == g],

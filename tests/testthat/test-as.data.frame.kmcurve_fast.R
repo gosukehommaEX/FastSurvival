@@ -59,9 +59,6 @@ test_that("as.data.frame.kmcurve_fast matches survival::survfit", {
   time  <- c(round(pmin(t0, cc), 1), 5, 5, 5)
   event <- c(as.integer(t0 <= cc), 1, 0, 1)
   tab <- as.data.frame(kmcurve_fast(time, event), conf.type = "log-log")
-  # Report whether the external comparison below is run or skipped.
-  message("survival available for the as.data.frame.kmcurve_fast ",
-          "comparison: ", requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   ref <- survival::survfit(survival::Surv(time, event) ~ 1,
                            conf.type = "log-log")

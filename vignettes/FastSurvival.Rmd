@@ -37,7 +37,7 @@ The estimation and testing functions operate on a single dataset and return
 an S3 object with a `print()` method. `survfit_fast()` evaluates the
 Kaplan-Meier estimate at a single time point. `survdiff_fast()` computes the
 log-rank test and its weighted and stratified variants. `coxph_fast()`
-returns a closed-form hazard ratio, the Pike-Halley Estimator. `rmst_fast()` returns the restricted mean
+fits the Cox proportional hazards model for two groups. `rmst_fast()` returns the restricted mean
 survival time, and `wmst_fast()` the window mean survival time over an
 interval. `milestone_fast()` compares survival at a milestone timepoint, and
 `medsurv_fast()` compares median survival times. `maxcombo_fast()` computes the
@@ -76,7 +76,7 @@ survfit_fast(ovarian$futime[ord], ovarian$fustat[ord],
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
               control = 1, side = 1)
 
-# Hazard ratio via the Pike-Halley Estimator
+# Hazard ratio from the Cox model
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
            control = 1, side = 1)
 ```

@@ -12,9 +12,9 @@ Description: Provides fast alternatives to standard survival analysis functions
     in the 'survival' package, together with tools for time-to-event trial
     simulation and sequential analysis. The estimation and testing functions
     cover a single-time-point Kaplan-Meier estimator (survfit_fast()), log-rank
-    tests including weighted and stratified variants (survdiff_fast()), a
-    closed-form hazard ratio estimator based on the Pike-Halley Estimator method
-    (coxph_fast()), restricted mean survival time (rmst_fast()), window mean
+    tests including weighted and stratified variants (survdiff_fast()), the
+    two-group Cox proportional hazards model (coxph_fast()), restricted mean
+    survival time (rmst_fast()), window mean
     survival time (wmst_fast()), milestone survival comparison
     (milestone_fast()), median survival time (medsurv_fast()), the max-combo
     test (maxcombo_fast()), the robust modestly-weighted log-rank test

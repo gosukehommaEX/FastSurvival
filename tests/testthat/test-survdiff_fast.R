@@ -499,9 +499,6 @@ test_that("survdiff_fast: mwlrt is not capped when the pooled curve reaches 0 be
                                    control = 0, side = 1, weight = "mwlrt",
                                    t_star = 10, strata = rep(1:2, each = 6)))
   expect_equal(z_st, 0.0655990630, tolerance = 1e-8)
-  # Report whether the external comparison below is run or skipped.
-  message("nphRCT available for the mwlrt comparison: ",
-          requireNamespace("nphRCT", quietly = TRUE))
   skip_if_not_installed("nphRCT")
   skip_if_not_installed("survival")
   df <- data.frame(time = tt, event = ee, arm = factor(gg))
