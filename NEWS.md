@@ -1,3 +1,5 @@
+# FastSurvival (development version)
+
 # FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an
