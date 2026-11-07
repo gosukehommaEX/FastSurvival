@@ -21,11 +21,9 @@ void stratified_weighted_logrank_core_impl(const double*, const int*,
                                            const int*, const int*, int,
                                            int, double, double, double,
                                            double*);
-struct PiheEvSummary { double n1k; double n0k; double OTk; double Ok; };
-void pihe_core_strat_impl(const double*, const int*, const int*, const int*,
-                          int, std::vector<PiheEvSummary>&, double*);
-void pihe_core_impl(const double*, const int*, const int*, int,
-                    std::vector<PiheEvSummary>&, double*);
+struct CoxEvent { double nT; double nC; double OT; double O; };
+void cox_core_impl(const double*, const int*, const int*, const int*, int,
+                   bool, int, std::vector<CoxEvent>&, double*);
 struct RmstEvSummary { double cum_area; double g; };
 void rmst_core_impl(const double*, const double*, int, double,
                     std::vector<RmstEvSummary>&, double*);
@@ -177,7 +175,8 @@ List analysis_loop_core(
     double rho, double gamma, double t_star,
     const NumericVector& mc_rho, const NumericVector& mc_gamma,
     double tau, double t_eval, double s_star,
-    double wmst_tau1, double wmst_tau2, int wkm_weight, double medsurv_bw
+    double wmst_tau1, double wmst_tau2, int wkm_weight, double medsurv_bw,
+    bool cox_efron                  // true = Efron, false = Breslow ties
 ) {
   const int nsim    = sim_ptr.size() - 1;
   const int n_looks = look_values.size();
@@ -195,7 +194,7 @@ List analysis_loop_core(
   NumericMatrix ms_mat, rmw_mat, ahr_mat;
   NumericMatrix medsurv_mat, wkm_mat, wmst_mat;
   if (do_logrank) { lr_mat   = NumericMatrix(ncells, 2); std::fill(lr_mat.begin(),   lr_mat.end(),   NA_REAL); }
-  if (do_coxph)   { cox_mat  = NumericMatrix(ncells, 4); std::fill(cox_mat.begin(),  cox_mat.end(),  NA_REAL); }
+  if (do_coxph)   { cox_mat  = NumericMatrix(ncells, 3); std::fill(cox_mat.begin(),  cox_mat.end(),  NA_REAL); }
   if (do_rmst)    { rmst_mat = NumericMatrix(ncells, 4); std::fill(rmst_mat.begin(), rmst_mat.end(), NA_REAL); }
   if (do_km)      { km_mat   = NumericMatrix(ncells, 2); std::fill(km_mat.begin(),   km_mat.end(),   NA_REAL); }
   if (do_ahsw)    { ahsw_mat = NumericMatrix(ncells, 8); std::fill(ahsw_mat.begin(), ahsw_mat.end(), NA_REAL); }
@@ -248,7 +247,7 @@ List analysis_loop_core(
   std::vector<int>    es(max_block), js(max_block), ss(max_block);
 
   // Core scratch reused across cells.
-  std::vector<PiheEvSummary> pihe_ev;
+  std::vector<CoxEvent> cox_ev;
   std::vector<RmstEvSummary> rmst_ev;
   std::vector<double> ahsw_dH, ahsw_Rrun, ahsw_Gfrac;
   std::vector<double> mc_w(nw > 0 ? nw : 1);
@@ -432,18 +431,21 @@ List analysis_loop_core(
           lr_mat(pos, 1) = var;
         }
 
-        // ---- Cox (PiHE) ---------------------------------------------------
+        // ---- Cox ----------------------------------------------------------
+        // Columns: log hazard ratio, standard error, and the status of the
+        // Newton-Raphson iteration (0 converged, 1 not converged, 2 infinite
+        // or undefined estimate; see cox_core.cpp).
         if (do_coxph && n_ev > 0 && both) {
-          double r[4];
+          double r[6];
           if (use_strata) {
-            pihe_core_strat_impl(ts.data(), es.data(), js.data(), ss.data(),
-                                 sz, pihe_ev, r);
+            cox_core_impl(ts.data(), es.data(), js.data(), ss.data(), sz,
+                          cox_efron, 20, cox_ev, r);
           } else {
-            pihe_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), sz,
-                           pihe_ev, r);
+            cox_core_impl(t_sel.data(), ei_sel.data(), j_sel.data(), nullptr,
+                          sz, cox_efron, 20, cox_ev, r);
           }
           cox_mat(pos, 0) = r[0]; cox_mat(pos, 1) = r[1];
-          cox_mat(pos, 2) = r[2]; cox_mat(pos, 3) = r[3];
+          cox_mat(pos, 2) = r[5];
         }
 
         // Group splits reused by rmst / km / ahsw / wmst / medsurv.

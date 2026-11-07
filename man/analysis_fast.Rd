@@ -32,7 +32,8 @@ analysis_fast(
   wmst.tau1 = 0,
   wmst.tau2 = NULL,
   cutoff.looks = NULL,
-  mc.alpha = NULL
+  mc.alpha = NULL,
+  ties = c("efron", "breslow")
 )
 }
 \arguments{
@@ -196,6 +197,10 @@ p-value is compared. When supplied, the p-value is computed by
 integration only when the Bonferroni bounds do not decide the comparison
 (see Details), and the output gains a logical column
 \code{maxcombo.p.exact}. \code{NULL} (default) computes every p-value.}
+
+\item{ties}{A character string, \code{"efron"} (default) or
+\code{"breslow"}, naming the handling of tied event times in the
+\code{"coxph"} statistic; see \code{\link{coxph_fast}}.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -211,7 +216,9 @@ A data frame. When \code{by.subgroup = FALSE}, it has
   and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
   subjects still in follow-up at the cutoff), followed by the
   columns of the requested statistics. A statistic that cannot be computed
-  for a row (no events, or an empty group) is \code{NA}. The statistic
+  for a row (no events, or an empty group; for \code{"coxph"}, also an
+  infinite estimate or an iteration that did not converge) is \code{NA}.
+  The statistic
   columns are \code{logrank.z}, \code{logrank.chisq}, and \code{logrank.p}
   for \code{"logrank"}; \code{cox.coef}, \code{cox.hr}, \code{cox.se},
   \code{cox.z}, \code{cox.p}, \code{cox.lower}, and \code{cox.upper} for
@@ -333,9 +340,17 @@ the subgroup column that defines a subgroup population, the stratum is
 constant within that population and the stratified test there reduces to
 the ordinary one. Several columns define their combinations as strata.
 The same \code{strata} also stratify the
-\code{"coxph"} statistic, which is then the stratified Pike-Halley estimate
-of \code{\link{coxph_fast}} (a common hazard ratio with a separate baseline
+\code{"coxph"} statistic, which is then the stratified Cox model of
+\code{\link{coxph_fast}} (a common hazard ratio with a separate baseline
 hazard in each stratum).
+
+The \code{"coxph"} statistic is the maximum partial likelihood estimate of
+\code{\link{coxph_fast}}, computed by the same Newton-Raphson iteration,
+with the handling of tied event times chosen by \code{ties}. A row in
+which the estimate is infinite (for example, all events in one group) has
+\code{NA} in the \code{cox.} columns, and so has a row in which the
+iteration does not converge in 20 iterations; a single warning then gives
+the number of such rows.
 
 The \code{"maxcombo"} statistic is the max-combo test of \code{mc.rho} and
 \code{mc.gamma} Fleming-Harrington weights. Its \code{maxcombo.stat} is the

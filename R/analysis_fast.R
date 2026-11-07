@@ -92,9 +92,17 @@
 #' constant within that population and the stratified test there reduces to
 #' the ordinary one. Several columns define their combinations as strata.
 #' The same \code{strata} also stratify the
-#' \code{"coxph"} statistic, which is then the stratified Pike-Halley estimate
-#' of \code{\link{coxph_fast}} (a common hazard ratio with a separate baseline
+#' \code{"coxph"} statistic, which is then the stratified Cox model of
+#' \code{\link{coxph_fast}} (a common hazard ratio with a separate baseline
 #' hazard in each stratum).
+#'
+#' The \code{"coxph"} statistic is the maximum partial likelihood estimate of
+#' \code{\link{coxph_fast}}, computed by the same Newton-Raphson iteration,
+#' with the handling of tied event times chosen by \code{ties}. A row in
+#' which the estimate is infinite (for example, all events in one group) has
+#' \code{NA} in the \code{cox.} columns, and so has a row in which the
+#' iteration does not converge in 20 iterations; a single warning then gives
+#' the number of such rows.
 #'
 #' The \code{"maxcombo"} statistic is the max-combo test of \code{mc.rho} and
 #' \code{mc.gamma} Fleming-Harrington weights. Its \code{maxcombo.stat} is the
@@ -361,6 +369,9 @@
 #'   integration only when the Bonferroni bounds do not decide the comparison
 #'   (see Details), and the output gains a logical column
 #'   \code{maxcombo.p.exact}. \code{NULL} (default) computes every p-value.
+#' @param ties A character string, \code{"efron"} (default) or
+#'   \code{"breslow"}, naming the handling of tied event times in the
+#'   \code{"coxph"} statistic; see \code{\link{coxph_fast}}.
 #'
 #' @return A data frame. When \code{by.subgroup = FALSE}, it has
 #'   \code{nsim * length(looks)} rows. When \code{by.subgroup = TRUE}, it has
@@ -375,7 +386,9 @@
 #'   and \code{n.pipeline} (\code{n.enrolled - n.event - n.dropout}, the
 #'   subjects still in follow-up at the cutoff), followed by the
 #'   columns of the requested statistics. A statistic that cannot be computed
-#'   for a row (no events, or an empty group) is \code{NA}. The statistic
+#'   for a row (no events, or an empty group; for \code{"coxph"}, also an
+#'   infinite estimate or an iteration that did not converge) is \code{NA}.
+#'   The statistic
 #'   columns are \code{logrank.z}, \code{logrank.chisq}, and \code{logrank.p}
 #'   for \code{"logrank"}; \code{cox.coef}, \code{cox.hr}, \code{cox.se},
 #'   \code{cox.z}, \code{cox.p}, \code{cox.lower}, and \code{cox.upper} for
@@ -470,12 +483,14 @@ analysis_fast <- function(data, control,
                           medsurv.method = c("km", "nph"), medsurv.bw = NULL,
                           wkm.weight = c("PF", "sqrtPF", "constant"),
                           wmst.tau1 = 0, wmst.tau2 = NULL,
-                          cutoff.looks = NULL, mc.alpha = NULL) {
+                          cutoff.looks = NULL, mc.alpha = NULL,
+                          ties = c("efron", "breslow")) {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
   medsurv.method <- match.arg(medsurv.method)
   wkm.weight <- match.arg(wkm.weight)
+  ties <- match.arg(ties)
 
   # ---- Input validation --------------------------------------------------
   req_cols <- c("sim", "group", "accrual_time", "tte", "event")
@@ -800,7 +815,8 @@ analysis_fast <- function(data, control,
     weight_scheme, rho, gamma, t_star_v,
     as.numeric(mc.rho), as.numeric(mc.gamma),
     tau_v, teval_v, s_star_v,
-    wmst_tau1_v, wmst_tau2_v, wkm_weight_v, medsurv_bw_v
+    wmst_tau1_v, wmst_tau2_v, wkm_weight_v, medsurv_bw_v,
+    ties == "efron"
   )
 
   total <- nsim * length(looks) * n_pop
@@ -846,15 +862,24 @@ analysis_fast <- function(data, control,
     out$logrank.p     <- p_from_z(z, eff_dir = -1)
   }
   if (do_coxph) {
-    theta0 <- core$coxph[, 1]; U0 <- core$coxph[, 2]
-    I0     <- core$coxph[, 3]; J0 <- core$coxph[, 4]
-    delta  <- U0 / I0 - (J0 * U0 * U0) / (2 * I0 * I0 * I0)
-    theta  <- theta0 * exp(delta)
-    se     <- 1 / sqrt(I0)
-    coef   <- log(theta)
+    # Kernel columns: log hazard ratio, standard error, and the status of the
+    # iteration (0 converged, 1 not converged, 2 infinite or undefined)
+    coef   <- core$coxph[, 1]
+    se     <- core$coxph[, 2]
+    status <- core$coxph[, 3]
+    n_nc   <- sum(status == 1, na.rm = TRUE)
+    if (n_nc > 0L) {
+      warning(sprintf(paste0("the Newton-Raphson iteration of the Cox model ",
+                             "did not converge in %d of %d rows; their ",
+                             "'cox.' columns are NA"), n_nc, length(status)),
+              call. = FALSE)
+    }
+    bad <- is.na(status) | status != 0
+    coef[bad] <- NA_real_
+    se[bad]   <- NA_real_
     z_v    <- ifelse(is.finite(se) & se > 0, coef / se, NA_real_)
     out$cox.coef  <- coef
-    out$cox.hr    <- theta
+    out$cox.hr    <- exp(coef)
     out$cox.se    <- se
     out$cox.z     <- z_v
     out$cox.p     <- p_from_z(z_v, eff_dir = -1)

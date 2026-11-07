@@ -749,3 +749,55 @@ test_that("analysis_fast: further arguments are validated", {
   expect_error(analysis_fast(dat, control = 1, time.looks = 10,
                              by.subgroup = "yes"), "by.subgroup")
 })
+
+test_that("analysis_fast coxph follows ties and matches coxph_fast", {
+  dat <- simdata_fast(nsim = 4, n = c(60, 60), a.time = c(0, 6), a.prop = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 14),
+                      d.median = list(30, 30), seed = 303)
+  # Whole-month times give tied event times
+  dat$tte <- ceiling(dat$tte)
+  res_e <- analysis_fast(dat, control = 1, time.looks = 20, stat = "coxph")
+  res_b <- analysis_fast(dat, control = 1, time.looks = 20, stat = "coxph",
+                         ties = "breslow")
+  sims <- sort(unique(dat$sim))
+  for (k in seq_along(sims)) {
+    cc <- cut_one(dat, sims[k], 20)
+    ce <- coxph_fast(cc$time, cc$event, cc$group, control = 1,
+                     presorted = TRUE)
+    cb <- coxph_fast(cc$time, cc$event, cc$group, control = 1,
+                     presorted = TRUE, ties = "breslow")
+    expect_equal(res_e$cox.coef[k], unname(ce["coef"]), tolerance = 1e-12)
+    expect_equal(res_e$cox.se[k], unname(ce["se(coef)"]), tolerance = 1e-12)
+    expect_equal(res_b$cox.coef[k], unname(cb["coef"]), tolerance = 1e-12)
+    expect_equal(res_b$cox.se[k], unname(cb["se(coef)"]), tolerance = 1e-12)
+  }
+  # The data have tied event times, so the two handlings differ
+  expect_false(isTRUE(all.equal(res_e$cox.coef, res_b$cox.coef)))
+  expect_error(analysis_fast(dat, control = 1, time.looks = 20,
+                             stat = "coxph", ties = "exact"),
+               "should be one of")
+})
+
+test_that("analysis_fast gives NA and one warning for a non-converged Cox fit", {
+  dat <- simdata_fast(nsim = 3, n = c(40, 40), a.time = c(0, 6), a.prop = 1,
+                      e.hazard = list(log(2) / 10, log(2) / 12), seed = 92)
+  ref <- analysis_fast(dat, control = 1, time.looks = 10,
+                       stat = c("logrank", "coxph"))
+  # The fused kernel is wrapped so that the second row reports no
+  # convergence of the Cox iteration
+  real_core <- analysis_loop_core
+  local_mocked_bindings(analysis_loop_core = function(...) {
+    r <- real_core(...)
+    r$coxph[2, 3] <- 1
+    r
+  })
+  expect_warning(
+    res <- analysis_fast(dat, control = 1, time.looks = 10,
+                         stat = c("logrank", "coxph")),
+    "did not converge in 1 of 3 rows")
+  cox_cols <- grep("^cox[.]", names(res), value = TRUE)
+  expect_true(all(is.na(unlist(res[2, cox_cols]))))
+  expect_identical(res[-2, cox_cols], ref[-2, cox_cols])
+  expect_identical(res$logrank.z, ref$logrank.z)
+  expect_false(anyNA(ref$cox.coef))
+})

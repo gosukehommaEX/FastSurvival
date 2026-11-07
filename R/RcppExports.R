@@ -68,8 +68,8 @@ ahsw_core <- function(time_sorted, event_sorted, tau) {
     .Call(`_FastSurvival_ahsw_core`, time_sorted, event_sorted, tau)
 }
 
-analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw) {
-    .Call(`_FastSurvival_analysis_loop_core`, sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw)
+analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw, cox_efron) {
+    .Call(`_FastSurvival_analysis_loop_core`, sim_ptr, accrual, tte, event, j, look_type, look_values, cut_mat, pop_col, pop_level, sub_mat, strata, use_strata, do_logrank, do_coxph, do_rmst, do_km, do_maxcombo, do_ahsw, do_milestone, do_rmw, do_ahr, do_medsurv, do_wkm, do_wmst, weight_scheme, rho, gamma, t_star, mc_rho, mc_gamma, tau, t_eval, s_star, wmst_tau1, wmst_tau2, wkm_weight, medsurv_bw, cox_efron)
 }
 
 #' Core max-combo weighted log-rank computation on pooled sorted vectors (C++ backend)
@@ -118,6 +118,43 @@ analysis_loop_core <- function(sim_ptr, accrual, tte, event, j, look_type, look_
 #' @keywords internal
 combo_logrank_core <- function(time_sorted, event_sorted, j_sorted, rho_vec, gamma_vec) {
     .Call(`_FastSurvival_combo_logrank_core`, time_sorted, event_sorted, j_sorted, rho_vec, gamma_vec)
+}
+
+#' Core two-group Cox model fit (C++ backend)
+#'
+#' @description
+#' Internal C++ function that fits the Cox proportional hazards model with a
+#' single treatment indicator by Newton-Raphson iteration on the risk-set
+#' counts at the distinct event times, as described in
+#' \code{\link{coxph_fast}}. Not intended to be called directly by users; use
+#' \code{coxph_fast()} instead.
+#'
+#' @param time_sorted A numeric vector of pooled follow-up times sorted in
+#'   ascending order (by stratum, then time, when \code{strata_sorted} is not
+#'   empty).
+#' @param event_sorted An integer vector of event indicators (1 = event,
+#'   0 = censored), aligned with \code{time_sorted}.
+#' @param j_sorted An integer vector of group indicators (1 = treatment,
+#'   0 = control), aligned with \code{time_sorted}.
+#' @param strata_sorted An integer vector of stratum codes aligned with
+#'   \code{time_sorted}, with the rows of each stratum contiguous, or an
+#'   integer vector of length 0 for the unstratified model.
+#' @param efron \code{TRUE} for the Efron handling of tied event times,
+#'   \code{FALSE} for the Breslow handling.
+#' @param iter_max The maximum number of iterations (20 in
+#'   \code{coxph_fast()}).
+#'
+#' @return A numeric vector of length 6: the estimate of the log hazard
+#'   ratio, its standard error, the log partial likelihood at 0 and at the
+#'   estimate, the number of iterations, and a status code: 0 converged;
+#'   1 not converged within \code{iter_max} iterations, in which case the
+#'   estimate is the last iterate; 2 the estimate is infinite or cannot be
+#'   computed, in which case the other elements except the number of
+#'   iterations are \code{NA}.
+#'
+#' @keywords internal
+cox_core <- function(time_sorted, event_sorted, j_sorted, strata_sorted, efron, iter_max = 20L) {
+    .Call(`_FastSurvival_cox_core`, time_sorted, event_sorted, j_sorted, strata_sorted, efron, iter_max)
 }
 
 cutoff_core <- function(sim_ptr, accrual, tte, event, count_event, time_looks, target, max_time, min_gap, min_enrolled, min_followup) {
@@ -188,68 +225,6 @@ medsurv_core <- function(time, event, grp, ngroup, bw) {
 
 milestone_core <- function(time, status, grp, tau, presorted) {
     .Call(`_FastSurvival_milestone_core`, time, status, grp, tau, presorted)
-}
-
-#' Core PiHE hazard ratio computation (C++ backend)
-#'
-#' @description
-#' Internal C++ function that computes the Pike-Halley Estimator (PiHE) for
-#' the hazard ratio. Accepts pooled sorted vectors plus an integer group
-#' indicator, performs group splitting and the two-pointer merge scan
-#' entirely in C++, and returns the quantities needed for the Halley
-#' correction and Wald interval. Not intended to be called directly by
-#' users; use \code{coxph_fast()} instead.
-#'
-#' Implementation notes: Pass 1 accumulates pooled scalars
-#' (O_T, O_C, E_T, E_C) and stores per-distinct-event-time summaries in a
-#' single struct array (better cache locality than four parallel vectors)
-#' with a single \code{reserve(n)} call (no event-count prepass over the
-#' input). Pass 2 walks the saved summaries once at the Pike anchor
-#' theta_0 to compute U_0, I_0, and J_0.
-#'
-#' @param time_sorted A numeric vector of pooled follow-up times sorted in
-#'   ascending order.
-#' @param event_sorted An integer vector of event indicators (1 = event,
-#'   0 = censored), aligned with \code{time_sorted}.
-#' @param j_sorted An integer vector of group indicators (1 = treatment,
-#'   0 = control), aligned with \code{time_sorted}.
-#'
-#' @return A numeric vector of length 4: \code{c(theta_0, U_0, I_0, J_0)}.
-#'   Returns a length-4 vector of \code{NA_real_} when the estimate cannot
-#'   be computed.
-#'
-#' @keywords internal
-pihe_core <- function(time_sorted, event_sorted, j_sorted) {
-    .Call(`_FastSurvival_pihe_core`, time_sorted, event_sorted, j_sorted)
-}
-
-#' Core stratified PiHE hazard ratio computation (C++ backend)
-#'
-#' @description
-#' Internal C++ function that computes the quantities of the stratified
-#' Pike-Halley Estimator. The at-risk sets are restarted in every stratum and
-#' the observed and expected event totals, the score, the information, and
-#' the curvature term are summed over strata, which gives the Pike anchor and
-#' its Halley correction for the stratified Breslow partial likelihood. Not
-#' intended to be called directly by users; use \code{coxph_fast()} with
-#' \code{strata} instead.
-#'
-#' @param time_sorted A numeric vector of pooled follow-up times, sorted by
-#'   stratum and in ascending order of time within stratum.
-#' @param event_sorted An integer vector of event indicators (1 = event,
-#'   0 = censored), aligned with \code{time_sorted}.
-#' @param j_sorted An integer vector of group indicators (1 = treatment,
-#'   0 = control), aligned with \code{time_sorted}.
-#' @param strata_sorted An integer vector of stratum codes aligned with
-#'   \code{time_sorted}; rows of the same stratum must be contiguous.
-#'
-#' @return A numeric vector of length 4: \code{c(theta_0, U_0, I_0, J_0)}.
-#'   Returns a length-4 vector of \code{NA_real_} when the estimate cannot
-#'   be computed.
-#'
-#' @keywords internal
-pihe_core_strat <- function(time_sorted, event_sorted, j_sorted, strata_sorted) {
-    .Call(`_FastSurvival_pihe_core_strat`, time_sorted, event_sorted, j_sorted, strata_sorted)
 }
 
 #' Core restricted mean survival time computation (C++ backend)

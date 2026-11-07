@@ -8,7 +8,8 @@
 #' the object, and the Wald confidence interval for the hazard ratio.
 #' The p-value column is labeled \code{Pr(>|z|)} for a two-sided test and
 #' \code{Pr(<z)} for a one-sided test, whose p-value is the lower tail in the
-#' direction of treatment benefit.
+#' direction of treatment benefit. The control group, the handling of tied
+#' event times, and the alternative are shown above the tables.
 #'
 #' @param x An object of class \code{"coxph_fast"} returned by
 #'   \code{\link{coxph_fast}}.
@@ -34,15 +35,19 @@ print.coxph_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...)
   # Detect whether the estimate is available.
   n_str  <- attr(x, "strata")
   header <- if (is.null(n_str)) {
-    "Pike-Halley estimator for the hazard ratio (two-group)\n\n"
+    "Cox proportional hazards model for two groups\n\n"
   } else {
-    sprintf(paste0("Stratified Pike-Halley estimator for the hazard ratio ",
-                   "(two-group, %d strata)\n\n"), as.integer(n_str))
+    sprintf(paste0("Stratified Cox proportional hazards model for two ",
+                   "groups (%d strata)\n\n"), as.integer(n_str))
   }
 
   if (anyNA(x)) {
     cat(header)
-    cat("  Estimate not available (insufficient data).\n")
+    if (isFALSE(attr(x, "converged"))) {
+      cat("  Estimate not available (the iteration did not converge).\n")
+    } else {
+      cat("  Estimate not available (no events, or an infinite estimate).\n")
+    }
     return(invisible(x))
   }
 
@@ -90,6 +95,9 @@ print.coxph_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...)
   cat(header)
   if (!is.null(control)) {
     cat(sprintf("  control = %s\n", format(control)))
+  }
+  if (!is.null(attr(x, "ties"))) {
+    cat(sprintf("  ties = %s\n", attr(x, "ties")))
   }
   cat(sprintf("  alternative = %s\n\n",
               if (side == 1L) "one.sided" else "two.sided"))

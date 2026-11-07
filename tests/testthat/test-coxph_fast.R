@@ -83,27 +83,161 @@ test_that("coxph_fast handles factor group correctly", {
   expect_false(any(is.na(res)))
 })
 
-test_that("coxph_fast agrees with coxph (no ties, tolerance 1e-4)", {
+test_that("coxph_fast agrees with survival::coxph() (estimate and SE)", {
+  # Report whether the external comparison below is run or skipped.
+  message("survival available for the coxph_fast comparison: ",
+          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
-  set.seed(8)
-  n     <- 200
-  time  <- c(rexp(n / 2, 0.1), rexp(n / 2, 0.15))
-  event <- rep(1L, n)
-  group <- rep(c(1L, 2L), each = n / 2)
-
-  res <- coxph_fast(time, event, group, control = 1)
-
-  fit <- survival::coxph(
-    survival::Surv(time, event) ~ I(group != 1),
-    ties    = "breslow",
-    control = survival::coxph.control(
-      eps        = 1e-12,
-      toler.chol = .Machine$double.eps^0.875
-    )
+  ctrl <- survival::coxph.control(timefix = FALSE)
+  lung <- survival::lung
+  sets <- list(
+    ovarian = list(t = survival::ovarian$futime, e = survival::ovarian$fustat,
+                   g = survival::ovarian$rx),
+    veteran = list(t = survival::veteran$time, e = survival::veteran$status,
+                   g = survival::veteran$trt),
+    lung = list(t = lung$time, e = as.integer(lung$status == 2), g = lung$sex),
+    # Times in months: many tied event times
+    lung_month = list(t = ceiling(lung$time / 30.4375),
+                      e = as.integer(lung$status == 2), g = lung$sex)
   )
-  hr_cox <- unname(exp(stats::coef(fit)[1L]))
+  for (nm in names(sets)) {
+    d <- sets[[nm]]
+    x <- as.numeric(d$g != min(d$g))
+    for (tie in c("efron", "breslow")) {
+      fast <- coxph_fast(d$t, d$e, d$g, control = min(d$g), ties = tie)
+      ref <- survival::coxph(survival::Surv(d$t, d$e) ~ x, ties = tie,
+                             control = ctrl)
+      lab <- paste(nm, tie)
+      expect_equal(unname(fast["coef"]), unname(stats::coef(ref)),
+                   tolerance = 1e-10, label = lab)
+      expect_equal(unname(fast["se(coef)"]), sqrt(ref$var[1, 1]),
+                   tolerance = 1e-10, label = lab)
+      expect_identical(attr(fast, "iter"), as.integer(ref$iter), label = lab)
+      expect_true(attr(fast, "converged"), label = lab)
+    }
+  }
+})
 
-  expect_equal(unname(res["exp(coef)"]), hr_cox, tolerance = 1e-4)
+test_that("coxph_fast reproduces Therneau and Grambsch (2000), Appendix E", {
+  # Test data 1 (p. 323). Published (p. 324, Breslow): beta 1.475285,
+  # LL(0) -4.564348, LL(beta) -3.824750, I(beta) 0.634168, iterates 0, 8/5,
+  # 1.4727236, 1.4752838, 1.4752849; (p. 327, Efron): LL(0) -4.276666. The
+  # expected values to 1e-12 are the exact Newton iterates of the book's own
+  # U and I and the fit of Planning/python_checks/cox_exact.py. The printed
+  # iterates 2 and 3 and the Efron LL(beta), I(beta), and beta of p. 327
+  # differ from the book's own formulas (see cox_exact_output.txt), so they
+  # are not tested.
+  tt <- c(1, 1, 6, 6, 8, 9)
+  ee <- c(1L, 0L, 1L, 1L, 0L, 1L)
+  xx <- c(1L, 1L, 1L, 0L, 0L, 0L)
+  br <- cox_core(tt, ee, xx, integer(0), efron = FALSE)
+  expect_identical(br[c(5, 6)], c(4, 0))
+  expect_lt(abs(br[1] - 1.475285), 5e-7)
+  expect_lt(abs(br[3] - (-4.564348)), 5e-7)
+  expect_lt(abs(br[4] - (-3.824750)), 5e-7)
+  expect_lt(abs(1 / br[2]^2 - 0.634168), 5e-7)
+  expect_equal(br[1:4], c(1.475284914828868, 1.2557343930105218,
+                          -4.564348191467836, -3.8247495050028655),
+               tolerance = 1e-12)
+  iter_br <- c(1.6, 1.472723532245478, 1.475283960697332, 1.4752849148288683)
+  ef <- cox_core(tt, ee, xx, integer(0), efron = TRUE)
+  expect_identical(ef[c(5, 6)], c(4, 0))
+  expect_lt(abs(ef[3] - (-4.276666)), 5e-7)
+  expect_equal(ef[1:4], c(1.6768574855882044, 1.277615576278031,
+                          -4.276666119016055, -3.3589748402633477),
+               tolerance = 1e-12)
+  iter_ef <- c(1.8795180722891567, 1.6701860496115566, 1.6768515659499237,
+               1.6768574855882044)
+  for (k in 1:4) {
+    expect_equal(cox_core(tt, ee, xx, integer(0), FALSE, iter_max = k)[1],
+                 iter_br[k], tolerance = 1e-12)
+    expect_equal(cox_core(tt, ee, xx, integer(0), TRUE, iter_max = k)[1],
+                 iter_ef[k], tolerance = 1e-12)
+  }
+  expect_identical(cox_core(tt, ee, xx, integer(0), FALSE, iter_max = 1)[1],
+                   8 / 5)
+  fit <- coxph_fast(tt, ee, xx, control = 0, ties = "breslow")
+  expect_identical(unname(fit["coef"]), br[1])
+  expect_identical(unname(coxph_fast(tt, ee, xx, control = 0)["coef"]), ef[1])
+})
+
+test_that("coxph_fast returns NA when the estimate is infinite", {
+  # The finiteness condition L < O_T < H of ?coxph_fast fails in the first
+  # three data sets (no root of the score; Planning/python_checks/
+  # cox_exact.py, check C). In the last, a treated subject is at risk at a
+  # control event, and the brentq root of the score is 0.8216793853198513.
+  inf_sets <- list(
+    list(1:6, c(1, 1, 1, 0, 0, 0), c(0, 0, 0, 1, 1, 1)),  # O_T = 0 = L
+    list(1:4, c(1, 0, 1, 1), c(0, 0, 1, 1)),              # L = O_T = 2
+    list(1:4, c(1, 1, 1, 0), c(1, 1, 0, 0))               # O_T = H = 2
+  )
+  for (d in inf_sets) {
+    x <- coxph_fast(d[[1]], d[[2]], d[[3]], control = 0)
+    expect_true(all(is.na(x)))
+    expect_identical(attr(x, "converged"), NA)
+  }
+  fin <- coxph_fast(1:5, c(1, 1, 1, 0, 1), c(1, 1, 0, 1, 0), control = 0)
+  expect_true(attr(fin, "converged"))
+  expect_lt(abs(unname(fin["coef"]) - 0.8216793853198513), 1e-6)
+  expect_equal(unname(fin["coef"]), 0.8216793837613253, tolerance = 1e-10)
+})
+
+test_that("coxph_fast converges when steps must be halved", {
+  # Five treated subjects (n = 60), all with early events. Without the
+  # bracket of the root kept after the first halved step, the iteration does
+  # not converge in 20 iterations; with it, it converges in 8 with one halved
+  # step (Planning/python_checks/cox_exact.py, check D, which also gives the
+  # brentq root 4.901223249152088).
+  tt <- c(0.6275, 0.6532, 0.2890, 0.1301, 0.0050, 0.2375, 0.0127, 0.0420,
+          0.3368, 0.0600, 0.0034, 0.0951, 0.0783, 0.6512, 0.9587, 0.1691,
+          0.4081, 0.7416, 0.2145, 0.3499, 0.1962, 0.9845, 0.1353, 0.3724,
+          0.1657, 0.0214, 0.4140, 0.0436, 0.2786, 0.1745, 0.4734, 0.0043,
+          0.8343, 0.4718, 0.7199, 0.2009, 0.0010, 0.0071, 0.0241, 0.0446,
+          0.0235, 0.1780, 0.8053, 0.0619, 0.3778, 0.4031, 0.6465, 0.7278,
+          0.1549, 0.2192, 0.1909, 0.8311, 0.0933, 0.0293, 0.3511, 0.8700,
+          0.2604, 1.1072, 0.0729, 0.4103)
+  ee <- c(0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0,
+          1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+          0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0)
+  xx <- c(0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+  fit <- coxph_fast(tt, ee, xx, control = 0, ties = "breslow")
+  expect_true(attr(fit, "converged"))
+  expect_identical(attr(fit, "iter"), 8L)
+  expect_equal(unname(fit["coef"]), 4.901223249152084, tolerance = 1e-10)
+  expect_equal(unname(fit["se(coef)"]), 1.123500228719776, tolerance = 1e-10)
+  expect_lt(abs(unname(fit["coef"]) - 4.901223249152088), 1e-6)
+})
+
+test_that("coxph_fast returns NA with a warning when the iteration fails", {
+  # The core is replaced by a stub that reports no convergence
+  local_mocked_bindings(cox_core = function(...) c(0.1, 0.2, -9, -8, 20, 1))
+  expect_warning(
+    x <- coxph_fast(1:6, c(1, 1, 1, 1, 0, 1), c(0, 1, 0, 1, 0, 1),
+                    control = 0),
+    "did not converge in 20 iterations")
+  expect_true(all(is.na(x)))
+  expect_false(attr(x, "converged"))
+  expect_identical(attr(x, "iter"), 20L)
+})
+
+test_that("coxph_fast records the fit and validates ties", {
+  set.seed(9)
+  n  <- 80
+  tt <- rexp(n, 0.1)                    # distinct times: no ties
+  ee <- rbinom(n, 1, 0.8)
+  gg <- rep(1:2, each = n / 2)
+  ef <- coxph_fast(tt, ee, gg, control = 1)
+  br <- coxph_fast(tt, ee, gg, control = 1, ties = "breslow")
+  expect_identical(attr(ef, "ties"), "efron")
+  expect_identical(attr(br, "ties"), "breslow")
+  expect_true(is.integer(attr(ef, "iter")) && attr(ef, "iter") >= 1L)
+  expect_true(attr(ef, "converged"))
+  # Without tied event times the two handlings give the same result
+  expect_identical(as.numeric(ef), as.numeric(br))
+  expect_error(coxph_fast(tt, ee, gg, control = 1, ties = "exact"),
+               "should be one of")
 })
 
 test_that("coxph_fast returns all-NA when no events", {
@@ -138,20 +272,29 @@ test_that("coxph_fast validates event coding, group levels, and conf.level", {
 #  Stratified estimator
 # ------------------------------------------------------------------ #
 
-test_that("stratified core reproduces a hand calculation", {
+test_that("cox_core reproduces a stratified hand calculation", {
   # Stratum 1: (t, group, event) = (1, C, 1), (2, T, 1), (3, C, 0), (4, T, 1)
   # Stratum 2: (1, T, 1), (2, C, 1), (3, T, 1)
-  # Risk sets restart in each stratum, so O_T = 4, O_C = 2,
-  # E_T = 2/4 + 2/3 + 1 + 2/3 + 1/2 + 1 = 13/3 and
-  # E_C = 2/4 + 1/3 + 0 + 1/3 + 1/2 + 0 = 5/3, giving the Pike anchor
-  # theta_0 = (4 * 5/3) / (2 * 13/3) = 10/13. U_0 = -62/759 and
-  # I_0 = 558220/576081 follow from p_k = n_T theta_0 / (n_C + n_T theta_0).
-  res <- pihe_core_strat(c(1, 2, 3, 4, 1, 2, 3), c(1L, 1L, 0L, 1L, 1L, 1L, 1L),
-                         c(0L, 1L, 0L, 1L, 1L, 0L, 1L),
-                         c(1L, 1L, 1L, 1L, 2L, 2L, 2L))
-  expect_equal(res[1], 10 / 13, tolerance = 1e-12)
-  expect_equal(res[2], -62 / 759, tolerance = 1e-12)
-  expect_equal(res[3], 558220 / 576081, tolerance = 1e-12)
+  # Risk sets restart in each stratum. At beta = 0, the sizes of the risk
+  # sets give l(0) = -log(4 * 3 * 3 * 2) = -log(72), U(0) = O_T - E_T =
+  # 4 - 13/3 = -1/3, and I(0) = 1/4 + 2/9 + 2/9 + 1/4 = 17/18, so the first
+  # Newton-Raphson iterate is U(0) / I(0) = -6/17. With r = exp(beta) the
+  # score is U = 2 - 2r / (r + 1) - 4r / (2r + 1), which vanishes at
+  # r = 1 / sqrt(2), i.e. beta = -log(2) / 2 (Planning/python_checks/
+  # cox_exact.py, check B).
+  tt <- c(1, 2, 3, 4, 1, 2, 3)
+  ee <- c(1L, 1L, 0L, 1L, 1L, 1L, 1L)
+  jj <- c(0L, 1L, 0L, 1L, 1L, 0L, 1L)
+  ss <- c(1L, 1L, 1L, 1L, 2L, 2L, 2L)
+  one <- cox_core(tt, ee, jj, ss, efron = FALSE, iter_max = 1)
+  expect_equal(one[3], -log(72), tolerance = 1e-14)
+  expect_equal(one[1], -6 / 17, tolerance = 1e-14)
+  expect_identical(one[c(5, 6)], c(1, 1))
+  full <- cox_core(tt, ee, jj, ss, efron = FALSE)
+  expect_identical(full[6], 0)
+  expect_lt(abs(full[1] + log(2) / 2), 1e-12)
+  fast <- coxph_fast(tt, ee, jj, control = 0, strata = ss)
+  expect_identical(unname(fast["coef"]), full[1])
 })
 
 test_that("a single stratum gives the unstratified estimate", {
@@ -167,6 +310,9 @@ test_that("a single stratum gives the unstratified estimate", {
 })
 
 test_that("stratified coxph_fast agrees with survival::coxph(strata())", {
+  # Report whether the external comparison below is run or skipped.
+  message("survival available for the stratified coxph_fast comparison: ",
+          requireNamespace("survival", quietly = TRUE))
   skip_if_not_installed("survival")
   set.seed(402)
   n_s  <- 150
@@ -178,13 +324,17 @@ test_that("stratified coxph_fast agrees with survival::coxph(strata())", {
   cc   <- rexp(length(s), 0.05)
   tt   <- round(pmin(t0, cc), 1)       # rounding creates tied times
   ee   <- as.integer(t0 <= cc)
-  fast <- coxph_fast(tt, ee, g, control = 0, strata = s)
-  ref  <- survival::coxph(survival::Surv(tt, ee) ~ g + survival::strata(s),
-                          ties = "breslow")
-  expect_lt(abs(unname(fast["coef"]) - unname(stats::coef(ref))), 1e-3)
-  expect_equal(unname(fast["se(coef)"]), unname(sqrt(ref$var[1, 1])),
-               tolerance = 1e-2)
-  expect_equal(attr(fast, "strata"), 4L)
+  ctrl <- survival::coxph.control(timefix = FALSE)
+  for (tie in c("efron", "breslow")) {
+    fast <- coxph_fast(tt, ee, g, control = 0, strata = s, ties = tie)
+    ref  <- survival::coxph(survival::Surv(tt, ee) ~ g + survival::strata(s),
+                            ties = tie, control = ctrl)
+    expect_equal(unname(fast["coef"]), unname(stats::coef(ref)),
+                 tolerance = 1e-10, label = tie)
+    expect_equal(unname(fast["se(coef)"]), unname(sqrt(ref$var[1, 1])),
+                 tolerance = 1e-10, label = tie)
+    expect_equal(attr(fast, "strata"), 4L)
+  }
 })
 
 test_that("stratified coxph_fast does not depend on the row order", {
@@ -203,7 +353,7 @@ test_that("stratified coxph_fast does not depend on the row order", {
   expect_equal(as.numeric(coxph_fast(tt[ord], ee[ord], gg[ord], control = 1,
                                      strata = s[ord], presorted = TRUE)),
                as.numeric(ref), tolerance = 1e-12)
-  expect_output(print(ref), "Stratified Pike-Halley estimator")
+  expect_output(print(ref), "Stratified Cox proportional hazards model")
 })
 
 test_that("stratified coxph_fast validates strata", {
@@ -259,9 +409,9 @@ test_that("coxph_fast: the formula interface passes every argument", {
   d2 <- d[order(d$s, d$tt), ]
   expect_identical(
     coxph_fast(Surv(tt, ee) ~ g + strata(s), d2, control = "b", side = 1,
-               conf.level = 0.9, presorted = TRUE),
+               conf.level = 0.9, presorted = TRUE, ties = "breslow"),
     coxph_fast(d2$tt, d2$ee, d2$g, "b", side = 1, conf.level = 0.9,
-               presorted = TRUE, strata = d2$s))
+               presorted = TRUE, strata = d2$s, ties = "breslow"))
   # The control group defaults to the first value in sorted order
   expect_identical(coxph_fast(Surv(tt, ee) ~ g, d),
                    coxph_fast(d$tt, d$ee, d$g, control = "a"))
