@@ -627,8 +627,7 @@ inside simulation loops.
 - [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md)
   : Fast Log-Rank Test for Two-Group Survival Data
 - [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
-  : Fast Closed-Form Hazard Ratio Estimation via the Pike-Halley
-  Estimator
+  : Fast Cox Proportional Hazards Estimation for Two Groups
 - [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
   : Fast Restricted Mean Survival Time (Single Group or Two-Group
   Comparison)

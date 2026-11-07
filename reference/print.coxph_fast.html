@@ -6,14 +6,16 @@ the Wald z-statistic, the p-value that follows the side recorded in
 the object, and the Wald confidence interval for the hazard ratio.
 The p-value column is labeled Pr(&amp;gt;|z|) for a two-sided test and
 Pr(&amp;lt;z) for a one-sided test, whose p-value is the lower tail in the
-direction of treatment benefit."><meta property="og:description" content="Formats and prints a coxph_fast object similarly to
+direction of treatment benefit. The control group, the handling of tied
+event times, and the alternative are shown above the tables."><meta property="og:description" content="Formats and prints a coxph_fast object similarly to
 summary(survival::coxph(...)), showing the point estimate of the
 log hazard ratio, the hazard ratio, the standard error on the log scale,
 the Wald z-statistic, the p-value that follows the side recorded in
 the object, and the Wald confidence interval for the hazard ratio.
 The p-value column is labeled Pr(&amp;gt;|z|) for a two-sided test and
 Pr(&amp;lt;z) for a one-sided test, whose p-value is the lower tail in the
-direction of treatment benefit."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
+direction of treatment benefit. The control group, the handling of tied
+event times, and the alternative are shown above the tables."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -68,7 +70,8 @@ the Wald z-statistic, the p-value that follows the <code>side</code> recorded in
 the object, and the Wald confidence interval for the hazard ratio.
 The p-value column is labeled <code>Pr(&gt;|z|)</code> for a two-sided test and
 <code>Pr(&lt;z)</code> for a one-sided test, whose p-value is the lower tail in the
-direction of treatment benefit.</p>
+direction of treatment benefit. The control group, the handling of tied
+event times, and the alternative are shown above the tables.</p>
     </div>
 
     <div class="section level2">
@@ -110,18 +113,19 @@ global option <code>getOption("digits")</code>.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pike-Halley estimator for the hazard ratio (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cox proportional hazards model for two groups</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ties = efron</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          coef exp(coef) se(coef)      z Pr(&gt;|z|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5868 -1.016     0.31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5870 -1.016     0.31</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hazard ratio and 95% Wald confidence interval:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1744    1.7399</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1743    1.7404</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

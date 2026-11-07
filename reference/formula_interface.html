@@ -153,31 +153,33 @@ remains the choice inside simulation loops.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The same hazard ratio from the formula and from the vectors</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pike-Halley estimator for the hazard ratio (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cox proportional hazards model for two groups</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ties = efron</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          coef exp(coef) se(coef)      z Pr(&gt;|z|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5868 -1.016     0.31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5870 -1.016     0.31</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hazard ratio and 95% Wald confidence interval:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1744    1.7399</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1743    1.7404</span>
 <span class="r-in"><span><span class="fu"><a href="coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pike-Halley estimator for the hazard ratio (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cox proportional hazards model for two groups</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ties = efron</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          coef exp(coef) se(coef)      z Pr(&gt;|z|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5868 -1.016     0.31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5870 -1.016     0.31</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hazard ratio and 95% Wald confidence interval:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1744    1.7399</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1743    1.7404</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Stratified log-rank test</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="survdiff_fast.html">survdiff_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">resid.ds</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span></span>

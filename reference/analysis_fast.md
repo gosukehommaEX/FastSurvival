@@ -58,7 +58,8 @@ analysis_fast(
   wmst.tau1 = 0,
   wmst.tau2 = NULL,
   cutoff.looks = NULL,
-  mc.alpha = NULL
+  mc.alpha = NULL,
+  ties = c("efron", "breslow")
 )
 ```
 
@@ -282,6 +283,12 @@ analysis_fast(
   and the output gains a logical column `maxcombo.p.exact`. `NULL`
   (default) computes every p-value.
 
+- ties:
+
+  A character string, `"efron"` (default) or `"breslow"`, naming the
+  handling of tied event times in the `"coxph"` statistic; see
+  [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md).
+
 ## Value
 
 A data frame. When `by.subgroup = FALSE`, it has `nsim * length(looks)`
@@ -297,9 +304,10 @@ occurred on or before the cutoff) and `n.pipeline`
 (`n.enrolled - n.event - n.dropout`, the subjects still in follow-up at
 the cutoff), followed by the columns of the requested statistics. A
 statistic that cannot be computed for a row (no events, or an empty
-group) is `NA`. The statistic columns are `logrank.z`, `logrank.chisq`,
-and `logrank.p` for `"logrank"`; `cox.coef`, `cox.hr`, `cox.se`,
-`cox.z`, `cox.p`, `cox.lower`, and `cox.upper` for `"coxph"`;
+group; for `"coxph"`, also an infinite estimate or an iteration that did
+not converge) is `NA`. The statistic columns are `logrank.z`,
+`logrank.chisq`, and `logrank.p` for `"logrank"`; `cox.coef`, `cox.hr`,
+`cox.se`, `cox.z`, `cox.p`, `cox.lower`, and `cox.upper` for `"coxph"`;
 `rmst.ctrl`, `rmst.trt`, `rmst.diff`, `rmst.diff.lower`,
 `rmst.diff.upper`, `rmst.z`, and `rmst.p` for `"rmst"`; `km.surv.ctrl`
 and `km.surv.trt` for `"km"`; `maxcombo.stat` and `maxcombo.p` (and
@@ -393,9 +401,17 @@ subgroup column that defines a subgroup population, the stratum is
 constant within that population and the stratified test there reduces to
 the ordinary one. Several columns define their combinations as strata.
 The same `strata` also stratify the `"coxph"` statistic, which is then
-the stratified Pike-Halley estimate of
+the stratified Cox model of
 [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
 (a common hazard ratio with a separate baseline hazard in each stratum).
+
+The `"coxph"` statistic is the maximum partial likelihood estimate of
+[`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),
+computed by the same Newton-Raphson iteration, with the handling of tied
+event times chosen by `ties`. A row in which the estimate is infinite
+(for example, all events in one group) has `NA` in the `cox.` columns,
+and so has a row in which the iteration does not converge in 20
+iterations; a single warning then gives the number of such rows.
 
 The `"maxcombo"` statistic is the max-combo test of `mc.rho` and
 `mc.gamma` Fleming-Harrington weights. Its `maxcombo.stat` is the most
@@ -599,19 +615,19 @@ head(res2)
 #> 5   5    1         24     24    TRUE        300     194         0        106
 #> 6   6    1         24     24    TRUE        300     203         0         97
 #>   logrank.z logrank.chisq    logrank.p   cox.coef    cox.hr    cox.se     cox.z
-#> 1 -3.059687      9.361684 2.215684e-03 -0.4286952 0.6513584 0.1410554 -3.039197
-#> 2 -5.125810     26.273925 2.962617e-07 -0.7470592 0.4737577 0.1487554 -5.022065
-#> 3 -5.532218     30.605431 3.162074e-08 -0.8010695 0.4488486 0.1482634 -5.403014
-#> 4 -4.736340     22.432915 2.176126e-06 -0.6711369 0.5111272 0.1438130 -4.666733
-#> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1461903 -3.699654
-#> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410111 -1.581234
+#> 1 -3.059687      9.361684 2.215684e-03 -0.4286953 0.6513584 0.1411269 -3.037658
+#> 2 -5.125810     26.273925 2.962617e-07 -0.7470594 0.4737576 0.1489665 -5.014950
+#> 3 -5.532218     30.605431 3.162074e-08 -0.8010698 0.4488485 0.1484937 -5.394639
+#> 4 -4.736340     22.432915 2.176126e-06 -0.6711381 0.5111265 0.1440892 -4.657795
+#> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1462641 -3.697789
+#> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410163 -1.581175
 #>          cox.p cox.lower cox.upper
-#> 1 2.372098e-03 0.4940301 0.8587893
-#> 2 5.111897e-07 0.3539448 0.6341283
-#> 3 6.553017e-08 0.3356587 0.6002083
-#> 4 3.060273e-06 0.3855805 0.6775523
-#> 5 2.158937e-04 0.4371926 0.7754391
-#> 6 1.138246e-01 0.6069262 1.0548570
+#> 1 2.384246e-03 0.4939609 0.8589096
+#> 2 5.304718e-07 0.3537983 0.6343905
+#> 3 6.866152e-08 0.3355071 0.6004790
+#> 4 3.196148e-06 0.3853713 0.6779184
+#> 5 2.174855e-04 0.4371294 0.7755511
+#> 6 1.138380e-01 0.6069200 1.0548677
 
 # Fleming-Harrington G(0, 1) weighted log-rank for delayed effects
 res3 <- analysis_fast(df, control = 1, time.looks = 24,

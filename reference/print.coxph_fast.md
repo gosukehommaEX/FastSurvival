@@ -7,7 +7,8 @@ Wald z-statistic, the p-value that follows the `side` recorded in the
 object, and the Wald confidence interval for the hazard ratio. The
 p-value column is labeled `Pr(>|z|)` for a two-sided test and `Pr(<z)`
 for a one-sided test, whose p-value is the lower tail in the direction
-of treatment benefit.
+of treatment benefit. The control group, the handling of tied event
+times, and the alternative are shown above the tables.
 
 ## Usage
 
@@ -47,16 +48,17 @@ Invisibly returns `x`.
 library(survival)
 fit <- coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
 print(fit)
-#> Pike-Halley estimator for the hazard ratio (two-group)
+#> Cox proportional hazards model for two groups
 #> 
 #>   control = 1
+#>   ties = efron
 #>   alternative = two.sided
 #> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
-#> group -0.5964    0.5508   0.5868 -1.016     0.31
+#> group -0.5964    0.5508   0.5870 -1.016     0.31
 #> 
 #> Hazard ratio and 95% Wald confidence interval:
 #>       exp(coef) exp(-coef) lower .95 upper .95
-#> group    0.5508     1.8155    0.1744    1.7399
+#> group    0.5508     1.8155    0.1743    1.7404
 ```

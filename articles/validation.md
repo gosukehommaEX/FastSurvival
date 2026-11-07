@@ -151,14 +151,14 @@ ref_cox <- coxph(Surv(rfstime, status) ~ hormon, data = gbsg,
 
 c(fast = unclass(fast_hr)["coef"], cox = unname(coef(ref_cox)))
 #>  fast.coef        cox 
-#> -0.3638987 -0.3638988
+#> -0.3640099 -0.3638988
 cox_diff <- abs(unname(unclass(fast_hr)["coef"]) - unname(coef(ref_cox)))
 ```
 
 Because the Pike-Halley Estimator is a closed-form approximation rather
 than the exact partial-likelihood maximizer, the two log hazard ratios
 are not expected to be identical. Their absolute difference here is
-2.1e-09, which reflects the approximation and is not a sign of error.
+0.00011, which reflects the approximation and is not a sign of error.
 
 With `strata`,
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
@@ -179,7 +179,7 @@ ref_cox_s <- coxph(Surv(rfstime, status) ~ hormon + strata(grade),
 
 c(fast = unclass(fast_hr_s)["coef"], cox = unname(coef(ref_cox_s)))
 #>  fast.coef        cox 
-#> -0.3396679 -0.3396679
+#> -0.3397231 -0.3396679
 ```
 
 ## Restricted mean survival time

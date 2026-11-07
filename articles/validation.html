@@ -216,12 +216,12 @@ estimate.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span>, cox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  fast.coef        cox </span></span>
-<span><span class="co">#&gt; -0.3638987 -0.3638988</span></span>
+<span><span class="co">#&gt; -0.3640099 -0.3638988</span></span>
 <span><span class="va">cox_diff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Because the Pike-Halley Estimator is a closed-form approximation
 rather than the exact partial-likelihood maximizer, the two log hazard
 ratios are not expected to be identical. Their absolute difference here
-is 2.1e-09, which reflects the approximation and is not a sign of
+is 0.00011, which reflects the approximation and is not a sign of
 error.</p>
 <p>With <code>strata</code>, <code><a href="../reference/coxph_fast.html">coxph_fast()</a></code> approximates the
 stratified Cox model, in which each stratum has its own baseline hazard.
@@ -238,7 +238,7 @@ targets.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>fast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="va">fast_hr_s</span><span class="op">)</span><span class="op">[</span><span class="st">"coef"</span><span class="op">]</span>, cox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ref_cox_s</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  fast.coef        cox </span></span>
-<span><span class="co">#&gt; -0.3396679 -0.3396679</span></span></code></pre></div>
+<span><span class="co">#&gt; -0.3397231 -0.3396679</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="restricted-mean-survival-time">Restricted mean survival time<a class="anchor" aria-label="anchor" href="#restricted-mean-survival-time"></a>

@@ -143,13 +143,13 @@ library(survival)
 fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
 as.data.frame(fit)
 #>   term estimate std.error  conf.low conf.high statistic   p.value
-#> 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.3095107
+#> 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.3096304
 coef(fit)
 #>     coef 
 #> -0.59638 
 exp(confint(fit))
 #>          2.5 %   97.5 %
-#> coef 0.1743704 1.739875
+#> coef 0.1743207 1.740371
 
 as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
                         tau = 600))
@@ -173,8 +173,8 @@ res <- lapply(1:3, function(s) {
   cbind(sim = s, as.data.frame(fit_s))
 })
 do.call(rbind, res)
-#>   sim term   estimate std.error  conf.low conf.high  statistic    p.value
-#> 1   1 coef -0.9047674 0.5449332 -1.972817 0.1632820 -1.6603272 0.09684865
-#> 2   2 coef -0.1123616 0.6784779 -1.442154 1.2174305 -0.1656084 0.86846515
-#> 3   3 coef -0.5031459 0.5086887 -1.500157 0.4938656 -0.9891037 0.32261240
+#>   sim term   estimate std.error  conf.low conf.high  statistic   p.value
+#> 1   1 coef -0.9003863 0.5445172 -1.967620 0.1668478 -1.6535499 0.0982190
+#> 2   2 coef -0.1129692 0.6784150 -1.442638 1.2166999 -0.1665192 0.8677483
+#> 3   3 coef -0.4556965 0.5065539 -1.448524 0.5371309 -0.8996012 0.3683325
 ```

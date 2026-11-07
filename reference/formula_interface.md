@@ -88,31 +88,33 @@ library(survival)
 
 # The same hazard ratio from the formula and from the vectors
 coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
-#> Pike-Halley estimator for the hazard ratio (two-group)
+#> Cox proportional hazards model for two groups
 #> 
 #>   control = 1
+#>   ties = efron
 #>   alternative = two.sided
 #> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
-#> group -0.5964    0.5508   0.5868 -1.016     0.31
+#> group -0.5964    0.5508   0.5870 -1.016     0.31
 #> 
 #> Hazard ratio and 95% Wald confidence interval:
 #>       exp(coef) exp(-coef) lower .95 upper .95
-#> group    0.5508     1.8155    0.1744    1.7399
+#> group    0.5508     1.8155    0.1743    1.7404
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
-#> Pike-Halley estimator for the hazard ratio (two-group)
+#> Cox proportional hazards model for two groups
 #> 
 #>   control = 1
+#>   ties = efron
 #>   alternative = two.sided
 #> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(>|z|)
-#> group -0.5964    0.5508   0.5868 -1.016     0.31
+#> group -0.5964    0.5508   0.5870 -1.016     0.31
 #> 
 #> Hazard ratio and 95% Wald confidence interval:
 #>       exp(coef) exp(-coef) lower .95 upper .95
-#> group    0.5508     1.8155    0.1744    1.7399
+#> group    0.5508     1.8155    0.1743    1.7404
 
 # Stratified log-rank test
 survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)

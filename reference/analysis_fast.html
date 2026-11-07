@@ -128,7 +128,8 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <span>  wmst.tau1 <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  wmst.tau2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cutoff.looks <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  mc.alpha <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  mc.alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"efron"</span>, <span class="st">"breslow"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -352,6 +353,12 @@ integration only when the Bonferroni bounds do not decide the comparison
 (see Details), and the output gains a logical column
 <code>maxcombo.p.exact</code>. <code>NULL</code> (default) computes every p-value.</p></dd>
 
+
+<dt id="arg-ties">ties<a class="anchor" aria-label="anchor" href="#arg-ties"></a></dt>
+<dd><p>A character string, <code>"efron"</code> (default) or
+<code>"breslow"</code>, naming the handling of tied event times in the
+<code>"coxph"</code> statistic; see <code><a href="coxph_fast.html">coxph_fast</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -368,7 +375,9 @@ integration only when the Bonferroni bounds do not decide the comparison
   and <code>n.pipeline</code> (<code>n.enrolled - n.event - n.dropout</code>, the
   subjects still in follow-up at the cutoff), followed by the
   columns of the requested statistics. A statistic that cannot be computed
-  for a row (no events, or an empty group) is <code>NA</code>. The statistic
+  for a row (no events, or an empty group; for <code>"coxph"</code>, also an
+  infinite estimate or an iteration that did not converge) is <code>NA</code>.
+  The statistic
   columns are <code>logrank.z</code>, <code>logrank.chisq</code>, and <code>logrank.p</code>
   for <code>"logrank"</code>; <code>cox.coef</code>, <code>cox.hr</code>, <code>cox.se</code>,
   <code>cox.z</code>, <code>cox.p</code>, <code>cox.lower</code>, and <code>cox.upper</code> for
@@ -466,9 +475,16 @@ the subgroup column that defines a subgroup population, the stratum is
 constant within that population and the stratified test there reduces to
 the ordinary one. Several columns define their combinations as strata.
 The same <code>strata</code> also stratify the
-<code>"coxph"</code> statistic, which is then the stratified Pike-Halley estimate
-of <code><a href="coxph_fast.html">coxph_fast</a></code> (a common hazard ratio with a separate baseline
+<code>"coxph"</code> statistic, which is then the stratified Cox model of
+<code><a href="coxph_fast.html">coxph_fast</a></code> (a common hazard ratio with a separate baseline
 hazard in each stratum).</p>
+<p>The <code>"coxph"</code> statistic is the maximum partial likelihood estimate of
+<code><a href="coxph_fast.html">coxph_fast</a></code>, computed by the same Newton-Raphson iteration,
+with the handling of tied event times chosen by <code>ties</code>. A row in
+which the estimate is infinite (for example, all events in one group) has
+<code>NA</code> in the <code>cox.</code> columns, and so has a row in which the
+iteration does not converge in 20 iterations; a single warning then gives
+the number of such rows.</p>
 <p>The <code>"maxcombo"</code> statistic is the max-combo test of <code>mc.rho</code> and
 <code>mc.gamma</code> Fleming-Harrington weights. Its <code>maxcombo.stat</code> is the
 most extreme component (<code>min</code> of the component Z-scores when
@@ -646,19 +662,19 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         24     24    TRUE        300     194         0        106</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         24     24    TRUE        300     203         0         97</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p   cox.coef    cox.hr    cox.se     cox.z</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.059687      9.361684 2.215684e-03 -0.4286952 0.6513584 0.1410554 -3.039197</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -5.125810     26.273925 2.962617e-07 -0.7470592 0.4737577 0.1487554 -5.022065</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -5.532218     30.605431 3.162074e-08 -0.8010695 0.4488486 0.1482634 -5.403014</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.736340     22.432915 2.176126e-06 -0.6711369 0.5111272 0.1438130 -4.666733</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1461903 -3.699654</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410111 -1.581234</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -3.059687      9.361684 2.215684e-03 -0.4286953 0.6513584 0.1411269 -3.037658</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -5.125810     26.273925 2.962617e-07 -0.7470594 0.4737576 0.1489665 -5.014950</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -5.532218     30.605431 3.162074e-08 -0.8010698 0.4488485 0.1484937 -5.394639</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.736340     22.432915 2.176126e-06 -0.6711381 0.5111265 0.1440892 -4.657795</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.741408     13.998135 1.829920e-04 -0.5408537 0.5822510 0.1462641 -3.697789</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.584396      2.510311 1.131036e-01 -0.2229715 0.8001377 0.1410163 -1.581175</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          cox.p cox.lower cox.upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.372098e-03 0.4940301 0.8587893</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 5.111897e-07 0.3539448 0.6341283</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 6.553017e-08 0.3356587 0.6002083</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 3.060273e-06 0.3855805 0.6775523</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2.158937e-04 0.4371926 0.7754391</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1.138246e-01 0.6069262 1.0548570</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.384246e-03 0.4939609 0.8589096</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 5.304718e-07 0.3537983 0.6343905</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 6.866152e-08 0.3355071 0.6004790</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 3.196148e-06 0.3853713 0.6779184</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2.174855e-04 0.4371294 0.7755511</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1.138380e-01 0.6069200 1.0548677</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fleming-Harrington G(0, 1) weighted log-rank for delayed effects</span></span></span>
 <span class="r-in"><span><span class="va">res3</span> <span class="op">&lt;-</span> <span class="fu">analysis_fast</span><span class="op">(</span><span class="va">df</span>, control <span class="op">=</span> <span class="fl">1</span>, time.looks <span class="op">=</span> <span class="fl">24</span>,</span></span>

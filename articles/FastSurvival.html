@@ -166,18 +166,19 @@ survival package, with a one-sided test of treatment benefit
 <span><span class="co"># Hazard ratio via the Pike-Halley Estimator</span></span>
 <span><span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>,</span>
 <span>           control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Pike-Halley estimator for the hazard ratio (two-group)</span></span>
+<span><span class="co">#&gt; Cox proportional hazards model for two groups</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   control = 1</span></span>
+<span><span class="co">#&gt;   ties = efron</span></span>
 <span><span class="co">#&gt;   alternative = one.sided</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Coefficients:</span></span>
 <span><span class="co">#&gt;          coef exp(coef) se(coef)      z Pr(&lt;z)</span></span>
-<span><span class="co">#&gt; group -0.5964    0.5508   0.5868 -1.016  0.155</span></span>
+<span><span class="co">#&gt; group -0.5964    0.5508   0.5870 -1.016  0.155</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Hazard ratio and 95% Wald confidence interval:</span></span>
 <span><span class="co">#&gt;       exp(coef) exp(-coef) lower .95 upper .95</span></span>
-<span><span class="co">#&gt; group    0.5508     1.8155    0.1744    1.7399</span></span></code></pre></div>
+<span><span class="co">#&gt; group    0.5508     1.8155    0.1743    1.7404</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="formulas-data-frames-and-plots">Formulas, data frames, and plots<a class="anchor" aria-label="anchor" href="#formulas-data-frames-and-plots"></a>
@@ -195,10 +196,10 @@ the log scale.</p>
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   term estimate std.error  conf.low conf.high statistic   p.value</span></span>
-<span><span class="co">#&gt; 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.1547553</span></span>
+<span><span class="co">#&gt; 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.1548152</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          2.5 %   97.5 %</span></span>
-<span><span class="co">#&gt; coef 0.1743704 1.739875</span></span>
+<span><span class="co">#&gt; coef 0.1743207 1.740371</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>,</span>
 <span>                        tau <span class="op">=</span> <span class="fl">500</span><span class="op">)</span><span class="op">)</span></span>

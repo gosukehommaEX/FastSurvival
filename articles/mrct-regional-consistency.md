@@ -177,8 +177,8 @@ head(res[, c("sim", "look", "population", "n.event", "logrank.z", "cox.hr")])
 #> 2   1    1 subgroup_1       7 -2.071416 0.1455994
 #> 3   1    1 subgroup_2      77 -2.026667 0.6272952
 #> 4   1    1 subgroup_3      58 -1.549859 0.6640957
-#> 5   1    2    overall     248 -3.678632 0.6250666
-#> 6   1    2 subgroup_1      22 -2.766921 0.2995078
+#> 5   1    2    overall     248 -3.678632 0.6250665
+#> 6   1    2 subgroup_1      22 -2.766921 0.2995075
 ```
 
 The output is in long form: for each `(sim, look)` there is one

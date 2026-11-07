@@ -108,18 +108,19 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
 # Hazard ratio via the Pike-Halley Estimator
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx,
            control = 1, side = 1)
-#> Pike-Halley estimator for the hazard ratio (two-group)
+#> Cox proportional hazards model for two groups
 #> 
 #>   control = 1
+#>   ties = efron
 #>   alternative = one.sided
 #> 
 #> Coefficients:
 #>          coef exp(coef) se(coef)      z Pr(<z)
-#> group -0.5964    0.5508   0.5868 -1.016  0.155
+#> group -0.5964    0.5508   0.5870 -1.016  0.155
 #> 
 #> Hazard ratio and 95% Wald confidence interval:
 #>       exp(coef) exp(-coef) lower .95 upper .95
-#> group    0.5508     1.8155    0.1744    1.7399
+#> group    0.5508     1.8155    0.1743    1.7404
 ```
 
 ## Formulas, data frames, and plots
@@ -140,10 +141,10 @@ estimates; ratios are reported on the log scale.
 fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 as.data.frame(fit)
 #>   term estimate std.error  conf.low conf.high statistic   p.value
-#> 1 coef -0.59638 0.5868442 -1.746574 0.5538135 -1.016249 0.1547553
+#> 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.1548152
 exp(confint(fit))
 #>          2.5 %   97.5 %
-#> coef 0.1743704 1.739875
+#> coef 0.1743207 1.740371
 
 as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
                         tau = 500))
