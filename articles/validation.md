@@ -140,7 +140,7 @@ convergence criterion, and maximum number of iterations of
 (1977) handling of tied event times by default and the Breslow (1974)
 handling on request. We compare the log hazard ratio and its standard
 error with [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) for
-both handlings, without and with stratification by tumor grade (a
+each handling, without and with stratification by tumor grade (a
 separate baseline hazard in each stratum). The reference uses
 `timefix = FALSE`, so that, as in
 [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md),

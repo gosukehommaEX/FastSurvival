@@ -234,8 +234,9 @@ estimates agree to rounding error when no step is halved; when a step is
 halved, they can differ within the convergence tolerance.</p>
 <p>The standard error of the log hazard ratio is 1 / sqrt(I), where
 I = -l”(beta) is the observed information at the estimate, and the Wald
-confidence interval for the hazard ratio is exp(coef -/+ z se), where z is
-the standard normal quantile for <code>conf.level</code>.</p>
+confidence interval for the hazard ratio is
+<code>exp(coef -/+ z * se(coef))</code>, where <code>z</code> is the standard normal
+quantile for <code>conf.level</code>.</p>
 <p>Let O_T be the total number of events in the treatment group, L the number
 of events at times when no control subject is at risk, and H the number of
 events at times when a treatment-group subject is at risk. The score
@@ -379,9 +380,9 @@ Extending the Cox Model</em>. New York: Springer.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq       mean    median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   55.247   70.0315   88.34929   97.8965  103.869  169.774  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1468.945 1506.2020 1555.83391 1519.0180 1533.961 6755.828  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr     min      lq      mean  median       uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast  29.864  35.703  43.43603  45.303  49.9545  105.047  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 686.074 712.082 751.50989 721.837 735.0410 4896.814  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

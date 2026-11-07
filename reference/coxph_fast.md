@@ -184,8 +184,9 @@ tolerance.
 
 The standard error of the log hazard ratio is 1 / sqrt(I), where I =
 -l”(beta) is the observed information at the estimate, and the Wald
-confidence interval for the hazard ratio is exp(coef -/+ z se), where z
-is the standard normal quantile for `conf.level`.
+confidence interval for the hazard ratio is
+`exp(coef -/+ z * se(coef))`, where `z` is the standard normal quantile
+for `conf.level`.
 
 Let O_T be the total number of events in the treatment group, L the
 number of events at times when no control subject is at risk, and H the
@@ -338,8 +339,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min        lq       mean    median       uq      max neval cld
-#>  coxph_fast   55.247   70.0315   88.34929   97.8965  103.869  169.774  1000  a 
-#>       coxph 1468.945 1506.2020 1555.83391 1519.0180 1533.961 6755.828  1000   b
+#>        expr     min      lq      mean  median       uq      max neval cld
+#>  coxph_fast  29.864  35.703  43.43603  45.303  49.9545  105.047  1000  a 
+#>       coxph 686.074 712.082 751.50989 721.837 735.0410 4896.814  1000   b
 # }
 ```
