@@ -127,7 +127,7 @@ model (Cox, 1972), found by Newton-Raphson iteration with the starting value,
 convergence criterion, and maximum number of iterations of `coxph()`, with the
 Efron (1977) handling of tied event times by default and the Breslow (1974)
 handling on request. We compare the log hazard ratio and its standard error
-with `coxph()` for both handlings, without and with stratification by tumor
+with `coxph()` for each handling, without and with stratification by tumor
 grade (a separate baseline hazard in each stratum). The reference uses
 `timefix = FALSE`, so that, as in `coxph_fast()`, only exactly equal times are
 tied.

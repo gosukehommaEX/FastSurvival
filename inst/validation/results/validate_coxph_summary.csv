@@ -1,0 +1,4 @@
+"group","fits","PASS","EXPLAINED","FAIL"
+"A regular",7200,7173,27,0
+"B extreme",986,332,651,3
+"C analysis_fast",1000,1000,0,0

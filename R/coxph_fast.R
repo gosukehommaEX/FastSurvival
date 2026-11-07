@@ -48,8 +48,9 @@
 #'
 #' The standard error of the log hazard ratio is 1 / sqrt(I), where
 #' I = -l''(beta) is the observed information at the estimate, and the Wald
-#' confidence interval for the hazard ratio is exp(coef -/+ z se), where z is
-#' the standard normal quantile for \code{conf.level}.
+#' confidence interval for the hazard ratio is
+#' \code{exp(coef -/+ z * se(coef))}, where \code{z} is the standard normal
+#' quantile for \code{conf.level}.
 #'
 #' Let O_T be the total number of events in the treatment group, L the number
 #' of events at times when no control subject is at risk, and H the number of

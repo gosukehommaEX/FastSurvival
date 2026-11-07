@@ -8,7 +8,10 @@
 # sorted once and reused. References on CRAN are survival, survRM2, survAH, nph
 # and nphRCT; survWMST, nphsim and AHR are on GitHub, and those rows are skipped
 # when the package is not installed. Results are printed and written to
-# speed_results.csv / speed_results.rds under tools/benchmarks/.
+# speed_results.csv / speed_results.rds under tools/benchmarks/, with the date
+# and the versions of R and the packages in speed_results_session.txt. The
+# installed FastSurvival is timed, so install the version to be timed first
+# (for example with devtools::install()).
 #
 # Run from the package root, for example: Rscript tools/benchmark_speed.R
 
@@ -310,6 +313,18 @@ write.csv(speed_results, file.path(out_dir, "speed_results.csv"),
           row.names = FALSE)
 saveRDS(speed_results, file.path(out_dir, "speed_results.rds"))
 log_line("Wrote speed_results.csv and speed_results.rds")
+
+writeLines(c(paste("date:", format(Sys.Date())),
+             paste("R:", R.version.string),
+             paste("running:", utils::sessionInfo()$running),
+             paste("FastSurvival:",
+                   as.character(utils::packageVersion("FastSurvival"))),
+             if (have_survival) {
+               paste("survival:",
+                     as.character(utils::packageVersion("survival")))
+             }),
+           file.path(out_dir, "speed_results_session.txt"))
+log_line("Wrote speed_results_session.txt")
 
 cat("\n")
 print(sessionInfo())

@@ -1,13 +1,13 @@
 "method","replaces","fast_ms","ref_ms","speedup"
-"survfit_fast()","survfit() + summary()",0.0948,3.6067,38
-"survdiff_fast()","survdiff()",0.1033,2.7151,26.3
-"coxph_fast()","coxph()",0.1107,3.9469,35.7
-"rmst_fast()","survRM2::rmst2()",0.129,4.7158,36.6
-"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.1426,42.5982,298.7
-"wmst_fast()","survWMST::wmst()",0.2632,230.2984,875
-"milestone_fast()","survfit() + summary()",0.1889,3.4551,18.3
-"medsurv_fast()","nph::nphparams()",0.2789,10.3674,37.2
-"maxcombo_fast()","nph::logrank.maxtest()",0.3616,129.2954,357.6
-"rmw_fast()","nphRCT::wlrt() (two components)",0.3292,25.4786,77.4
-"ahsw_fast()","survAH::ah2()",0.139,62.5495,450.2
-"ahr_fast()","AHR::ahrKM()",0.3152,62.4337,198.1
+"survfit_fast()","survfit() + summary()",0.1005,3.5033,34.9
+"survdiff_fast()","survdiff()",0.0987,2.3544,23.9
+"coxph_fast()","coxph()",0.1387,3.6551,26.4
+"rmst_fast()","survRM2::rmst2()",0.1286,4.1461,32.3
+"survdiff_fast(weight = ""fh"")","nph::logrank.test()",0.1414,38.6413,273.2
+"wmst_fast()","survWMST::wmst()",0.3324,266.1738,800.8
+"milestone_fast()","survfit() + summary()",0.1986,3.491,17.6
+"medsurv_fast()","nph::nphparams()",0.3491,11.6395,33.3
+"maxcombo_fast()","nph::logrank.maxtest()",0.4468,149.1852,333.9
+"rmw_fast()","nphRCT::wlrt() (two components)",0.3128,23.0305,73.6
+"ahsw_fast()","survAH::ah2()",0.1629,66.374,407.5
+"ahr_fast()","AHR::ahrKM()",0.362,68.023,187.9
