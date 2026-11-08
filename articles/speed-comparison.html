@@ -92,7 +92,7 @@ run the code blocks interactively. The same code is collected in the
 <code>tools/benchmark_speed.R</code> script of the package’s GitHub
 repository.</p>
 <p>The reported figures are median times of 1,000 microbenchmark
-replicates, measured on 2026-09-29 with R 4.6.0 on Windows 11 (x86_64)
+replicates, measured on 2026-11-07 with R 4.6.1 on Windows 11 (x86_64)
 for the data set of 500 subjects below, all of whom have an event. The
 FastSurvival functions are timed on presorted input, so the single sort
 of the data is excluded from their times, whereas the reference
@@ -351,7 +351,7 @@ because nphsim was not installed when the table was produced.</p>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> + <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> at one time
 point</td>
-<td>~40x</td>
+<td>~35x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code></td>
@@ -362,22 +362,22 @@ point</td>
 <td><code><a href="../reference/coxph_fast.html">coxph_fast()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">coxph()</a></code> (point estimate + Wald CI)</td>
-<td>~35x</td>
+<td>~25x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/rmst_fast.html">rmst_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/survRM2/man/rmst2.html" class="external-link">survRM2::rmst2()</a></code></td>
-<td>~35x</td>
+<td>~30x</td>
 </tr>
 <tr class="odd">
 <td><code>survdiff_fast(weight = "fh")</code></td>
 <td><code><a href="https://rdrr.io/pkg/nph/man/logrank.test.html" class="external-link">nph::logrank.test()</a></code></td>
-<td>~300x</td>
+<td>~250x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/wmst_fast.html">wmst_fast()</a></code></td>
 <td><code>survWMST::wmst()</code></td>
-<td>~900x</td>
+<td>~800x</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/milestone_fast.html">milestone_fast()</a></code></td>
@@ -404,7 +404,7 @@ point</td>
 <tr class="odd">
 <td><code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/survAH/man/ah2.html" class="external-link">survAH::ah2()</a></code></td>
-<td>~450x</td>
+<td>~400x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/ahr_fast.html">ahr_fast()</a></code></td>
