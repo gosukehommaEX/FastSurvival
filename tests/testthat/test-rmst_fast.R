@@ -26,10 +26,30 @@ test_that("rmst_fast two-group returns difference and ratio contrasts", {
   group <- rep(0:1, each = n)
 
   res <- rmst_fast(time, event, group = group, control = 0, tau = 10)
-  expect_true(all(c("rmst.ctrl", "rmst.trt", "diff", "se.diff",
-                    "diff.lower", "diff.upper", "z.diff", "p.diff",
-                    "ratio", "ratio.lower", "ratio.upper",
-                    "z.ratio", "p.ratio") %in% names(res)))
+  expect_identical(names(res),
+                   c("rmst.ctrl", "rmst.trt", "se.ctrl", "se.trt", "diff",
+                     "se.diff", "diff.lower", "diff.upper", "z.diff",
+                     "p.diff", "ratio", "ratio.lower", "ratio.upper",
+                     "z.ratio", "p.ratio"))
+})
+
+test_that("rmst_fast two-group stores the standard error of each group", {
+  set.seed(9)
+  n     <- 200
+  time  <- c(rexp(n, 0.10), rexp(n, 0.07))
+  event <- rbinom(2 * n, 1, 0.8)
+  group <- rep(0:1, each = n)
+
+  res <- rmst_fast(time, event, group = group, control = 0, tau = 10)
+  r0  <- rmst_fast(time[group == 0], event[group == 0], tau = 10)
+  r1  <- rmst_fast(time[group == 1], event[group == 1], tau = 10)
+  expect_equal(unname(res[c("rmst.ctrl", "se.ctrl")]),
+               unname(r0[c("rmst", "std.err")]), tolerance = 1e-12)
+  expect_equal(unname(res[c("rmst.trt", "se.trt")]),
+               unname(r1[c("rmst", "std.err")]), tolerance = 1e-12)
+  # The variance of the difference is the sum of the group variances
+  expect_equal(unname(res["se.diff"]^2),
+               unname(res["se.ctrl"]^2 + res["se.trt"]^2), tolerance = 1e-12)
 })
 
 test_that("rmst_fast diff equals treatment minus control", {
@@ -106,6 +126,17 @@ test_that("rmst_fast two-group contrasts agree with survRM2", {
   expect_equal(unname(res["diff.upper"]), ur[1L, 3L], tolerance = 1e-6)
   expect_equal(unname(res["p.diff"]),     ur[1L, 4L], tolerance = 1e-6)
   expect_equal(unname(res["ratio"]),      ur[2L, 1L], tolerance = 1e-6)
+  # Each group: estimate and standard error (RMST.arm0$rmst and
+  # RMST.arm1$rmst hold the estimate, se, and lower and upper limits)
+  expect_equal(unname(res[c("rmst.ctrl", "se.ctrl")]),
+               unname(ref$RMST.arm0$rmst[1:2]), tolerance = 1e-6)
+  expect_equal(unname(res[c("rmst.trt", "se.trt")]),
+               unname(ref$RMST.arm1$rmst[1:2]), tolerance = 1e-6)
+  ci <- confint(res)
+  expect_equal(unname(ci["rmst.ctrl", ]), unname(ref$RMST.arm0$rmst[3:4]),
+               tolerance = 1e-6)
+  expect_equal(unname(ci["rmst.trt", ]), unname(ref$RMST.arm1$rmst[3:4]),
+               tolerance = 1e-6)
 })
 
 test_that("rmst_fast single-group returns NA with class when n = 0", {

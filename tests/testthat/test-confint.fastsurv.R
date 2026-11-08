@@ -31,8 +31,12 @@ test_that("confint.fastsurv selects estimates with parm", {
   ci <- confint(rm)
   expect_identical(rownames(ci),
                    c("rmst.ctrl", "rmst.trt", "diff", "log.ratio"))
-  # rmst_fast() gives no interval for the RMST of each group
-  expect_true(all(is.na(ci[1:2, ])))
+  # The Wald interval of the RMST of each group
+  q <- qnorm(0.975)
+  expect_equal(unname(ci["rmst.ctrl", ]),
+               rm[["rmst.ctrl"]] + c(-1, 1) * q * rm[["se.ctrl"]])
+  expect_equal(unname(ci["rmst.trt", ]),
+               rm[["rmst.trt"]] + c(-1, 1) * q * rm[["se.trt"]])
   expect_equal(unname(ci["diff", ]),
                c(rm[["diff.lower"]], rm[["diff.upper"]]))
   expect_equal(exp(unname(ci["log.ratio", ])),

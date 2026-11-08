@@ -79,78 +79,41 @@ plot.simsummary_fast <- function(x, what = c("cumulative", "stage"),
   what  <- match.arg(what)
   xaxis <- match.arg(xaxis)
 
-  # A result of FastSurvival 1.1.0 stores the boundary settings without the
-  # looks and rows that the blocks are checked against
-  bd <- attr(x, "boundary")
-  if (!is.null(bd) && is.null(bd$looks)) {
-    stop("this result was created by an earlier version of FastSurvival; ",
-         "call simsummary_fast() again to plot it")
-  }
-  blocks <- simsummary_blocks(x)
-  if (is.null(blocks)) {
-    stop("plot() needs a simsummary_fast() result whose blocks keep all ",
-         "their looks in the original order")
-  }
-  has_fut <- identical(bd$mode, "z") && !is.null(bd$futility)
-
-  xcol <- switch(xaxis, look = NULL, events = "n.event.mean",
-                 time = "cutoff.mean")
-  if (!is.null(xcol) && !(xcol %in% names(blocks[[1L]]))) {
-    stop("xaxis = \"", xaxis, "\" needs the column '", xcol, "', which the ",
-         "result does not have")
-  }
-  if (!is.null(xcol) &&
-      !any(is.finite(unlist(lapply(blocks, function(b) b[[xcol]]))))) {
-    stop("xaxis = \"", xaxis, "\" needs finite values in the column '", xcol,
-         "'")
-  }
+  # The values drawn, checked and computed by an internal helper
+  pd      <- simsummary_plot_data(x, xaxis)
+  blocks  <- pd$blocks
+  has_fut <- pd$has.futility
+  xcol    <- pd$xcol
   if (is.null(xlab)) {
     xlab <- switch(xaxis, look = "Look", events = "Expected number of events",
                    time = "Expected calendar time")
   }
 
   nb   <- length(blocks)
-  labs <- vapply(blocks, function(b) attr(b, "label"), character(1L))
+  labs <- vapply(blocks, function(b) b$label, character(1L))
   if (is.null(col)) {
     col <- if (nb == 1L) "#3060c0" else grDevices::hcl.colors(nb, "Dark 3")
   }
   col <- rep_len(col, nb)
 
-  # Abscissae of the looks of a block, and the cumulative probabilities
-  x_of <- function(b) {
-    if (is.null(xcol)) seq_len(nrow(b)) else b[[xcol]]
-  }
-  cum_eff <- lapply(blocks, function(b) b$cum.reject)
-  cum_fut <- lapply(blocks, function(b) cumsum(b$prob.stop.futility))
-
-  top_of <- function(v) {
-    m <- suppressWarnings(max(unlist(v), na.rm = TRUE))
-    if (!is.finite(m) || m <= 0) 1 else min(1, 1.08 * m)
-  }
-
   if (what == "cumulative") {
-    if (is.null(ylim)) {
-      ylim <- c(0, top_of(c(cum_eff, if (has_fut) cum_fut)))
-    }
+    if (is.null(ylim)) ylim <- pd$ylim$cumulative
     if (is.null(ylab)) ylab <- "Cumulative probability of stopping"
     if (is.null(main)) main <- "Cumulative stopping probability"
-    xs   <- unlist(lapply(blocks, x_of))
-    xlim <- range(xs[is.finite(xs)])
-    if (!(diff(xlim) > 0)) xlim <- xlim + c(-0.5, 0.5)
 
-    graphics::plot.default(NA, NA, xlim = xlim, ylim = ylim, xaxt = "n",
+    graphics::plot.default(NA, NA, xlim = pd$xlim, ylim = ylim, xaxt = "n",
                            xlab = xlab, ylab = ylab, main = main)
     if (is.null(xcol)) {
-      graphics::axis(1L, at = seq_along(bd$looks), labels = bd$looks)
+      graphics::axis(1L, at = seq_along(pd$looks), labels = pd$looks)
     } else {
       graphics::axis(1L)
     }
     for (i in seq_len(nb)) {
-      xi <- x_of(blocks[[i]])
-      graphics::lines(xi, cum_eff[[i]], type = "b", pch = 19, lty = 1,
+      b <- blocks[[i]]
+      graphics::lines(b$x, b$cum.efficacy, type = "b", pch = 19, lty = 1,
                       col = col[i], lwd = 2)
       if (has_fut) {
-        graphics::lines(xi, cum_fut[[i]], type = "b", pch = 1, lty = 2,
+        graphics::lines(b$x, b$cum.futility, type = "b", pch = 1, lty = 2,
                         col = col[i], lwd = 2)
       }
     }
@@ -184,27 +147,14 @@ plot.simsummary_fast <- function(x, what = c("cumulative", "stage"),
 
   # what == "stage": stacked bars of the stopping probabilities at each look
   if (is.null(ylab)) ylab <- "Probability of stopping"
-  if (is.null(ylim)) {
-    ylim <- c(0, top_of(lapply(blocks, function(b) {
-      b$prob.stop.efficacy + b$prob.stop.futility
-    })))
-  }
+  if (is.null(ylim)) ylim <- pd$ylim$stage
   if (nb > 1L) {
     op <- graphics::par(mfrow = grDevices::n2mfrow(nb))
     on.exit(graphics::par(op), add = TRUE)
   }
   for (i in seq_len(nb)) {
     b <- blocks[[i]]
-    h <- if (has_fut) {
-      rbind(b$prob.stop.efficacy, b$prob.stop.futility)
-    } else {
-      matrix(b$prob.stop.efficacy, nrow = 1L)
-    }
-    nms <- if (is.null(xcol)) {
-      bd$looks
-    } else {
-      format(round(b[[xcol]], 1), trim = TRUE)
-    }
+    h <- unname(b$stage)
     ttl <- if (!is.null(main)) {
       main
     } else if (nb > 1L) {
@@ -213,7 +163,7 @@ plot.simsummary_fast <- function(x, what = c("cumulative", "stage"),
       "Stopping probability by look"
     }
     fills <- c(col[i], grDevices::adjustcolor(col[i], 0.35))[seq_len(nrow(h))]
-    graphics::barplot(h, names.arg = nms, col = fills, border = NA,
+    graphics::barplot(h, names.arg = b$names, col = fills, border = NA,
                       ylim = ylim, xlab = xlab, ylab = ylab, main = ttl)
     if (i == 1L) {
       graphics::legend(legend_pos, legend = c("Efficacy", "Futility")[

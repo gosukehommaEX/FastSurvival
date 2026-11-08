@@ -275,4 +275,4 @@ randomized trials using rank preserving structural failure time models.
 *Communications in Statistics - Theory and Methods*, 20(8), 2609-2631.
 
 Zhang, H. (2026). TrialSimulator: Clinical Trial Simulator. R package version
-1.35.8. https://CRAN.R-project.org/package=TrialSimulator
+1.39.0. https://CRAN.R-project.org/package=TrialSimulator

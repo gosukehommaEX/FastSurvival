@@ -29,6 +29,24 @@
   `coxph_fast()` has the new attributes `ties`, `iter`, and `converged`, and
   its `print()` method shows the handling of tied event times.
 
+* In the two-group mode, `rmst_fast()` also returns the standard errors of
+  the restricted mean survival times of the two groups, `se.ctrl` and
+  `se.trt`, after `rmst.trt`, so the elements from `diff` onward have moved
+  by two positions. The rows `rmst.ctrl` and `rmst.trt` of `as.data.frame()`
+  and `confint()`, which were `NA` except for the estimate, now have these
+  standard errors and the Wald limits, as in the single-group mode, and the
+  `print()` method shows them.
+
+## Documentation
+
+* The treatment-switching vignette refers to TrialSimulator 1.39.0, the
+  current version on CRAN.
+
+## Tests
+
+* The values that `plot.simsummary_fast()` draws are computed by an internal
+  function, and new tests check them against values computed independently.
+
 # FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an

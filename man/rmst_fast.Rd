@@ -60,7 +60,8 @@ The order is checked, and an error is given when it does not hold.}
 An object of class \code{"rmst_fast"}, a named numeric vector. In
   single-group mode it has length 4 with elements \code{rmst},
   \code{std.err}, \code{lower}, and \code{upper}. In two-group mode it
-  contains the per-group RMST (\code{rmst.ctrl}, \code{rmst.trt}), the
+  contains the per-group RMST (\code{rmst.ctrl}, \code{rmst.trt}) and
+  their standard errors (\code{se.ctrl}, \code{se.trt}), the
   difference contrast (\code{diff}, \code{se.diff}, \code{diff.lower},
   \code{diff.upper}, \code{z.diff}, \code{p.diff}), and the ratio contrast
   (\code{ratio}, \code{ratio.lower}, \code{ratio.upper}, \code{z.ratio},

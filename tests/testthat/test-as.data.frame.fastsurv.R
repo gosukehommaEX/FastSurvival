@@ -129,6 +129,22 @@ test_that("as.data.frame.fastsurv: ratios on the log scale and derived SEs", {
   expect_equal(c(df$estimate, df$std.error, df$statistic, df$p.value),
                c(rm[["diff"]], rm[["se.diff"]], rm[["z.diff"]],
                  rm[["p.diff"]]))
+  # Each group: the standard error and the Wald limits, without a test
+  gr <- as.data.frame(rm)[1:2, ]
+  expect_equal(gr$std.error, c(rm[["se.ctrl"]], rm[["se.trt"]]))
+  expect_equal(gr$conf.low, gr$estimate - q * gr$std.error)
+  expect_equal(gr$conf.high, gr$estimate + q * gr$std.error)
+  expect_true(all(is.na(c(gr$statistic, gr$p.value))))
+  # A result without the standard errors of the groups (FastSurvival 1.2.0
+  # and earlier) keeps NA there
+  old <- structure(unclass(rm)[setdiff(names(rm), c("se.ctrl", "se.trt"))],
+                   tau = attr(rm, "tau"), conf.level = attr(rm, "conf.level"),
+                   side = attr(rm, "side"), control = attr(rm, "control"),
+                   class = class(rm))
+  go <- as.data.frame(old)
+  expect_true(all(is.na(unlist(go[1:2, c("std.error", "conf.low",
+                                          "conf.high")]))))
+  expect_equal(go[3:4, ], as.data.frame(rm)[3:4, ], ignore_attr = TRUE)
 
   # Average hazard with survival weight, two-sided and one-sided: the
   # derived statistics give the stored p-values

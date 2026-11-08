@@ -13,6 +13,14 @@ test_that("print.rmst_fast prints the two-group and single-group summaries", {
   expect_output(print(x), "tau = 10,  control = 1", fixed = TRUE)
   expect_output(print(x), "difference (treatment - control)", fixed = TRUE)
   expect_output(print(x), "ratio (treatment / control)", fixed = TRUE)
+  expect_output(print(x), "std.err", fixed = TRUE)
+  # A result without the standard errors of the groups (FastSurvival 1.2.0
+  # and earlier) is still printed
+  old <- structure(unclass(x)[setdiff(names(x), c("se.ctrl", "se.trt"))],
+                   tau = attr(x, "tau"), conf.level = attr(x, "conf.level"),
+                   side = attr(x, "side"), control = attr(x, "control"),
+                   class = class(x))
+  expect_output(print(old), "std.err", fixed = TRUE)
   x1 <- rmst_fast(d$tte, d$event, d$group, control = 1, tau = 10, side = 1)
   expect_output(print(x1), "alternative = one.sided")
 

@@ -89,12 +89,19 @@ fastsurv_table <- function(x) {
     # symmetric and its test is computed
     lo_r <- log(el("ratio.lower"))
     hi_r <- log(el("ratio.upper"))
+    # Each group: the Wald interval of the single-group mode; a result of
+    # FastSurvival 1.2.0 or earlier stores no standard errors of the groups
+    est_g <- c(el("rmst.ctrl"), el("rmst.trt"))
+    se_g  <- if (all(c("se.ctrl", "se.trt") %in% names(x))) {
+      c(el("se.ctrl"), el("se.trt"))
+    } else {
+      c(NA_real_, NA_real_)
+    }
     return(tab(c("rmst.ctrl", "rmst.trt", "diff", "log.ratio"),
-               c(el("rmst.ctrl"), el("rmst.trt"), el("diff"),
-                 log(el("ratio"))),
-               c(NA, NA, el("se.diff"), se_from_limits(lo_r, hi_r)),
-               c(NA, NA, el("diff.lower"), lo_r),
-               c(NA, NA, el("diff.upper"), hi_r),
+               c(est_g, el("diff"), log(el("ratio"))),
+               c(se_g, el("se.diff"), se_from_limits(lo_r, hi_r)),
+               c(est_g - q * se_g, el("diff.lower"), lo_r),
+               c(est_g + q * se_g, el("diff.upper"), hi_r),
                c(NA, NA, el("z.diff"), el("z.ratio")),
                c(NA, NA, el("p.diff"), el("p.ratio"))))
   }

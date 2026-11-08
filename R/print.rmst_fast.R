@@ -4,7 +4,8 @@
 #' Formats and prints an \code{rmst_fast} object. In single-group mode it shows
 #' the restricted mean survival time, its Greenwood standard error, and the
 #' Wald confidence interval at the requested horizon. In two-group mode it
-#' shows the per-group restricted mean survival times together with the
+#' shows the per-group restricted mean survival times with their standard
+#' errors and Wald confidence intervals, together with the
 #' difference (treatment minus control) and ratio (treatment over control)
 #' contrasts, each with a Wald z-statistic and a p-value that follows the
 #' \code{side} recorded in the object.
@@ -81,10 +82,22 @@ print.rmst_fast <- function(x, digits = max(1L, getOption("digits") - 3L), ...) 
   cat(sprintf("  alternative = %s\n\n",
               if (side == 1L) "one.sided" else "two.sided"))
 
+  # A result of FastSurvival 1.2.0 or earlier stores no standard errors of
+  # the groups
+  est_g <- c(x[["rmst.ctrl"]], x[["rmst.trt"]])
+  se_g  <- if (all(c("se.ctrl", "se.trt") %in% names(x))) {
+    c(x[["se.ctrl"]], x[["se.trt"]])
+  } else {
+    c(NA_real_, NA_real_)
+  }
+  z_ci  <- stats::qnorm(1 - (1 - conf.level) / 2)
   g_tab <- matrix(
-    c(x[["rmst.ctrl"]], x[["rmst.trt"]]),
+    c(est_g, se_g, est_g - z_ci * se_g, est_g + z_ci * se_g),
     nrow = 2L,
-    dimnames = list(c("control", "treatment"), "RMST")
+    dimnames = list(c("control", "treatment"),
+                    c("RMST", "std.err",
+                      sprintf("lower %g%%", ci_lab),
+                      sprintf("upper %g%%", ci_lab)))
   )
   print(round(g_tab, digits = digits))
   cat("\n")

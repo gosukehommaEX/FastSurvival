@@ -22,7 +22,8 @@ Invisibly returns \code{x}.
 Formats and prints an \code{rmst_fast} object. In single-group mode it shows
 the restricted mean survival time, its Greenwood standard error, and the
 Wald confidence interval at the requested horizon. In two-group mode it
-shows the per-group restricted mean survival times together with the
+shows the per-group restricted mean survival times with their standard
+errors and Wald confidence intervals, together with the
 difference (treatment minus control) and ratio (treatment over control)
 contrasts, each with a Wald z-statistic and a p-value that follows the
 \code{side} recorded in the object.

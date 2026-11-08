@@ -218,8 +218,9 @@ the estimates and standard errors with `coxph()` on the `gbsg` data.
 horizon (Royston and Parmar, 2013) in a single C++ scan, reused once per
 group. With a single group it
 returns the RMST with a Greenwood-type standard error and a Wald confidence
-interval; with two groups it adds the RMST difference and ratio contrasts,
-each with a standard error, confidence interval, and test.
+interval; with two groups it returns the RMST and its standard error for
+each group and adds the RMST difference and ratio contrasts, each with a
+standard error, confidence interval, and test.
 
 **wmst_fast** computes the window mean survival time, the area under the
 Kaplan-Meier curve between a lower and an upper window limit, generalizing the
