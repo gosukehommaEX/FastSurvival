@@ -158,7 +158,8 @@ The order is checked, and an error is given when it does not hold.</p></dd>
     <p>An object of class <code>"rmst_fast"</code>, a named numeric vector. In
   single-group mode it has length 4 with elements <code>rmst</code>,
   <code>std.err</code>, <code>lower</code>, and <code>upper</code>. In two-group mode it
-  contains the per-group RMST (<code>rmst.ctrl</code>, <code>rmst.trt</code>), the
+  contains the per-group RMST (<code>rmst.ctrl</code>, <code>rmst.trt</code>) and
+  their standard errors (<code>se.ctrl</code>, <code>se.trt</code>), the
   difference contrast (<code>diff</code>, <code>se.diff</code>, <code>diff.lower</code>,
   <code>diff.upper</code>, <code>z.diff</code>, <code>p.diff</code>), and the ratio contrast
   (<code>ratio</code>, <code>ratio.lower</code>, <code>ratio.upper</code>, <code>z.ratio</code>,
@@ -248,9 +249,9 @@ point.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 10,  control = 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             RMST</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   6.7572</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 7.8384</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             RMST std.err lower 95% upper 95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   6.7572  0.2428    6.2813    7.2331</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 7.8384  0.2420    7.3642    8.3127</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                    Est. lower 95% upper 95%     z Pr(&gt;|z|)   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control) 1.0813    0.4094    1.7531 3.154  0.00161 **</span>
@@ -262,8 +263,8 @@ point.</p></div>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span>, <span class="va">group</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">rmst_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, data <span class="op">=</span> <span class="va">d</span>, tau <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        term  estimate  std.error   conf.low conf.high statistic     p.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 rmst.ctrl 6.7571810         NA         NA        NA        NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  rmst.trt 7.8384416         NA         NA        NA        NA          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3      diff 1.0812605 0.34278492 0.40941442 1.7531066  3.154341 0.001608610</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 log.ratio 0.1484342 0.04737151 0.05558778 0.2412807  3.133407 0.001727894</span>
 <span class="r-in"><span></span></span>

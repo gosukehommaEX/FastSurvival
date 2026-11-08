@@ -49,6 +49,30 @@
   [`print()`](https://rdrr.io/r/base/print.html) method shows the
   handling of tied event times.
 
+- In the two-group mode,
+  [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
+  also returns the standard errors of the restricted mean survival times
+  of the two groups, `se.ctrl` and `se.trt`, after `rmst.trt`, so the
+  elements from `diff` onward have moved by two positions. The rows
+  `rmst.ctrl` and `rmst.trt` of
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
+  [`confint()`](https://rdrr.io/r/stats/confint.html), which were `NA`
+  except for the estimate, now have these standard errors and the Wald
+  limits, as in the single-group mode, and the
+  [`print()`](https://rdrr.io/r/base/print.html) method shows them.
+
+### Documentation
+
+- The treatment-switching vignette refers to TrialSimulator 1.39.0, the
+  current version on CRAN.
+
+### Tests
+
+- The values that
+  [`plot.simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.simsummary_fast.md)
+  draws are computed by an internal function, and new tests check them
+  against values computed independently.
+
 ## FastSurvival 1.2.0
 
 CRAN release: 2026-10-15

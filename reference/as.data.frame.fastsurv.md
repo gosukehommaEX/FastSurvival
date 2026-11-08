@@ -154,8 +154,8 @@ exp(confint(fit))
 as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
                         tau = 600))
 #>        term    estimate  std.error     conf.low   conf.high statistic
-#> 1 rmst.ctrl 427.5384615         NA           NA          NA        NA
-#> 2  rmst.trt 534.9059829         NA           NA          NA        NA
+#> 1 rmst.ctrl 427.5384615 57.0792676 315.66515285 539.4117702        NA
+#> 2  rmst.trt 534.9059829 25.6842417 484.56579418 585.2461716        NA
 #> 3      diff 107.3675214 62.5917172 -15.30999001 230.0450327  1.715363
 #> 4 log.ratio   0.2240467  0.1418789  -0.05403079   0.5021243  1.579141
 #>      p.value

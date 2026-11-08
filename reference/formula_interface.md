@@ -144,9 +144,9 @@ rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 600, control = 2)
 #>   tau = 600,  control = 2
 #>   alternative = two.sided
 #> 
-#>               RMST
-#> control   534.9060
-#> treatment 427.5385
+#>               RMST std.err lower 95% upper 95%
+#> control   534.9060 25.6842  484.5658  585.2462
+#> treatment 427.5385 57.0793  315.6652  539.4118
 #> 
 #>                                       Est. lower 95% upper 95%      z Pr(>|z|)
 #> difference (treatment - control) -107.3675 -230.0450   15.3100 -1.715   0.0863

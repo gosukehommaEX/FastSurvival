@@ -3,12 +3,13 @@
 Formats and prints an `rmst_fast` object. In single-group mode it shows
 the restricted mean survival time, its Greenwood standard error, and the
 Wald confidence interval at the requested horizon. In two-group mode it
-shows the per-group restricted mean survival times together with the
-difference (treatment minus control) and ratio (treatment over control)
-contrasts, each with a Wald z-statistic and a p-value that follows the
-`side` recorded in the object. The p-value column is labeled `Pr(>|z|)`
-for a two-sided test and `Pr(>z)` for a one-sided test, whose p-value is
-the upper tail in the direction of treatment benefit.
+shows the per-group restricted mean survival times with their standard
+errors and Wald confidence intervals, together with the difference
+(treatment minus control) and ratio (treatment over control) contrasts,
+each with a Wald z-statistic and a p-value that follows the `side`
+recorded in the object. The p-value column is labeled `Pr(>|z|)` for a
+two-sided test and `Pr(>z)` for a one-sided test, whose p-value is the
+upper tail in the direction of treatment benefit.
 
 ## Usage
 
@@ -69,9 +70,9 @@ print(rmst_fast(time, event, group = group, control = 0, tau = 10))
 #>   tau = 10,  control = 0
 #>   alternative = two.sided
 #> 
-#>             RMST
-#> control   6.7572
-#> treatment 7.8384
+#>             RMST std.err lower 95% upper 95%
+#> control   6.7572  0.2428    6.2813    7.2331
+#> treatment 7.8384  0.2420    7.3642    8.3127
 #> 
 #>                                    Est. lower 95% upper 95%     z Pr(>|z|)   
 #> difference (treatment - control) 1.0813    0.4094    1.7531 3.154  0.00161 **

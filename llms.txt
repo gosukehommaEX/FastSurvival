@@ -229,9 +229,10 @@ data.
 **rmst_fast** integrates the Kaplan-Meier survival step function up to a
 horizon (Royston and Parmar, 2013) in a single C++ scan, reused once per
 group. With a single group it returns the RMST with a Greenwood-type
-standard error and a Wald confidence interval; with two groups it adds
-the RMST difference and ratio contrasts, each with a standard error,
-confidence interval, and test.
+standard error and a Wald confidence interval; with two groups it
+returns the RMST and its standard error for each group and adds the RMST
+difference and ratio contrasts, each with a standard error, confidence
+interval, and test.
 
 **wmst_fast** computes the window mean survival time, the area under the
 Kaplan-Meier curve between a lower and an upper window limit,

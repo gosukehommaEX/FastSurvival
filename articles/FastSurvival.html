@@ -203,11 +203,16 @@ the log scale.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/rmst_fast.html">rmst_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>,</span>
 <span>                        tau <span class="op">=</span> <span class="fl">500</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        term    estimate  std.error    conf.low   conf.high statistic    p.value</span></span>
-<span><span class="co">#&gt; 1 rmst.ctrl 373.6923077         NA          NA          NA        NA         NA</span></span>
-<span><span class="co">#&gt; 2  rmst.trt 472.5726496         NA          NA          NA        NA         NA</span></span>
-<span><span class="co">#&gt; 3      diff  98.8803419 47.0605014  6.64345409 191.1172297  2.101132 0.03562935</span></span>
-<span><span class="co">#&gt; 4 log.ratio   0.2347587  0.1238482 -0.00797928   0.4774968  1.895536 0.05802142</span></span></code></pre></div>
+<span><span class="co">#&gt;        term    estimate  std.error     conf.low   conf.high statistic</span></span>
+<span><span class="co">#&gt; 1 rmst.ctrl 373.6923077 44.9503848 285.59117234 461.7934430        NA</span></span>
+<span><span class="co">#&gt; 2  rmst.trt 472.5726496 13.9339045 445.26269865 499.8826005        NA</span></span>
+<span><span class="co">#&gt; 3      diff  98.8803419 47.0605014   6.64345409 191.1172297  2.101132</span></span>
+<span><span class="co">#&gt; 4 log.ratio   0.2347587  0.1238482  -0.00797928   0.4774968  1.895536</span></span>
+<span><span class="co">#&gt;      p.value</span></span>
+<span><span class="co">#&gt; 1         NA</span></span>
+<span><span class="co">#&gt; 2         NA</span></span>
+<span><span class="co">#&gt; 3 0.03562935</span></span>
+<span><span class="co">#&gt; 4 0.05802142</span></span></code></pre></div>
 <p><code><a href="../reference/kmcurve_fast.html">kmcurve_fast()</a></code> builds the Kaplan-Meier curves of a data
 set, and its <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method can add the numbers at risk
 below the curves.</p>

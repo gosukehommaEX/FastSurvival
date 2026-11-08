@@ -90,14 +90,15 @@ rmst_fast(
 An object of class `"rmst_fast"`, a named numeric vector. In
 single-group mode it has length 4 with elements `rmst`, `std.err`,
 `lower`, and `upper`. In two-group mode it contains the per-group RMST
-(`rmst.ctrl`, `rmst.trt`), the difference contrast (`diff`, `se.diff`,
-`diff.lower`, `diff.upper`, `z.diff`, `p.diff`), and the ratio contrast
-(`ratio`, `ratio.lower`, `ratio.upper`, `z.ratio`, `p.ratio`). The
-restriction horizon, confidence level, and test side are stored as
-attributes `tau`, `conf.level`, and `side`; in two-group mode the
-`control` label is also stored. Returns `NA_real_` values (still with
-class `"rmst_fast"`) when `n` is zero in single-group mode. The object
-also has the class `"fastsurv"`, whose
+(`rmst.ctrl`, `rmst.trt`) and their standard errors (`se.ctrl`,
+`se.trt`), the difference contrast (`diff`, `se.diff`, `diff.lower`,
+`diff.upper`, `z.diff`, `p.diff`), and the ratio contrast (`ratio`,
+`ratio.lower`, `ratio.upper`, `z.ratio`, `p.ratio`). The restriction
+horizon, confidence level, and test side are stored as attributes `tau`,
+`conf.level`, and `side`; in two-group mode the `control` label is also
+stored. Returns `NA_real_` values (still with class `"rmst_fast"`) when
+`n` is zero in single-group mode. The object also has the class
+`"fastsurv"`, whose
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
 [`coef()`](https://rdrr.io/r/stats/coef.html), and
 [`confint()`](https://rdrr.io/r/stats/confint.html) methods are
@@ -189,9 +190,9 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 #>   tau = 10,  control = 0
 #>   alternative = two.sided
 #> 
-#>             RMST
-#> control   6.7572
-#> treatment 7.8384
+#>             RMST std.err lower 95% upper 95%
+#> control   6.7572  0.2428    6.2813    7.2331
+#> treatment 7.8384  0.2420    7.3642    8.3127
 #> 
 #>                                    Est. lower 95% upper 95%     z Pr(>|z|)   
 #> difference (treatment - control) 1.0813    0.4094    1.7531 3.154  0.00161 **
@@ -203,8 +204,8 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 d <- data.frame(time, event, group)
 as.data.frame(rmst_fast(Surv(time, event) ~ group, data = d, tau = 10))
 #>        term  estimate  std.error   conf.low conf.high statistic     p.value
-#> 1 rmst.ctrl 6.7571810         NA         NA        NA        NA          NA
-#> 2  rmst.trt 7.8384416         NA         NA        NA        NA          NA
+#> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA
+#> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA
 #> 3      diff 1.0812605 0.34278492 0.40941442 1.7531066  3.154341 0.001608610
 #> 4 log.ratio 0.1484342 0.04737151 0.05558778 0.2412807  3.133407 0.001727894
 

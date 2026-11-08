@@ -148,11 +148,16 @@ exp(confint(fit))
 
 as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
                         tau = 500))
-#>        term    estimate  std.error    conf.low   conf.high statistic    p.value
-#> 1 rmst.ctrl 373.6923077         NA          NA          NA        NA         NA
-#> 2  rmst.trt 472.5726496         NA          NA          NA        NA         NA
-#> 3      diff  98.8803419 47.0605014  6.64345409 191.1172297  2.101132 0.03562935
-#> 4 log.ratio   0.2347587  0.1238482 -0.00797928   0.4774968  1.895536 0.05802142
+#>        term    estimate  std.error     conf.low   conf.high statistic
+#> 1 rmst.ctrl 373.6923077 44.9503848 285.59117234 461.7934430        NA
+#> 2  rmst.trt 472.5726496 13.9339045 445.26269865 499.8826005        NA
+#> 3      diff  98.8803419 47.0605014   6.64345409 191.1172297  2.101132
+#> 4 log.ratio   0.2347587  0.1238482  -0.00797928   0.4774968  1.895536
+#>      p.value
+#> 1         NA
+#> 2         NA
+#> 3 0.03562935
+#> 4 0.05802142
 ```
 
 [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)

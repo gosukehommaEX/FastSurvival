@@ -206,7 +206,7 @@ system.time({
   r1  <- os_final(d1)
 })
 #>    user  system elapsed 
-#>   0.361   0.032   0.393
+#>   0.458   0.036   0.494
 ```
 
 ## A check with the rank-preserving structural failure time model
@@ -298,4 +298,4 @@ randomized trials using rank preserving structural failure time models.
 *Communications in Statistics - Theory and Methods*, 20(8), 2609-2631.
 
 Zhang, H. (2026). TrialSimulator: Clinical Trial Simulator. R package
-version 1.35.8. <https://CRAN.R-project.org/package=TrialSimulator>
+version 1.39.0. <https://CRAN.R-project.org/package=TrialSimulator>
