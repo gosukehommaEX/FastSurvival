@@ -15,26 +15,16 @@
 #   PASS       both converge, the log hazard ratios and the standard errors
 #              differ by at most 1e-10 relative to max(1, |coxph() value|),
 #              and, for coxph_fast(), the numbers of iterations are equal.
-#   EXPLAINED  one of the registered reasons below applies.
+#   EXPLAINED  one of the reasons E1 to E4 registered (with their conditions)
+#              in inst/validation/explained.csv applies. E2 to E4 use the
+#              score test of coxph() at the coxph_fast() estimate (coxph()
+#              with init at the estimate and iter.max = 0), which shows that
+#              the estimate is a root of the score.
 #   FAIL       otherwise.
-# Registered reasons:
-#   E1  The estimate is infinite: coxph_fast() returns NA, and coxph() gives
-#       a warning, a coefficient that is not finite, or a standard error
-#       above 1e3.
-#   E2  Halved steps: both converge, the log hazard ratios differ by at most
-#       1e-6, the iterations differ (coxph_fast() keeps a bracket of the root
-#       after a halved step, see ?coxph_fast), and the score test of coxph()
-#       at the coxph_fast() estimate is at most 1e-8.
-#   E3  coxph() does not converge in 20 iterations while coxph_fast() does,
-#       and the score test of coxph() at the coxph_fast() estimate is at most
-#       1e-8.
-#   E4  coxph() warns that the coefficient may be infinite, but both
-#       converge, the log hazard ratios differ by at most 1e-6, and the score
-#       test of coxph() at the coxph_fast() estimate is at most 1e-8 (the
-#       estimate is finite, so the warning is a false alarm).
-# A self-test changes the coxph_fast() estimates of the PASS fits by 1e-8
-# times max(1, |estimate|) and checks that none of them is then classified
-# as PASS.
+# Two self-tests check that the comparison is not vacuous: the coxph_fast()
+# estimates of the PASS fits changed by 1e-8 times max(1, |estimate|) must
+# not be PASS, and those of the E2 fits changed by 1e-5 times
+# max(1, |estimate|) must not be E2.
 
 library(survival)
 if (!"FastSurvival" %in% loadedNamespaces()) library(FastSurvival)
@@ -42,10 +32,14 @@ stopifnot("ties" %in% names(formals(FastSurvival::coxph_fast)))
 
 res_dir <- file.path("inst", "validation", "results")
 dir.create(res_dir, showWarnings = FALSE, recursive = TRUE)
+explained <- utils::read.csv(file.path("inst", "validation", "explained.csv"),
+                             stringsAsFactors = FALSE)
+explained <- explained[explained$script == "validate_coxph.R", ]
+stopifnot(identical(explained$id, c("E1", "E2", "E3", "E4")))
 
 tol_pass  <- 1e-10
 tol_e2    <- 1e-6
-tol_score <- 1e-8
+tol_score <- 1e-12
 
 # Reference fit by survival::coxph(); warnings are kept as text. With
 # iter.max = 0 the fit stays at init, and its score test is at init.
@@ -90,7 +84,7 @@ classify <- function(d) {
   e1 <- is.na(conv) & (d$warning_cox != "" | !is.finite(d$coef_cox) |
                          (!is.na(d$se_cox) & d$se_cox > 1e3))
   e2 <- !pass & !is.na(conv) & conv & ok_ref & score_ok &
-    abs(d$coef_fast - d$coef_cox) <= tol_e2 & !same_iter
+    abs(d$coef_fast - d$coef_cox) <= tol_e2
   e3 <- !pass & !is.na(conv) & conv & score_ok &
     grepl("Ran out of iterations", d$warning_cox)
   e4 <- !pass & !is.na(conv) & conv & score_ok &
@@ -258,6 +252,14 @@ perturbed$coef_fast <- perturbed$coef_fast +
   1e-8 * pmax(1, abs(perturbed$coef_fast))
 self_v <- classify(perturbed)$verdict
 self_ok <- sum(pass) > 0L && !any(self_v == "PASS")
+is_e2 <- all_fits$reason == "E2"
+perturbed_e2 <- all_fits[is_e2, ]
+perturbed_e2$coef_fast <- perturbed_e2$coef_fast +
+  1e-5 * pmax(1, abs(perturbed_e2$coef_fast))
+self_r2 <- classify(perturbed_e2)$reason
+self_ok2 <- !any(self_r2 == "E2")
+explained_rows <- all_fits$verdict == "EXPLAINED" &
+  all_fits$reason %in% c("E2", "E3", "E4")
 
 groups <- unique(all_fits$group)
 summary_tab <- do.call(rbind, lapply(groups, function(g) {
@@ -304,24 +306,34 @@ md <- c(
          fmt(max(rel_diff(all_fits$se_fast[pass], all_fits$se_cox[pass]))),
          " (tolerance ", fmt(tol_pass), ")."),
   "",
-  paste0("EXPLAINED: E1 (infinite estimate) ", reasons[["E1"]],
-         ", E2 (halved steps) ", reasons[["E2"]],
-         ", E3 (coxph() did not converge) ", reasons[["E3"]],
-         ", E4 (false warning of an infinite coefficient by coxph()) ",
-         reasons[["E4"]],
-         ". The reasons are defined at the top of the script; every fit ",
-         "that is not PASS is listed in `validate_coxph_nonpass.csv`."),
+  paste0("EXPLAINED: E1 ", reasons[["E1"]], ", E2 ", reasons[["E2"]],
+         ", E3 ", reasons[["E3"]], ", E4 ", reasons[["E4"]],
+         ". Every fit that is not PASS is listed in ",
+         "`validate_coxph_nonpass.csv`. The largest score test of coxph() ",
+         "at the coxph_fast() estimate among the E2 to E4 fits is ",
+         if (any(explained_rows)) {
+           fmt(max(all_fits$score_at_fast[explained_rows]))
+         } else "not applicable",
+         " (threshold ", fmt(tol_score), "). The reasons registered in ",
+         "`inst/validation/explained.csv`:"),
+  "",
+  sprintf("- %s. Condition: %s Reason: %s", explained$id,
+          explained$condition, explained$reason),
   "",
   paste0("Self-test: after changing the ", sum(pass), " PASS estimates by ",
          "1e-8 times max(1, |estimate|), ", sum(self_v == "PASS"),
          " are PASS and ",
          sum(self_v == "FAIL"), " are FAIL (",
          if (self_ok) "the comparison detects the change" else
-           "THE COMPARISON DOES NOT DETECT THE CHANGE", ").")
+           "THE COMPARISON DOES NOT DETECT THE CHANGE", "). After changing ",
+         "the ", sum(is_e2), " E2 estimates by 1e-5 times max(1, |estimate|), ",
+         sum(self_r2 == "E2"), " are E2 (",
+         if (self_ok2) "E2 does not accept the change" else
+           "E2 ACCEPTS THE CHANGE", ").")
 )
 writeLines(md, file.path(res_dir, "validate_coxph_summary.md"))
 message(paste(md, collapse = "\n"))
-if (any(all_fits$verdict == "FAIL") || !self_ok) {
+if (any(all_fits$verdict == "FAIL") || !self_ok || !self_ok2) {
   warning("validate_coxph: FAIL in ", sum(all_fits$verdict == "FAIL"),
-          " fits or the self-test failed; see ", res_dir)
+          " fits or a self-test failed; see ", res_dir)
 }

@@ -27,7 +27,7 @@ code is collected in the `tools/benchmark_speed.R` script of the package's
 GitHub repository.
 
 The reported figures are median times of 1,000 microbenchmark replicates,
-measured on 2026-09-29 with R 4.6.0 on Windows 11 (x86_64) for the data set of
+measured on 2026-11-07 with R 4.6.1 on Windows 11 (x86_64) for the data set of
 500 subjects below, all of whom have an event. The FastSurvival functions are
 timed on presorted input, so the single sort of the data is excluded from
 their times, whereas the reference functions sort internally; in a simulation
@@ -269,17 +269,17 @@ nphsim was not installed when the table was produced.
 
 | Function | Replaces | Approximate speed gain |
 |----------|----------|------------------------|
-| `survfit_fast()` | `survfit()` + `summary()` at one time point | ~40x |
+| `survfit_fast()` | `survfit()` + `summary()` at one time point | ~35x |
 | `survdiff_fast()` | `survdiff()` | ~25x |
-| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~35x |
-| `rmst_fast()` | `survRM2::rmst2()` | ~35x |
-| `survdiff_fast(weight = "fh")` | `nph::logrank.test()` | ~300x |
-| `wmst_fast()` | `survWMST::wmst()` | ~900x |
+| `coxph_fast()` | `coxph()` (point estimate + Wald CI) | ~25x |
+| `rmst_fast()` | `survRM2::rmst2()` | ~30x |
+| `survdiff_fast(weight = "fh")` | `nph::logrank.test()` | ~250x |
+| `wmst_fast()` | `survWMST::wmst()` | ~800x |
 | `milestone_fast()` | `survfit()` + `summary()` at a milestone | ~20x |
 | `medsurv_fast()` | `nph::nphparams()` | ~35x |
 | `maxcombo_fast()` | `nph::logrank.maxtest()` | ~350x |
 | `rmw_fast()` | `nphRCT::wlrt()` (two components) | ~75x |
-| `ahsw_fast()` | `survAH::ah2()` | ~450x |
+| `ahsw_fast()` | `survAH::ah2()` | ~400x |
 | `ahr_fast()` | `AHR::ahrKM()` | ~200x |
 
 # Why it is faster
