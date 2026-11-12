@@ -92,10 +92,23 @@ n G1(t) G2(t) / (n1 G1(t) + n2 G2(t)), where G1 and G2 are the
 Kaplan-Meier estimates of the censoring survival functions of the two
 groups. This weight gives less weight to regions with heavy censoring
 and stabilizes the variance in the tail. The choice `weight = "sqrtPF"`
-uses its square root, and `weight = "constant"` uses a weight of 1, in
-which case the numerator reduces to the difference in restricted mean
-survival time over the observed range. With `weight = "PF"` the result
-reproduces `nphsim::wkm.Stat` for data without tied times.
+uses its square root (also studied by Pepe and Fleming, 1989), and
+`weight = "constant"` uses a weight of 1, in which case the numerator
+reduces to the difference in restricted mean survival time over the
+observed range.
+
+The standard error is the square root of the pooled variance estimator
+of Pepe and Fleming (1989, p. 501) divided by `sqrt(n1 n2 / n)`. The
+estimator is minus the sum, over the event times t, of A(t)^2 dS(t) /
+(S(t) S(t-) w(t-)), where S is the pooled Kaplan-Meier estimate, dS(t)
+its jump at t, A(t) the integral from t to the largest observed time of
+the selected weight times S, and w the Pepe-Fleming weight, whatever
+weight is selected. Without censoring the Pepe-Fleming weight is 1, the
+weighted difference is the difference in mean survival times, and the
+variance estimate is the variance of the pooled sample, so the test is
+the two-sample z test (Pepe and Fleming, 1989, p. 501). Versions of
+FastSurvival before 2.0.0 divided by S(t-)^2 in place of S(t) S(t-),
+which gave a smaller variance.
 
 Because the integral extends to the largest observed time of the pooled
 data, the curve of a group whose follow-up ends earlier with a censored
@@ -140,9 +153,9 @@ wkm_fast(time, event, group = g, control = 0)
 #>   weight = PF,  alternative = two.sided
 #> 
 #>                                             Est. lower 95% upper 95%     z
-#> weighted difference (treatment - control) 2.8030    0.4869    5.1192 2.372
+#> weighted difference (treatment - control) 2.8030    0.4706    5.1354 2.355
 #>                                           Pr(>|z|)  
-#> weighted difference (treatment - control)   0.0177 *
+#> weighted difference (treatment - control)   0.0185 *
 #> ---
 #> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -155,9 +168,9 @@ wkm_fast(Surv(time, event) ~ g, data = d)
 #>   weight = PF,  alternative = two.sided
 #> 
 #>                                             Est. lower 95% upper 95%     z
-#> weighted difference (treatment - control) 2.8030    0.4869    5.1192 2.372
+#> weighted difference (treatment - control) 2.8030    0.4706    5.1354 2.355
 #>                                           Pr(>|z|)  
-#> weighted difference (treatment - control)   0.0177 *
+#> weighted difference (treatment - control)   0.0185 *
 #> ---
 #> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 ```

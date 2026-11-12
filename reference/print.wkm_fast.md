@@ -57,9 +57,9 @@ print(wkm_fast(time, event, group = g, control = 0))
 #>   weight = PF,  alternative = two.sided
 #> 
 #>                                             Est. lower 95% upper 95%     z
-#> weighted difference (treatment - control) 2.5230    0.4581    4.5878 2.395
+#> weighted difference (treatment - control) 2.5230    0.4448    4.6011 2.379
 #>                                           Pr(>|z|)  
-#> weighted difference (treatment - control)   0.0166 *
+#> weighted difference (treatment - control)   0.0173 *
 #> ---
 #> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 ```

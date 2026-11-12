@@ -297,9 +297,10 @@ remains sensitive when the hazards cross. The default Pepe-Fleming
 combined weight, built from the censoring distributions of the two
 groups, gives less weight to regions with heavy censoring; square-root
 and constant weights are also available. The single C++ scan evaluates
-the per-group Kaplan-Meier curves, the censoring weights, and the
-variance over the pooled event grid, and the result reproduces the
-weighted Kaplan-Meier statistic of the `nphsim` package.
+the per-group Kaplan-Meier curves, the censoring weights, and the pooled
+variance estimator of Pepe and Fleming (1989) over the pooled event
+grid. Without censoring the test reduces to the two-sample z test, as
+Pepe and Fleming (1989) note.
 
 **ahsw_fast** computes the average hazard with survival weight of Uno
 and Horiguchi for two groups. The average hazard on the window up to a

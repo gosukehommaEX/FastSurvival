@@ -18,13 +18,14 @@ the log-rank test, the Cox hazard ratio, milestone survival, and the
 median survival comparison; survRM2 for the restricted mean survival
 time; survAH for the average hazard with survival weight; nph for the
 weighted log-rank test and the max-combo test; and nphRCT for the robust
-modestly-weighted test. The window mean survival time and the weighted
-Kaplan-Meier statistic, which have no direct package counterpart on
-CRAN, are checked against a Kaplan-Meier integral computed from
-[`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html) and against
-the restricted mean survival time identity, respectively. The same
-comparisons form the basis of the automated test suite shipped with the
-package.
+modestly-weighted test. The window mean survival time, which has no
+package counterpart on CRAN, is checked against a Kaplan-Meier integral
+computed from
+[`survfit()`](https://rdrr.io/pkg/survival/man/survfit.html). The
+weighted Kaplan-Meier test is checked against the restricted mean
+survival time identity and against its reduction to the two-sample z
+test without censoring (Pepe and Fleming, 1989). The same comparisons
+form the basis of the automated test suite shipped with the package.
 
 ``` r
 
@@ -283,13 +284,38 @@ c(wkm.constant = unclass(fast_wk)["wdiff"], rmst = unclass(ref_rm)["diff"])
 #>           256.7207           256.7207
 ```
 
-With the default Pepe-Fleming weight,
-[`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md)
-reproduces the weighted Kaplan-Meier statistic of the `nphsim` package.
-Because `nphsim` is distributed only on GitHub, that comparison is kept
-in `tools/compare_wkm_nphsim.R` (which also bundles a survival-only
-reproduction of the statistic) and in the test suite, rather than in
-this vignette.
+The variance is the pooled estimator of Pepe and Fleming (1989, p. 501).
+Without censoring the Pepe-Fleming weight is 1, the weighted difference
+is the difference in mean survival times, and this variance estimate is
+the variance of the pooled sample, so the test is the two-sample z test.
+We check this on the recurrence times of the patients with a recurrence,
+treated as uncensored data.
+
+``` r
+
+rec   <- gbsg$status == 1
+x_rec <- gbsg$rfstime[rec]
+g_rec <- gbsg$hormon[rec]
+fast_unc <- wkm_fast(x_rec, rep(1L, length(x_rec)), g_rec,
+                     control = 0, side = 2)
+
+# Two-sample z test with the variance of the pooled sample (divisor n)
+v_rec  <- mean((x_rec - mean(x_rec))^2)
+se_rec <- sqrt(v_rec * (1 / sum(g_rec == 1) + 1 / sum(g_rec == 0)))
+z_rec  <- (mean(x_rec[g_rec == 1]) - mean(x_rec[g_rec == 0])) / se_rec
+
+c(wkm.z = unname(fast_unc["z"]), z.test = z_rec)
+#>   wkm.z  z.test 
+#> 1.80783 1.80783
+```
+
+The `Overall.test()` function of the `ComparisonSurv` package also
+reports a weighted Kaplan-Meier test. Its values differ from those of
+[`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md),
+because it evaluates the censoring weight on each interval at the
+preceding observed time and ends the integral at the last time at which
+the Kaplan-Meier estimates of survival and censoring of both groups are
+positive.
 
 ## Milestone survival
 
@@ -648,10 +674,11 @@ values on the `gbsg` data. The point estimates and test statistics agree
 to numerical precision for the Kaplan-Meier, log-rank, weighted
 log-rank, RMST, milestone, median, and average-hazard quantities; the
 window mean survival time matches a Kaplan-Meier integral and the
-weighted Kaplan-Meier statistic matches the RMST identity; the average
-hazard ratio matches a survival-based reference; and the Cox hazard
-ratio and its standard error, with or without strata and with either
-handling of tied event times, agree with
+weighted Kaplan-Meier statistic matches the RMST identity and the
+two-sample z test without censoring; the average hazard ratio matches a
+survival-based reference; and the Cox hazard ratio and its standard
+error, with or without strata and with either handling of tied event
+times, agree with
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) to rounding
 error. In the simulation layer, the analysis cutoffs agree with simtrial
 and the switched survival times follow their analytic distribution. This
