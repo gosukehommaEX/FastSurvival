@@ -176,7 +176,8 @@ The order is checked, and an error is given when it does not hold.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The RMST is the area under the Kaplan-Meier curve from 0 to <code>tau</code>:</p>
 <p>RMST(tau) = integral over [0, tau] of S(u) du.</p>
-<p>The variance follows the Greenwood-type estimator</p>
+<p>The variance follows the Greenwood-type estimator (Tang, 2021,
+Section 2.2.1, without the small-sample correction factor proposed there)</p>
 <p>Var[RMST] = sum_{t_i &lt;= tau} A_i^2 d_i / (n_i (n_i - d_i)),</p>
 <p>where A_i = integral over [t_i, tau] of S(u) du is the area to the right of
 event time t_i. This matches the restricted mean reported by
@@ -187,8 +188,9 @@ control RMST as r1 and r0 with variances v1 and v0, the difference contrast
 is diff = r1 - r0 with Var[diff] = v1 + v0, using the independence of the
 two groups. The ratio contrast is formed on the log scale by the delta
 method, Var[log(r1 / r0)] = v1 / r1^2 + v0 / r0^2, with the confidence
-interval exponentiated back to the ratio scale. These match the unadjusted
-contrasts reported by <code>survRM2</code>.</p>
+interval exponentiated back to the ratio scale (Tang, 2021, Sections 2.2.1
+and 3.1). These match the unadjusted contrasts reported by
+<code>survRM2</code>.</p>
 <p>When <code>presorted = TRUE</code>, the input vectors are assumed to be sorted in
 ascending order of <code>time</code>; splitting into groups preserves the
 ascending order within each group, so no re-sorting is performed. When
@@ -202,6 +204,9 @@ simulation loops where the data are generated in sorted order,
 alternative to the hazard ratio for the design and analysis of randomized
 trials with a time-to-event outcome. <em>BMC Medical Research
 Methodology</em>, <em>13</em>, 152.</p>
+<p>Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
+estimators from one and two sample survival data. <em>Statistics in
+Medicine</em>, <em>40</em>(23), 4961-4976.</p>
 <p>Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
 ratio in quantifying the between-group difference in survival analysis.
 <em>Journal of Clinical Oncology</em>, <em>32</em>(22), 2380-2385.</p>

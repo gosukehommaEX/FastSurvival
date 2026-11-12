@@ -78,8 +78,10 @@ plot(
 
 - bw:
 
-  Kernel bandwidth for the smoothed hazard ratio. Defaults to a value
-  derived from the spread of the event times.
+  Kernel bandwidth for the smoothed hazard ratio. Defaults to 0.15 times
+  the range of the event times of both groups, a default for display:
+  the bandwidth sets the smoothness of the drawn curve, and
+  Ramlau-Hansen (1983) also chose it by inspecting the estimate.
 
 - n_grid:
 
@@ -192,8 +194,8 @@ The input `x`, invisibly.
 ## Details
 
 The smoothed hazard ratio is obtained by kernel smoothing the
-Nelson-Aalen increments of each group. For group `j` the kernel hazard
-estimate is the sum over event times of
+Nelson-Aalen increments of each group (Ramlau-Hansen, 1983). For group
+`j` the kernel hazard estimate is the sum over event times of
 `(1 / bw) K((t - t_i) / bw) (d_i / Y_i)`, with an Epanechnikov kernel
 `K`, and the hazard ratio is the treatment estimate divided by the
 control estimate. The bandwidth `bw` controls the width of the averaging
@@ -218,6 +220,11 @@ the tick marks of the time axis or at `risk_times`; the bottom margin
 (and, for long group labels, the left margin) is enlarged to hold it.
 The curves themselves are available as a data frame from
 [`as.data.frame.kmcurve_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/as.data.frame.kmcurve_fast.md).
+
+## References
+
+Ramlau-Hansen, H. (1983). Smoothing counting process intensities by
+means of kernel functions. *The Annals of Statistics*, *11*(2), 453-466.
 
 ## See also
 

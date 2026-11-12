@@ -146,11 +146,13 @@ The joint normal probability is evaluated by dimension. With a single
 weight the univariate normal is used. With two or three weights and a
 one-sided test, where the integration region is an orthant (all upper
 limits infinite), the deterministic
-[`TVPACK`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm is
-used. For the two-sided test, whose region is a bounded rectangle, and
-for four or more weights, the randomized quasi-Monte-Carlo
-[`GenzBretz`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm
-is used. It uses R's random-number generator, so call
+[`TVPACK`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html) algorithm of
+Genz (2004) is used. For the two-sided test, whose region is a bounded
+rectangle, and for four or more weights, the randomized
+quasi-Monte-Carlo
+[`GenzBretz`](https://rdrr.io/pkg/mvtnorm/man/algorithms.html)
+algorithm, based on the transformation of Genz (1992), is used. It uses
+R's random-number generator, so call
 [`set.seed()`](https://rdrr.io/r/base/Random.html) beforehand for
 reproducible p-values, and it stops when its error estimate falls below
 `abseps` or after `maxpts` function evaluations, whichever comes first.
@@ -177,6 +179,14 @@ useful inside simulation loops where the data are generated in sorted
 order.
 
 ## References
+
+Genz, A. (1992). Numerical computation of multivariate normal
+probabilities. *Journal of Computational and Graphical Statistics*,
+*1*(2), 141-149.
+
+Genz, A. (2004). Numerical computation of rectangular bivariate and
+trivariate normal and t probabilities. *Statistics and Computing*,
+*14*(3), 251-260.
 
 Karrison, T. G. (2016). Versatile tests for comparing survival curves
 based on weighted log-rank statistics. *The Stata Journal*, *16*(3),

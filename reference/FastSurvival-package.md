@@ -163,7 +163,7 @@ Visualization:
 
 ## References
 
-Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th
 ed.). Chapman and Hall/CRC.
 
 ## See also

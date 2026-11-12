@@ -108,7 +108,9 @@ The variance of the WMST estimate uses the counting process (Greenwood)
 form in which each event time at or before `tau2` contributes the
 squared remaining window area. Event times at or before `tau1`
 contribute the full window area, since the hazard before `tau1` scales
-the survival curve throughout the window.
+the survival curve throughout the window. This is the variance of
+Paukner and Chappell (2021, eqs. 5-7), written as a sum over the event
+times rather than over the pairs of intervals of the window.
 
 The difference is computed as treatment minus control, so a positive
 difference indicates a longer mean survival time within the window under

@@ -18,7 +18,6 @@ medsurv_fast(
   side = 2,
   conf.level = 0.95,
   conf.type = "log",
-  method = c("km", "nph"),
   bw = NULL,
   presorted = FALSE,
   data = NULL
@@ -63,18 +62,11 @@ medsurv_fast(
   Confidence interval type for each group median, either `"plain"` or
   `"log"`. The interval for the difference is always on the plain scale.
 
-- method:
-
-  Variance method, either `"km"` (Greenwood increment with a kernel
-  hazard) or `"nph"` (local constant hazard with a `sum 1 / (Y - k)^2`
-  increment, matching
-  [`nph::nphparams`](https://rdrr.io/pkg/nph/man/nphparams.html)).
-
 - bw:
 
-  Optional kernel bandwidth for the hazard at the median, used only when
-  `method = "km"`. Either a single value applied to both groups or one
-  value per group. If omitted, a Silverman type default is used.
+  Optional kernel bandwidth for the hazard at the median. Either a
+  single value applied to both groups or one value per group. If
+  omitted, the default described in Details is computed for each group.
 
 - presorted:
 
@@ -111,35 +103,42 @@ Kaplan-Meier estimate drops to 0.5 or below. When the estimate equals
 (the next event time, or the last observed time when no later event
 exists, closes the interval). This is the convention used by `survfit`,
 including its tolerance of `sqrt(.Machine$double.eps)` when comparing
-the estimate with 0.5. The point estimate is the same for both variance
-methods. When the estimate stays at 0.5 up to an infinite observed time
-(for example a subject without a finite event or dropout time in
+the estimate with 0.5. Collett (2023, Section 2.4) defines the median in
+the same way. When the estimate stays at 0.5 up to an infinite observed
+time (for example a subject without a finite event or dropout time in
 simulated data), the midpoint is not defined, and the median of that
 group and the statistics that depend on it are `NA`.
 
-Two variance methods are available through the `method` argument. With
-`method = "km"` the variance of the estimated median follows the
-counting process delta method, var(median) = greenwood_sum / hazard^2,
-where the instantaneous hazard at the median is obtained by a
-Ramlau-Hansen kernel smoother with an Epanechnikov kernel and bandwidth
-`bw`. With `method = "nph"` the variance reproduces the computation used
-by [`nph::nphparams`](https://rdrr.io/pkg/nph/man/nphparams.html) with
-`param_type = "Q"` and `haz_method = "local"`: a local constant hazard
-at the median and a `sum 1 / (Y - k)^2` variance increment. The two
-methods give the same median but generally different standard errors,
-since the variance of a quantile depends on the local hazard estimate.
-When the Kaplan-Meier and Nelson-Aalen medians coincide, which is the
-usual case, `method = "nph"` reproduces the
-[`nph::nphparams`](https://rdrr.io/pkg/nph/man/nphparams.html) standard
-error and p-value to numerical precision.
+The variance of the estimated median follows from the delta method for a
+percentile (Collett, 2023, Section 2.5): var(median) = var(S(median)) /
+f^2, where f is the density of the survival time at the median. The
+variance of S(median) is Greenwood's, S(median)^2 times greenwood_sum,
+and the density is estimated as S(median) times the hazard at the
+median, so that var(median) = greenwood_sum / hazard^2. The hazard at
+the median is the kernel smoother of Ramlau-Hansen (1983) applied to the
+Nelson-Aalen increments, with the Epanechnikov kernel 0.75 (1 - u^2) on
+\[-1, 1\] and bandwidth `bw`. Collett (2023) estimates the density
+instead by a difference quotient of the Kaplan-Meier estimate.
+
+The default bandwidth of a group is (40 sqrt(pi))^(1/5) s m^(-1/5),
+about 2.34 s m^(-1/5), where m is the number of events in the group and
+s the standard deviation of their times. This is the bandwidth that
+minimizes the asymptotic mean integrated squared error of an
+Epanechnikov kernel estimate of a normal density, applied to the event
+times as a simple default. When a group has fewer than two events, or
+their times do not vary, the range of the event times divided by m^(1/3)
+is used, or 1 when that range is 0.
 
 The difference is computed as treatment minus control, so a positive
 difference indicates a longer median survival time under treatment.
 
 ## References
 
-Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and
-Survival Analysis*. New York: John Wiley & Sons.
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th
+ed.). Chapman and Hall/CRC.
+
+Ramlau-Hansen, H. (1983). Smoothing counting process intensities by
+means of kernel functions. *The Annals of Statistics*, *11*(2), 453-466.
 
 ## Examples
 
@@ -155,26 +154,26 @@ medsurv_fast(time, event, group = g, control = 0)
 #> Median survival time (two-group)
 #> 
 #>   control = 0
-#>   method = km,  alternative = two.sided
+#>   conf.type = log,  alternative = two.sided
 #> 
 #>            median std.err lower 95% upper 95%
-#> control    8.1851  0.9708    6.4873   10.3273
-#> treatment 10.7251  1.4586    8.2156   14.0012
+#> control    8.1851  0.9241    6.5603   10.2124
+#> treatment 10.7251  1.7252    7.8249   14.7002
 #> 
-#>                                     Est. lower 95% upper 95%    z Pr(>|z|)
-#> difference (treatment - control)  2.5400   -0.8942    5.9742 1.45    0.147
-medsurv_fast(time, event, group = g, control = 0, method = "nph")
+#>                                    Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  2.540    -1.296     6.376 1.298    0.194
+medsurv_fast(time, event, group = g, control = 0, bw = 10)
 #> Median survival time (two-group)
 #> 
 #>   control = 0
-#>   method = nph,  alternative = two.sided
+#>   conf.type = log,  alternative = two.sided
 #> 
 #>            median std.err lower 95% upper 95%
-#> control    8.1851  0.9813    6.4710   10.3533
-#> treatment 10.7251  1.6181    7.9796   14.4152
+#> control    8.1851  1.0445    6.3738   10.5112
+#> treatment 10.7251  1.7302    7.8177   14.7137
 #> 
 #>                                    Est. lower 95% upper 95%     z Pr(>|z|)
-#> difference (treatment - control)  2.540    -1.169     6.249 1.342     0.18
+#> difference (treatment - control)  2.540    -1.421     6.501 1.257    0.209
 
 # Formula interface
 d <- data.frame(time, event, g)
@@ -182,12 +181,12 @@ medsurv_fast(Surv(time, event) ~ g, data = d)
 #> Median survival time (two-group)
 #> 
 #>   control = 0
-#>   method = km,  alternative = two.sided
+#>   conf.type = log,  alternative = two.sided
 #> 
 #>            median std.err lower 95% upper 95%
-#> control    8.1851  0.9708    6.4873   10.3273
-#> treatment 10.7251  1.4586    8.2156   14.0012
+#> control    8.1851  0.9241    6.5603   10.2124
+#> treatment 10.7251  1.7252    7.8249   14.7002
 #> 
-#>                                     Est. lower 95% upper 95%    z Pr(>|z|)
-#> difference (treatment - control)  2.5400   -0.8942    5.9742 1.45    0.147
+#>                                    Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  2.540    -1.296     6.376 1.298    0.194
 ```

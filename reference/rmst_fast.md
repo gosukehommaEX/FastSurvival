@@ -111,7 +111,8 @@ The RMST is the area under the Kaplan-Meier curve from 0 to `tau`:
 
 RMST(tau) = integral over \[0, tau\] of S(u) du.
 
-The variance follows the Greenwood-type estimator
+The variance follows the Greenwood-type estimator (Tang, 2021, Section
+2.2.1, without the small-sample correction factor proposed there)
 
 Var\[RMST\] = sum\_{t_i \<= tau} A_i^2 d_i / (n_i (n_i - d_i)),
 
@@ -126,8 +127,9 @@ as r1 and r0 with variances v1 and v0, the difference contrast is diff =
 r1 - r0 with Var\[diff\] = v1 + v0, using the independence of the two
 groups. The ratio contrast is formed on the log scale by the delta
 method, Var\[log(r1 / r0)\] = v1 / r1^2 + v0 / r0^2, with the confidence
-interval exponentiated back to the ratio scale. These match the
-unadjusted contrasts reported by `survRM2`.
+interval exponentiated back to the ratio scale (Tang, 2021, Sections
+2.2.1 and 3.1). These match the unadjusted contrasts reported by
+`survRM2`.
 
 When `presorted = TRUE`, the input vectors are assumed to be sorted in
 ascending order of `time`; splitting into groups preserves the ascending
@@ -142,6 +144,10 @@ Royston, P., & Parmar, M. K. B. (2013). Restricted mean survival time:
 an alternative to the hazard ratio for the design and analysis of
 randomized trials with a time-to-event outcome. *BMC Medical Research
 Methodology*, *13*, 152.
+
+Tang, Y. (2021). Some new confidence intervals for Kaplan-Meier based
+estimators from one and two sample survival data. *Statistics in
+Medicine*, *40*(23), 4961-4976.
 
 Uno, H., Claggett, B., Tian, L., et al. (2014). Moving beyond the hazard
 ratio in quantifying the between-group difference in survival analysis.

@@ -187,9 +187,10 @@ expected) yields a small, negative value, and the one-sided p-value is
 <code>side = 2</code> the statistic is <code>max(abs(Z_lr), abs(Z_mw))</code> and the
 two-sided p-value is <code>P(max(abs(Z_lr), abs(Z_mw)) &gt;= observed)</code>. The
 joint normal probability is evaluated with <code><a href="https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html" class="external-link">mvtnorm::pmvnorm</a></code>, using the
-exact <code>TVPACK</code> algorithm for the one-sided region, an orthant (all
-upper limits infinite), and the
-deterministic <code>Miwa</code> algorithm for the two-sided rectangle.</p>
+deterministic <code>TVPACK</code> algorithm of Genz (2004) for the one-sided
+region, an orthant (all upper limits infinite), and the deterministic
+<code>Miwa</code> algorithm of Miwa, Hayter, and Kuriki (2003) for the two-sided
+rectangle.</p>
 <p>When <code>presorted = TRUE</code>, the input vectors are assumed to be sorted by
 ascending <code>time</code> and the internal <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> call is skipped, which
 avoids one O(n log n) pass in simulation loops where the data are already
@@ -197,11 +198,17 @@ generated in time order.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Magirr, D., &amp; Öhrn, F. (2026). Robust modestly weighted log-rank
+    <p>Genz, A. (2004). Numerical computation of rectangular bivariate and
+trivariate normal and t probabilities. <em>Statistics and Computing</em>,
+<em>14</em>(3), 251-260.</p>
+<p>Magirr, D., &amp; Öhrn, F. (2026). Robust modestly weighted log-rank
 tests.
 <em>Pharmaceutical Statistics</em>, <em>25</em>(1), e70066.</p>
 <p>Magirr, D., &amp; Burman, C.-F. (2019). Modestly weighted logrank tests.
 <em>Statistics in Medicine</em>, <em>38</em>(20), 3782-3790.</p>
+<p>Miwa, T., Hayter, A. J., &amp; Kuriki, S. (2003). The evaluation of general
+non-centred orthant probabilities. <em>Journal of the Royal Statistical
+Society, Series B</em>, <em>65</em>(1), 223-234.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

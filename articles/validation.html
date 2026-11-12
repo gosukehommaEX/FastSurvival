@@ -400,7 +400,7 @@ the per-group medians match those reported by <code><a href="https://rdrr.io/pkg
 exactly.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fast_med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/medsurv_fast.html">medsurv_fast</a></span><span class="op">(</span><span class="va">gbsg</span><span class="op">$</span><span class="va">rfstime</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">status</span>, <span class="va">gbsg</span><span class="op">$</span><span class="va">hormon</span>,</span>
-<span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"nph"</span><span class="op">)</span></span>
+<span>                         control <span class="op">=</span> <span class="fl">0</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_med</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">rfstime</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">hormon</span>, data <span class="op">=</span> <span class="va">gbsg</span><span class="op">)</span></span>
 <span><span class="va">med_ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_med</span><span class="op">)</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="st">"median"</span><span class="op">]</span></span>
@@ -420,12 +420,11 @@ different survival curves: <code><a href="https://rdrr.io/pkg/survival/man/survf
 <code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code> use the Kaplan-Meier (product-limit) median,
 whereas <code><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nph::nphparams()</a></code> reads the median off the
 Nelson-Aalen curve, S(t) = exp(-H(t)), which lies above the Kaplan-Meier
-curve and so can cross 0.5 at a later time on tied data. The
-<code>method = "nph"</code> standard error reproduces the
-<code><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nph::nphparams()</a></code> standard error to numerical precision when
-the two medians coincide; that comparison is run on tie-free scenarios
-in <code>tools/compare_medsurv_nphparams.R</code> and in the package
-test suite.</p>
+curve and so can cross 0.5 at a later time on tied data. The standard
+error of <code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code>, from Greenwood’s variance and a
+kernel estimate of the hazard at the median (see
+<code><a href="../reference/medsurv_fast.html">?medsurv_fast</a></code>), is checked against values computed
+independently in the package test suite.</p>
 </div>
 <div class="section level2">
 <h2 id="average-hazard-with-survival-weight">Average hazard with survival weight<a class="anchor" aria-label="anchor" href="#average-hazard-with-survival-weight"></a>

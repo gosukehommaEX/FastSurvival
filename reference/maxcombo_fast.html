@@ -206,9 +206,10 @@ statistic is max_k abs(Z_k) and the p-value is
 the univariate normal is used. With two or three weights and a one-sided
 test, where the integration region is an orthant (all upper limits
 infinite), the deterministic
-<code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">TVPACK</a></code> algorithm is used. For the two-sided test, whose
-region is a bounded rectangle, and for four or more weights, the randomized
-quasi-Monte-Carlo <code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">GenzBretz</a></code> algorithm is used. It
+<code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">TVPACK</a></code> algorithm of Genz (2004) is used. For the
+two-sided test, whose region is a bounded rectangle, and for four or more
+weights, the randomized quasi-Monte-Carlo <code><a href="https://rdrr.io/pkg/mvtnorm/man/algorithms.html" class="external-link">GenzBretz</a></code>
+algorithm, based on the transformation of Genz (1992), is used. It
 uses R's random-number generator, so call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> beforehand for
 reproducible p-values, and it stops when its error estimate falls below
 <code>abseps</code> or after <code>maxpts</code> function evaluations, whichever comes
@@ -232,7 +233,13 @@ useful inside simulation loops where the data are generated in sorted order.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Karrison, T. G. (2016). Versatile tests for comparing survival curves based
+    <p>Genz, A. (1992). Numerical computation of multivariate normal probabilities.
+<em>Journal of Computational and Graphical Statistics</em>, <em>1</em>(2),
+141-149.</p>
+<p>Genz, A. (2004). Numerical computation of rectangular bivariate and
+trivariate normal and t probabilities. <em>Statistics and Computing</em>,
+<em>14</em>(3), 251-260.</p>
+<p>Karrison, T. G. (2016). Versatile tests for comparing survival curves based
 on weighted log-rank statistics. <em>The Stata Journal</em>, <em>16</em>(3),
 678-690.</p>
 <p>Lin, R. S., Lin, J., Roychoudhury, S., et al. (2020). Alternative analysis

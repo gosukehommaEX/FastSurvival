@@ -52,14 +52,12 @@ print(medsurv_fast(time, status, group, control = 0))
 #> Median survival time (two-group)
 #> 
 #>   control = 0
-#>   method = km,  alternative = two.sided
+#>   conf.type = log,  alternative = two.sided
 #> 
 #>            median std.err lower 95% upper 95%
-#> control    7.5861  1.3184    5.3961   10.6648
-#> treatment 11.6279  1.9602    8.3561   16.1806
+#> control    7.5861  1.1289    5.6669   10.1551
+#> treatment 11.6279  2.2206    7.9974   16.9065
 #> 
-#>                                     Est. lower 95% upper 95%     z Pr(>|z|)  
-#> difference (treatment - control)  4.0418   -0.5883    8.6720 1.711   0.0871 .
-#> ---
-#> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#>                                     Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  4.0418   -0.8405    8.9242 1.623    0.105
 ```

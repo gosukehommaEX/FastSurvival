@@ -95,12 +95,12 @@ survdiff_fast(
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
   log-rank test of Magirr and Burman with weight
-  `1 / max(S(t-), S(t_star-))`, the left-continuous form used by nphRCT
-  (Magirr and Burman define the weight with `S(t)` and `S(t_star)`).
-  `"gehan"` is the Gehan-Breslow test with weight equal to the at-risk
-  count, and `"tarone-ware"` uses the square root of the at-risk count.
-  Here `S(t-)` is the left-continuous pooled Kaplan-Meier estimate just
-  prior to each event time.
+  `1 / max(S(t-), S(t_star-))`, the left-continuous form of Magirr and
+  Öhrn (2026, eq. 2) and nphRCT (Magirr and Burman define the weight
+  with `S(t)` and `S(t_star)`). `"gehan"` is the Gehan-Breslow test with
+  weight equal to the at-risk count, and `"tarone-ware"` uses the square
+  root of the at-risk count. Here `S(t-)` is the left-continuous pooled
+  Kaplan-Meier estimate just prior to each event time.
 
 - rho:
 
@@ -177,25 +177,30 @@ so the overall statistic is Z = (sum O_1 - sum E_1) / sqrt(sum V_1). A
 stratum that contains only one group contributes zero to all three
 totals, the same convention used by
 [`survdiff`](https://rdrr.io/pkg/survival/man/survdiff.html). This is
-the standard stratified log-rank test, equivalent to a log-rank test
-that conditions on the stratum at each event time.
+the standard stratified log-rank test (Collett, 2023, Section 2.8),
+equivalent to a log-rank test that conditions on the stratum at each
+event time.
 
 When a non-default `weight` is requested, the weighted log-rank test is
 computed by the C++ core `weighted_logrank_core`. The statistic is Z = U
 / sqrt(V) with U = sum w_j (O_1j - E_1j) and V = sum w_j^2 n_0j n_1j O_j
 (n_j - O_j) / (n_j^2 (n_j - 1)), where the weight w_j is one of the
-schemes named by `weight`. The Fleming-Harrington and modestly-weighted
-schemes use the left-continuous pooled Kaplan-Meier estimate S(t-),
-initialized at 1 and updated after each event time, so the first event
-always has S(t-) = 1. The modestly-weighted scheme determines its weight
-cap in a first pass over the event times before accumulating U and V in
-a second pass; the other schemes accumulate in a single pass. When both
-`weight` and `strata` are supplied, the stratified weighted log-rank
-test is computed by the C++ core `stratified_weighted_logrank_core`:
-each stratum is an independent weighted log-rank test whose weights come
-from that stratum's own pooled Kaplan-Meier estimate, and the
-per-stratum U and V are summed before standardizing once as Z = sum U /
-sqrt(sum V).
+schemes named by `weight`. V is the hypergeometric variance of the
+log-rank test weighted by w_j^2 (Fleming and Harrington, 1991, Section
+7.2). For the Gehan-Breslow weight it is the variance of Breslow (1970)
+and Tarone and Ware (1977), not the permutation variance of Gehan
+(1965). The Fleming-Harrington and modestly-weighted schemes use the
+left-continuous pooled Kaplan-Meier estimate S(t-), initialized at 1 and
+updated after each event time, so the first event always has S(t-) = 1.
+The modestly-weighted scheme determines its weight cap in a first pass
+over the event times before accumulating U and V in a second pass; the
+other schemes accumulate in a single pass. When both `weight` and
+`strata` are supplied, the stratified weighted log-rank test is computed
+by the C++ core `stratified_weighted_logrank_core`: each stratum is an
+independent weighted log-rank test whose weights come from that
+stratum's own pooled Kaplan-Meier estimate, and the per-stratum U and V
+are summed before standardizing once as Z = sum U / sqrt(sum V), as
+Collett (2023, Section 2.8) describes for the stratified weighted tests.
 
 When `presorted = TRUE`, the input vectors are assumed to be sorted and
 the internal [`order()`](https://rdrr.io/r/base/order.html) call is
@@ -217,6 +222,13 @@ expected event counts for both the control and treatment groups.
 
 ## References
 
+Breslow, N. (1970). A generalized Kruskal-Wallis test for comparing K
+samples subject to unequal patterns of censorship. *Biometrika*,
+*57*(3), 579-594.
+
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th
+ed.). Chapman and Hall/CRC.
+
 Gehan, E. A. (1965). A generalized Wilcoxon test for comparing
 arbitrarily singly-censored samples. *Biometrika*, *52*(1-2), 203-224.
 
@@ -232,6 +244,9 @@ Survival Analysis*. New York: John Wiley & Sons.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, *38*(20), 3782-3790.
+
+Magirr, D., & Öhrn, F. (2026). Robust modestly weighted log-rank tests.
+*Pharmaceutical Statistics*, *25*(1), e70066.
 
 ## See also
 
@@ -377,8 +392,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min      lq       mean   median       uq      max neval cld
-#>  survdiff_fast  57.287  65.988   80.50087  77.9005   81.167 4999.046  1000  a 
-#>       survdiff 945.576 984.499 1038.24088 994.1715 1012.447 9503.540  1000   b
+#>           expr     min       lq      mean   median       uq      max neval cld
+#>  survdiff_fast  44.591  56.2035  68.99773  73.7465  79.6445  196.411  1000  a 
+#>       survdiff 879.053 934.0400 974.76659 948.9850 964.4350 5742.268  1000   b
 # }
 ```

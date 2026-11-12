@@ -14,7 +14,7 @@ overhead of
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) becomes a
 computational bottleneck. Core computations are implemented in C++ via
 [Rcpp](https://cran.r-project.org/package=Rcpp) for maximum performance.
-Collett (2014) gives the methodological background of the standard
+Collett (2023) gives the methodological background of the standard
 methods.
 
 The full documentation site, including function references and articles,
@@ -32,7 +32,7 @@ is available at <https://gosukehommaEX.github.io/FastSurvival/>.
 | [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md) | Restricted mean survival time for a single group or a two-group comparison (difference and ratio). |
 | [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md) | Window mean survival time over an interval, generalizing the restricted mean survival time, for a single group or a two-group comparison. |
 | [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md) | Two-group comparison of Kaplan-Meier survival at a milestone timepoint (Wald, log-log, and MOVER methods). |
-| [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md) | Median survival time for a single group or a two-group comparison, with a native and an `nph`-compatible variance method. |
+| [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md) | Median survival time for a single group or a two-group comparison, with a delta-method standard error. |
 | [`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md) | Max-combo test, the maximum over a set of Fleming-Harrington weighted log-rank statistics, for non-proportional hazards. |
 | [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md) | Robust modestly-weighted test (Magirr and Öhrn): the maximum of the standard log-rank and a modestly-weighted log-rank statistic, for non-proportional hazards. |
 | [`wkm_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wkm_fast.md) | Weighted Kaplan-Meier (Pepe-Fleming) test, the weighted integrated difference between two Kaplan-Meier curves, for non-proportional hazards. |
@@ -255,14 +255,11 @@ following Tang (2021).
 
 **medsurv_fast** estimates the Kaplan-Meier median survival time and,
 for two groups, the difference (treatment minus control), in a single
-C++ scan that locates the median on the Kaplan-Meier curve. Because the
-variance of a quantile depends on the local hazard, two variance methods
-are provided: a native method using a kernel-smoothed hazard with a
-Greenwood increment, and an `nph`-compatible method using a local
-constant hazard, which reproduces the standard error and p-value of the
-median comparison in the `nph` package to numerical precision when the
-Kaplan-Meier and Nelson-Aalen medians coincide (the usual case). The
-point estimate is the same under both methods.
+C++ scan that locates the median on the Kaplan-Meier curve. The standard
+error follows the delta method for a percentile (Collett, 2023):
+Greenwood’s variance of the Kaplan-Meier estimate at the median divided
+by the squared density, which is estimated from a kernel-smoothed hazard
+(Ramlau-Hansen, 1983).
 
 **maxcombo_fast** computes the max-combo test, the maximum over a set of
 Fleming-Harrington weighted log-rank statistics, for comparing survival
@@ -615,7 +612,10 @@ Robins, J. M., & Tsiatis, A. A. (1991). Correcting for non-compliance in
 randomized trials using rank preserving structural failure time models.
 *Communications in Statistics - Theory and Methods*, 20(8), 2609-2631.
 
-Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
+Ramlau-Hansen, H. (1983). Smoothing counting process intensities by
+means of kernel functions. *The Annals of Statistics*, 11(2), 453-466.
+
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th
 ed.). Chapman and Hall/CRC.
 
 ## License

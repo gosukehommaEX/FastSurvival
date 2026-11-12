@@ -144,7 +144,8 @@ With the formula interface the default is <code>FALSE</code>.</p></dd>
 product-limit estimator evaluated at the largest observed event time less
 than or equal to <code>t_eval</code>. If <code>t_eval</code> is smaller than the first
 observed event time, <code>S(t) = 1</code> and the standard error is zero.</p>
-<p>The standard error is estimated by Greenwood's formula:</p>
+<p>The standard error is estimated by Greenwood's formula (Collett, 2023,
+Section 2.2.1):</p>
 <p>SE[S(t)] = S(t) * sqrt(sum_{t_i &lt;= t, d_i &gt; 0} d_i / (n_i * (n_i - d_i)))</p>
 <p>where d_i is the number of events and n_i is the number at risk at time t_i.
 The output field <code>std.err</code> is SE[S(t)], the standard error on the
@@ -170,7 +171,11 @@ before the first event), the confidence interval collapses to the estimate.</p>
     <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit</a></code>.</p></li>
 <li><p><code>"log-log"</code>: Interval on the complementary log-log scale,
     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).</p></li>
-</ul><p>The returned object has class <code>"survfit_fast"</code> and is a named numeric
+</ul><p>The plain and complementary log-log intervals are those of Collett (2023,
+Section 2.2.3). The log interval applies the normal approximation to
+log(S(t)), whose estimated variance is the Greenwood sum (Collett, 2023,
+Section 2.2.1).</p>
+<p>The returned object has class <code>"survfit_fast"</code> and is a named numeric
 vector of length 4 with the evaluation time <code>t_eval</code>, the confidence
 level <code>conf.level</code>, and the confidence interval type <code>conf.type</code>
 stored as attributes. A <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method formats the result similarly
@@ -178,7 +183,9 @@ to <code>print(summary(survival::survfit(...)))</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Kaplan, E. L., &amp; Meier, P. (1958). Nonparametric estimation from incomplete
+    <p>Collett, D. (2023). <em>Modelling Survival Data in Medical Research</em>
+(4th ed.). Chapman and Hall/CRC.</p>
+<p>Kaplan, E. L., &amp; Meier, P. (1958). Nonparametric estimation from incomplete
 observations. <em>Journal of the American Statistical Association</em>,
 <em>53</em>(282), 457-481.</p>
     </div>

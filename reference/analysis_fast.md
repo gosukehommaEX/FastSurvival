@@ -52,7 +52,6 @@ analysis_fast(
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
   maxpts = 25000,
-  medsurv.method = c("km", "nph"),
   medsurv.bw = NULL,
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
@@ -225,19 +224,13 @@ analysis_fast(
   Defaults to 25000. Larger values reduce the integration error at a
   higher computing cost.
 
-- medsurv.method:
-
-  A character string naming the variance method for the `"medsurv"`
-  statistic, one of `"km"` (default) or `"nph"`. See
-  [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
-
 - medsurv.bw:
 
   An optional single positive numeric value, the kernel bandwidth for
-  the median hazard used by `medsurv.method = "km"`, applied to both
-  groups. `NULL` (default) uses a Silverman type default computed per
-  group from the cut data, matching
-  [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
+  the hazard at the median, applied to both groups. `NULL` (default)
+  uses the default bandwidth of
+  [`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+  computed per group from the cut data.
 
 - wkm.weight:
 
@@ -507,15 +500,15 @@ The `"medsurv"` statistic compares the non-parametric Kaplan-Meier
 median survival times of the two groups. It reports the per-group
 medians, their difference (treatment minus control) with a plain-scale
 confidence interval, the Wald statistic, and the p-value. The variance
-method is selected with `medsurv.method` (`"km"` or `"nph"`), matching
-[`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md);
-`medsurv.bw` optionally overrides the kernel bandwidth used by
-`medsurv.method = "km"`. The benefit direction is a positive difference
-(a longer median under treatment), so a positive Z favors treatment.
-When the Kaplan-Meier estimate of a group stays at 0.5 up to an infinite
-observed time, as for subjects with `tte = Inf` at a look that is not
-reached, the median of that group is not defined and the `"medsurv"`
-columns that depend on it are `NA`.
+is that of
+[`medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+and `medsurv.bw` optionally overrides its default kernel bandwidth. The
+benefit direction is a positive difference (a longer median under
+treatment), so a positive Z favors treatment. When the Kaplan-Meier
+estimate of a group stays at 0.5 up to an infinite observed time, as for
+subjects with `tte = Inf` at a look that is not reached, the median of
+that group is not defined and the `"medsurv"` columns that depend on it
+are `NA`.
 
 The `"wkm"` statistic is the weighted Kaplan-Meier (Pepe-Fleming) test.
 It reports the weighted integrated survival difference (treatment minus

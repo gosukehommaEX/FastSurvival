@@ -362,7 +362,7 @@ per-group medians match those reported by
 ``` r
 
 fast_med <- medsurv_fast(gbsg$rfstime, gbsg$status, gbsg$hormon,
-                         control = 0, side = 1, method = "nph")
+                         control = 0, side = 1)
 
 fit_med <- survfit(Surv(rfstime, status) ~ hormon, data = gbsg)
 med_ref <- summary(fit_med)$table[, "median"]
@@ -388,11 +388,13 @@ use the Kaplan-Meier (product-limit) median, whereas
 [`nph::nphparams()`](https://rdrr.io/pkg/nph/man/nphparams.html) reads
 the median off the Nelson-Aalen curve, S(t) = exp(-H(t)), which lies
 above the Kaplan-Meier curve and so can cross 0.5 at a later time on
-tied data. The `method = "nph"` standard error reproduces the
-[`nph::nphparams()`](https://rdrr.io/pkg/nph/man/nphparams.html)
-standard error to numerical precision when the two medians coincide;
-that comparison is run on tie-free scenarios in
-`tools/compare_medsurv_nphparams.R` and in the package test suite.
+tied data. The standard error of
+[`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+from Greenwood’s variance and a kernel estimate of the hazard at the
+median (see
+[`?medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)),
+is checked against values computed independently in the package test
+suite.
 
 ## Average hazard with survival weight
 

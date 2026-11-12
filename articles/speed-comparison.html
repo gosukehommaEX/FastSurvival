@@ -234,10 +234,13 @@ block to reproduce it.</p>
 <div class="section level2">
 <h2 id="medsurv_fast-vs-nphnphparams">medsurv_fast vs nph::nphparams<a class="anchor" aria-label="anchor" href="#medsurv_fast-vs-nphnphparams"></a>
 </h2>
+<p>Both compute the difference in median survival time with a standard
+error and a test, but with different variance estimators (see
+<code><a href="../reference/medsurv_fast.html">?medsurv_fast</a></code>), so only the computing time is compared.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
 <span>  fast <span class="op">=</span> <span class="fu"><a href="../reference/medsurv_fast.html">medsurv_fast</a></span><span class="op">(</span><span class="va">t_s</span>, <span class="va">e_s</span>, <span class="va">g_s</span>, control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                      method <span class="op">=</span> <span class="st">"nph"</span>, presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                      presorted <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  ref  <span class="op">=</span> <span class="fu">nph</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/nph/man/nphparams.html" class="external-link">nphparams</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">dataset</span><span class="op">$</span><span class="va">tte</span>, event <span class="op">=</span> <span class="va">dataset</span><span class="op">$</span><span class="va">event</span>,</span>
 <span>                        group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">dataset</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>                        param_type <span class="op">=</span> <span class="st">"Q"</span>, param_par <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>

@@ -352,7 +352,9 @@ keep the per-group total exact), placed uniformly within the interval.</p>
 supplied and piecewise-exponential when a vector is supplied together with
 the corresponding <code>e.time</code> or <code>d.time</code> breakpoints, whose last
 element must be <code>Inf</code>. Group-specific parameters are supplied as a
-two-element list (control first, treatment second).</p>
+two-element list (control first, treatment second). The times are generated
+by applying the inverse of the cumulative hazard to a unit exponential
+variable (Bender, Augustin, and Blettner, 2005).</p>
 <p>When <code>prevalence</code> is supplied the trial has subgroups. A numeric vector
 defines a single factor; a list of numeric vectors defines several
 independent factors; a multi-dimensional array defines the joint
@@ -435,7 +437,10 @@ across runs.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Fleischer, F., Gaschler-Markefski, B., &amp; Bluhmki, E. (2009). A statistical
+    <p>Bender, R., Augustin, T., &amp; Blettner, M. (2005). Generating survival times
+to simulate Cox proportional hazards models. <em>Statistics in Medicine</em>,
+<em>24</em>(11), 1713-1723.</p>
+<p>Fleischer, F., Gaschler-Markefski, B., &amp; Bluhmki, E. (2009). A statistical
 model for the dependence between progression-free survival and overall
 survival. <em>Statistics in Medicine</em>, <em>28</em>(21), 2669-2686.</p>
     </div>

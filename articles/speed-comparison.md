@@ -168,11 +168,16 @@ microbenchmark(
 
 ## medsurv_fast vs nph::nphparams
 
+Both compute the difference in median survival time with a standard
+error and a test, but with different variance estimators (see
+[`?medsurv_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)),
+so only the computing time is compared.
+
 ``` r
 
 microbenchmark(
   fast = medsurv_fast(t_s, e_s, g_s, control = 1, side = 1,
-                      method = "nph", presorted = TRUE),
+                      presorted = TRUE),
   ref  = nph::nphparams(time = dataset$tte, event = dataset$event,
                         group = as.integer(dataset$group == 2),
                         param_type = "Q", param_par = 0.5),

@@ -164,15 +164,24 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 <code>S1</code> and <code>S2</code> for the two survival functions, the reference-group
 share is <code>theta1 = -integral(S2 dS1) / (1 - S1(tau) S2(tau))</code> over
 <code>[0, tau]</code>, the comparison-group share is <code>theta2 = 1 - theta1</code>,
-and the average hazard ratio is <code>ahr = theta2 / theta1</code>. Under
+and the average hazard ratio is <code>ahr = theta2 / theta1</code>. This is the
+share of Kalbfleisch and Prentice (1981, Section 2.3) with the weight
+function <code>S1 S2</code> (their alpha = 1), truncated at <code>tau</code>. Under
 proportional hazards with hazard ratio <code>psi</code>, <code>ahr</code> estimates
 <code>psi</code>. A value above 1 indicates higher hazard (worse survival) in the
-comparison group. The variance of <code>theta1</code> is the direct
-Greenwood-based estimator. The primary test is on the theta (group-share)
+comparison group. The variance of <code>theta1</code> is the delta-method
+variance of Kalbfleisch and Prentice (1981, Section 2.3), with the variance
+of each log Kaplan-Meier curve estimated by Greenwood's formula as in their
+Section 2.4. The terms that pair a curve over <code>[0, tau]</code> with its value
+at <code>tau</code> carry the factor <code>S1(tau) S2(tau)</code> that follows from
+the linearization in their eq. (11). The primary test is on the theta
+(group-share)
 scale, as in Kalbfleisch and Prentice (1981) and Dormuth et al. (2024,
 eq. 5): the comparison-group share is compared with its null value (0.5 when
 <code>null.ahr = 1</code>). An equivalent test and a confidence interval on the
-<code>log(ahr)</code> scale are also reported.</p>
+<code>log(ahr)</code> scale are also reported; they use the delta method for
+<code>log(theta2 / theta1)</code>, as Kalbfleisch and Prentice (1981, p. 107) do
+for <code>log(theta1 / (1 - theta1))</code>.</p>
 <p>The integral uses the right-continuous Kaplan-Meier estimate <code>S2</code> at
 each jump of <code>S1</code>, exactly as the <code>AHR</code> package does, and
 <code>theta2</code> is obtained as <code>1 - theta1</code> rather than by a separate

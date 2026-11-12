@@ -140,8 +140,10 @@ observed times.</p></dd>
 
 
 <dt id="arg-bw">bw<a class="anchor" aria-label="anchor" href="#arg-bw"></a></dt>
-<dd><p>Kernel bandwidth for the smoothed hazard ratio. Defaults to a value
-derived from the spread of the event times.</p></dd>
+<dd><p>Kernel bandwidth for the smoothed hazard ratio. Defaults to 0.15
+times the range of the event times of both groups, a default for display:
+the bandwidth sets the smoothness of the drawn curve, and Ramlau-Hansen
+(1983) also chose it by inspecting the estimate.</p></dd>
 
 
 <dt id="arg-n-grid">n_grid<a class="anchor" aria-label="anchor" href="#arg-n-grid"></a></dt>
@@ -256,7 +258,8 @@ or <code>"band"</code> as a shaded band.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The smoothed hazard ratio is obtained by kernel smoothing the Nelson-Aalen
-increments of each group. For group <code>j</code> the kernel hazard estimate is
+increments of each group (Ramlau-Hansen, 1983). For group <code>j</code> the
+kernel hazard estimate is
 the sum over event times of <code>(1 / bw) K((t - t_i) / bw) (d_i / Y_i)</code>,
 with an Epanechnikov kernel <code>K</code>, and the hazard ratio is the treatment
 estimate divided by the control estimate. The bandwidth <code>bw</code> controls the
@@ -274,6 +277,12 @@ colors of the curves, at the tick marks of the time axis or at
 <code>risk_times</code>; the bottom margin (and, for long group labels, the left
 margin) is enlarged to hold it. The curves themselves are available as a data
 frame from <code><a href="as.data.frame.kmcurve_fast.html">as.data.frame.kmcurve_fast</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Ramlau-Hansen, H. (1983). Smoothing counting process intensities by means
+of kernel functions. <em>The Annals of Statistics</em>, <em>11</em>(2),
+453-466.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

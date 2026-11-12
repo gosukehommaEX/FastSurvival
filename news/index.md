@@ -76,6 +76,33 @@
   documentation no longer states that the result reproduces
   `nphsim::wkm.Stat()`.
 
+- [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  no longer has the argument `method`, and
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  no longer has the argument `medsurv.method`. The removed
+  `method = "nph"` reproduced the computation of
+  [`nph::nphparams()`](https://rdrr.io/pkg/nph/man/nphparams.html), for
+  which no published description exists. The standard error is always
+  that of the former `method = "km"`: the delta method for a percentile
+  with a kernel estimate of the hazard at the median. The
+  [`print()`](https://rdrr.io/r/base/print.html) method of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  shows `conf.type` in place of the method.
+
+- The default kernel bandwidth of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  and of the `"medsurv"` statistic of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  is now (40 sqrt(pi))^(1/5) s m^(-1/5), about 2.34 s m^(-1/5), where m
+  is the number of events of the group and s the standard deviation of
+  their times. This is the normal-reference bandwidth of the
+  Epanechnikov kernel that the hazard estimate uses; earlier versions
+  used 1.06 s m^(-1/5), the constant for a Gaussian kernel. In our
+  checks the coverage of the 95 percent interval of the median was 0.94
+  to 0.95 with the new default and 0.91 to 0.94 with the earlier one.
+  The standard errors with the default bandwidth change; the medians do
+  not.
+
 ### Documentation
 
 - The treatment-switching vignette refers to TrialSimulator 1.39.0, the
@@ -87,6 +114,47 @@
   weighted Kaplan-Meier test of `ComparisonSurv::Overall.test()` gives
   different values. It no longer states that no CRAN package provides
   this test.
+
+- The documentation names the sources of methods that it did not cite,
+  checked against the original articles: Collett (2023) for the
+  Greenwood variance, the confidence intervals, the stratified tests,
+  and the median
+  ([`survfit_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survfit_fast.md),
+  [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md));
+  Breslow (1970) and Tarone and Ware (1977) for the variance of the
+  Gehan-Breslow test and Magirr and Öhrn (2026) for the left-continuous
+  weight of the modestly weighted test
+  ([`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md));
+  Tang (2021) for the variance of the restricted mean survival time
+  ([`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md));
+  Ramlau-Hansen (1983) for the kernel estimate of the hazard
+  ([`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md),
+  [`plot.kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/plot.kmcurve_fast.md));
+  Genz (1992, 2004) and Miwa, Hayter, and Kuriki (2003) for the
+  multivariate normal probabilities
+  ([`maxcombo_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/maxcombo_fast.md),
+  [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md));
+  Bender, Augustin, and Blettner (2005) for the generation of survival
+  times
+  ([`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md));
+  and Zou and Donner (2008) for the MOVER method
+  ([`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)).
+  The documentation of
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md)
+  gives the sections of Kalbfleisch and Prentice (1981) that its
+  estimator and variance follow, and that of
+  [`wmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/wmst_fast.md)
+  states that its variance is that of Paukner and Chappell (2021).
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  no longer cites Fleming and Harrington (1991).
+
+- The package overview, `DESCRIPTION`, and the README cite the fourth
+  edition of Collett (2023) in place of the third edition (2014).
+
+- The validation and speed-comparison vignettes no longer use the
+  removed `method = "nph"` of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
 
 ### Tests
 
@@ -100,6 +168,16 @@
   reduces to the two-sample z test without censoring and that it gives
   the values computed independently from the formulas of Pepe and
   Fleming (1989).
+
+- New tests check that the default bandwidth and the standard error of
+  [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
+  equal values computed independently, and that the `"rmw"` and `"ahr"`
+  statistics of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  equal the results of
+  [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
+  and
+  [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 
 ## FastSurvival 1.2.0
 

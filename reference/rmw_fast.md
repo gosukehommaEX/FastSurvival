@@ -122,8 +122,9 @@ the statistic is `max(abs(Z_lr), abs(Z_mw))` and the two-sided p-value
 is `P(max(abs(Z_lr), abs(Z_mw)) >= observed)`. The joint normal
 probability is evaluated with
 [`mvtnorm::pmvnorm`](https://rdrr.io/pkg/mvtnorm/man/pmvnorm.html),
-using the exact `TVPACK` algorithm for the one-sided region, an orthant
-(all upper limits infinite), and the deterministic `Miwa` algorithm for
+using the deterministic `TVPACK` algorithm of Genz (2004) for the
+one-sided region, an orthant (all upper limits infinite), and the
+deterministic `Miwa` algorithm of Miwa, Hayter, and Kuriki (2003) for
 the two-sided rectangle.
 
 When `presorted = TRUE`, the input vectors are assumed to be sorted by
@@ -134,11 +135,19 @@ already generated in time order.
 
 ## References
 
+Genz, A. (2004). Numerical computation of rectangular bivariate and
+trivariate normal and t probabilities. *Statistics and Computing*,
+*14*(3), 251-260.
+
 Magirr, D., & Öhrn, F. (2026). Robust modestly weighted log-rank tests.
 *Pharmaceutical Statistics*, *25*(1), e70066.
 
 Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 *Statistics in Medicine*, *38*(20), 3782-3790.
+
+Miwa, T., Hayter, A. J., & Kuriki, S. (2003). The evaluation of general
+non-centred orthant probabilities. *Journal of the Royal Statistical
+Society, Series B*, *65*(1), 223-234.
 
 ## See also
 
