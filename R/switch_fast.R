@@ -23,8 +23,9 @@
 #' survival), \code{e2_surv_time} (time to the terminal event, such as overall
 #' survival), \code{dropout_time}, and \code{intermediate}. The observed
 #' columns (\code{tte}, \code{event}, and \code{calendar_time}, or their
-#' \code{e1_} and \code{e2_} counterparts) are recomputed from the modified
-#' latent times, and the columns \code{switched} and \code{switch_time} (time
+#' \code{e1_} and \code{e2_} counterparts) of the switched subjects are
+#' recomputed from the modified latent times (those of the other subjects are
+#' kept), and the columns \code{switched} and \code{switch_time} (time
 #' from accrual to the switch) record the switches. The columns \code{sim},
 #' \code{group}, \code{accrual_time}, and the subgroup columns are unchanged.
 #'
@@ -44,8 +45,11 @@
 #' \code{prob} when the switch occurs before the terminal event and before
 #' dropout (\code{s < e2_surv_time}, or \code{s < surv_time} for
 #' single-endpoint data, and \code{s < dropout_time}) and the subject has not
-#' already switched (\code{switched == 1}, for example at progression through
-#' the \code{switch.prop} argument of \code{\link{simdata_fast}}). With \code{when = "cutoff"} or \code{"later"}, the switch
+#' already switched (\code{switched == 1}, for example through the
+#' \code{switch.prop}, \code{h1s.*}, or \code{h0s.*} arguments of
+#' \code{\link{simdata_fast}}, whose observed columns, such as a first
+#' endpoint censored at a switch before the intermediate event, are kept).
+#' With \code{when = "cutoff"} or \code{"later"}, the switch
 #' never occurs before the opening time, so every outcome observed by calendar
 #' time \code{cutoff + delay} is left unchanged; subjects accrued after the
 #' opening are also eligible, as in a protocol that opens crossover from that
@@ -402,27 +406,54 @@ switch_fast <- function(data, group, prob = 1,
     e2[idx] <- term_new
     out$e1_surv_time     <- e1
     out$e2_surv_time     <- e2
-    # Ties count as events; a subject with neither a finite event time nor a
-    # finite dropout time is censored, as in simdata_fast().
-    out$e1_tte           <- pmin(e1, drop_t)
-    out$e1_event         <- as.integer(e1 < drop_t |
-                                         (e1 == drop_t & is.finite(e1)))
-    out$e2_tte           <- pmin(e2, drop_t)
-    out$e2_event         <- as.integer(e2 < drop_t |
-                                         (e2 == drop_t & is.finite(e2)))
-    out$e1_calendar_time <- a + out$e1_tte
-    out$e2_calendar_time <- a + out$e2_tte
+    out <- set_observed(out, idx, e1, drop_t, a, "e1_tte", "e1_event",
+                        "e1_calendar_time")
+    out <- set_observed(out, idx, e2, drop_t, a, "e2_tte", "e2_event",
+                        "e2_calendar_time")
   } else {
     st <- as.numeric(out$surv_time)
     st[idx] <- term_new
     out$surv_time <- st
-    out$tte   <- pmin(st, drop_t)
-    out$event <- as.integer(st < drop_t | (st == drop_t & is.finite(st)))
-    if ("calendar_time" %in% names(out)) out$calendar_time <- a + out$tte
+    out <- set_observed(out, idx, st, drop_t, a, "tte", "event",
+                        if ("calendar_time" %in% names(out)) "calendar_time")
   }
   out$switched    <- sw_col
   out$switch_time <- st_col
   out
+}
+
+# ------------------------------------------------------------------ #
+#  Internal helper: observed columns of the switched rows
+# ------------------------------------------------------------------ #
+# Recomputes the observed time, the event indicator, and the calendar time
+# from the latent time 't' for the rows 'rows' only, so that the observed
+# columns of the other rows are kept (for example a first endpoint censored
+# at a switch before the intermediate event by simdata_fast()). A column that
+# 'd' does not have is computed for all rows; 'cal' is NULL when no
+# calendar-time column is written. Ties count as events, and a subject with
+# neither a finite event time nor a finite dropout time is censored, as in
+# simdata_fast().
+set_observed <- function(d, rows, t, drop_t, a, tte, event, cal) {
+  obs_t <- pmin(t, drop_t)
+  obs_e <- as.integer(t < drop_t | (t == drop_t & is.finite(t)))
+  if (tte %in% names(d)) {
+    d[[tte]][rows] <- obs_t[rows]
+  } else {
+    d[[tte]] <- obs_t
+  }
+  if (event %in% names(d)) {
+    d[[event]][rows] <- obs_e[rows]
+  } else {
+    d[[event]] <- obs_e
+  }
+  if (!is.null(cal)) {
+    if (cal %in% names(d)) {
+      d[[cal]][rows] <- a[rows] + obs_t[rows]
+    } else {
+      d[[cal]] <- a + d[[tte]]
+    }
+  }
+  d
 }
 
 # ------------------------------------------------------------------ #

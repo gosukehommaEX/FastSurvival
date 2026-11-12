@@ -107,8 +107,9 @@ a single-endpoint simulation these are \code{surv_time} and
 survival), \code{e2_surv_time} (time to the terminal event, such as overall
 survival), \code{dropout_time}, and \code{intermediate}. The observed
 columns (\code{tte}, \code{event}, and \code{calendar_time}, or their
-\code{e1_} and \code{e2_} counterparts) are recomputed from the modified
-latent times, and the columns \code{switched} and \code{switch_time} (time
+\code{e1_} and \code{e2_} counterparts) of the switched subjects are
+recomputed from the modified latent times (those of the other subjects are
+kept), and the columns \code{switched} and \code{switch_time} (time
 from accrual to the switch) record the switches. The columns \code{sim},
 \code{group}, \code{accrual_time}, and the subgroup columns are unchanged.
 
@@ -128,8 +129,11 @@ A subject of the selected \code{group} switches with probability
 \code{prob} when the switch occurs before the terminal event and before
 dropout (\code{s < e2_surv_time}, or \code{s < surv_time} for
 single-endpoint data, and \code{s < dropout_time}) and the subject has not
-already switched (\code{switched == 1}, for example at progression through
-the \code{switch.prop} argument of \code{\link{simdata_fast}}). With \code{when = "cutoff"} or \code{"later"}, the switch
+already switched (\code{switched == 1}, for example through the
+\code{switch.prop}, \code{h1s.*}, or \code{h0s.*} arguments of
+\code{\link{simdata_fast}}, whose observed columns, such as a first
+endpoint censored at a switch before the intermediate event, are kept).
+With \code{when = "cutoff"} or \code{"later"}, the switch
 never occurs before the opening time, so every outcome observed by calendar
 time \code{cutoff + delay} is left unchanged; subjects accrued after the
 opening are also eligible, as in a protocol that opens crossover from that

@@ -8,7 +8,11 @@
 # and each group's element is shared or a list with one element per subgroup
 # cell; in a one-group simulation a list holds one element per cell. All
 # subjects share one accrual process, and the cells are assigned after accrual
-# (see simdata_core_id_sub()). The seed is already set by the caller.
+# (see simdata_core_id_sub()). The seed is already set by the caller. The
+# switching rules of 2.0.0 (h1s, h0s, h01.switch, h02.switch,
+# switch.aft.factor, and the clocks) are passed to the kernel as elements of
+# the cell specifications; simdata_fast_id() also calls this function, with
+# one cell per group, when they are used without subgroups.
 simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
                                 a.time, a.rate, a.prop,
                                 h01.hazard, h01.time,
@@ -17,7 +21,17 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
                                 switch.prop,
                                 h12.switch.hazard, h12.switch.time,
                                 has_dropout, d.hazard, d.time,
-                                prevalence, fixed.alloc) {
+                                prevalence, fixed.alloc,
+                                h1s.hazard = NULL, h1s.time = NULL,
+                                h0s.hazard = NULL, h0s.time = NULL,
+                                h01.switch.hazard = NULL,
+                                h01.switch.time = NULL,
+                                h02.switch.hazard = NULL,
+                                h02.switch.time = NULL,
+                                switch.aft.factor = NULL,
+                                switch.clock = "reset",
+                                h12.switch.clock = "switch",
+                                e1.censor.switch = FALSE) {
   group_specific_prev <- is_group_specific_prev(prevalence)
   if (group_specific_prev) {
     spec_ctrl <- build_prevalence_spec(prevalence[["control"]])
@@ -41,7 +55,11 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
   spec_args <- list(h01.hazard = h01.hazard, h02.hazard = h02.hazard,
                     h12.hazard = h12.hazard,
                     h12.switch.hazard = h12.switch.hazard,
-                    switch.prop = switch.prop, d.hazard = d.hazard)
+                    switch.prop = switch.prop, d.hazard = d.hazard,
+                    h1s.hazard = h1s.hazard, h0s.hazard = h0s.hazard,
+                    h01.switch.hazard = h01.switch.hazard,
+                    h02.switch.hazard = h02.switch.hazard,
+                    switch.aft.factor = switch.aft.factor)
   any_nested <- any(vapply(spec_args, function(x) {
     is.list(x) && length(x) == 2L && any(vapply(x, is.list, logical(1L)))
   }, logical(1L)))
@@ -104,11 +122,43 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
           sw > 1) {
         stop("Each 'switch.prop' value must be a single probability in [0, 1]")
       }
-      if (sw > 0 && is.null(h12.switch.hazard)) {
+      # Switching rules of 2.0.0
+      aft <- if (is.null(switch.aft.factor)) NULL else
+        cell_spec(switch.aft.factor, g, cc, "switch.aft.factor")
+      if (!is.null(aft) && (!is.numeric(aft) || length(aft) != 1L ||
+                            !is.finite(aft) || aft <= 0)) {
+        stop("Each 'switch.aft.factor' value must be a single positive ",
+             "number")
+      }
+      h1s <- if (is.null(h1s.hazard)) NULL else
+        piecewise_precompute(cell_spec(h1s.hazard, g, cc, "h1s.hazard"),
+                             cell_spec(h1s.time, g, cc, "h1s.time"),
+                             "h1s")
+      h0s <- if (is.null(h0s.hazard)) NULL else
+        piecewise_precompute(cell_spec(h0s.hazard, g, cc, "h0s.hazard"),
+                             cell_spec(h0s.time, g, cc, "h0s.time"),
+                             "h0s")
+      post <- !is.null(h1s) && any(h1s$hazard > 0)
+      pre  <- !is.null(h0s) && any(h0s$hazard > 0)
+      if (pre && !is.null(aft)) {
+        stop("'switch.aft.factor' cannot be combined with switching before ",
+             "the intermediate event ('h0s.*'); give 'h12.switch.hazard' ",
+             "(or 'h12.switch.median') instead")
+      }
+      if (pre && is.null(h12.switch.hazard)) {
+        stop("'h12.switch.hazard' (or 'h12.switch.median') must be supplied ",
+             "when any 'h0s.*' is positive")
+      }
+      if (post && is.null(aft) && is.null(h12.switch.hazard)) {
+        stop("'h12.switch.hazard' (or 'h12.switch.median') or ",
+             "'switch.aft.factor' must be supplied when any 'h1s.*' is ",
+             "positive")
+      }
+      if (sw > 0 && is.null(aft) && is.null(h12.switch.hazard)) {
         stop("'h12.switch.hazard' (or 'h12.switch.median') must be supplied ",
              "when any 'switch.prop' is positive")
       }
-      h12s <- if (sw > 0) {
+      h12s <- if ((sw > 0 || pre || post) && !is.null(h12.switch.hazard)) {
         piecewise_precompute(
           cell_spec(h12.switch.hazard, g, cc, "h12.switch.hazard"),
           cell_spec(h12.switch.time, g, cc, "h12.switch.time"),
@@ -116,6 +166,20 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
       } else {
         empty_spec
       }
+      # Hazards after a switch before the intermediate event (default: those
+      # without the switch), and the switching hazards that are used.
+      h01s <- if (!pre) empty_spec else if (is.null(h01.switch.hazard)) h01 else
+        piecewise_precompute(
+          cell_spec(h01.switch.hazard, g, cc, "h01.switch.hazard"),
+          cell_spec(h01.switch.time, g, cc, "h01.switch.time"),
+          "h01.switch")
+      h02s <- if (!pre) empty_spec else if (is.null(h02.switch.hazard)) h02 else
+        piecewise_precompute(
+          cell_spec(h02.switch.hazard, g, cc, "h02.switch.hazard"),
+          cell_spec(h02.switch.time, g, cc, "h02.switch.time"),
+          "h02.switch")
+      h0s_s <- if (pre) h0s else empty_spec
+      h1s_s <- if (post) h1s else empty_spec
       d <- if (has_dropout) {
         piecewise_precompute(cell_spec(d.hazard, g, cc, "d.hazard"),
                              cell_spec(d.time, g, cc, "d.time"),
@@ -129,7 +193,20 @@ simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
            h12s_haz = h12s$hazard, h12s_fin = h12s$fin_time,
            h12s_cum = h12s$cum_haz,
            d_haz = d$hazard, d_fin = d$fin_time, d_cum = d$cum_haz,
-           sw = as.numeric(sw))
+           sw = as.numeric(sw),
+           h0s_haz = h0s_s$hazard, h0s_fin = h0s_s$fin_time,
+           h0s_cum = h0s_s$cum_haz,
+           h01s_haz = h01s$hazard, h01s_fin = h01s$fin_time,
+           h01s_cum = h01s$cum_haz,
+           h02s_haz = h02s$hazard, h02s_fin = h02s$fin_time,
+           h02s_cum = h02s$cum_haz,
+           h1s_haz = h1s_s$hazard, h1s_fin = h1s_s$fin_time,
+           h1s_cum = h1s_s$cum_haz,
+           aft = if (is.null(aft)) 0 else as.numeric(aft),
+           pre = pre, post = post,
+           forward = identical(switch.clock, "forward"),
+           h12s_same = identical(h12.switch.clock, "same"),
+           censor_e1 = isTRUE(e1.censor.switch))
     })
   }
   spec_c <- build_group(1L)

@@ -191,21 +191,121 @@
 #'   \code{h12} restarts the piecewise profile at the intermediate event.
 #' @param h12.median Median(s) for the post-event terminal event; an alternative
 #'   to \code{h12.hazard}.
-#' @param h12.time Breakpoints for a piecewise \code{h12.hazard}, measured from
-#'   the intermediate-event time (clock-reset).
+#' @param h12.time Breakpoints for a piecewise \code{h12.hazard}, measured on
+#'   the clock of \code{switch.clock} (by default from the intermediate
+#'   event).
 #' @param switch.prop Probability that a subject whose intermediate event is
 #'   observed (on or before dropout) switches treatment at that event, a
 #'   scalar or a two-element list (control, treatment).
 #'   Defaults to zero (no switching); the treatment group is typically left at
 #'   zero.
-#' @param h12.switch.hazard Transition hazard(s) from state 1 to state 2 for
-#'   subjects who switch. Required when any \code{switch.prop} is positive.
+#' @param h12.switch.hazard Transition hazard(s) to the terminal event for
+#'   subjects who switch. Required when a switch is possible
+#'   (\code{switch.prop}, \code{h1s.*}, or \code{h0s.*}), unless
+#'   \code{switch.aft.factor} is given for switches at or after the
+#'   intermediate event.
 #' @param h12.switch.median Median(s) for the post-switch terminal event; an
 #'   alternative to \code{h12.switch.hazard}.
 #' @param h12.switch.time Breakpoints for a piecewise \code{h12.switch.hazard},
-#'   measured from the switch (intermediate-event) time (clock-reset).
-#' @param switch.clock Time origin for the post-event hazards. Currently only
-#'   \code{"reset"} (measured from the intermediate event) is implemented.
+#'   measured on the clock of \code{h12.switch.clock} (by default from the
+#'   switch).
+#' @param switch.clock Clock of the post-event hazards (\code{h12.*},
+#'   \code{h1s.*}, and, with \code{h12.switch.clock = "same"},
+#'   \code{h12.switch.*}): \code{"reset"} (default, the time since the
+#'   intermediate event) or \code{"forward"} (the time since
+#'   randomization, so that their breakpoints are also times since
+#'   randomization). See the section on switching rules.
+#' @param h1s.hazard Hazard(s) of switching after the intermediate event, for
+#'   subjects who did not switch at it, on the clock of
+#'   \code{switch.clock}. Same group, subgroup, and piecewise conventions as
+#'   \code{h12.hazard}. Defaults to no switching after the intermediate
+#'   event.
+#' @param h1s.median Median(s) of the time to a switch after the intermediate
+#'   event; an alternative to \code{h1s.hazard}.
+#' @param h1s.time Breakpoints for a piecewise \code{h1s.hazard} (last element
+#'   \code{Inf}).
+#' @param h12.switch.clock Clock of \code{h12.switch.*} after a switch at or
+#'   after the intermediate event: \code{"switch"} (default, the time since
+#'   the switch) or \code{"same"} (the clock of \code{switch.clock}). The two
+#'   give the same data for a switch at the intermediate event with
+#'   \code{switch.clock = "reset"}.
+#' @param switch.aft.factor Optional acceleration factor of an accelerated
+#'   failure time effect of a switch at or after the intermediate event: the
+#'   remaining time to the terminal event without switching is multiplied by
+#'   it, as with the \code{aft.factor} argument of \code{\link{switch_fast}},
+#'   so that a value above 1 prolongs survival. A single positive value or a
+#'   two-element list (control, treatment). It replaces
+#'   \code{h12.switch.*} and cannot be combined with \code{h0s.*}.
+#' @param h0s.hazard Hazard(s) of switching before the intermediate event,
+#'   measured from randomization. Same conventions as \code{h01.hazard}.
+#'   Defaults to no switching before the intermediate event. A switch before
+#'   the intermediate event requires \code{h12.switch.*}.
+#' @param h0s.median Median(s) of the time to a switch before the
+#'   intermediate event; an alternative to \code{h0s.hazard}.
+#' @param h0s.time Breakpoints for a piecewise \code{h0s.hazard} (last element
+#'   \code{Inf}).
+#' @param h01.switch.hazard Hazard(s) of the intermediate event after a switch
+#'   before it, measured from randomization. Defaults to \code{h01.hazard}.
+#' @param h01.switch.median Median(s); an alternative to
+#'   \code{h01.switch.hazard}.
+#' @param h01.switch.time Breakpoints for a piecewise
+#'   \code{h01.switch.hazard}.
+#' @param h02.switch.hazard Hazard(s) of the terminal event without an
+#'   intermediate event after a switch before the intermediate event,
+#'   measured from randomization. Defaults to \code{h02.hazard}.
+#' @param h02.switch.median Median(s); an alternative to
+#'   \code{h02.switch.hazard}.
+#' @param h02.switch.time Breakpoints for a piecewise
+#'   \code{h02.switch.hazard}.
+#' @param e1.censor.switch Logical; when \code{TRUE}, the first endpoint is
+#'   censored at a switch before the intermediate event (for example
+#'   progression-free survival censored at the start of a new therapy).
+#'   Defaults to \code{FALSE}, under which the first endpoint is followed up
+#'   to the intermediate or terminal event after such a switch.
+#'
+#' @section Switching rules in the illness-death model:
+#' A subject can switch treatment before, at, or after the intermediate
+#' event. A switch before the intermediate event occurs with hazard
+#' \code{h0s.*} (time since randomization) when it comes before the
+#' intermediate event, the terminal event, and dropout. After it, the
+#' intermediate and terminal events follow \code{h01.switch.*} and
+#' \code{h02.switch.*} (time since randomization, given survival to the
+#' switch), and the terminal event after an intermediate event follows
+#' \code{h12.switch.*} on the clock of \code{switch.clock}. At an
+#' intermediate event observed before dropout, a subject switches with
+#' probability \code{switch.prop}. After the intermediate event, a subject
+#' who did not switch at it switches with hazard \code{h1s.*} when the
+#' switch comes before the terminal event (hazard \code{h12.*}) and before
+#' dropout. After a switch at or after the intermediate event, the terminal
+#' event follows \code{h12.switch.*} on the clock of
+#' \code{h12.switch.clock}, given survival to the switch on that clock, or,
+#' with \code{switch.aft.factor}, the remaining time without switching
+#' multiplied by the factor.
+#'
+#' With \code{switch.clock = "reset"} the post-event hazards are functions of
+#' the time since the intermediate event (a semi-Markov model); with
+#' \code{"forward"} they are functions of the time since randomization (a
+#' Markov model when the post-switch hazard is on the same clock). The two
+#' clocks give the same model when the post-event hazards are constant.
+#' Competing events are generated as independent latent times, and a time
+#' after a switch, or after the intermediate event on the forward clock, by
+#' the inverse of the cumulative hazard given survival to that time (Bender,
+#' Augustin, and Blettner, 2005). The rules follow the multistate model of
+#' the DesignComplexSurvival package, and the script
+#' \code{validation/validate_switching.R} of the installed package compares
+#' the simulated data with its analytic values.
+#'
+#' The columns \code{switched} and \code{switch_time} record all three kinds
+#' of switch: \code{switch_time} is before \code{e1_surv_time} for a switch
+#' before the intermediate event, equal to it for a switch at the
+#' intermediate event, and after it for a switch after the intermediate
+#' event. \code{e1_surv_time} is always the time of leaving the event-free
+#' states; with \code{e1.censor.switch = TRUE} only the observed columns of
+#' the first endpoint (\code{e1_tte}, \code{e1_event}, and
+#' \code{e1_calendar_time}) are censored at a switch before the intermediate
+#' event. The random numbers of these rules are drawn after the others and
+#' only in the groups (and subgroup cells) that use them, so the data of a
+#' call without them are unchanged.
 #'
 #' @section Batches and parallel execution:
 #' The output has \code{nsim * sum(n)} rows, so memory rather than time limits
@@ -242,9 +342,11 @@
 #'   describes the latent process (an intermediate event before the terminal
 #'   event, \code{e1_surv_time < e2_surv_time}), also when it would occur
 #'   after dropout; the observed intermediate event is \code{intermediate == 1}
-#'   with \code{e1_event == 1}. A switch (\code{switched == 1}, at
-#'   \code{switch_time}, the intermediate-event time) occurs only after an
-#'   observed intermediate event.
+#'   with \code{e1_event == 1}. With \code{switch.prop} only, a switch
+#'   (\code{switched == 1}, at \code{switch_time}, the intermediate-event
+#'   time) occurs only at an observed intermediate event; with \code{h1s.*}
+#'   or \code{h0s.*}, \code{switch_time} can also be after or before it (see
+#'   the section on switching rules).
 #'
 #' @examples
 #' # Batches from independent random-number streams: the simulations of each
@@ -386,6 +488,27 @@
 #' )
 #' head(dfsw)
 #'
+#' # Switching rules: control subjects also switch after the intermediate
+#' # event with hazard 0.03 and before it with hazard 0.01, and the first
+#' # endpoint is censored at a switch before the intermediate event. The sign
+#' # of switch_time - e1_surv_time gives the kind of switch.
+#' dfr <- simdata_fast(
+#'   nsim              = 20,
+#'   n                 = c(150, 150),
+#'   a.time            = c(0, 12),
+#'   a.rate            = 300 / 12,
+#'   h01.median        = list(8, 12),
+#'   h02.median        = list(24, 30),
+#'   switch.prop       = list(0.4, 0),
+#'   h12.switch.median = list(36, 36),
+#'   h1s.hazard        = list(0.03, 0),
+#'   h0s.hazard        = list(0.01, 0),
+#'   e1.censor.switch  = TRUE,
+#'   seed              = 9
+#' )
+#' table(dfr$group, sign(dfr$switch_time - dfr$e1_surv_time),
+#'       useNA = "ifany")
+#'
 #' # Illness-death model with two subgroups (prevalence 0.4 and 0.6): the
 #' # treatment effect on progression is larger in subgroup 2.
 #' dfsg <- simdata_fast(
@@ -457,7 +580,22 @@ simdata_fast <- function(nsim       = 1000,
                          h12.switch.median = NULL,
                          h12.switch.time   = NULL,
                          switch.clock = "reset",
-                         stream     = NULL) {
+                         stream     = NULL,
+                         h1s.hazard = NULL,
+                         h1s.median = NULL,
+                         h1s.time   = NULL,
+                         h12.switch.clock  = "switch",
+                         switch.aft.factor = NULL,
+                         h0s.hazard = NULL,
+                         h0s.median = NULL,
+                         h0s.time   = NULL,
+                         h01.switch.hazard = NULL,
+                         h01.switch.median = NULL,
+                         h01.switch.time   = NULL,
+                         h02.switch.hazard = NULL,
+                         h02.switch.median = NULL,
+                         h02.switch.time   = NULL,
+                         e1.censor.switch  = FALSE) {
 
   if (missing(n) || !is.numeric(n) || length(n) < 1L || anyNA(n) ||
       any(!is.finite(n)) || any(n < 1) || any(abs(n - round(n)) > 1e-8)) {
@@ -506,7 +644,31 @@ simdata_fast <- function(nsim       = 1000,
       switch.clock = switch.clock,
       d.hazard = d.hazard, d.median = d.median, d.time = d.time,
       prevalence = prevalence, fixed.alloc = fixed.alloc,
-      alloc_given = !missing(alloc)))
+      alloc_given = !missing(alloc),
+      h1s.hazard = h1s.hazard, h1s.median = h1s.median, h1s.time = h1s.time,
+      h12.switch.clock = h12.switch.clock,
+      switch.aft.factor = switch.aft.factor,
+      h0s.hazard = h0s.hazard, h0s.median = h0s.median, h0s.time = h0s.time,
+      h01.switch.hazard = h01.switch.hazard,
+      h01.switch.median = h01.switch.median,
+      h01.switch.time = h01.switch.time,
+      h02.switch.hazard = h02.switch.hazard,
+      h02.switch.median = h02.switch.median,
+      h02.switch.time = h02.switch.time,
+      e1.censor.switch = e1.censor.switch))
+  }
+
+  # The switching rules belong to the illness-death model.
+  rule_args <- list(h1s.hazard, h1s.median, h1s.time, switch.aft.factor,
+                    h0s.hazard, h0s.median, h0s.time,
+                    h01.switch.hazard, h01.switch.median, h01.switch.time,
+                    h02.switch.hazard, h02.switch.median, h02.switch.time)
+  if (!all(vapply(rule_args, is.null, logical(1L))) ||
+      !identical(h12.switch.clock, "switch") ||
+      !identical(e1.censor.switch, FALSE)) {
+    stop("'h1s.*', 'h0s.*', 'h01.switch.*', 'h02.switch.*', ",
+         "'h12.switch.clock', 'switch.aft.factor', and 'e1.censor.switch' ",
+         "are used only with the illness-death model ('h01.*' / 'h02.*')")
   }
 
   # Multi-arm (K > 2) mode dispatches to a separate assembler that generates each
@@ -1018,10 +1180,32 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
                             switch.clock,
                             d.hazard, d.median, d.time,
                             prevalence, fixed.alloc = FALSE,
-                            alloc_given = FALSE) {
+                            alloc_given = FALSE,
+                            h1s.hazard = NULL, h1s.median = NULL,
+                            h1s.time = NULL,
+                            h12.switch.clock = "switch",
+                            switch.aft.factor = NULL,
+                            h0s.hazard = NULL, h0s.median = NULL,
+                            h0s.time = NULL,
+                            h01.switch.hazard = NULL,
+                            h01.switch.median = NULL,
+                            h01.switch.time = NULL,
+                            h02.switch.hazard = NULL,
+                            h02.switch.median = NULL,
+                            h02.switch.time = NULL,
+                            e1.censor.switch = FALSE) {
 
-  if (!identical(switch.clock, "reset")) {
-    stop("Only switch.clock = \"reset\" is currently implemented.")
+  if (!(identical(switch.clock, "reset") ||
+        identical(switch.clock, "forward"))) {
+    stop("'switch.clock' must be \"reset\" or \"forward\"")
+  }
+  if (!(identical(h12.switch.clock, "switch") ||
+        identical(h12.switch.clock, "same"))) {
+    stop("'h12.switch.clock' must be \"switch\" or \"same\"")
+  }
+  if (!is.logical(e1.censor.switch) || length(e1.censor.switch) != 1L ||
+      is.na(e1.censor.switch)) {
+    stop("'e1.censor.switch' must be TRUE or FALSE")
   }
 
   # Resolve transition hazards (exactly one of hazard or median per quantity).
@@ -1055,15 +1239,63 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
     h12.switch.hazard <- convert_median_to_hazard(h12.switch.median)
   }
 
+  # Hazards of the switching rules (at most one of hazard and median each)
+  one_of <- function(hz, md, nm) {
+    if (!is.null(hz) && !is.null(md)) {
+      stop("Specify exactly one of '", nm, ".hazard' and '", nm, ".median'")
+    }
+    if (!is.null(md)) convert_median_to_hazard(md) else hz
+  }
+  h1s.hazard <- one_of(h1s.hazard, h1s.median, "h1s")
+  h0s.hazard <- one_of(h0s.hazard, h0s.median, "h0s")
+  h01.switch.hazard <- one_of(h01.switch.hazard, h01.switch.median,
+                              "h01.switch")
+  h02.switch.hazard <- one_of(h02.switch.hazard, h02.switch.median,
+                              "h02.switch")
+  if (is.null(h0s.hazard) &&
+      (!is.null(h01.switch.hazard) || !is.null(h02.switch.hazard))) {
+    stop("'h01.switch.*' and 'h02.switch.*' are used only with 'h0s.*' ",
+         "(switching before the intermediate event)")
+  }
+  if (isTRUE(e1.censor.switch) && is.null(h0s.hazard)) {
+    stop("'e1.censor.switch' applies to switching before the intermediate ",
+         "event, which needs 'h0s.*'")
+  }
+  if (!is.null(switch.aft.factor) && !is.null(h12.switch.hazard)) {
+    stop("Specify at most one of 'switch.aft.factor' and ",
+         "'h12.switch.hazard' (or 'h12.switch.median')")
+  }
+  new_rules <- !is.null(h1s.hazard) || !is.null(h0s.hazard) ||
+    !is.null(switch.aft.factor) || identical(switch.clock, "forward") ||
+    identical(h12.switch.clock, "same") || isTRUE(e1.censor.switch)
+
   has_dropout <- !is.null(d.hazard) || !is.null(d.median)
   if (!is.null(d.hazard) && !is.null(d.median)) {
     stop("Specify exactly one of 'd.hazard' and 'd.median'")
   }
   if (!is.null(d.median)) d.hazard <- convert_median_to_hazard(d.median)
 
-  if (!is.null(prevalence)) {
-    return(simdata_fast_id_sub(
-      nsim = nsim, n = n, alloc = alloc, alloc_given = alloc_given,
+  # The switching rules added in 2.0.0 are generated by the subgroup kernel.
+  # Without 'prevalence' each group is passed to it as one cell, which draws
+  # the same random numbers as simdata_core_id(), and the subgroup column is
+  # dropped.
+  sub_prev  <- prevalence
+  sub_n     <- n
+  sub_alloc <- alloc_given
+  if (is.null(prevalence) && new_rules) {
+    two <- (length(n) == 2L) || alloc_given ||
+      is.list(h01.hazard) || is.list(h02.hazard) || is.list(h12.hazard) ||
+      is.list(h12.switch.hazard) || is.list(switch.prop) ||
+      is.list(d.hazard) || is.list(h1s.hazard) || is.list(h0s.hazard) ||
+      is.list(h01.switch.hazard) || is.list(h02.switch.hazard) ||
+      is.list(switch.aft.factor)
+    if (length(n) == 1L && two) sub_n <- split_total(n, alloc)
+    sub_prev  <- 1
+    sub_alloc <- FALSE
+  }
+  if (!is.null(sub_prev)) {
+    out <- simdata_fast_id_sub(
+      nsim = nsim, n = sub_n, alloc = alloc, alloc_given = sub_alloc,
       a.time = a.time, a.rate = a.rate, a.prop = a.prop,
       h01.hazard = h01.hazard, h01.time = h01.time,
       h02.hazard = h02.hazard, h02.time = h02.time,
@@ -1072,7 +1304,18 @@ simdata_fast_id <- function(nsim, n, alloc, a.time, a.rate, a.prop,
       h12.switch.hazard = h12.switch.hazard,
       h12.switch.time = h12.switch.time,
       has_dropout = has_dropout, d.hazard = d.hazard, d.time = d.time,
-      prevalence = prevalence, fixed.alloc = fixed.alloc))
+      prevalence = sub_prev, fixed.alloc = fixed.alloc,
+      h1s.hazard = h1s.hazard, h1s.time = h1s.time,
+      h0s.hazard = h0s.hazard, h0s.time = h0s.time,
+      h01.switch.hazard = h01.switch.hazard,
+      h01.switch.time = h01.switch.time,
+      h02.switch.hazard = h02.switch.hazard,
+      h02.switch.time = h02.switch.time,
+      switch.aft.factor = switch.aft.factor, switch.clock = switch.clock,
+      h12.switch.clock = h12.switch.clock,
+      e1.censor.switch = e1.censor.switch)
+    if (is.null(prevalence)) out <- out[names(out) != "subgroup"]
+    return(out)
   }
 
   # A two-group simulation is signalled by a length-two 'n', an explicitly

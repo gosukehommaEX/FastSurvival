@@ -204,11 +204,12 @@ test_that("simdata_fast (illness-death): input validation", {
                  h01.hazard = 0.1, h02.hazard = 0.05, switch.prop = 1.5,
                  h12.switch.hazard = 0.02, prevalence = c(0.5, 0.5)),
     "probability")
-  # only clock-reset is implemented
+  # the clock of the post-event hazards is "reset" or "forward"
   expect_error(
     simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.prop = 1,
-                 h01.hazard = 0.1, h02.hazard = 0.05, switch.clock = "forward"),
-    "reset")
+                 h01.hazard = 0.1, h02.hazard = 0.05,
+                 switch.clock = "calendar"),
+    "forward")
   # the illness-death model and the single-endpoint argument are exclusive
   expect_error(
     simdata_fast(nsim = 5, n = 50, a.time = c(0, 1), a.prop = 1,
@@ -465,4 +466,249 @@ test_that("simdata_fast (illness-death): the list checks name the median argumen
                  h02.median = list(20, 30), prevalence = c(0.5, 0.5),
                  seed = 1),
     "A per-cell list for 'h01.hazard' (or 'h01.median')", fixed = TRUE)
+})
+
+# Switching rules (FastSurvival 2.0.0) ----------------------------------------
+
+# State occupation at time t: A event-free without switch, B event-free after a
+# switch before the intermediate event, C after the intermediate event without
+# switch, D switched after the intermediate event (or after an intermediate
+# event that followed a switch), E after the terminal event.
+switch_states <- function(d, t) {
+  sw_t <- d$switched == 1L & d$switch_time <= t
+  sw_t[is.na(sw_t)] <- FALSE
+  free <- d$e1_surv_time > t
+  dead <- d$e2_surv_time <= t
+  c(A = mean(free & !sw_t), B = mean(free & sw_t),
+    C = mean(!free & !dead & !sw_t), D = mean(!free & !dead & sw_t),
+    E = mean(dead))
+}
+
+test_that("simdata_fast (illness-death): switching rules at zero give the data without them", {
+  base <- list(nsim = 5, n = c(60, 60), a.time = c(0, 6), a.rate = 20,
+               h01.hazard = list(0.10, 0.07), h02.hazard = list(0.03, 0.02),
+               h12.hazard = list(0.08, 0.08), switch.prop = list(0.4, 0),
+               h12.switch.hazard = list(0.04, 0.04), d.hazard = 0.01,
+               seed = 12)
+  b <- do.call(simdata_fast, base)
+  extras <- list(list(h1s.hazard = 0), list(h0s.hazard = list(0, 0)),
+                 list(h12.switch.clock = "same"),
+                 list(h1s.hazard = 0, prevalence = 1))
+  for (extra in extras) {
+    a <- do.call(simdata_fast, c(base, extra))
+    expect_identical(a[names(b)], b)
+  }
+})
+
+test_that("simdata_fast (illness-death): the forward and reset clocks agree for constant hazards", {
+  args <- list(nsim = 10, n = c(100, 100), a.time = c(0, 6), a.prop = 1,
+               h01.hazard = list(0.10, 0.07), h02.hazard = 0.02,
+               h12.hazard = list(0.06, 0.05), switch.prop = list(0.3, 0),
+               h1s.hazard = list(0.04, 0), h12.switch.hazard = 0.03,
+               h0s.hazard = list(0.02, 0), h12.switch.clock = "same",
+               d.hazard = 0.01, seed = 31)
+  r <- do.call(simdata_fast, c(args, list(switch.clock = "reset")))
+  f <- do.call(simdata_fast, c(args, list(switch.clock = "forward")))
+  num <- c("e1_surv_time", "e2_surv_time", "e1_tte", "e2_tte",
+           "e1_calendar_time", "e2_calendar_time", "switch_time")
+  for (v in num) expect_equal(f[[v]], r[[v]], tolerance = 1e-12)
+  expect_identical(f[setdiff(names(f), num)], r[setdiff(names(r), num)])
+})
+
+test_that("simdata_fast (illness-death): the switching rules give the state probabilities of a Markov model", {
+  # Model M1 of Planning/switching_rules/expected_markov.py (matrix
+  # exponential): constant hazards, switching before, at, and after the
+  # intermediate event.
+  d <- simdata_fast(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
+                    h01.hazard = 0.10, h02.hazard = 0.02, h12.hazard = 0.06,
+                    switch.prop = 0.3, h1s.hazard = 0.04,
+                    h12.switch.hazard = 0.03, h0s.hazard = 0.02,
+                    h01.switch.hazard = 0.07, h02.switch.hazard = 0.01,
+                    seed = 32)
+  ex <- rbind(
+    c(0.7557837414557255, 0.032120015836828615, 0.11015727033894866,
+      0.05777694464795878, 0.044162027720538434),
+    c(0.4965853037914095, 0.0579115807480766, 0.19240437286214185,
+      0.13337863028690097, 0.11972011231147106),
+    c(0.24659696394160635, 0.06757733339187169, 0.21224433515221267,
+      0.22441546657182482, 0.24916590094248423),
+    c(0.06081006262522004, 0.0470288184564785, 0.13041913606993796,
+      0.2943994717308373, 0.4673425111175263))
+  tt <- c(2, 5, 10, 20)
+  for (k in seq_along(tt)) {
+    p <- switch_states(d, tt[k])
+    se <- sqrt(ex[k, ] * (1 - ex[k, ]) / nrow(d))
+    expect_true(all(abs(p - ex[k, ]) < 4 * se))
+  }
+})
+
+test_that("simdata_fast (illness-death): the forward clock gives the state probabilities of a piecewise Markov model", {
+  # Model M2 of Planning/switching_rules/expected_markov.py (products of
+  # matrix exponentials over the pieces of the time since randomization).
+  d <- simdata_fast(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
+                    h01.hazard = c(0.12, 0.06), h01.time = c(0, 4, Inf),
+                    h02.hazard = 0.01, h12.hazard = c(0.05, 0.15),
+                    h12.time = c(0, 6, Inf), switch.prop = 0.25,
+                    h1s.hazard = c(0.08, 0.02), h1s.time = c(0, 6, Inf),
+                    h12.switch.hazard = c(0.02, 0.06),
+                    h12.switch.time = c(0, 6, Inf),
+                    h12.switch.clock = "same", switch.clock = "forward",
+                    seed = 33)
+  ex <- rbind(
+    c(0.6770568744981648, 0.18280535611450444, 0.09675564352035064,
+      0.04338212586698019),
+    c(0.554327284734507, 0.212147610614084, 0.15233879688287347,
+      0.08118630776853547),
+    c(0.44932896411722156, 0.18531274630119698, 0.1753119531057533,
+      0.19004633647582805),
+    c(0.2752707830897523, 0.11873498886732542, 0.16200748956332148,
+      0.4439867384796008))
+  tt <- c(3, 5, 8, 15)
+  for (k in seq_along(tt)) {
+    p <- switch_states(d, tt[k])
+    expect_equal(unname(p["B"]), 0)
+    se <- sqrt(ex[k, ] * (1 - ex[k, ]) / nrow(d))
+    expect_true(all(abs(p[c("A", "C", "D", "E")] - ex[k, ]) < 4 * se))
+  }
+})
+
+test_that("simdata_fast (illness-death): h12.switch.clock sets the clock after a switch after the intermediate event", {
+  # Models M3 and M3b of Planning/switching_rules/expected_markov.py: the
+  # post-switch hazard is 0.5 in the first unit of its clock and 0.01 after.
+  args <- list(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
+               h01.hazard = 0.2, h02.hazard = 0.01, h12.hazard = 0.05,
+               h1s.hazard = 0.2, h12.switch.hazard = c(0.5, 0.01),
+               h12.switch.time = c(0, 1, Inf), seed = 34)
+  ex <- c(switch = 0.6065306597126334, same = 0.9424275504816213)
+  for (clk in names(ex)) {
+    d <- do.call(simdata_fast, c(args, list(h12.switch.clock = clk)))
+    late <- d$switched == 1L & d$switch_time > d$e1_surv_time
+    expect_gt(sum(late), 50000)
+    expect_true(all(d$switch_time[late] < d$e2_surv_time[late]))
+    p <- mean(d$e2_surv_time[late] - d$switch_time[late] > 1)
+    se <- sqrt(ex[[clk]] * (1 - ex[[clk]]) / sum(late))
+    expect_lt(abs(p - ex[[clk]]), 4 * se)
+  }
+})
+
+test_that("simdata_fast (illness-death): switch.aft.factor multiplies the remaining time", {
+  # Model M4 of Planning/switching_rules/expected_markov.py: with a constant
+  # h12 of 0.05 and the factor 1.5, the time from a switch at or after the
+  # intermediate event to the terminal event is exponential with rate
+  # 0.05 / 1.5.
+  for (clk in c("reset", "forward")) {
+    d <- simdata_fast(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
+                      h01.hazard = 0.2, h02.hazard = 0.01, h12.hazard = 0.05,
+                      switch.prop = 0.3, h1s.hazard = 0.1,
+                      switch.aft.factor = 1.5, switch.clock = clk,
+                      seed = 35)
+    sw <- d$switched == 1L
+    at <- sw & d$switch_time == d$e1_surv_time
+    late <- sw & d$switch_time > d$e1_surv_time
+    ex <- 0.513417119032592
+    for (k in list(at, late)) {
+      expect_gt(sum(k), 15000)
+      p <- mean(d$e2_surv_time[k] - d$switch_time[k] > 20)
+      expect_lt(abs(p - ex), 4 * sqrt(ex * (1 - ex) / sum(k)))
+    }
+  }
+})
+
+test_that("simdata_fast (illness-death): e1.censor.switch censors the first endpoint at a switch before the intermediate event", {
+  args <- list(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
+               h01.hazard = 0.10, h02.hazard = 0.02, h0s.hazard = 0.02,
+               h12.switch.hazard = 0.03, seed = 36)
+  d <- do.call(simdata_fast, c(args, list(e1.censor.switch = TRUE)))
+  pre <- d$switched == 1L
+  expect_gt(sum(pre), 10000)
+  expect_true(all(d$switch_time[pre] < d$e1_surv_time[pre]))
+  expect_identical(d$e1_tte[pre], d$switch_time[pre])
+  expect_true(all(d$e1_event[pre] == 0L))
+  expect_identical(d$e1_calendar_time[pre],
+                   d$accrual_time[pre] + d$switch_time[pre])
+  expect_true(all(d$e1_event[!pre] == 1L))
+  # Expected proportion of events (h01 + h02) / (h01 + h02 + h0s), from
+  # Planning/switching_rules/expected_markov.py
+  ex <- 0.8571428571428571
+  expect_lt(abs(mean(d$e1_event) - ex), 4 * sqrt(ex * (1 - ex) / nrow(d)))
+  # Without the censoring the first endpoint is followed up to its event, and
+  # the latent times are the same.
+  d0 <- do.call(simdata_fast, args)
+  expect_true(all(d0$e1_event == 1L))
+  expect_identical(d0$e1_surv_time, d$e1_surv_time)
+  expect_identical(d0$e2_surv_time, d$e2_surv_time)
+})
+
+test_that("simdata_fast (illness-death): switches follow the rules with dropout and two groups", {
+  d <- simdata_fast(nsim = 20, n = c(200, 200), a.time = c(0, 6), a.prop = 1,
+                    h01.hazard = list(0.10, 0.07), h02.hazard = 0.02,
+                    h12.hazard = 0.06, switch.prop = list(0.3, 0),
+                    h1s.hazard = list(0.04, 0), h0s.hazard = list(0.02, 0),
+                    h12.switch.hazard = 0.03, d.hazard = 0.02, seed = 37)
+  sw <- d$switched == 1L
+  expect_true(all(d$group[sw] == 1L))
+  expect_true(all(d$switch_time[sw] <= d$dropout_time[sw]))
+  expect_true(all(d$switch_time[sw] < d$e2_surv_time[sw]))
+  late <- sw & d$switch_time > d$e1_surv_time
+  pre <- sw & d$switch_time < d$e1_surv_time
+  expect_gt(sum(late), 0)
+  expect_gt(sum(pre), 0)
+  expect_true(all(d$intermediate[late] == 1L))
+  expect_true(all(d$switch_time[late] < d$dropout_time[late]))
+  expect_true(all(is.na(d$switch_time[!sw])))
+})
+
+test_that("simdata_fast (illness-death): switching rules work with subgroups", {
+  d <- simdata_fast(nsim = 1, n = c(20000, 20000), a.time = c(0, 1),
+                    a.prop = 1, h01.hazard = 0.1, h02.hazard = 0.02,
+                    h1s.hazard = list(list(0.2, 0), 0),
+                    h12.switch.hazard = 0.03, prevalence = c(0.5, 0.5),
+                    seed = 38)
+  late <- d$switched == 1L & d$switch_time > d$e1_surv_time
+  expect_gt(sum(late & d$group == 1L & d$subgroup == 1L), 1000)
+  expect_equal(sum(late & d$subgroup == 2L), 0)
+  expect_equal(sum(late & d$group == 2L), 0)
+  # One cell gives the data without subgroups
+  args <- list(nsim = 3, n = c(60, 60), a.time = c(0, 6), a.rate = 20,
+               h01.hazard = list(0.10, 0.07), h02.hazard = 0.03,
+               h1s.hazard = list(0.05, 0), h12.switch.hazard = 0.03,
+               h0s.hazard = list(0.02, 0), switch.clock = "forward",
+               d.hazard = 0.01, seed = 39)
+  a <- do.call(simdata_fast, c(args, list(prevalence = 1)))
+  b <- do.call(simdata_fast, args)
+  expect_true(all(a$subgroup == 1L))
+  expect_identical(a[names(b)], b)
+})
+
+test_that("simdata_fast (illness-death): the switching rules are checked", {
+  base <- list(nsim = 2, n = c(50, 50), a.time = c(0, 1), a.prop = 1,
+               h01.hazard = list(0.1, 0.08), h02.hazard = 0.05)
+  err <- function(extra, pattern, fixed = FALSE) {
+    expect_error(do.call(simdata_fast, c(base, extra)), pattern,
+                 fixed = fixed)
+  }
+  err(list(h1s.hazard = 0.02), "'switch.aft.factor' must be supplied",
+      fixed = TRUE)
+  err(list(h0s.hazard = 0.02), "when any 'h0s.*' is positive", fixed = TRUE)
+  err(list(h0s.hazard = 0.02, switch.aft.factor = 1.5),
+      "cannot be combined")
+  err(list(h1s.hazard = 0.02, switch.aft.factor = 1.5,
+           h12.switch.hazard = 0.02), "at most one")
+  err(list(h01.switch.hazard = 0.05), "used only with 'h0s.*'", fixed = TRUE)
+  err(list(e1.censor.switch = TRUE), "needs 'h0s.*'", fixed = TRUE)
+  err(list(e1.censor.switch = NA), "TRUE or FALSE")
+  err(list(h12.switch.clock = "event"), "'h12.switch.clock' must be",
+      fixed = TRUE)
+  err(list(h1s.hazard = 0.02, h1s.median = 10, h12.switch.hazard = 0.02),
+      "exactly one of 'h1s.hazard' and 'h1s.median'", fixed = TRUE)
+  err(list(h1s.hazard = 0.02, switch.aft.factor = -1),
+      "single positive number")
+  err(list(h1s.hazard = list(0.02, 0.01, 0), h12.switch.hazard = 0.02),
+      "'h1s.hazard' (or 'h1s.median') must be a single", fixed = TRUE)
+  err(list(h1s.hazard = c(0.02, 0.01), h12.switch.hazard = 0.02),
+      "h1s.time")
+  expect_error(
+    simdata_fast(nsim = 2, n = 50, a.time = c(0, 1), a.prop = 1,
+                 e.hazard = 0.1, h1s.hazard = 0.02),
+    "used only with the illness-death model")
 })

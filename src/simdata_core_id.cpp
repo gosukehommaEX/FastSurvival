@@ -4,6 +4,7 @@
 #include <dqrng.h>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 using namespace Rcpp;
 
 // ------------------------------------------------------------------ //
@@ -32,6 +33,14 @@ using namespace Rcpp;
 // same structure applies to other settings (for example a non-fatal event and
 // all-cause death in a cardiovascular outcome trial). Subgroups are handled
 // by simdata_core_id_sub() at the end of this file.
+//
+// The switching rules added in FastSurvival 2.0.0 (switching after and before
+// the intermediate event, the forward clock of the post-event hazards, the
+// clock of the post-switch hazard, an accelerated failure time effect of a
+// switch, and the censoring of the first endpoint at a switch before the
+// intermediate event) are implemented in id_subject() and used only by
+// simdata_core_id_sub(). Without subgroups, simdata_fast() calls it with one
+// cell per group, which draws the same random numbers as simdata_core_id().
 
 // Per-group dqrng consumption order (drawn contiguously over all simulations):
 //   1. accrual (one dqrunif per subject, within-interval position)
@@ -391,11 +400,37 @@ struct IdCellSpec {
   std::vector<double> h12s_haz, h12s_fin, h12s_cum;
   std::vector<double> d_haz, d_fin, d_cum;
   double sw;
+  // Switching rules added in 2.0.0 (see id_subject()).
+  std::vector<double> h0s_haz, h0s_fin, h0s_cum;     // switch before the event
+  std::vector<double> h01s_haz, h01s_fin, h01s_cum;  // event after that switch
+  std::vector<double> h02s_haz, h02s_fin, h02s_cum;  // death after that switch
+  std::vector<double> h1s_haz, h1s_fin, h1s_cum;     // switch after the event
+  double aft;      // acceleration factor of the time after a switch; 0 if none
+  bool pre;        // h0s is positive in some piece
+  bool post;       // h1s is positive in some piece
+  bool forward;    // post-event hazards in the time since randomization
+  bool h12s_same;  // h12s on the clock of the post-event hazards
+  bool censor_e1;  // first endpoint censored at a switch before the event
 };
 
 static std::vector<double> list_vec(const List& x, const char* name) {
   NumericVector v = x[name];
   return std::vector<double>(v.begin(), v.end());
+}
+
+// Optional elements of a cell specification (the switching rules); a missing
+// element means that the rule is not used.
+static std::vector<double> list_vec_opt(const List& x, const char* name) {
+  if (!x.containsElementNamed(name)) return std::vector<double>();
+  return list_vec(x, name);
+}
+
+static double list_num_opt(const List& x, const char* name) {
+  return x.containsElementNamed(name) ? as<double>(x[name]) : 0.0;
+}
+
+static bool list_flag(const List& x, const char* name) {
+  return x.containsElementNamed(name) && as<bool>(x[name]);
 }
 
 // Unpack the per-cell specifications built by simdata_fast_id_sub() in R.
@@ -420,9 +455,187 @@ static std::vector<IdCellSpec> unpack_cells(const List& spec) {
     out[c].d_fin    = list_vec(x, "d_fin");
     out[c].d_cum    = list_vec(x, "d_cum");
     out[c].sw       = as<double>(x["sw"]);
+    out[c].h0s_haz   = list_vec_opt(x, "h0s_haz");
+    out[c].h0s_fin   = list_vec_opt(x, "h0s_fin");
+    out[c].h0s_cum   = list_vec_opt(x, "h0s_cum");
+    out[c].h01s_haz  = list_vec_opt(x, "h01s_haz");
+    out[c].h01s_fin  = list_vec_opt(x, "h01s_fin");
+    out[c].h01s_cum  = list_vec_opt(x, "h01s_cum");
+    out[c].h02s_haz  = list_vec_opt(x, "h02s_haz");
+    out[c].h02s_fin  = list_vec_opt(x, "h02s_fin");
+    out[c].h02s_cum  = list_vec_opt(x, "h02s_cum");
+    out[c].h1s_haz   = list_vec_opt(x, "h1s_haz");
+    out[c].h1s_fin   = list_vec_opt(x, "h1s_fin");
+    out[c].h1s_cum   = list_vec_opt(x, "h1s_cum");
+    out[c].aft       = list_num_opt(x, "aft");
+    out[c].pre       = list_flag(x, "pre");
+    out[c].post      = list_flag(x, "post");
+    out[c].forward   = list_flag(x, "forward");
+    out[c].h12s_same = list_flag(x, "h12s_same");
+    out[c].censor_e1 = list_flag(x, "censor_e1");
   }
   return out;
 }
+
+// ---- Switching rules of one subject ---------------------------------- //
+// Plain C++ (no R objects apart from R_PosInf and NA_REAL), so that these
+// functions can be compiled and checked on their own.
+
+// Cumulative hazard at x of a piecewise-exponential specification (in the
+// representation used by inv_cum_hazard()).
+static inline double cum_hazard_at(double x,
+                                   const std::vector<double>& hazard,
+                                   const std::vector<double>& fin_time,
+                                   const std::vector<double>& cum_haz) {
+  if (!(x > 0.0)) return 0.0;
+  if (std::isinf(x)) return R_PosInf;
+  const int n_int = (int) hazard.size();
+  if (n_int == 1) return hazard[0] * x;
+  int k = (int) (std::upper_bound(fin_time.begin(), fin_time.end(), x) -
+                 fin_time.begin()) - 1;
+  if (k < 0) k = 0;
+  return cum_haz[k] + hazard[k] * (x - fin_time[k]);
+}
+
+// Event time on a clock, given survival to the clock value 'start', from the
+// unit exponential draw 'e' (the inverse of the cumulative hazard).
+static inline double draw_after(double start, double e,
+                                const std::vector<double>& hazard,
+                                const std::vector<double>& fin_time,
+                                const std::vector<double>& cum_haz) {
+  return inv_cum_hazard(cum_hazard_at(start, hazard, fin_time, cum_haz) + e,
+                        hazard, fin_time, cum_haz);
+}
+
+// Random numbers of one subject: those of FastSurvival 1.2.0 and those of the
+// switching rules (drawn only when the rule is used in the cell).
+struct IdDraws {
+  double e01, e02, u_sw, e_osp, dr;  // dr is the dropout time
+  double e_a, e_b, e_c, e_d;         // switch before the intermediate event
+  double e_e, e_f;                   // switch after the intermediate event
+};
+
+// Latent times of one subject.
+struct IdOut {
+  double e1_t, e2_t, sw_time;
+  int intermediate, switched;
+  bool e1_censored;                  // first endpoint censored at the switch
+};
+
+// Times of one subject of the illness-death model with the switching rules.
+// The post-event clock has the value u0 at the intermediate event t01: 0 on
+// the reset clock and t01 on the forward clock (the time since
+// randomization), and a clock value u is the time since randomization
+// t01 + (u - u0). Competing events are independent latent times.
+static IdOut id_subject(const IdCellSpec& sp, const IdDraws& x) {
+  IdOut o;
+  o.intermediate = 0;
+  o.switched     = 0;
+  o.sw_time      = NA_REAL;
+  o.e1_censored  = false;
+  const double t01 = inv_cum_hazard(x.e01, sp.h01_haz, sp.h01_fin, sp.h01_cum);
+  const double t02 = inv_cum_hazard(x.e02, sp.h02_haz, sp.h02_fin, sp.h02_cum);
+  const double dr  = x.dr;
+
+  // Switch before the intermediate event, when it comes before the
+  // intermediate event, the terminal event, and dropout. The intermediate and
+  // terminal events after it follow h01s and h02s (time since randomization,
+  // given survival to the switch), and the terminal event after a later
+  // intermediate event follows h12s on the post-event clock.
+  if (sp.pre) {
+    const double s0 = inv_cum_hazard(x.e_a, sp.h0s_haz, sp.h0s_fin, sp.h0s_cum);
+    if (s0 < t01 && s0 < t02 && s0 < dr) {
+      o.switched    = 1;
+      o.sw_time     = s0;
+      o.e1_censored = sp.censor_e1;
+      const double p = draw_after(s0, x.e_b, sp.h01s_haz, sp.h01s_fin,
+                                  sp.h01s_cum);
+      const double d = draw_after(s0, x.e_c, sp.h02s_haz, sp.h02s_fin,
+                                  sp.h02s_cum);
+      if (p < d) {
+        o.intermediate = 1;
+        o.e1_t = p;
+        const double u0 = sp.forward ? p : 0.0;
+        const double u  = draw_after(u0, x.e_d, sp.h12s_haz, sp.h12s_fin,
+                                     sp.h12s_cum);
+        o.e2_t = sp.forward ? u : p + u;
+      } else {
+        o.e1_t = d;
+        o.e2_t = d;
+      }
+      return o;
+    }
+  }
+
+  if (t02 <= t01) {
+    // Direct terminal event before any intermediate event.
+    o.e1_t = t02;
+    o.e2_t = t02;
+    return o;
+  }
+
+  // Intermediate event first. A switch at it requires the intermediate event
+  // to be observed, that is, on or before dropout.
+  o.intermediate = 1;
+  o.e1_t = t01;
+  const bool sw_at = (x.u_sw < sp.sw) && (t01 <= dr);
+  const bool aft   = sp.aft > 0.0;
+  if (!sp.forward && !sp.post && !aft) {
+    // Switching at the intermediate event only, on the reset clock: the
+    // computation of simdata_core_id().
+    double osp;
+    if (sw_at) {
+      o.switched = 1;
+      o.sw_time  = t01;
+      osp = inv_cum_hazard(x.e_osp, sp.h12s_haz, sp.h12s_fin, sp.h12s_cum);
+    } else {
+      osp = inv_cum_hazard(x.e_osp, sp.h12_haz, sp.h12_fin, sp.h12_cum);
+    }
+    o.e2_t = t01 + osp;
+    return o;
+  }
+
+  const double u0 = sp.forward ? t01 : 0.0;
+  // Clock value of the terminal event without switching.
+  const double u = sp.forward ?
+    draw_after(u0, x.e_osp, sp.h12_haz, sp.h12_fin, sp.h12_cum) :
+    inv_cum_hazard(x.e_osp, sp.h12_haz, sp.h12_fin, sp.h12_cum);
+  double u_end = u;
+  if (sw_at) {
+    o.switched = 1;
+    o.sw_time  = t01;
+    if (aft) {
+      u_end = u0 + sp.aft * (u - u0);
+    } else if (sp.forward && sp.h12s_same) {
+      u_end = draw_after(u0, x.e_osp, sp.h12s_haz, sp.h12s_fin, sp.h12s_cum);
+    } else {
+      u_end = u0 + inv_cum_hazard(x.e_osp, sp.h12s_haz, sp.h12s_fin,
+                                  sp.h12s_cum);
+    }
+  } else if (sp.post) {
+    // Switch after the intermediate event, when it comes before the terminal
+    // event without switching and before dropout.
+    const double w = sp.forward ?
+      draw_after(u0, x.e_e, sp.h1s_haz, sp.h1s_fin, sp.h1s_cum) :
+      inv_cum_hazard(x.e_e, sp.h1s_haz, sp.h1s_fin, sp.h1s_cum);
+    const double w_time = sp.forward ? w : t01 + w;
+    if (w < u && w_time < dr) {
+      o.switched = 1;
+      o.sw_time  = w_time;
+      if (aft) {
+        u_end = w + sp.aft * (u - w);
+      } else if (sp.h12s_same) {
+        u_end = draw_after(w, x.e_f, sp.h12s_haz, sp.h12s_fin, sp.h12s_cum);
+      } else {
+        u_end = w + inv_cum_hazard(x.e_f, sp.h12s_haz, sp.h12s_fin,
+                                   sp.h12s_cum);
+      }
+    }
+  }
+  o.e2_t = sp.forward ? u_end : t01 + u_end;
+  return o;
+}
+// ---- End of the switching rules -------------------------------------- //
 
 // Output column pointers of the interleaved data frame.
 struct IdSubCols {
@@ -513,51 +726,58 @@ static void simulate_group_id_sub(
         drv[r] = inv_cum_hazard(e_dro[r], sp.d_haz, sp.d_fin, sp.d_cum);
     }
 
+    // Draws of the switching rules added in 2.0.0: after the draws above, and
+    // only when the rule is used in the cell, so that the data without these
+    // rules are unchanged.
+    NumericVector e_a, e_b, e_c, e_d, e_e, e_f;
+    if (sp.pre) {
+      e_a = dqrng::dqrexp(m, 1.0);
+      e_b = dqrng::dqrexp(m, 1.0);
+      e_c = dqrng::dqrexp(m, 1.0);
+      e_d = dqrng::dqrexp(m, 1.0);
+    }
+    if (sp.post) {
+      e_e = dqrng::dqrexp(m, 1.0);
+      e_f = dqrng::dqrexp(m, 1.0);
+    }
+
     for (int r = 0; r < m; ++r) {
       const int i  = idx[r];
       const int rw = row(i);
-      const double t01 = inv_cum_hazard(e_01[r], sp.h01_haz, sp.h01_fin, sp.h01_cum);
-      const double t02 = inv_cum_hazard(e_02[r], sp.h02_haz, sp.h02_fin, sp.h02_cum);
-      const double dr  = drv[r];
-      double e1_t, e2_t;
-      int    intermediate = 0, switched = 0;
-      double sw_time = NA_REAL;
-      if (t02 <= t01) {
-        e1_t = t02;
-        e2_t = t02;
-      } else {
-        // As in simdata_core_id: a switch requires the intermediate event on
-        // or before dropout.
-        intermediate = 1;
-        e1_t = t01;
-        const bool swr = (u_sw[r] < sp.sw) && (t01 <= dr);
-        double osp;
-        if (swr) {
-          switched = 1;
-          sw_time  = t01;
-          osp = inv_cum_hazard(e_osp[r], sp.h12s_haz, sp.h12s_fin, sp.h12s_cum);
-        } else {
-          osp = inv_cum_hazard(e_osp[r], sp.h12_haz, sp.h12_fin, sp.h12_cum);
-        }
-        e2_t = t01 + osp;
-      }
-      const double e1_tt = (e1_t <= dr) ? e1_t : dr;
-      const double e2_tt = (e2_t <= dr) ? e2_t : dr;
+      IdDraws x;
+      x.e01   = e_01[r];
+      x.e02   = e_02[r];
+      x.u_sw  = u_sw[r];
+      x.e_osp = e_osp[r];
+      x.dr    = drv[r];
+      x.e_a   = sp.pre ? e_a[r] : 0.0;
+      x.e_b   = sp.pre ? e_b[r] : 0.0;
+      x.e_c   = sp.pre ? e_c[r] : 0.0;
+      x.e_d   = sp.pre ? e_d[r] : 0.0;
+      x.e_e   = sp.post ? e_e[r] : 0.0;
+      x.e_f   = sp.post ? e_f[r] : 0.0;
+      const IdOut s = id_subject(sp, x);
+      const double dr = x.dr;
+      // A first endpoint censored at a switch before the intermediate event
+      // is observed up to the switch, which is before dropout.
+      const double e1_tt = s.e1_censored ? s.sw_time :
+        ((s.e1_t <= dr) ? s.e1_t : dr);
+      const double e2_tt = (s.e2_t <= dr) ? s.e2_t : dr;
       o.sim[rw]   = i / n + 1;
       o.grp[rw]   = group_id;
       o.acc[rw]   = acc[i];
-      o.e1s[rw]   = e1_t;
-      o.e2s[rw]   = e2_t;
+      o.e1s[rw]   = s.e1_t;
+      o.e2s[rw]   = s.e2_t;
       o.dro[rw]   = dr;
       o.e1t[rw]   = e1_tt;
-      o.e1e[rw]   = event_first(e1_t, dr);
+      o.e1e[rw]   = s.e1_censored ? 0 : event_first(s.e1_t, dr);
       o.e2t[rw]   = e2_tt;
-      o.e2e[rw]   = event_first(e2_t, dr);
+      o.e2e[rw]   = event_first(s.e2_t, dr);
       o.e1c[rw]   = acc[i] + e1_tt;
       o.e2c[rw]   = acc[i] + e2_tt;
-      o.inter[rw] = intermediate;
-      o.sw[rw]    = switched;
-      o.st[rw]    = sw_time;
+      o.inter[rw] = s.intermediate;
+      o.sw[rw]    = s.switched;
+      o.st[rw]    = s.sw_time;
       for (std::size_t f = 0; f < o.sub.size(); ++f)
         o.sub[f][rw] = level_table(c - 1, (int) f);
     }

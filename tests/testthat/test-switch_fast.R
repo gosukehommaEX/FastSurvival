@@ -265,3 +265,23 @@ test_that("switch_fast: cutoff can be a function of the data", {
                            cutoff = function(x) "a", aft.factor = 1.5),
                "must return a numeric")
 })
+
+test_that("switch_fast keeps the observed columns of the subjects it does not switch", {
+  d <- simdata_fast(nsim = 20, n = c(100, 100), a.time = c(0, 6), a.prop = 1,
+                    h01.hazard = list(0.10, 0.07), h02.hazard = 0.02,
+                    h0s.hazard = list(0.03, 0), h12.switch.hazard = 0.03,
+                    e1.censor.switch = TRUE, d.hazard = 0.01, seed = 41)
+  ia <- cutoff_fast(d, event.looks = 80, tte.col = "e2_tte",
+                    event.col = "e2_event")
+  s <- switch_fast(d, group = 1, when = "cutoff", cutoff = ia,
+                   aft.factor = 1.5)
+  new <- s$switched == 1L & d$switched == 0L
+  pre <- d$switched == 1L
+  expect_gt(sum(new), 0)
+  expect_gt(sum(pre), 0)
+  cols <- c("e1_tte", "e1_event", "e1_calendar_time", "e2_tte", "e2_event",
+            "e2_calendar_time")
+  expect_identical(s[!new, cols], d[!new, cols])
+  expect_identical(s$e1_tte[pre], s$switch_time[pre])
+  expect_true(all(s$e1_event[pre] == 0L))
+})
