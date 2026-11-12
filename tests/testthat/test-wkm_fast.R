@@ -1,6 +1,6 @@
-# Reference implementation of the Pepe-Fleming weighted Kaplan-Meier statistic,
-# built from survfit and approxfun. This mirrors the algorithm of
-# nphsim::wkm.Stat and provides an independent validation axis for wkm_core.
+# Reference implementation of the Pepe-Fleming weighted Kaplan-Meier statistic
+# and of its pooled variance estimator (Pepe and Fleming, 1989, p. 501), built
+# from survfit and approxfun as a second implementation for checking wkm_core.
 # event: 1 = event, 0 = censoring; grp: 1 = treatment, 0 = control.
 # The selected weight enters the numerator and the weighted area; the variance
 # always divides by the Pepe-Fleming weight, the censoring factor of the
@@ -55,8 +55,11 @@ wkm_reference <- function(time, event, grp, weight = "PF") {
   a_rem <- a_seq[n] - a_seq
   sp_next <- c(sp[-1], min(fp$surv))
   d_sm <- sp_next - sp
-  keep <- pf > 0 & sp > 0
-  variance <- -sum((a_rem[keep]^2 / (sp[keep]^2 * pf[keep])) * d_sm[keep])
+  # Each jump of the pooled estimate is divided by S(t) S(t-); a jump to zero
+  # leaves no area after it and contributes nothing
+  keep <- pf > 0 & d_sm != 0 & sp_next > 0
+  variance <- -sum((a_rem[keep]^2 / (sp[keep] * sp_next[keep] * pf[keep])) *
+                     d_sm[keep])
 
   num <- sqrt(n1 * n2 / n) * num_raw
   z <- num / sqrt(variance)
@@ -94,6 +97,51 @@ test_that("wkm_fast matches the survfit-based reference (PF weight)", {
   ref <- wkm_reference(time, event, g)
   expect_equal(unname(fast["z"]), ref$z, tolerance = 1e-6)
   expect_equal(unname(fast["p"]), ref$p, tolerance = 1e-6)
+})
+
+test_that("wkm_fast reduces to the two-sample z test without censoring", {
+  # Pepe and Fleming (1989, p. 501): without censoring the Pepe-Fleming weight
+  # is 1, the weighted difference is the difference in means, and the pooled
+  # variance estimate is the variance of the pooled sample (divisor n)
+  set.seed(61)
+  x <- c(rexp(40, 0.10), rexp(50, 0.07))
+  g <- rep(0:1, c(40, 50))
+  res <- wkm_fast(x, rep(1L, 90), g, control = 0, side = 2)
+  v  <- mean((x - mean(x))^2)
+  d  <- mean(x[g == 1]) - mean(x[g == 0])
+  se <- sqrt(v * (1 / 40 + 1 / 50))
+  expect_equal(unname(res["wdiff"]), d, tolerance = 1e-10)
+  expect_equal(unname(res["se"]), se, tolerance = 1e-10)
+  expect_equal(unname(res["z"]), d / se, tolerance = 1e-10)
+  # The same with tied times
+  xr <- ceiling(x)
+  rr <- wkm_fast(xr, rep(1L, 90), g, control = 0, side = 2)
+  vr <- mean((xr - mean(xr))^2)
+  expect_equal(unname(rr["se"]), sqrt(vr * (1 / 40 + 1 / 50)),
+               tolerance = 1e-10)
+})
+
+test_that("wkm_fast matches values computed from Pepe and Fleming (1989)", {
+  # Expected values computed independently from the formulas of Pepe and
+  # Fleming (1989, eq. 3.3 and p. 501) with exact sums over the intervals
+  # (Planning/wkm_comparisonsurv/wkm_pf1989.py). The data have tied times
+  # within and across the groups, a tie of an event and a censored time, and
+  # a control group whose follow-up ends earlier with a censored time.
+  tt <- c(2, 3, 3, 5, 6, 7, 8, 8, 10, 12, 14, 15,
+          1, 2, 4, 4, 6, 9, 11, 11, 13, 16, 18, 20)
+  ee <- c(1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0,
+          1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0)
+  gg <- rep(0:1, each = 12)
+  pf <- wkm_fast(tt, ee, gg, control = 0, side = 2, weight = "PF")
+  expect_equal(unname(pf[c("wdiff", "se", "z")]),
+               c(0.6700854953303487, 1.5668590747286166, 0.42766162326781615),
+               tolerance = 1e-10)
+  sq <- wkm_fast(tt, ee, gg, control = 0, side = 2, weight = "sqrtPF")
+  expect_equal(unname(sq[c("wdiff", "se", "z")]),
+               c(0.8398669988115303, 1.7978187411971103, 0.4671588851344878),
+               tolerance = 1e-10)
+  # The variance of versions before 2.0.0 gave z = 0.4451738122823085
+  expect_gt(abs(unname(pf["z"]) - 0.4451738122823085), 1e-3)
 })
 
 test_that("a treatment benefit gives a positive weighted difference and z", {

@@ -1,8 +1,7 @@
 # Analysis output of six simulated trials at two looks. The expected values
 # were computed independently from the rules in ?simsummary_fast and
 # ?plot.simsummary_fast with exact fractions
-# (Planning/python_checks/simsummary_plot_data.py of the development
-# repository).
+# (Planning/python_checks/simsummary_plot_data.py).
 spd_data <- function() {
   df <- data.frame(
     sim       = rep(1:6, each = 2),

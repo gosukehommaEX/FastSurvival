@@ -23,10 +23,11 @@ void wkm_core_impl(const double*, const int*, const int*, int, int,
 
 // Single-scan core for the weighted Kaplan-Meier (Pepe-Fleming) two-sample test.
 //
-// This reproduces the computation in nphsim::wkm.Stat. The integrand is a step
-// function that is constant between consecutive observation times, so the
-// midpoint Riemann sum over the sorted observation times is the exact value of
-// the step-function integral.
+// The statistic and its pooled variance estimator are those of Pepe and
+// Fleming (1989, eq. 3.3 and p. 501). The integrand is a step function that is
+// constant between consecutive observation times, so the sum over the
+// intervals between the sorted observation times, with the values on each
+// open interval, is the exact value of the integral.
 //
 // For each interval between consecutive sorted observation times the core
 // evaluates, on the open interval, the per-group Kaplan-Meier survival
@@ -37,13 +38,17 @@ void wkm_core_impl(const double*, const int*, const int*, int, int,
 // where Gj is the censoring survival estimate in group j. The weight type
 // argument selects w (0), sqrt(w) (1) or a constant 1 (2).
 //
-// The variance of sqrt(n1 n2 / n) times the weighted difference is
-//   - sum_k A_k^2 / (S_k^2 w_PF,k) (S_{k+1} - S_k),
-// where A_k is the remaining weighted area under the pooled curve S after
-// interval k (computed with the selected weight) and w_PF is always the
-// Pepe-Fleming weight: n G1 G2 / (n1 G1 + n2 G2) is the inverse of
-// (n1 n2 / n) (1 / (n1 G1) + 1 / (n2 G2)), the censoring factor of the
-// variance of the two Kaplan-Meier estimates, whatever weight is selected.
+// The variance of sqrt(n1 n2 / n) times the weighted difference is the
+// pooled estimator of Pepe and Fleming (1989, p. 501),
+//   - sum_k A_k^2 / (S_k S_{k+1} w_PF,k) (S_{k+1} - S_k),
+// where S_k is the pooled Kaplan-Meier estimate on interval k, so that the
+// jump S_{k+1} - S_k at the end of interval k is divided by S(t) S(t-); A_k
+// is the remaining weighted area under S after interval k (computed with the
+// selected weight); and w_PF is always the Pepe-Fleming weight
+// n G1 G2 / (n1 G1 + n2 G2), the inverse of the censoring factor
+// (p1 G1 + p2 G2) / (G1 G2) of that estimator (with the values of G1 and G2
+// on interval k, that is, just before the jump), whatever weight is selected.
+// Versions before 2.0.0 divided by S_k^2.
 //
 // Returns a numeric vector with:
 //   [0] num_raw  = sum_k w_k (S1_k - S2_k) width_k, the weighted integrated
@@ -205,8 +210,10 @@ void wkm_core_impl(const double* time, const int* event, const int* grp, int n,
     double a_rem = total - a_seq[k];
     double sp_next = (k < n - 1) ? sp[k + 1] : sp_final;
     double d_sm = sp_next - sp[k];
-    if (pf[k] > 0.0 && sp[k] > 0.0) {
-      double term = (a_rem * a_rem) / (sp[k] * sp[k] * pf[k]) * d_sm;
+    // Only the jumps of S contribute. No area remains after S reaches zero,
+    // so a jump to zero contributes nothing.
+    if (d_sm != 0.0 && sp_next > 0.0 && pf[k] > 0.0) {
+      double term = (a_rem * a_rem) / (sp[k] * sp_next * pf[k]) * d_sm;
       variance -= term;
     }
   }

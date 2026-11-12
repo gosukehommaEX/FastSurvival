@@ -37,15 +37,35 @@
   standard errors and the Wald limits, as in the single-group mode, and the
   `print()` method shows them.
 
+* The variance of `wkm_fast()` and of the `"wkm"` statistic of
+  `analysis_fast()` is now the pooled estimator of Pepe and Fleming (1989,
+  p. 501), in which each jump of the pooled Kaplan-Meier estimate S at t is
+  divided by S(t) S(t-). Earlier versions divided by S(t-)^2, which gave a
+  variance 1 to 10 percent smaller in our checks and a slightly
+  anticonservative test. Without censoring the test is now the two-sample z
+  test with the variance of the pooled sample, as Pepe and Fleming (1989)
+  note. The standard errors, confidence limits, z statistics, and p-values
+  change; the weighted difference does not. The documentation no longer
+  states that the result reproduces `nphsim::wkm.Stat()`.
+
 ## Documentation
 
 * The treatment-switching vignette refers to TrialSimulator 1.39.0, the
   current version on CRAN.
 
+* The validation vignette checks `wkm_fast()` against the two-sample z test
+  without censoring, and explains why the weighted Kaplan-Meier test of
+  `ComparisonSurv::Overall.test()` gives different values. It no longer
+  states that no CRAN package provides this test.
+
 ## Tests
 
 * The values that `plot.simsummary_fast()` draws are computed by an internal
   function, and new tests check them against values computed independently.
+
+* New tests check that `wkm_fast()` reduces to the two-sample z test without
+  censoring and that it gives the values computed independently from the
+  formulas of Pepe and Fleming (1989).
 
 # FastSurvival 1.2.0
 
