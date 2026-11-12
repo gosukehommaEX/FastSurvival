@@ -92,6 +92,8 @@ coxph_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> coxph_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 - ties:
 
@@ -329,6 +331,11 @@ exp(confint(fit_f))
 #>          2.5 %   97.5 %
 #> coef 0.1743207 1.740371
 
+# The same with the native pipe
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
+#>   term estimate std.error  conf.low conf.high statistic   p.value
+#> 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.3096304
+
 # \donttest{
 # Speed comparison against coxph()
 if (requireNamespace("microbenchmark", quietly = TRUE)) {
@@ -339,8 +346,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr      min        lq     mean    median        uq      max neval cld
-#>  coxph_fast   73.086   83.8765   95.302  100.2275  103.7385  174.997  1000  a 
-#>       coxph 1496.421 1540.3730 1595.776 1557.9955 1577.4320 6727.378  1000   b
+#>        expr      min       lq       mean    median        uq      max neval cld
+#>  coxph_fast   45.427   53.524   65.99088   72.5575   77.4545  123.092  1000  a 
+#>       coxph 1068.573 1097.106 1142.56356 1107.3860 1121.0410 6090.897  1000   b
 # }
 ```

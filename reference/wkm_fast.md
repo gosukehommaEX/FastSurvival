@@ -72,6 +72,8 @@ wkm_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> wkm_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -162,6 +164,18 @@ wkm_fast(time, event, group = g, control = 0)
 # Formula interface
 d <- data.frame(time, event, g)
 wkm_fast(Surv(time, event) ~ g, data = d)
+#> Weighted Kaplan-Meier test (Pepe-Fleming, two-group)
+#> 
+#>   control = 0
+#>   weight = PF,  alternative = two.sided
+#> 
+#>                                             Est. lower 95% upper 95%     z
+#> weighted difference (treatment - control) 2.8030    0.4706    5.1354 2.355
+#>                                           Pr(>|z|)  
+#> weighted difference (treatment - control)   0.0185 *
+#> ---
+#> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+d |> wkm_fast(Surv(time, event) ~ g)
 #> Weighted Kaplan-Meier test (Pepe-Fleming, two-group)
 #> 
 #>   control = 0

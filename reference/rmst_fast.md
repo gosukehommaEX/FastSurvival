@@ -84,6 +84,8 @@ rmst_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> rmst_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -209,6 +211,12 @@ rmst_fast(time, event, group = group, control = 0, tau = 10)
 # Formula interface, and the result as a data frame
 d <- data.frame(time, event, group)
 as.data.frame(rmst_fast(Surv(time, event) ~ group, data = d, tau = 10))
+#>        term  estimate  std.error   conf.low conf.high statistic     p.value
+#> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA
+#> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA
+#> 3      diff 1.0812605 0.34278492 0.40941442 1.7531066  3.154341 0.001608610
+#> 4 log.ratio 0.1484342 0.04737151 0.05558778 0.2412807  3.133407 0.001727894
+d |> rmst_fast(Surv(time, event) ~ group, tau = 10) |> as.data.frame()
 #>        term  estimate  std.error   conf.low conf.high statistic     p.value
 #> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA
 #> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA

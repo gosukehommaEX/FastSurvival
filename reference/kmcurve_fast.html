@@ -112,7 +112,9 @@ group variable.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; kmcurve_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -191,11 +193,13 @@ with no hazard ratio.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      1 treatment 150     58  19.14</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cox PH hazard ratio (treatment vs control): 0.609</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">|&gt;</span> <span class="fu">kmcurve_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="kmcurve_fast-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Single-group object: pass group = NULL (or a single-level group)</span></span></span>
 <span class="r-in"><span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu">kmcurve_fast</span><span class="op">(</span><span class="va">time</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span>, <span class="va">event</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit1</span>, rmst <span class="op">=</span> <span class="cn">TRUE</span>, tau <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="kmcurve_fast-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="kmcurve_fast-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

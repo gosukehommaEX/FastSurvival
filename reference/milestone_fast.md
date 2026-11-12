@@ -91,6 +91,8 @@ milestone_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> milestone_fast(formula, ...)` uses the
+  data frame `d` in the same way.
 
 ## Value
 
@@ -156,6 +158,18 @@ milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 # Formula interface
 d <- data.frame(time, event, group)
 milestone_fast(Surv(time, event) ~ group, data = d, tau = 10)
+#> Milestone survival (two-group)
+#> 
+#>   tau = 10,  control = 0
+#>   method = wald,  alternative = two.sided
+#> 
+#>           survival std.err lower 95% upper 95%
+#> control       0.42  0.0698    0.2832    0.5568
+#> treatment     0.56  0.0702    0.4224    0.6976
+#> 
+#>                                      Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  0.14000  -0.05403   0.33403 1.414    0.157
+d |> milestone_fast(Surv(time, event) ~ group, tau = 10)
 #> Milestone survival (two-group)
 #> 
 #>   tau = 10,  control = 0

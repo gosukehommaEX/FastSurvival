@@ -166,7 +166,9 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; milestone_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -229,6 +231,18 @@ effect measures: a general approach. <em>Statistics in Medicine</em>,
 <span class="r-in"><span><span class="co"># Formula interface</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span>, <span class="va">group</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">milestone_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, data <span class="op">=</span> <span class="va">d</span>, tau <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Milestone survival (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 10,  control = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   method = wald,  alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           survival std.err lower 95% upper 95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.42  0.0698    0.2832    0.5568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment     0.56  0.0702    0.4224    0.6976</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      Est. lower 95% upper 95%     z Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control)  0.14000  -0.05403   0.33403 1.414    0.157</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">|&gt;</span> <span class="fu">milestone_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, tau <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Milestone survival (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   tau = 10,  control = 0</span>

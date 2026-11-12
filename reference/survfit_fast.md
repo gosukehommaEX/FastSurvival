@@ -62,6 +62,8 @@ survfit_fast(
   A data frame in which the variables of a formula given as `t_sorted`
   are evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> survfit_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -208,6 +210,13 @@ summary(fit, times = 10)
 # Formula interface (the data are sorted internally)
 d <- data.frame(time = t_raw, status = e_raw)
 survfit_fast(Surv(time, status) ~ 1, data = d, t_eval = 10)
+#> Kaplan-Meier survival estimate (single time point)
+#> 
+#>        survival std.err lower 95% upper 95%
+#> t = 10   0.4744  0.0543     0.379    0.5938
+#> 
+#>  Confidence interval type: log
+d |> survfit_fast(Surv(time, status) ~ 1, t_eval = 10)
 #> Kaplan-Meier survival estimate (single time point)
 #> 
 #>        survival std.err lower 95% upper 95%

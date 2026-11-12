@@ -19,6 +19,13 @@ arguments (`side`, `tau`, `conf.level`, and so on) are given by name as
 with the vector interface, and the result is the same as that of the
 vector interface with the vectors evaluated from the formula.
 
+With the native pipe of R, the data frame comes first:
+`d |> coxph_fast(Surv(time, status) ~ arm)` is the same as
+`coxph_fast(Surv(time, status) ~ arm, data = d)`. When the first
+argument is a data frame (or a list) and the second is a formula, the
+two are taken as the data and the formula; giving `data` as well is an
+error.
+
 ## Details
 
 The response must be `Surv(time, event)` with right-censored data, where
@@ -102,6 +109,22 @@ coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
 #>       exp(coef) exp(-coef) lower .95 upper .95
 #> group    0.5508     1.8155    0.1743    1.7404
 coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+#> Cox proportional hazards model for two groups
+#> 
+#>   control = 1
+#>   ties = efron
+#>   alternative = two.sided
+#> 
+#> Coefficients:
+#>          coef exp(coef) se(coef)      z Pr(>|z|)
+#> group -0.5964    0.5508   0.5870 -1.016     0.31
+#> 
+#> Hazard ratio and 95% Wald confidence interval:
+#>       exp(coef) exp(-coef) lower .95 upper .95
+#> group    0.5508     1.8155    0.1743    1.7404
+
+# The data frame piped into the formula interface
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx)
 #> Cox proportional hazards model for two groups
 #> 
 #>   control = 1

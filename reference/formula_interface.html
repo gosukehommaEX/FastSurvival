@@ -16,7 +16,13 @@ formula), and the data frame as data or as the second
 argument. The other arguments (side,
 tau, conf.level, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
-interface with the vectors evaluated from the formula."><meta property="og:description" content="The estimation and testing functions and kmcurve_fast take
+interface with the vectors evaluated from the formula.
+With the native pipe of R, the data frame comes first:
+d |&amp;gt; coxph_fast(Surv(time, status) ~ arm) is the same as
+coxph_fast(Surv(time, status) ~ arm, data = d). When the first
+argument is a data frame (or a list) and the second is a formula, the two
+are taken as the data and the formula; giving data as well is an
+error."><meta property="og:description" content="The estimation and testing functions and kmcurve_fast take
 vectors of times, event indicators, and group labels, which suits repeated
 calls inside a simulation loop. For the analysis of a single data set they
 also accept a model formula with a Surv(time, event) response and a
@@ -33,7 +39,13 @@ formula), and the data frame as data or as the second
 argument. The other arguments (side,
 tau, conf.level, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
-interface with the vectors evaluated from the formula."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
+interface with the vectors evaluated from the formula.
+With the native pipe of R, the data frame comes first:
+d |&amp;gt; coxph_fast(Surv(time, status) ~ arm) is the same as
+coxph_fast(Surv(time, status) ~ arm, data = d). When the first
+argument is a data frame (or a list) and the second is a formula, the two
+are taken as the data and the formula; giving data as well is an
+error."><meta property="og:image" content="https://gosukehommaEX.github.io/FastSurvival/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -98,6 +110,12 @@ argument. The other arguments (<code>side</code>,
 <code>tau</code>, <code>conf.level</code>, and so on) are given by name as with the
 vector interface, and the result is the same as that of the vector
 interface with the vectors evaluated from the formula.</p>
+<p>With the native pipe of R, the data frame comes first:
+<code>d |&gt; coxph_fast(Surv(time, status) ~ arm)</code> is the same as
+<code>coxph_fast(Surv(time, status) ~ arm, data = d)</code>. When the first
+argument is a data frame (or a list) and the second is a formula, the two
+are taken as the data and the formula; giving <code>data</code> as well is an
+error.</p>
     </div>
 
 
@@ -167,6 +185,22 @@ remains the choice inside simulation loops.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1743    1.7404</span>
 <span class="r-in"><span><span class="fu"><a href="coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="va">ovarian</span><span class="op">$</span><span class="va">futime</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">fustat</span>, <span class="va">ovarian</span><span class="op">$</span><span class="va">rx</span>, control <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cox proportional hazards model for two groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ties = efron</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          coef exp(coef) se(coef)      z Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group -0.5964    0.5508   0.5870 -1.016     0.31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hazard ratio and 95% Wald confidence interval:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       exp(coef) exp(-coef) lower .95 upper .95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> group    0.5508     1.8155    0.1743    1.7404</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The data frame piped into the formula interface</span></span></span>
+<span class="r-in"><span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu"><a href="coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cox proportional hazards model for two groups</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   control = 1</span>

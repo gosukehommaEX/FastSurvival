@@ -155,7 +155,9 @@ gives the unstratified estimator.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; coxph_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 
 <dt id="arg-ties">ties<a class="anchor" aria-label="anchor" href="#arg-ties"></a></dt>
@@ -370,6 +372,11 @@ Extending the Cox Model</em>. New York: Springer.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          2.5 %   97.5 %</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> coef 0.1743207 1.740371</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same with the native pipe</span></span></span>
+<span class="r-in"><span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu">coxph_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   term estimate std.error  conf.low conf.high statistic   p.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.3096304</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Speed comparison against coxph()</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"microbenchmark"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -380,9 +387,9 @@ Extending the Cox Model</em>. New York: Springer.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min        lq     mean    median        uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   73.086   83.8765   95.302  100.2275  103.7385  174.997  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1496.421 1540.3730 1595.776 1557.9955 1577.4320 6727.378  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        expr      min       lq       mean    median        uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coxph_fast   45.427   53.524   65.99088   72.5575   77.4545  123.092  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       coxph 1068.573 1097.106 1142.56356 1107.3860 1121.0410 6090.897  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

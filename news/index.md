@@ -103,6 +103,31 @@
   The standard errors with the default bandwidth change; the medians do
   not.
 
+### New features
+
+- The estimation and testing functions and
+  [`kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/kmcurve_fast.md)
+  take a data frame piped into their formula interface with the native
+  pipe: `d |> coxph_fast(Surv(time, status) ~ arm)` is the same as
+  `coxph_fast(Surv(time, status) ~ arm, data = d)`. Giving `data` as
+  well is an error.
+
+- `cutoff.looks` of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  and
+  [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  and `cutoff` of
+  [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md)
+  also accept a function of the data, such as
+  `function(x) cutoff_fast(x, event.looks = 150)`, so that a simulation
+  study can be written as one chain from
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  to
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md)
+  with `|>`.
+  [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  applies the function to the data of all arms.
+
 ### Documentation
 
 - The treatment-switching vignette refers to TrialSimulator 1.39.0, the
@@ -156,6 +181,9 @@
   removed `method = "nph"` of
   [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md).
 
+- The README, the introduction vignette, and the examples show the use
+  of the functions with the native pipe.
+
 ### Tests
 
 - The values that
@@ -178,6 +206,9 @@
   [`rmw_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmw_fast.md)
   and
   [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
+
+- New tests check that the calls with the native pipe give the same
+  results as the calls without it.
 
 ## FastSurvival 1.2.0
 

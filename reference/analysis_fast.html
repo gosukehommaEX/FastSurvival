@@ -335,7 +335,11 @@ is treated as a single look. <code>NA</code> or <code>Inf</code> marks a look th
 not reached. The <code>look.value</code> column of the output is taken from the
 <code>"look.value"</code> attribute of the matrix when it is present, and is
 <code>NA</code> otherwise. Mutually exclusive with <code>event.looks</code> and
-<code>time.looks</code>.</p></dd>
+<code>time.looks</code>. <code>cutoff.looks</code> can also be a function of one
+argument, which is applied to <code>data</code> and must return such a matrix
+or vector, for example
+<code>function(x) cutoff_fast(x, event.looks = 150)</code>; the cutoffs are then
+computed inside a chain of calls with the native pipe <code>|&gt;</code>.</p></dd>
 
 
 <dt id="arg-mc-alpha">mc.alpha<a class="anchor" aria-label="anchor" href="#arg-mc-alpha"></a></dt>
@@ -753,6 +757,27 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.5446814      0.6473827     0.3526173 -4.280992 9.303115e-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.5873300      0.6299887     0.3700113 -3.657652 1.272682e-04</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.8184949      0.5499053     0.4500947 -1.364031 8.627888e-02</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Cutoffs from a rule, computed inside a chain with the native pipe: the</span></span></span>
+<span class="r-in"><span><span class="co"># final look at 140 events or at month 36, whichever comes first</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">analysis_fast</span><span class="op">(</span>control <span class="op">=</span> <span class="fl">1</span>, cutoff.looks <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="cutoff_fast.html">cutoff_fast</a></span><span class="op">(</span><span class="va">x</span>, event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fl">140</span><span class="op">)</span>, max.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">36</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         80 11.76464    TRUE        291      80         0        211</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1    2        140 16.08387    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2    1         80 11.40147    TRUE        285      80         0        205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   2    2        140 16.62229    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   3    1         80 11.48259    TRUE        286      80         0        206</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   3    2        140 16.06186    TRUE        300     140         0        160</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   logrank.z logrank.chisq    logrank.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -1.171526      1.372472 2.413876e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -1.555453      2.419433 1.198383e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -2.780165      7.729316 5.433132e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.862092     23.639938 1.161516e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.631606     13.188562 2.816629e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -5.043861     25.440534 4.562306e-07</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

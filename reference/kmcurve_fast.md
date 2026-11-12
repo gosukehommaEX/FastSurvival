@@ -52,6 +52,8 @@ kmcurve_fast(time, event, group = NULL, control = NULL, data = NULL)
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> kmcurve_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -135,6 +137,8 @@ kmcurve_fast(Surv(time, event) ~ group, data = d)
 #>      1 treatment 150     58  19.14
 #> 
 #> Cox PH hazard ratio (treatment vs control): 0.609
+d |> kmcurve_fast(Surv(time, event) ~ group) |> plot()
+
 
 # Single-group object: pass group = NULL (or a single-level group)
 fit1 <- kmcurve_fast(time[group == 0], event[group == 0])

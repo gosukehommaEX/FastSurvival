@@ -130,6 +130,8 @@ survdiff_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> survdiff_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -367,6 +369,20 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+# Formula interface with the native pipe
+ovarian |> survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds))
+#> Stratified log-rank test (two-group, 2 strata)
+#> 
+#>   N = 26,  control = 1
+#> 
+#>           Observed Expected (O-E)^2/E (O-E)^2/V
+#> control          7   5.0952    0.7121    1.2796
+#> treatment        5   6.9048    0.5255    1.2796
+#> 
+#>  Chi-square = 1.28 on 1 df,  p-value = 0.258  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
 # Formula interface (the first level of rx, 1, is the control group)
 survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)
 #> Stratified log-rank test (two-group, 2 strata)
@@ -392,8 +408,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min      lq       mean  median      uq      max neval cld
-#>  survdiff_fast  56.676  65.567   74.40805  77.159  80.575  176.829  1000  a 
-#>       survdiff 941.265 973.526 1017.22652 983.514 998.102 6274.674  1000   b
+#>           expr     min       lq      mean  median       uq      max neval cld
+#>  survdiff_fast  37.445  43.8350  52.62831  54.511  59.2830  187.929  1000  a 
+#>       survdiff 620.569 666.7585 706.83426 681.905 697.9895 6004.608  1000   b
 # }
 ```

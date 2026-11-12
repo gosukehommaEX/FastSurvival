@@ -100,6 +100,8 @@ maxcombo_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> maxcombo_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -281,6 +283,20 @@ maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 #>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512  
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+ovarian |> maxcombo_fast(Surv(futime, fustat) ~ rx, side = 1)
+#> Max-combo weighted log-rank test (two-group)
+#> 
+#>   N = 26,  control = 1
+#> 
+#>               Z
+#> FH(0,0) -1.0309
+#> FH(0,1)  0.0101
+#> FH(1,0) -1.2980
+#> FH(1,1) -0.0576
+#> 
+#>  Max-combo statistic = -1.298 (one-sided),  p-value = 0.1512  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 # \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)
@@ -294,6 +310,6 @@ if (requireNamespace("simtrial", quietly = TRUE)) {
   simtrial::maxcombo(df, rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
                      return_corr = TRUE)$p_value
 }
-#> [1] 0.1512311
+#> [1] 0.1512078
 # }
 ```

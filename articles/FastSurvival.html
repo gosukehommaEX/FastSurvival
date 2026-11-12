@@ -221,6 +221,56 @@ below the curves.</p>
 <p><img src="FastSurvival_files/figure-html/km-plot-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
+<h2 id="chaining-with-the-native-pipe">Chaining with the native pipe<a class="anchor" aria-label="anchor" href="#chaining-with-the-native-pipe"></a>
+</h2>
+<p>The functions can be chained with the native pipe <code>|&gt;</code>
+of R. A data frame piped into an estimation or testing function is used
+as the data of its formula interface. The simulation functions take the
+data, or the result of the previous step, as their first argument, and
+<code>cutoff.looks</code> of <code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> and
+<code><a href="../reference/pairwise_fast.html">pairwise_fast()</a></code>, like <code>cutoff</code> of
+<code><a href="../reference/switch_fast.html">switch_fast()</a></code>, also accepts a function of the data, so that
+cutoffs from a rule of <code><a href="../reference/cutoff_fast.html">cutoff_fast()</a></code> are computed inside
+the chain. Here the final analysis is at 180 events or at month 36,
+whichever comes first, and the nominal one-sided levels of the two looks
+are only for illustration.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   term estimate std.error  conf.low conf.high statistic   p.value</span></span>
+<span><span class="co">#&gt; 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.1548152</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span>nsim <span class="op">=</span> <span class="fl">200</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150</span>, <span class="fl">150</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span>
+<span>             a.rate <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>, e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">18</span><span class="op">)</span>,</span>
+<span>             d.hazard <span class="op">=</span> <span class="fl">0.01</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span>control <span class="op">=</span> <span class="fl">1</span>, side <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                cutoff.looks <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span>                  <span class="fu"><a href="../reference/cutoff_fast.html">cutoff_fast</a></span><span class="op">(</span><span class="va">x</span>, event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">120</span>, <span class="fl">180</span><span class="op">)</span>,</span>
+<span>                              max.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">36</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span>p.col <span class="op">=</span> <span class="st">"logrank.p"</span>, alpha <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.003</span>, <span class="fl">0.024</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
+<span><span class="co">#&gt;   Simulations: 200</span></span>
+<span><span class="co">#&gt;   Boundaries: nominal p-value on 'logrank.p'</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Stopping Boundaries: Look by Look</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.</span></span>
+<span><span class="co">#&gt;     1        0.67      120.0      300.0    0.0030           0.3000</span></span>
+<span><span class="co">#&gt;     2        1.00      180.0      300.0    0.0240           0.7850</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look</span></span>
+<span><span class="co">#&gt;  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time</span></span>
+<span><span class="co">#&gt;     1        0.67      300.0      120.0         25.0    155.0         17.92</span></span>
+<span><span class="co">#&gt;     2        1.00      300.0      180.0         38.0     82.0         29.18</span></span>
+<span><span class="co">#&gt;  Cross. Eff.</span></span>
+<span><span class="co">#&gt;       0.3000</span></span>
+<span><span class="co">#&gt;       0.4850</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overall</span></span>
+<span><span class="co">#&gt;   Rejection rate (efficacy):      0.7850</span></span>
+<span><span class="co">#&gt;   Expected events at stop:        162.0</span></span>
+<span><span class="co">#&gt;   Expected sample size at stop:   300.0</span></span>
+<span><span class="co">#&gt;   Expected analysis time at stop: 25.79</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
 <p>Several further vignettes cover the package in depth. <em>Validation

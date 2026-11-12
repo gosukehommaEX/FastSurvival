@@ -150,7 +150,9 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; rmst_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -267,6 +269,12 @@ point.</p></div>
 <span class="r-in"><span><span class="co"># Formula interface, and the result as a data frame</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span>, <span class="va">group</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">rmst_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, data <span class="op">=</span> <span class="va">d</span>, tau <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        term  estimate  std.error   conf.low conf.high statistic     p.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      diff 1.0812605 0.34278492 0.40941442 1.7531066  3.154341 0.001608610</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 log.ratio 0.1484342 0.04737151 0.05558778 0.2412807  3.133407 0.001727894</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">|&gt;</span> <span class="fu">rmst_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>, tau <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        term  estimate  std.error   conf.low conf.high statistic     p.value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 rmst.ctrl 6.7571810 0.24280084 6.28130013 7.2330619        NA          NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  rmst.trt 7.8384416 0.24196953 7.36418998 8.3126931        NA          NA</span>

@@ -80,6 +80,8 @@ ahr_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> ahr_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -183,6 +185,23 @@ ahr_fast(obs, event, group, control = 0, tau = 8)
 # Formula interface
 d <- data.frame(obs, event, group)
 ahr_fast(Surv(obs, event) ~ group, data = d, tau = 8)
+#> Kalbfleisch-Prentice average hazard ratio (two-group)
+#> 
+#>   tau = 8,  control = 0
+#>   alternative = two.sided
+#> 
+#>            theta   n
+#> control   0.3079 200
+#> treatment 0.6921 200
+#> 
+#>                                             Est. lower 95% upper 95%     z
+#> average hazard ratio (treatment / control) 2.248     1.699     2.973 6.317
+#>                                            Pr(>|z|)    
+#> average hazard ratio (treatment / control) 2.66e-10 ***
+#> ---
+#> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#>   (log scale: z = 5.676, p = 1.379e-08)
+d |> ahr_fast(Surv(obs, event) ~ group, tau = 8)
 #> Kalbfleisch-Prentice average hazard ratio (two-group)
 #> 
 #>   tau = 8,  control = 0

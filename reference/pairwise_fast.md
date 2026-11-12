@@ -85,7 +85,11 @@ pairwise_fast(
   [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
   Mutually exclusive with `event.looks` and `time.looks`. See
   [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-  for how the rows are matched to the simulations.
+  for how the rows are matched to the simulations. It can also be a
+  function of one argument, as in
+  [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
+  which is applied to the whole `data` (all arms) before the contrasts
+  are formed.
 
 - ...:
 
@@ -211,4 +215,25 @@ head(pw2)
 #> 4         30 -1.7611765     3.1017428 0.03910426 0.07820853
 #> 5         31 -0.3822314     0.1461008 0.35114487 0.70228974
 #> 6         20 -1.3978726     1.9540478 0.08107566 0.16215132
+
+# A cutoff rule given as a function of the data, in a chain with the
+# native pipe
+dfk |>
+  pairwise_fast(control = 1, side = 1, adjust = "bonferroni",
+                cutoff.looks = function(x) cutoff_fast(x, time.looks = 30)) |>
+  head()
+#>   arm sim look look.value cutoff reached n.enrolled n.event n.dropout
+#> 1   2   1    1         30     30    TRUE        240     173         0
+#> 2   2   2    1         30     30    TRUE        240     160         0
+#> 3   2   3    1         30     30    TRUE        240     176         0
+#> 4   2   4    1         30     30    TRUE        240     176         0
+#> 5   2   5    1         30     30    TRUE        240     168         0
+#> 6   2   6    1         30     30    TRUE        240     160         0
+#>   n.pipeline  logrank.z logrank.chisq  logrank.p      p.adj
+#> 1         67 -2.0654860    4.26623257 0.01943852 0.03887704
+#> 2         80 -2.1030267    4.42272144 0.01773172 0.03546343
+#> 3         64 -0.6031565    0.36379774 0.27320230 0.54640460
+#> 4         64 -2.1304840    4.53896204 0.01656584 0.03313168
+#> 5         72  0.1039376    0.01080303 0.54139057 1.00000000
+#> 6         80 -2.0645649    4.26242820 0.01948209 0.03896419
 ```

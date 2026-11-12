@@ -72,7 +72,10 @@ switch_fast(
   the names of a vector (or the row names of a matrix) are matched to
   the values of `data$sim`; without names the elements are taken in the
   order of the sorted distinct values of `data$sim`. `NA` disables
-  switching in that simulated trial.
+  switching in that simulated trial. `cutoff` can also be a function of
+  one argument, which is applied to `data` (before switching) and must
+  return such a vector or matrix, for example
+  `function(x) cutoff_fast(x, event.looks = 150)`.
 
 - delay:
 
@@ -236,6 +239,27 @@ fa0 <- analysis_fast(df,  control = 1, event.looks = 220)
 fa1 <- analysis_fast(dfs, control = 1, event.looks = 220)
 c(mean(fa0$logrank.z), mean(fa1$logrank.z))
 #> [1] -3.078266 -2.112271
+
+# The same switching and final analysis in one chain with the native pipe
+df |>
+  switch_fast(group = 1, when = "cutoff", aft.factor = 1.5,
+              cutoff = function(x) cutoff_fast(x, event.looks = 150)) |>
+  analysis_fast(control = 1, event.looks = 220) |>
+  head()
+#>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1        220 48.83626    TRUE        300     220        49         31
+#> 2   2    1        220 48.75717    TRUE        300     220        43         37
+#> 3   3    1        220 47.02440    TRUE        300     220        45         35
+#> 4   4    1        220 53.14523    TRUE        300     220        42         38
+#> 5   5    1        220 45.46942    TRUE        300     220        49         31
+#> 6   6    1        220 57.54503    TRUE        300     220        57         23
+#>   logrank.z logrank.chisq   logrank.p
+#> 1 -1.912303      3.656902 0.055837359
+#> 2 -3.126831      9.777073 0.001767014
+#> 3 -2.498578      6.242891 0.012469274
+#> 4 -2.381197      5.670098 0.017256492
+#> 5 -1.190981      1.418437 0.233660915
+#> 6 -1.635293      2.674185 0.101987545
 
 # Switching at progression in an illness-death simulation: 50 percent of
 # the control subjects who progress switch, with a post-progression median

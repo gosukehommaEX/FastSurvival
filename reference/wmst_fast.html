@@ -147,7 +147,9 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; wmst_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -205,6 +207,18 @@ treatment.</p>
 <span class="r-in"><span><span class="co"># Formula interface</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span>, <span class="va">g</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">wmst_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">g</span>, data <span class="op">=</span> <span class="va">d</span>, tau1 <span class="op">=</span> <span class="fl">2</span>, tau2 <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Window mean survival time (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   window = [2, 12],  control = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   alternative = two.sided</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             wmst std.err lower 95% upper 95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   5.8371   0.402    5.0491    6.6251</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment 6.6057   0.402    5.8177    7.3936</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     Est. lower 95% upper 95%     z Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> difference (treatment - control)  0.7686   -0.3458    1.8829 1.352    0.176</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">|&gt;</span> <span class="fu">wmst_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">event</span><span class="op">)</span> <span class="op">~</span> <span class="va">g</span>, tau1 <span class="op">=</span> <span class="fl">2</span>, tau2 <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Window mean survival time (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   window = [2, 12],  control = 0</span>

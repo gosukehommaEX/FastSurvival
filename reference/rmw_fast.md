@@ -78,6 +78,8 @@ rmw_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> rmw_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -221,6 +223,19 @@ rmw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 # Formula interface
 rmw_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+#> Robust modestly-weighted log-rank test (two-group)
+#> 
+#>   N = 26,  control = 1,  s_star = 0.5
+#> 
+#>                         Z
+#> log-rank          -1.0309
+#> modestly-weighted -0.7583
+#> 
+#>   Null correlation = 0.9821
+#>  min Z = -1.031,  one-sided p-value = 0.169  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+ovarian |> rmw_fast(Surv(futime, fustat) ~ rx, side = 1)
 #> Robust modestly-weighted log-rank test (two-group)
 #> 
 #>   N = 26,  control = 1,  s_star = 0.5

@@ -146,7 +146,9 @@ The order is checked, and an error is given when it does not hold.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; rmw_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -280,6 +282,19 @@ Society, Series B</em>, <em>65</em>(1), 223-234.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Formula interface</span></span></span>
 <span class="r-in"><span><span class="fu">rmw_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, data <span class="op">=</span> <span class="va">ovarian</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Robust modestly-weighted log-rank test (two-group)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1,  s_star = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Z</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> log-rank          -1.0309</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> modestly-weighted -0.7583</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Null correlation = 0.9821</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  min Z = -1.031,  one-sided p-value = 0.169  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="r-in"><span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu">rmw_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Robust modestly-weighted log-rank test (two-group)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1,  s_star = 0.5</span>

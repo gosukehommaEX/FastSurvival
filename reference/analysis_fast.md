@@ -265,7 +265,11 @@ analysis_fast(
   look. `NA` or `Inf` marks a look that is not reached. The `look.value`
   column of the output is taken from the `"look.value"` attribute of the
   matrix when it is present, and is `NA` otherwise. Mutually exclusive
-  with `event.looks` and `time.looks`.
+  with `event.looks` and `time.looks`. `cutoff.looks` can also be a
+  function of one argument, which is applied to `data` and must return
+  such a matrix or vector, for example
+  `function(x) cutoff_fast(x, event.looks = 150)`; the cutoffs are then
+  computed inside a chain of calls with the native pipe `|>`.
 
 - mc.alpha:
 
@@ -707,4 +711,25 @@ head(res5)
 #> 4 0.5446814      0.6473827     0.3526173 -4.280992 9.303115e-06
 #> 5 0.5873300      0.6299887     0.3700113 -3.657652 1.272682e-04
 #> 6 0.8184949      0.5499053     0.4500947 -1.364031 8.627888e-02
+
+# Cutoffs from a rule, computed inside a chain with the native pipe: the
+# final look at 140 events or at month 36, whichever comes first
+df |>
+  analysis_fast(control = 1, cutoff.looks = function(x)
+    cutoff_fast(x, event.looks = c(80, 140), max.time = c(NA, 36))) |>
+  head()
+#>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         80 11.76464    TRUE        291      80         0        211
+#> 2   1    2        140 16.08387    TRUE        300     140         0        160
+#> 3   2    1         80 11.40147    TRUE        285      80         0        205
+#> 4   2    2        140 16.62229    TRUE        300     140         0        160
+#> 5   3    1         80 11.48259    TRUE        286      80         0        206
+#> 6   3    2        140 16.06186    TRUE        300     140         0        160
+#>   logrank.z logrank.chisq    logrank.p
+#> 1 -1.171526      1.372472 2.413876e-01
+#> 2 -1.555453      2.419433 1.198383e-01
+#> 3 -2.780165      7.729316 5.433132e-03
+#> 4 -4.862092     23.639938 1.161516e-06
+#> 5 -3.631606     13.188562 2.816629e-04
+#> 6 -5.043861     25.440534 4.562306e-07
 ```

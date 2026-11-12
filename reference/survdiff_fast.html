@@ -192,7 +192,9 @@ A value of 0 yields the ordinary log-rank test.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the variables of a formula given as
 <code>time</code> are evaluated. Used only with the formula interface; see
-<code><a href="formula_interface.html">formula_interface</a></code>.</p></dd>
+<code><a href="formula_interface.html">formula_interface</a></code>. With the native pipe,
+<code>d |&gt; survdiff_fast(formula, ...)</code> uses the data frame <code>d</code> in
+the same way.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -411,6 +413,20 @@ tests. <em>Pharmaceutical Statistics</em>, <em>25</em>(1), e70066.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Formula interface with the native pipe</span></span></span>
+<span class="r-in"><span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu">survdiff_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">resid.ds</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stratified log-rank test (two-group, 2 strata)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 26,  control = 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Observed Expected (O-E)^2/E (O-E)^2/V</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control          7   5.0952    0.7121    1.2796</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treatment        5   6.9048    0.5255    1.2796</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Chi-square = 1.28 on 1 df,  p-value = 0.258  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Formula interface (the first level of rx, 1, is the control group)</span></span></span>
 <span class="r-in"><span><span class="fu">survdiff_fast</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/survival/man/strata.html" class="external-link">strata</a></span><span class="op">(</span><span class="va">resid.ds</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">ovarian</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Stratified log-rank test (two-group, 2 strata)</span>
@@ -436,9 +452,9 @@ tests. <em>Pharmaceutical Statistics</em>, <em>25</em>(1), e70066.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq       mean  median      uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  56.676  65.567   74.40805  77.159  80.575  176.829  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 941.265 973.526 1017.22652 983.514 998.102 6274.674  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq      mean  median       uq      max neval cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  37.445  43.8350  52.62831  54.511  59.2830  187.929  1000  a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 620.569 666.7585 706.83426 681.905 697.9895 6004.608  1000   b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -87,6 +87,8 @@ wmst_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> wmst_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -147,6 +149,18 @@ wmst_fast(time, event, group = g, control = 0, tau1 = 2, tau2 = 12)
 # Formula interface
 d <- data.frame(time, event, g)
 wmst_fast(Surv(time, event) ~ g, data = d, tau1 = 2, tau2 = 12)
+#> Window mean survival time (two-group)
+#> 
+#>   window = [2, 12],  control = 0
+#>   alternative = two.sided
+#> 
+#>             wmst std.err lower 95% upper 95%
+#> control   5.8371   0.402    5.0491    6.6251
+#> treatment 6.6057   0.402    5.8177    7.3936
+#> 
+#>                                     Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  0.7686   -0.3458    1.8829 1.352    0.176
+d |> wmst_fast(Surv(time, event) ~ g, tau1 = 2, tau2 = 12)
 #> Window mean survival time (two-group)
 #> 
 #>   window = [2, 12],  control = 0

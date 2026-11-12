@@ -173,6 +173,62 @@ plot(km, risk_table = TRUE, conf.style = "band")
 
 ![](FastSurvival_files/figure-html/km-plot-1.png)
 
+## Chaining with the native pipe
+
+The functions can be chained with the native pipe `|>` of R. A data
+frame piped into an estimation or testing function is used as the data
+of its formula interface. The simulation functions take the data, or the
+result of the previous step, as their first argument, and `cutoff.looks`
+of
+[`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+and
+[`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md),
+like `cutoff` of
+[`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
+also accepts a function of the data, so that cutoffs from a rule of
+[`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+are computed inside the chain. Here the final analysis is at 180 events
+or at month 36, whichever comes first, and the nominal one-sided levels
+of the two looks are only for illustration.
+
+``` r
+
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx, side = 1) |> as.data.frame()
+#>   term estimate std.error  conf.low conf.high statistic   p.value
+#> 1 coef -0.59638 0.5869895 -1.746858 0.5540983 -1.015998 0.1548152
+
+simdata_fast(nsim = 200, n = c(150, 150), a.time = c(0, 12),
+             a.rate = 300 / 12, e.median = list(12, 18),
+             d.hazard = 0.01, seed = 1) |>
+  analysis_fast(control = 1, side = 1,
+                cutoff.looks = function(x)
+                  cutoff_fast(x, event.looks = c(120, 180),
+                              max.time = c(NA, 36))) |>
+  simsummary_fast(p.col = "logrank.p", alpha = c(0.003, 0.024))
+#> Group-Sequential Operating Characteristics (simsummary_fast)
+#>   Simulations: 200
+#>   Boundaries: nominal p-value on 'logrank.p'
+#> 
+#> Stopping Boundaries: Look by Look
+#>  Look Info. Frac. Events (s) Sample (n) Nominal p Cum. Cross. Eff.
+#>     1        0.67      120.0      300.0    0.0030           0.3000
+#>     2        1.00      180.0      300.0    0.0240           0.7850
+#> 
+#> Events, Sample Size, Dropouts, Pipeline and Analysis Times: Look by Look
+#>  Look Info. Frac. Sample (n) Events (s) Dropouts (d) Pipeline Analysis Time
+#>     1        0.67      300.0      120.0         25.0    155.0         17.92
+#>     2        1.00      300.0      180.0         38.0     82.0         29.18
+#>  Cross. Eff.
+#>       0.3000
+#>       0.4850
+#> 
+#> Overall
+#>   Rejection rate (efficacy):      0.7850
+#>   Expected events at stop:        162.0
+#>   Expected sample size at stop:   300.0
+#>   Expected analysis time at stop: 25.79
+```
+
 ## Where to go next
 
 Several further vignettes cover the package in depth. *Validation of

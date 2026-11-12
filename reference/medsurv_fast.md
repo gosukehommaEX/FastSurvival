@@ -80,6 +80,8 @@ medsurv_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> medsurv_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -178,6 +180,18 @@ medsurv_fast(time, event, group = g, control = 0, bw = 10)
 # Formula interface
 d <- data.frame(time, event, g)
 medsurv_fast(Surv(time, event) ~ g, data = d)
+#> Median survival time (two-group)
+#> 
+#>   control = 0
+#>   conf.type = log,  alternative = two.sided
+#> 
+#>            median std.err lower 95% upper 95%
+#> control    8.1851  0.9241    6.5603   10.2124
+#> treatment 10.7251  1.7252    7.8249   14.7002
+#> 
+#>                                    Est. lower 95% upper 95%     z Pr(>|z|)
+#> difference (treatment - control)  2.540    -1.296     6.376 1.298    0.194
+d |> medsurv_fast(Surv(time, event) ~ g)
 #> Median survival time (two-group)
 #> 
 #>   control = 0

@@ -84,6 +84,8 @@ ahsw_fast(
   A data frame in which the variables of a formula given as `time` are
   evaluated. Used only with the formula interface; see
   [`formula_interface`](https://gosukehommaEX.github.io/FastSurvival/reference/formula_interface.md).
+  With the native pipe, `d |> ahsw_fast(formula, ...)` uses the data
+  frame `d` in the same way.
 
 ## Value
 
@@ -185,6 +187,19 @@ ahsw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 # Formula interface
 ahsw_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 600)
+#> Average hazard with survival weight (two-group)
+#> 
+#>   tau = 600,  control = 1
+#>   alternative = two.sided
+#> 
+#>               AH
+#> control   0.0011
+#> treatment 0.0008
+#> 
+#>                                        Est.  lower 95%  upper 95% p.value
+#> ratio (treatment / control)       0.7548735  0.2622750  2.1726579   0.602
+#> difference (treatment - control) -0.0002646 -0.0012914  0.0007622   0.613
+ovarian |> ahsw_fast(Surv(futime, fustat) ~ rx, tau = 600)
 #> Average hazard with survival weight (two-group)
 #> 
 #>   tau = 600,  control = 1
