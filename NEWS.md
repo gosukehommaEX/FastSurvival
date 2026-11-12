@@ -66,6 +66,20 @@
   new default and 0.91 to 0.94 with the earlier one. The standard errors with
   the default bandwidth change; the medians do not.
 
+## New features
+
+* The estimation and testing functions and `kmcurve_fast()` take a data frame
+  piped into their formula interface with the native pipe:
+  `d |> coxph_fast(Surv(time, status) ~ arm)` is the same as
+  `coxph_fast(Surv(time, status) ~ arm, data = d)`. Giving `data` as well is
+  an error.
+
+* `cutoff.looks` of `analysis_fast()` and `pairwise_fast()` and `cutoff` of
+  `switch_fast()` also accept a function of the data, such as
+  `function(x) cutoff_fast(x, event.looks = 150)`, so that a simulation study
+  can be written as one chain from `simdata_fast()` to `simsummary_fast()`
+  with `|>`. `pairwise_fast()` applies the function to the data of all arms.
+
 ## Documentation
 
 * The treatment-switching vignette refers to TrialSimulator 1.39.0, the
@@ -101,6 +115,9 @@
 * The validation and speed-comparison vignettes no longer use the removed
   `method = "nph"` of `medsurv_fast()`.
 
+* The README, the introduction vignette, and the examples show the use of the
+  functions with the native pipe.
+
 ## Tests
 
 * The values that `plot.simsummary_fast()` draws are computed by an internal
@@ -114,6 +131,9 @@
   `medsurv_fast()` equal values computed independently, and that the `"rmw"`
   and `"ahr"` statistics of `analysis_fast()` equal the results of
   `rmw_fast()` and `ahr_fast()`.
+
+* New tests check that the calls with the native pipe give the same results
+  as the calls without it.
 
 # FastSurvival 1.2.0
 

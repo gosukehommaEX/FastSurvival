@@ -90,7 +90,9 @@ A value of 0 yields the ordinary log-rank test.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> survdiff_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"survdiff_fast"}, which is a length-one
@@ -226,6 +228,9 @@ survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 # Stratified weighted log-rank test: Fleming-Harrington G(0,1) within strata
 survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
               weight = "fh", rho = 0, gamma = 1, strata = ovarian$resid.ds)
+
+# Formula interface with the native pipe
+ovarian |> survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds))
 
 # Formula interface (the first level of rx, 1, is the control group)
 survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)

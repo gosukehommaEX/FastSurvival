@@ -53,7 +53,9 @@ The order is checked, and an error is given when it does not hold.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> ahr_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"ahr_fast"}, a list with elements
@@ -130,6 +132,7 @@ ahr_fast(obs, event, group, control = 0, tau = 8)
 # Formula interface
 d <- data.frame(obs, event, group)
 ahr_fast(Surv(obs, event) ~ group, data = d, tau = 8)
+d |> ahr_fast(Surv(obs, event) ~ group, tau = 8)
 }
 \references{
 Kalbfleisch, J. D., & Prentice, R. L. (1981). Estimation of the average

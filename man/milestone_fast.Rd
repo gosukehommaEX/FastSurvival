@@ -56,7 +56,9 @@ The order is checked, and an error is given when it does not hold.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> milestone_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"milestone_fast"}, a list with the
@@ -108,6 +110,7 @@ milestone_fast(time, event, group, control = 0, tau = 10, method = "loglog")
 # Formula interface
 d <- data.frame(time, event, group)
 milestone_fast(Surv(time, event) ~ group, data = d, tau = 10)
+d |> milestone_fast(Surv(time, event) ~ group, tau = 10)
 
 }
 \references{

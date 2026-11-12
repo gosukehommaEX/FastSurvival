@@ -433,3 +433,15 @@ test_that("maxcombo_fast: the formula interface passes every argument", {
     maxcombo_fast(d$tt, d$ee, d$g, "b", side = 1, rho = c(0, 1),
                   gamma = c(1, 0), abseps = 1e-7))
 })
+
+test_that("maxcombo_fast: a data frame can be piped into the formula interface", {
+  set.seed(708)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  rh <- c(0, 0, 1)
+  gm <- c(0, 1, 0)
+  expect_identical(d |> maxcombo_fast(fo, rho = rh, gamma = gm, side = 1),
+                   maxcombo_fast(fo, data = d, rho = rh, gamma = gm, side = 1))
+  expect_error(d |> maxcombo_fast(fo, data = d), "given twice")
+})

@@ -98,6 +98,9 @@
 #'   matrix) are matched to the values of \code{data$sim}; without names the
 #'   elements are taken in the order of the sorted distinct values of
 #'   \code{data$sim}. \code{NA} disables switching in that simulated trial.
+#'   \code{cutoff} can also be a function of one argument, which is applied to
+#'   \code{data} (before switching) and must return such a vector or matrix,
+#'   for example \code{function(x) cutoff_fast(x, event.looks = 150)}.
 #' @param delay A single non-negative number added to \code{cutoff}, for
 #'   example the time needed to implement the crossover after an interim
 #'   analysis. Defaults to 0.
@@ -152,6 +155,13 @@
 #' fa0 <- analysis_fast(df,  control = 1, event.looks = 220)
 #' fa1 <- analysis_fast(dfs, control = 1, event.looks = 220)
 #' c(mean(fa0$logrank.z), mean(fa1$logrank.z))
+#'
+#' # The same switching and final analysis in one chain with the native pipe
+#' df |>
+#'   switch_fast(group = 1, when = "cutoff", aft.factor = 1.5,
+#'               cutoff = function(x) cutoff_fast(x, event.looks = 150)) |>
+#'   analysis_fast(control = 1, event.looks = 220) |>
+#'   head()
 #'
 #' # Switching at progression in an illness-death simulation: 50 percent of
 #' # the control subjects who progress switch, with a post-progression median
@@ -254,6 +264,14 @@ switch_fast <- function(data, group, prob = 1,
   if (uses_open) {
     if (is.null(cutoff)) {
       stop("'cutoff' must be supplied when when = \"", when, "\"")
+    }
+    # A function of the data gives the cutoffs (for a chain with |>)
+    if (is.function(cutoff)) {
+      cutoff <- cutoff(data)
+      if (!is.numeric(cutoff)) {
+        stop("the function given as 'cutoff' must return a numeric vector ",
+             "or matrix, such as the result of cutoff_fast()")
+      }
     }
     if (!is.matrix(cutoff) && !is.null(names(cutoff))) {
       cutoff <- matrix(as.numeric(cutoff), ncol = 1L,

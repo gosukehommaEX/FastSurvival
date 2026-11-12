@@ -250,3 +250,18 @@ test_that("switch_fast: a stream within rounding error of a whole number is roun
   expect_identical(s_f, sw(29))
   expect_false(identical(s_f, sw(28)))
 })
+
+test_that("switch_fast: cutoff can be a function of the data", {
+  df <- simdata_fast(nsim = 6, n = c(100, 100), a.time = c(0, 12),
+                     a.prop = 1, e.median = list(12, 18),
+                     d.hazard = 0.01, seed = 406)
+  rule <- function(x) cutoff_fast(x, event.looks = 100)
+  expect_identical(
+    df |> switch_fast(group = 1, when = "cutoff", cutoff = rule,
+                      aft.factor = 1.5, seed = 1),
+    switch_fast(df, group = 1, when = "cutoff", cutoff = rule(df),
+                aft.factor = 1.5, seed = 1))
+  expect_error(switch_fast(df, group = 1, when = "cutoff",
+                           cutoff = function(x) "a", aft.factor = 1.5),
+               "must return a numeric")
+})

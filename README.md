@@ -445,6 +445,28 @@ oc
 plot(oc, xaxis = "events")
 ```
 
+The same steps can be chained with the native pipe `|>` (R 4.1 or later).
+`cutoff.looks` of `analysis_fast()` and `pairwise_fast()`, and `cutoff` of
+`switch_fast()`, also accept a function of the data, so that cutoffs from a
+rule of `cutoff_fast()` are computed inside the chain; here the final analysis
+is at 450 events or at month 48, whichever comes first. The estimation and
+testing functions take a data frame piped into their formula interface:
+
+```r
+simdata_fast(nsim = 1000, n = c(350, 350), a.time = c(0, 12),
+             a.rate = 700 / 12,
+             e.hazard = list(c(0.08, 0.08), c(0.08, 0.04)),
+             e.time = c(0, 6, Inf), d.hazard = list(0.01, 0.01), seed = 42) |>
+  analysis_fast(control = 1, stat = "logrank", side = 1,
+                cutoff.looks = \(x) cutoff_fast(x, event.looks = c(300, 450),
+                                                max.time = c(NA, 48))) |>
+  simsummary_fast(p.col = "logrank.p", alpha = c(0.0060, 0.0231)) |>
+  plot(xaxis = "events")
+
+library(survival)
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
+```
+
 The estimation functions can also be used directly inside a loop. Except for
 `milestone_fast()` and `ahr_fast()`, which return lists, each returned object
 is internally a numeric vector, so after stripping the class with

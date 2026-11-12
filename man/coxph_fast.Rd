@@ -62,7 +62,9 @@ gives the unstratified estimator.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> coxph_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 
 \item{ties}{A character string naming the handling of tied event times,
 \code{"efron"} (default, as in \code{survival::coxph()}) or
@@ -199,6 +201,9 @@ coxph_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 fit_f <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
 as.data.frame(fit_f)
 exp(confint(fit_f))
+
+# The same with the native pipe
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
 
 \donttest{
 # Speed comparison against coxph()

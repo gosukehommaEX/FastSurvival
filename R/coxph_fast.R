@@ -108,7 +108,9 @@
 #'   gives the unstratified estimator.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> coxph_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #' @param ties A character string naming the handling of tied event times,
 #'   \code{"efron"} (default, as in \code{survival::coxph()}) or
 #'   \code{"breslow"}. Without tied event times the two give the same result.
@@ -172,6 +174,9 @@
 #' as.data.frame(fit_f)
 #' exp(confint(fit_f))
 #'
+#' # The same with the native pipe
+#' ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
+#'
 #' \donttest{
 #' # Speed comparison against coxph()
 #' if (requireNamespace("microbenchmark", quietly = TRUE)) {
@@ -208,6 +213,14 @@ coxph_fast <- function(time, event, group, control, side = 2,
                        conf.level = 0.95, presorted = FALSE, strata = NULL,
                        data = NULL, ties = c("efron", "breslow")) {
 
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group + strata(s) evaluated in
   # 'data'
   if (inherits(time, "formula")) {

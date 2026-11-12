@@ -248,3 +248,13 @@ test_that("wmst_fast: the formula interface passes every argument", {
     wmst_fast(d1$tt, d1$ee, d1$g, "b", tau1 = 1, tau2 = 6, side = 1,
               conf.level = 0.9, presorted = TRUE))
 })
+
+test_that("wmst_fast: a data frame can be piped into the formula interface", {
+  set.seed(705)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> wmst_fast(fo, tau1 = 1, tau2 = 8),
+                   wmst_fast(fo, data = d, tau1 = 1, tau2 = 8))
+  expect_error(d |> wmst_fast(fo, data = d), "given twice")
+})

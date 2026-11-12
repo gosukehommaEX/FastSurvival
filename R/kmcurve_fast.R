@@ -40,7 +40,9 @@
 #'   group variable.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> kmcurve_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{kmcurve_fast}: a list with a logical
 #'   \code{two_group} flag, the group values and their labels, the per-group
@@ -69,6 +71,7 @@
 #' # Formula interface
 #' d <- data.frame(time, event, group)
 #' kmcurve_fast(Surv(time, event) ~ group, data = d)
+#' d |> kmcurve_fast(Surv(time, event) ~ group) |> plot()
 #'
 #' # Single-group object: pass group = NULL (or a single-level group)
 #' fit1 <- kmcurve_fast(time[group == 0], event[group == 0])
@@ -82,6 +85,14 @@
 #' @export
 kmcurve_fast <- function(time, event, group = NULL, control = NULL,
                          data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group or ~ 1 evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

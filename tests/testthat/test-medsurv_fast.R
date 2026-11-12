@@ -231,3 +231,13 @@ test_that("medsurv_fast: the formula interface passes every argument", {
                  conf.type = "plain", bw = c(2, 3),
                  presorted = TRUE))
 })
+
+test_that("medsurv_fast: a data frame can be piped into the formula interface", {
+  set.seed(707)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> medsurv_fast(fo),
+                   medsurv_fast(fo, data = d))
+  expect_error(d |> medsurv_fast(fo, data = d), "given twice")
+})

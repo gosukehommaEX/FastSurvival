@@ -67,7 +67,9 @@ values reduce the integration error at a higher computing cost.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> maxcombo_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"maxcombo_fast"}, a named numeric vector of
@@ -169,6 +171,7 @@ maxcombo_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 # Formula interface
 maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+ovarian |> maxcombo_fast(Surv(futime, fustat) ~ rx, side = 1)
 
 \donttest{
 # Cross-check against simtrial::maxcombo (one-sided)

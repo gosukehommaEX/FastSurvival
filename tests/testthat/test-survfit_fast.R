@@ -158,3 +158,13 @@ test_that("survfit_fast: the formula interface passes every argument", {
     survfit_fast(d1$tt, d1$ee, 5, conf.level = 0.9, conf.type = "log-log",
                  presorted = TRUE))
 })
+
+test_that("survfit_fast: a data frame can be piped into the formula interface", {
+  set.seed(701)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ 1
+  expect_identical(d |> survfit_fast(fo, t_eval = 5),
+                   survfit_fast(fo, data = d, t_eval = 5))
+  expect_error(d |> survfit_fast(fo, data = d), "given twice")
+})

@@ -53,7 +53,9 @@ The order is checked, and an error is given when it does not hold.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> medsurv_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 A named numeric vector of class \code{"medsurv_fast"}. For a single
@@ -123,6 +125,7 @@ medsurv_fast(time, event, group = g, control = 0, bw = 10)
 # Formula interface
 d <- data.frame(time, event, g)
 medsurv_fast(Surv(time, event) ~ g, data = d)
+d |> medsurv_fast(Surv(time, event) ~ g)
 
 }
 \references{

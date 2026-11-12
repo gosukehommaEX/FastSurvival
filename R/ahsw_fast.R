@@ -69,7 +69,9 @@
 #'   The order is checked, and an error is given when it does not hold.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> ahsw_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{"ahsw_fast"}, a named numeric vector
 #'   containing the per-group average hazards (\code{ah.ctrl}, \code{ah.trt}),
@@ -97,6 +99,7 @@
 #'
 #' # Formula interface
 #' ahsw_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 600)
+#' ovarian |> ahsw_fast(Surv(futime, fustat) ~ rx, tau = 600)
 #'
 #' \donttest{
 #' # Validation against survAH
@@ -121,6 +124,14 @@
 ahsw_fast <- function(time, event, group, control, side = 2,
                       conf.level = 0.95, tau, presorted = FALSE,
                       data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

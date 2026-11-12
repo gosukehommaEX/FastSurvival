@@ -184,7 +184,11 @@ is treated as a single look. \code{NA} or \code{Inf} marks a look that is
 not reached. The \code{look.value} column of the output is taken from the
 \code{"look.value"} attribute of the matrix when it is present, and is
 \code{NA} otherwise. Mutually exclusive with \code{event.looks} and
-\code{time.looks}.}
+\code{time.looks}. \code{cutoff.looks} can also be a function of one
+argument, which is applied to \code{data} and must return such a matrix
+or vector, for example
+\code{function(x) cutoff_fast(x, event.looks = 150)}; the cutoffs are then
+computed inside a chain of calls with the native pipe \code{|>}.}
 
 \item{mc.alpha}{An optional numeric vector of nominal levels in (0, 1), one
 per look or a single value for all looks, at which the \code{"maxcombo"}
@@ -513,6 +517,13 @@ res5 <- analysis_fast(df, control = 1, time.looks = 24,
                       stat = c("milestone", "rmw", "ahr"), tau = 18,
                       ms.method = "loglog", s_star = 0.5, side = 1)
 head(res5)
+
+# Cutoffs from a rule, computed inside a chain with the native pipe: the
+# final look at 140 events or at month 36, whichever comes first
+df |>
+  analysis_fast(control = 1, cutoff.looks = function(x)
+    cutoff_fast(x, event.looks = c(80, 140), max.time = c(NA, 36))) |>
+  head()
 
 }
 \seealso{

@@ -137,7 +137,9 @@
 #'   A value of 0 yields the ordinary log-rank test.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> survdiff_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{"survdiff_fast"}, which is a length-one
 #'   numeric value with attributes \code{O0}, \code{E0}, \code{O1}, \code{E1},
@@ -195,6 +197,9 @@
 #' survdiff_fast(ovarian$futime, ovarian$fustat, ovarian$rx, 2, side = 1,
 #'               weight = "fh", rho = 0, gamma = 1, strata = ovarian$resid.ds)
 #'
+#' # Formula interface with the native pipe
+#' ovarian |> survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds))
+#'
 #' # Formula interface (the first level of rx, 1, is the control group)
 #' survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)
 #'
@@ -247,6 +252,14 @@ survdiff_fast <- function(time, event, group, control, side = 2,
                           weight = c("logrank", "fh", "mwlrt", "gehan",
                                      "tarone-ware"),
                           rho = 0, gamma = 0, t_star = NULL, data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group + strata(s) evaluated in
   # 'data'
   if (inherits(time, "formula")) {

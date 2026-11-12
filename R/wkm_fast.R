@@ -69,7 +69,9 @@
 #'   The order is checked, and an error is given when it does not hold.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> wkm_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return A named numeric vector of class \code{"wkm_fast"} with the weighted
 #'   integrated difference, its standard error and confidence limits, and the
@@ -91,6 +93,7 @@
 #' # Formula interface
 #' d <- data.frame(time, event, g)
 #' wkm_fast(Surv(time, event) ~ g, data = d)
+#' d |> wkm_fast(Surv(time, event) ~ g)
 #'
 #' @references
 #' Pepe, M. S., & Fleming, T. R. (1989). Weighted Kaplan-Meier statistics: a
@@ -107,6 +110,14 @@ wkm_fast <- function(time, event, group, control = NULL,
                      side = 2, conf.level = 0.95,
                      weight = c("PF", "sqrtPF", "constant"),
                      presorted = FALSE, data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

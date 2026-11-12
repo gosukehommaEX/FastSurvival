@@ -314,3 +314,13 @@ test_that("milestone_fast: the formula interface passes every argument", {
     milestone_fast(d1$tt, d1$ee, d1$g, "b", side = 1, conf.level = 0.9,
                    tau = 5, method = "mover", presorted = TRUE))
 })
+
+test_that("milestone_fast: a data frame can be piped into the formula interface", {
+  set.seed(706)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> milestone_fast(fo, tau = 8),
+                   milestone_fast(fo, data = d, tau = 8))
+  expect_error(d |> milestone_fast(fo, data = d), "given twice")
+})

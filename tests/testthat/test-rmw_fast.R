@@ -249,3 +249,13 @@ test_that("rmw_fast: the formula interface passes every argument", {
     rmw_fast(d1$tt, d1$ee, d1$g, "b", side = 1, s_star = 0.7,
              presorted = TRUE))
 })
+
+test_that("rmw_fast: a data frame can be piped into the formula interface", {
+  set.seed(709)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> rmw_fast(fo),
+                   rmw_fast(fo, data = d))
+  expect_error(d |> rmw_fast(fo, data = d), "given twice")
+})

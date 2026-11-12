@@ -203,3 +203,13 @@ test_that("rmst_fast: the formula interface passes every argument", {
     rmst_fast(d1$tt, d1$ee, d1$g, "b", side = 1, conf.level = 0.9, tau = 6,
               presorted = TRUE))
 })
+
+test_that("rmst_fast: a data frame can be piped into the formula interface", {
+  set.seed(704)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> rmst_fast(fo, tau = 8),
+                   rmst_fast(fo, data = d, tau = 8))
+  expect_error(d |> rmst_fast(fo, data = d), "given twice")
+})

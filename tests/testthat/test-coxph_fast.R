@@ -410,3 +410,13 @@ test_that("coxph_fast: the formula interface passes every argument", {
   expect_identical(coxph_fast(Surv(tt, ee) ~ g, d),
                    coxph_fast(d$tt, d$ee, d$g, control = "a"))
 })
+
+test_that("coxph_fast: a data frame can be piped into the formula interface", {
+  set.seed(703)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> coxph_fast(fo),
+                   coxph_fast(fo, data = d))
+  expect_error(d |> coxph_fast(fo, data = d), "given twice")
+})

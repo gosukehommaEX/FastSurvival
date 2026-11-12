@@ -61,7 +61,9 @@
 #'   one row per simulated trial and one column per look, as returned by
 #'   \code{\link{cutoff_fast}}. Mutually exclusive with \code{event.looks} and
 #'   \code{time.looks}. See \code{\link{analysis_fast}} for how the rows are
-#'   matched to the simulations.
+#'   matched to the simulations. It can also be a function of one argument,
+#'   as in \code{\link{analysis_fast}}, which is applied to the whole
+#'   \code{data} (all arms) before the contrasts are formed.
 #' @param primary The group label of the experimental arm whose control-versus-arm
 #'   comparison defines the shared calendar cutoff. Required with
 #'   \code{event.looks} and ignored with \code{time.looks} and
@@ -108,6 +110,13 @@
 #'                      stat = "logrank", side = 1, adjust = "bonferroni")
 #' head(pw2)
 #'
+#' # A cutoff rule given as a function of the data, in a chain with the
+#' # native pipe
+#' dfk |>
+#'   pairwise_fast(control = 1, side = 1, adjust = "bonferroni",
+#'                 cutoff.looks = function(x) cutoff_fast(x, time.looks = 30)) |>
+#'   head()
+#'
 #' @seealso \code{\link{simdata_fast}}, \code{\link{analysis_fast}},
 #'   \code{\link{cutoff_fast}}
 #'
@@ -131,6 +140,14 @@ pairwise_fast <- function(data, control,
          "columns, as produced by simdata_fast().")
   }
 
+  # A function of the data gives the cutoffs of all arms (for a chain with |>)
+  if (is.function(cutoff.looks)) {
+    cutoff.looks <- cutoff.looks(data)
+    if (!is.numeric(cutoff.looks)) {
+      stop("the function given as 'cutoff.looks' must return a numeric ",
+           "matrix or vector, such as the result of cutoff_fast()")
+    }
+  }
   has_event  <- !is.null(event.looks)
   has_time   <- !is.null(time.looks)
   has_cutoff <- !is.null(cutoff.looks)

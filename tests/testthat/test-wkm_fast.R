@@ -324,3 +324,13 @@ test_that("wkm_fast: the formula interface passes every argument", {
     wkm_fast(d1$tt, d1$ee, d1$g, "b", side = 1, conf.level = 0.9,
              weight = "constant", presorted = TRUE))
 })
+
+test_that("wkm_fast: a data frame can be piped into the formula interface", {
+  set.seed(710)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> wkm_fast(fo),
+                   wkm_fast(fo, data = d))
+  expect_error(d |> wkm_fast(fo, data = d), "given twice")
+})

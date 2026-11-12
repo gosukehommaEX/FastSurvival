@@ -254,7 +254,11 @@
 #'   not reached. The \code{look.value} column of the output is taken from the
 #'   \code{"look.value"} attribute of the matrix when it is present, and is
 #'   \code{NA} otherwise. Mutually exclusive with \code{event.looks} and
-#'   \code{time.looks}.
+#'   \code{time.looks}. \code{cutoff.looks} can also be a function of one
+#'   argument, which is applied to \code{data} and must return such a matrix
+#'   or vector, for example
+#'   \code{function(x) cutoff_fast(x, event.looks = 150)}; the cutoffs are then
+#'   computed inside a chain of calls with the native pipe \code{|>}.
 #' @param stat A character vector naming the statistics to compute. Any subset
 #'   of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
 #'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
@@ -450,6 +454,13 @@
 #'                       ms.method = "loglog", s_star = 0.5, side = 1)
 #' head(res5)
 #'
+#' # Cutoffs from a rule, computed inside a chain with the native pipe: the
+#' # final look at 140 events or at month 36, whichever comes first
+#' df |>
+#'   analysis_fast(control = 1, cutoff.looks = function(x)
+#'     cutoff_fast(x, event.looks = c(80, 140), max.time = c(NA, 36))) |>
+#'   head()
+#'
 #' @seealso \code{\link{simdata_fast}}, \code{\link{survdiff_fast}},
 #'   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
 #'   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
@@ -492,6 +503,14 @@ analysis_fast <- function(data, control,
   if (!is.data.frame(data) || !all(req_cols %in% names(data))) {
     stop("'data' must be a data frame with columns: ",
          paste(req_cols, collapse = ", "))
+  }
+  # A function of the data gives the cutoffs (for a chain with |>)
+  if (is.function(cutoff.looks)) {
+    cutoff.looks <- cutoff.looks(data)
+    if (!is.numeric(cutoff.looks)) {
+      stop("the function given as 'cutoff.looks' must return a numeric ",
+           "matrix or vector, such as the result of cutoff_fast()")
+    }
   }
   has_event  <- !is.null(event.looks)
   has_time   <- !is.null(time.looks)

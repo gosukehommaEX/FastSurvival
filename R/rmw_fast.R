@@ -73,7 +73,9 @@
 #'   The order is checked, and an error is given when it does not hold.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> rmw_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{"rmw_fast"}, a length-two numeric vector
 #'   \code{c(statistic, p.value)} with attributes \code{z} (the named component
@@ -112,6 +114,7 @@
 #'
 #' # Formula interface
 #' rmw_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+#' ovarian |> rmw_fast(Surv(futime, fustat) ~ rx, side = 1)
 #'
 #' @seealso
 #' \code{\link{survdiff_fast}} for the standard and weighted log-rank tests.
@@ -137,6 +140,14 @@
 rmw_fast <- function(time, event, group, control, side = 2,
                      s_star = 0.5, presorted = FALSE, data = NULL) {
 
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

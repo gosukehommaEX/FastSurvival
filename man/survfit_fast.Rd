@@ -40,7 +40,9 @@ With the formula interface the default is \code{FALSE}.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{t_sorted} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> survfit_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"survfit_fast"}, which is a named numeric
@@ -140,6 +142,7 @@ summary(fit, times = 10)
 # Formula interface (the data are sorted internally)
 d <- data.frame(time = t_raw, status = e_raw)
 survfit_fast(Surv(time, status) ~ 1, data = d, t_eval = 10)
+d |> survfit_fast(Surv(time, status) ~ 1, t_eval = 10)
 
 }
 \references{

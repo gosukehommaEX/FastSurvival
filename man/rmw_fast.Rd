@@ -49,7 +49,9 @@ The order is checked, and an error is given when it does not hold.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> rmw_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{"rmw_fast"}, a length-two numeric vector
@@ -136,6 +138,7 @@ rmw_fast(ovarian$futime[ord], ovarian$fustat[ord], ovarian$rx[ord],
 
 # Formula interface
 rmw_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+ovarian |> rmw_fast(Surv(futime, fustat) ~ rx, side = 1)
 
 }
 \references{

@@ -108,6 +108,31 @@ km <- kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian)
 plot(km, risk_table = TRUE, conf.style = "band")
 ```
 
+# Chaining with the native pipe
+
+The functions can be chained with the native pipe `|>` of R. A data frame
+piped into an estimation or testing function is used as the data of its
+formula interface. The simulation functions take the data, or the result of
+the previous step, as their first argument, and `cutoff.looks` of
+`analysis_fast()` and `pairwise_fast()`, like `cutoff` of `switch_fast()`,
+also accepts a function of the data, so that cutoffs from a rule of
+`cutoff_fast()` are computed inside the chain. Here the final analysis is at
+180 events or at month 36, whichever comes first, and the nominal one-sided
+levels of the two looks are only for illustration.
+
+```{r pipe, eval = requireNamespace("survival", quietly = TRUE)}
+ovarian |> coxph_fast(Surv(futime, fustat) ~ rx, side = 1) |> as.data.frame()
+
+simdata_fast(nsim = 200, n = c(150, 150), a.time = c(0, 12),
+             a.rate = 300 / 12, e.median = list(12, 18),
+             d.hazard = 0.01, seed = 1) |>
+  analysis_fast(control = 1, side = 1,
+                cutoff.looks = function(x)
+                  cutoff_fast(x, event.looks = c(120, 180),
+                              max.time = c(NA, 36))) |>
+  simsummary_fast(p.col = "logrank.p", alpha = c(0.003, 0.024))
+```
+
 # Where to go next
 
 Several further vignettes cover the package in depth. *Validation of

@@ -53,7 +53,9 @@ column matching the chosen \code{stat} (for example \code{"logrank.p"}).}
 one row per simulated trial and one column per look, as returned by
 \code{\link{cutoff_fast}}. Mutually exclusive with \code{event.looks} and
 \code{time.looks}. See \code{\link{analysis_fast}} for how the rows are
-matched to the simulations.}
+matched to the simulations. It can also be a function of one argument,
+as in \code{\link{analysis_fast}}, which is applied to the whole
+\code{data} (all arms) before the contrasts are formed.}
 
 \item{...}{Further arguments passed to \code{\link{analysis_fast}}, such as
 \code{side}, \code{conf.level}, \code{tau}, \code{rho}, and \code{gamma}.
@@ -138,6 +140,13 @@ head(pw)
 pw2 <- pairwise_fast(dfk, control = 1, event.looks = 200, primary = 3,
                      stat = "logrank", side = 1, adjust = "bonferroni")
 head(pw2)
+
+# A cutoff rule given as a function of the data, in a chain with the
+# native pipe
+dfk |>
+  pairwise_fast(control = 1, side = 1, adjust = "bonferroni",
+                cutoff.looks = function(x) cutoff_fast(x, time.looks = 30)) |>
+  head()
 
 }
 \seealso{

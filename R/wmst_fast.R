@@ -49,7 +49,9 @@
 #'   The order is checked, and an error is given when it does not hold.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> wmst_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return A named numeric vector of class \code{"wmst_fast"}. For a single
 #'   group the elements are the WMST, its standard error and confidence limits.
@@ -73,6 +75,7 @@
 #' # Formula interface
 #' d <- data.frame(time, event, g)
 #' wmst_fast(Surv(time, event) ~ g, data = d, tau1 = 2, tau2 = 12)
+#' d |> wmst_fast(Surv(time, event) ~ g, tau1 = 2, tau2 = 12)
 #'
 #' @references
 #' Paukner, M., & Chappell, R. (2021). Window mean survival time.
@@ -83,6 +86,14 @@
 wmst_fast <- function(time, event, group = NULL, control = NULL,
                       tau1 = 0, tau2 = NULL, side = 2, conf.level = 0.95,
                       presorted = FALSE, data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group or ~ 1 evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

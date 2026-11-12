@@ -221,3 +221,13 @@ test_that("kmcurve_fast: the formula interface passes every argument", {
   expect_identical(kmcurve_fast(Surv(tt, ee) ~ g, d, control = "b"),
                    kmcurve_fast(d$tt, d$ee, d$g, control = "b"))
 })
+
+test_that("kmcurve_fast: a data frame can be piped into the formula interface", {
+  set.seed(713)
+  d <- data.frame(tt = round(rexp(120, 0.1), 1) + 0.1,
+                  ee = rbinom(120, 1, 0.8), g = rep(c(1, 0), 60))
+  fo <- Surv(tt, ee) ~ g
+  expect_identical(d |> kmcurve_fast(fo),
+                   kmcurve_fast(fo, data = d))
+  expect_error(d |> kmcurve_fast(fo, data = d), "given twice")
+})

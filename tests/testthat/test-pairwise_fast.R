@@ -201,3 +201,15 @@ test_that("pairwise_fast: unreached shared cutoffs blank the statistics", {
   expect_true(all(is.na(miss$n.event)))
   expect_true(all(!is.na(pw$logrank.z[pw$sim != 2])))
 })
+
+test_that("pairwise_fast: cutoff.looks can be a function of the data of all arms", {
+  dfk <- simdata_fast(nsim = 6, n = c(80, 80, 80), a.time = c(0, 12),
+                      a.prop = 1, e.median = list(12, 16, 20), seed = 405)
+  rule <- function(x) cutoff_fast(x, event.looks = 120)
+  expect_identical(
+    dfk |> pairwise_fast(control = 1, cutoff.looks = rule, side = 1),
+    pairwise_fast(dfk, control = 1, cutoff.looks = rule(dfk), side = 1))
+  expect_error(pairwise_fast(dfk, control = 1,
+                             cutoff.looks = function(x) "a"),
+               "must return a numeric")
+})

@@ -27,7 +27,9 @@ group variable.}
 
 \item{data}{A data frame in which the variables of a formula given as
 \code{time} are evaluated. Used only with the formula interface; see
-\code{\link{formula_interface}}.}
+\code{\link{formula_interface}}. With the native pipe,
+\code{d |> kmcurve_fast(formula, ...)} uses the data frame \code{d} in
+the same way.}
 }
 \value{
 An object of class \code{kmcurve_fast}: a list with a logical
@@ -81,6 +83,7 @@ head(as.data.frame(fit))
 # Formula interface
 d <- data.frame(time, event, group)
 kmcurve_fast(Surv(time, event) ~ group, data = d)
+d |> kmcurve_fast(Surv(time, event) ~ group) |> plot()
 
 # Single-group object: pass group = NULL (or a single-level group)
 fit1 <- kmcurve_fast(time[group == 0], event[group == 0])

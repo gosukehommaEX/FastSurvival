@@ -79,7 +79,9 @@
 #'   With the formula interface the default is \code{FALSE}.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{t_sorted} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> survfit_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{"survfit_fast"}, which is a named numeric
 #'   vector of length 4 with elements \code{surv}, \code{std.err},
@@ -118,6 +120,7 @@
 #' # Formula interface (the data are sorted internally)
 #' d <- data.frame(time = t_raw, status = e_raw)
 #' survfit_fast(Surv(time, status) ~ 1, data = d, t_eval = 10)
+#' d |> survfit_fast(Surv(time, status) ~ 1, t_eval = 10)
 #'
 #' @seealso
 #' \code{\link[survival]{survfit}} for the standard Kaplan-Meier estimator.
@@ -136,6 +139,14 @@
 survfit_fast <- function(t_sorted, e_sorted, t_eval,
                          conf.level = 0.95, conf.type = "log",
                          presorted = TRUE, data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(e_sorted)) fastsurv_pipe_args(t_sorted, e_sorted, data)
+  if (!is.null(pa)) {
+    t_sorted <- pa$formula
+    e_sorted <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ 1 evaluated in 'data'
   if (inherits(t_sorted, "formula")) {
     f <- fastsurv_formula(t_sorted, data,

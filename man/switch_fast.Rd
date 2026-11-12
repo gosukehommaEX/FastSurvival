@@ -42,7 +42,10 @@ one element per simulated trial or a one-column matrix from
 \code{\link{analysis_fast}}, the names of a vector (or the row names of a
 matrix) are matched to the values of \code{data$sim}; without names the
 elements are taken in the order of the sorted distinct values of
-\code{data$sim}. \code{NA} disables switching in that simulated trial.}
+\code{data$sim}. \code{NA} disables switching in that simulated trial.
+\code{cutoff} can also be a function of one argument, which is applied to
+\code{data} (before switching) and must return such a vector or matrix,
+for example \code{function(x) cutoff_fast(x, event.looks = 150)}.}
 
 \item{delay}{A single non-negative number added to \code{cutoff}, for
 example the time needed to implement the crossover after an interim
@@ -180,6 +183,13 @@ all.equal(r0$logrank.z, r1$logrank.z)
 fa0 <- analysis_fast(df,  control = 1, event.looks = 220)
 fa1 <- analysis_fast(dfs, control = 1, event.looks = 220)
 c(mean(fa0$logrank.z), mean(fa1$logrank.z))
+
+# The same switching and final analysis in one chain with the native pipe
+df |>
+  switch_fast(group = 1, when = "cutoff", aft.factor = 1.5,
+              cutoff = function(x) cutoff_fast(x, event.looks = 150)) |>
+  analysis_fast(control = 1, event.looks = 220) |>
+  head()
 
 # Switching at progression in an illness-death simulation: 50 percent of
 # the control subjects who progress switch, with a post-progression median

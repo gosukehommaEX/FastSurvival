@@ -101,7 +101,9 @@
 #'   values reduce the integration error at a higher computing cost.
 #' @param data A data frame in which the variables of a formula given as
 #'   \code{time} are evaluated. Used only with the formula interface; see
-#'   \code{\link{formula_interface}}.
+#'   \code{\link{formula_interface}}. With the native pipe,
+#'   \code{d |> maxcombo_fast(formula, ...)} uses the data frame \code{d} in
+#'   the same way.
 #'
 #' @return An object of class \code{"maxcombo_fast"}, a named numeric vector of
 #'   length two with elements \code{statistic} (the max-combo statistic;
@@ -139,6 +141,7 @@
 #'
 #' # Formula interface
 #' maxcombo_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
+#' ovarian |> maxcombo_fast(Surv(futime, fustat) ~ rx, side = 1)
 #'
 #' \donttest{
 #' # Cross-check against simtrial::maxcombo (one-sided)
@@ -182,6 +185,14 @@ maxcombo_fast <- function(time, event, group, control, side = 2,
                           rho = c(0, 0, 1, 1), gamma = c(0, 1, 0, 1),
                           presorted = FALSE, abseps = 1e-5, maxpts = 25000,
                           data = NULL) {
+  # Native pipe: d |> f(formula, ...) passes the data frame first and
+  # the formula second; it is handled as f(formula, data = d, ...)
+  pa <- if (!missing(event)) fastsurv_pipe_args(time, event, data)
+  if (!is.null(pa)) {
+    time <- pa$formula
+    event <- NULL
+    data <- pa$data
+  }
   # Formula interface: Surv(time, event) ~ group evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,

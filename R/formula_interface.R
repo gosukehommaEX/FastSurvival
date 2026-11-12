@@ -23,6 +23,13 @@
 #' vector interface, and the result is the same as that of the vector
 #' interface with the vectors evaluated from the formula.
 #'
+#' With the native pipe of R, the data frame comes first:
+#' \code{d |> coxph_fast(Surv(time, status) ~ arm)} is the same as
+#' \code{coxph_fast(Surv(time, status) ~ arm, data = d)}. When the first
+#' argument is a data frame (or a list) and the second is a formula, the two
+#' are taken as the data and the formula; giving \code{data} as well is an
+#' error.
+#'
 #' @details
 #' The response must be \code{Surv(time, event)} with right-censored data,
 #' where \code{event} is 1 (or \code{TRUE}) for an event and 0 (or
@@ -75,6 +82,9 @@
 #' # The same hazard ratio from the formula and from the vectors
 #' coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian)
 #' coxph_fast(ovarian$futime, ovarian$fustat, ovarian$rx, control = 1)
+#'
+#' # The data frame piped into the formula interface
+#' ovarian |> coxph_fast(Surv(futime, fustat) ~ rx)
 #'
 #' # Stratified log-rank test
 #' survdiff_fast(Surv(futime, fustat) ~ rx + strata(resid.ds), data = ovarian)

@@ -832,3 +832,17 @@ test_that("analysis_fast gives NA and one warning for a non-converged Cox fit", 
   expect_identical(res$logrank.z, ref$logrank.z)
   expect_false(anyNA(ref$cox.coef))
 })
+
+test_that("analysis_fast: cutoff.looks can be a function of the data", {
+  dat <- simdata_fast(nsim = 8, n = c(100, 100), a.time = c(0, 12),
+                      a.prop = 1, e.median = list(12, 18),
+                      d.median = list(48, 48), seed = 404)
+  rule <- function(x) cutoff_fast(x, event.looks = c(80, 140),
+                                  max.time = c(NA, 30))
+  expect_identical(
+    dat |> analysis_fast(control = 1, cutoff.looks = rule, side = 1),
+    analysis_fast(dat, control = 1, cutoff.looks = rule(dat), side = 1))
+  expect_error(analysis_fast(dat, control = 1,
+                             cutoff.looks = function(x) "a"),
+               "must return a numeric")
+})
