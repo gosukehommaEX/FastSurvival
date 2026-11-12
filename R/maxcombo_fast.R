@@ -36,9 +36,10 @@
 #' the univariate normal is used. With two or three weights and a one-sided
 #' test, where the integration region is an orthant (all upper limits
 #' infinite), the deterministic
-#' \code{\link[mvtnorm]{TVPACK}} algorithm is used. For the two-sided test, whose
-#' region is a bounded rectangle, and for four or more weights, the randomized
-#' quasi-Monte-Carlo \code{\link[mvtnorm]{GenzBretz}} algorithm is used. It
+#' \code{\link[mvtnorm]{TVPACK}} algorithm of Genz (2004) is used. For the
+#' two-sided test, whose region is a bounded rectangle, and for four or more
+#' weights, the randomized quasi-Monte-Carlo \code{\link[mvtnorm]{GenzBretz}}
+#' algorithm, based on the transformation of Genz (1992), is used. It
 #' uses R's random-number generator, so call \code{set.seed()} beforehand for
 #' reproducible p-values, and it stops when its error estimate falls below
 #' \code{abseps} or after \code{maxpts} function evaluations, whichever comes
@@ -154,6 +155,14 @@
 #' }
 #'
 #' @references
+#' Genz, A. (1992). Numerical computation of multivariate normal probabilities.
+#' \emph{Journal of Computational and Graphical Statistics}, \emph{1}(2),
+#' 141-149.
+#'
+#' Genz, A. (2004). Numerical computation of rectangular bivariate and
+#' trivariate normal and t probabilities. \emph{Statistics and Computing},
+#' \emph{14}(3), 251-260.
+#'
 #' Karrison, T. G. (2016). Versatile tests for comparing survival curves based
 #' on weighted log-rank statistics. \emph{The Stata Journal}, \emph{16}(3),
 #' 678-690.

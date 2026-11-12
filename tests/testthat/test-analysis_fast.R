@@ -264,7 +264,7 @@ test_that("analysis_fast medsurv/wkm/wmst match per-cell wrappers (event looks)"
   looks <- c(110, 170)
   res <- analysis_fast(dat, control = 1, event.looks = looks,
                        stat = c("medsurv", "wkm", "wmst"),
-                       medsurv.method = "km", wkm.weight = "PF",
+                       wkm.weight = "PF",
                        wmst.tau1 = 2, wmst.tau2 = 12, side = 2)
 
   sims <- sort(unique(dat$sim))
@@ -280,9 +280,8 @@ test_that("analysis_fast medsurv/wkm/wmst match per-cell wrappers (event looks)"
       if (!both) next
       n_ev <- sum(cc$event)
 
-      # Median survival difference (km variance, default bandwidth).
-      md <- medsurv_fast(cc$time, cc$event, group = cc$group, control = 1,
-                         method = "km")
+      # Median survival difference (default bandwidth).
+      md <- medsurv_fast(cc$time, cc$event, group = cc$group, control = 1)
       expect_equal(res$medsurv.diff[row], unname(md["diff"]), tolerance = 1e-10)
       expect_equal(res$medsurv.z[row],    unname(md["z"]),    tolerance = 1e-10)
 
@@ -302,6 +301,44 @@ test_that("analysis_fast medsurv/wkm/wmst match per-cell wrappers (event looks)"
   }
 })
 
+test_that("analysis_fast rmw and ahr match rmw_fast and ahr_fast (time looks)", {
+  dat <- simdata_fast(nsim = 10, n = c(100, 100), a.time = c(0, 12),
+                      a.prop = 1,
+                      e.hazard = list(log(2) / 12, c(log(2) / 12, log(2) / 18)),
+                      e.time = list(NULL, c(0, 6, Inf)),
+                      d.median = list(36, 36), seed = 303)
+  looks <- c(18, 30)
+  tau <- 6
+  sims <- sort(unique(dat$sim))
+  # One-sided p-values use the TVPACK algorithm for rmw, two-sided ones Miwa.
+  for (sd_i in c(1, 2)) {
+    res <- analysis_fast(dat, control = 1, time.looks = looks,
+                         stat = c("rmw", "ahr"), s_star = 0.5, tau = tau,
+                         side = sd_i)
+    row <- 0L
+    for (s in sims) {
+      for (cv in looks) {
+        row <- row + 1L
+        cc <- cut_one(dat, s, cv)
+        rw <- rmw_fast(cc$time, cc$event, cc$group, control = 1, side = sd_i,
+                       s_star = 0.5, presorted = TRUE)
+        expect_equal(res$rmw.stat[row], unname(rw["statistic"]),
+                     tolerance = 1e-10)
+        expect_equal(res$rmw.p[row], unname(rw["p.value"]), tolerance = 1e-10)
+        ah <- ahr_fast(cc$time, cc$event, cc$group, control = 1, side = sd_i,
+                       tau = tau, presorted = TRUE)
+        expect_equal(res$ahr.ahr[row], ah$ahr, tolerance = 1e-10)
+        expect_equal(res$ahr.theta.ctrl[row], ah$theta[[1]], tolerance = 1e-10)
+        expect_equal(res$ahr.theta.trt[row], ah$theta[[2]], tolerance = 1e-10)
+        expect_equal(res$ahr.z[row], ah$z, tolerance = 1e-10)
+        expect_equal(res$ahr.p[row], ah$p.value, tolerance = 1e-10)
+      }
+    }
+    expect_equal(row, length(sims) * length(looks))
+    expect_true(all(is.finite(res$rmw.p)) && all(is.finite(res$ahr.p)))
+  }
+})
+
 test_that("analysis_fast: new statistic arguments are validated", {
   set.seed(89)
   dat <- simdata_fast(nsim = 5, n = c(40, 40), a.time = c(0, 6), a.prop = 1,
@@ -318,10 +355,7 @@ test_that("analysis_fast: new statistic arguments are validated", {
   # medsurv.bw, when supplied, must be positive.
   expect_error(analysis_fast(dat, control = 1, event.looks = 50,
                              stat = "medsurv", medsurv.bw = 0), "medsurv.bw")
-  # match.arg guards the method and weight selectors.
-  expect_error(analysis_fast(dat, control = 1, event.looks = 50,
-                             stat = "medsurv", medsurv.method = "bogus"),
-               "should be one of")
+  # match.arg guards the weight selector.
   expect_error(analysis_fast(dat, control = 1, event.looks = 50,
                              stat = "wkm", wkm.weight = "bogus"),
                "should be one of")
@@ -601,15 +635,12 @@ test_that("analysis_fast: medsurv is NA when a median at 0.5 runs up to Inf", {
   d <- data.frame(sim = 1L, group = rep(1:2, each = 10), accrual_time = 0,
                   tte = c(1:10, 1:5, rep(Inf, 5)),
                   event = c(rep(1L, 10), rep(1L, 5), rep(0L, 5)))
-  for (m in c("km", "nph")) {
-    r <- analysis_fast(d, control = 1, event.looks = 1000, stat = "medsurv",
-                       medsurv.method = m)
-    expect_false(r$reached)
-    expect_equal(r$medsurv.ctrl, 5.5)
-    for (cn in c("medsurv.trt", "medsurv.diff", "medsurv.diff.lower",
-                 "medsurv.diff.upper", "medsurv.z", "medsurv.p")) {
-      expect_true(is.na(r[[cn]]), info = paste(m, cn))
-    }
+  r <- analysis_fast(d, control = 1, event.looks = 1000, stat = "medsurv")
+  expect_false(r$reached)
+  expect_equal(r$medsurv.ctrl, 5.5)
+  for (cn in c("medsurv.trt", "medsurv.diff", "medsurv.diff.lower",
+               "medsurv.diff.upper", "medsurv.z", "medsurv.p")) {
+    expect_true(is.na(r[[cn]]), info = cn)
   }
 })
 

@@ -26,7 +26,6 @@ analysis_fast(
   mc.gamma = c(0, 1, 0, 1),
   abseps = 1e-05,
   maxpts = 25000,
-  medsurv.method = c("km", "nph"),
   medsurv.bw = NULL,
   wkm.weight = c("PF", "sqrtPF", "constant"),
   wmst.tau1 = 0,
@@ -156,14 +155,10 @@ evaluations for the quasi-Monte-Carlo integration used by the
 test (see Details). Defaults to 25000. Larger values reduce the
 integration error at a higher computing cost.}
 
-\item{medsurv.method}{A character string naming the variance method for the
-\code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
-See \code{\link{medsurv_fast}}.}
-
 \item{medsurv.bw}{An optional single positive numeric value, the kernel
-bandwidth for the median hazard used by \code{medsurv.method = "km"},
-applied to both groups. \code{NULL} (default) uses a Silverman type default
-computed per group from the cut data, matching \code{\link{medsurv_fast}}.}
+bandwidth for the hazard at the median, applied to both groups.
+\code{NULL} (default) uses the default bandwidth of
+\code{\link{medsurv_fast}}, computed per group from the cut data.}
 
 \item{wkm.weight}{A character string naming the weight for the \code{"wkm"}
 statistic, one of \code{"PF"} (default, Pepe-Fleming combined censoring
@@ -440,10 +435,9 @@ direction is an average hazard ratio below 1 (a negative Z), as in
 The \code{"medsurv"} statistic compares the non-parametric Kaplan-Meier
 median survival times of the two groups. It reports the per-group medians,
 their difference (treatment minus control) with a plain-scale confidence
-interval, the Wald statistic, and the p-value. The variance method is
-selected with \code{medsurv.method} (\code{"km"} or \code{"nph"}), matching
-\code{\link{medsurv_fast}}; \code{medsurv.bw} optionally overrides the kernel
-bandwidth used by \code{medsurv.method = "km"}. The benefit direction is a
+interval, the Wald statistic, and the p-value. The variance is that of
+\code{\link{medsurv_fast}}, and \code{medsurv.bw} optionally overrides its
+default kernel bandwidth. The benefit direction is a
 positive difference (a longer median under treatment), so a positive Z favors
 treatment. When the Kaplan-Meier estimate of a group stays at 0.5 up to an
 infinite observed time, as for subjects with \code{tte = Inf} at a look

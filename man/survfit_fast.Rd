@@ -70,7 +70,8 @@ product-limit estimator evaluated at the largest observed event time less
 than or equal to \code{t_eval}. If \code{t_eval} is smaller than the first
 observed event time, \code{S(t) = 1} and the standard error is zero.
 
-The standard error is estimated by Greenwood's formula:
+The standard error is estimated by Greenwood's formula (Collett, 2023,
+Section 2.2.1):
 
 SE[S(t)] = S(t) * sqrt(sum_\{t_i <= t, d_i > 0\} d_i / (n_i * (n_i - d_i)))
 
@@ -104,6 +105,10 @@ Three confidence interval types are supported via \code{conf.type}:
   \item \code{"log-log"}: Interval on the complementary log-log scale,
     S(t)^exp(+/- z * SE / (S(t) * log(S(t)))).
 }
+The plain and complementary log-log intervals are those of Collett (2023,
+Section 2.2.3). The log interval applies the normal approximation to
+log(S(t)), whose estimated variance is the Greenwood sum (Collett, 2023,
+Section 2.2.1).
 
 The returned object has class \code{"survfit_fast"} and is a named numeric
 vector of length 4 with the evaluation time \code{t_eval}, the confidence
@@ -138,6 +143,9 @@ survfit_fast(Surv(time, status) ~ 1, data = d, t_eval = 10)
 
 }
 \references{
+Collett, D. (2023). \emph{Modelling Survival Data in Medical Research}
+(4th ed.). Chapman and Hall/CRC.
+
 Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from incomplete
 observations. \emph{Journal of the American Statistical Association},
 \emph{53}(282), 457-481.

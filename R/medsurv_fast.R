@@ -12,27 +12,32 @@
 #' interval, the midpoint of that interval is returned (the next event time, or
 #' the last observed time when no later event exists, closes the interval). This
 #' is the convention used by \code{survfit}, including its tolerance of
-#' \code{sqrt(.Machine$double.eps)} when comparing the estimate with 0.5. The
-#' point estimate is the same for both variance methods. When the estimate
-#' stays at 0.5 up to an infinite observed time (for example a subject without
+#' \code{sqrt(.Machine$double.eps)} when comparing the estimate with 0.5.
+#' Collett (2023, Section 2.4) defines the median in the same way. When the
+#' estimate stays at 0.5 up to an infinite observed time (for example a subject
+#' without
 #' a finite event or dropout time in simulated data), the midpoint is not
 #' defined, and the median of that group and the statistics that depend on it
 #' are \code{NA}.
 #'
-#' Two variance methods are available through the \code{method} argument. With
-#' \code{method = "km"} the variance of the estimated median follows the
-#' counting process delta method, var(median) = greenwood_sum / hazard^2, where
-#' the instantaneous hazard at the median is obtained by a Ramlau-Hansen kernel
-#' smoother with an Epanechnikov kernel and bandwidth \code{bw}. With
-#' \code{method = "nph"} the variance reproduces the computation used by
-#' \code{nph::nphparams} with \code{param_type = "Q"} and
-#' \code{haz_method = "local"}: a local constant hazard at the median and a
-#' \code{sum 1 / (Y - k)^2} variance increment. The two methods give the same
-#' median but generally different standard errors, since the variance of a
-#' quantile depends on the local hazard estimate. When the Kaplan-Meier and
-#' Nelson-Aalen medians coincide, which is the usual case, \code{method = "nph"}
-#' reproduces the \code{nph::nphparams} standard error and p-value to numerical
-#' precision.
+#' The variance of the estimated median follows from the delta method for a
+#' percentile (Collett, 2023, Section 2.5): var(median) = var(S(median)) / f^2,
+#' where f is the density of the survival time at the median. The variance of
+#' S(median) is Greenwood's, S(median)^2 times greenwood_sum, and the density is
+#' estimated as S(median) times the hazard at the median, so that
+#' var(median) = greenwood_sum / hazard^2. The hazard at the median is the
+#' kernel smoother of Ramlau-Hansen (1983) applied to the Nelson-Aalen
+#' increments, with the Epanechnikov kernel 0.75 (1 - u^2) on [-1, 1] and
+#' bandwidth \code{bw}. Collett (2023) estimates the density instead by a
+#' difference quotient of the Kaplan-Meier estimate.
+#'
+#' The default bandwidth of a group is (40 sqrt(pi))^(1/5) s m^(-1/5), about
+#' 2.34 s m^(-1/5), where m is the number of events in the group and s the
+#' standard deviation of their times. This is the bandwidth that minimizes the
+#' asymptotic mean integrated squared error of an Epanechnikov kernel estimate
+#' of a normal density, applied to the event times as a simple default. When a
+#' group has fewer than two events, or their times do not vary, the range of
+#' the event times divided by m^(1/3) is used, or 1 when that range is 0.
 #'
 #' The difference is computed as treatment minus control, so a positive
 #' difference indicates a longer median survival time under treatment.
@@ -54,12 +59,9 @@
 #' @param conf.type Confidence interval type for each group median, either
 #'   \code{"plain"} or \code{"log"}. The interval for the difference is always
 #'   on the plain scale.
-#' @param method Variance method, either \code{"km"} (Greenwood increment with a
-#'   kernel hazard) or \code{"nph"} (local constant hazard with a
-#'   \code{sum 1 / (Y - k)^2} increment, matching \code{nph::nphparams}).
-#' @param bw Optional kernel bandwidth for the hazard at the median, used only
-#'   when \code{method = "km"}. Either a single value applied to both groups or
-#'   one value per group. If omitted, a Silverman type default is used.
+#' @param bw Optional kernel bandwidth for the hazard at the median. Either a
+#'   single value applied to both groups or one value per group. If omitted,
+#'   the default described in Details is computed for each group.
 #' @param presorted Logical; set to \code{TRUE} when \code{time}, \code{event}
 #'   and \code{group} are already sorted in ascending order of \code{time}, to
 #'   skip the internal sort. Defaults to \code{FALSE}.
@@ -86,22 +88,25 @@
 #' time <- pmin(tt, cc)
 #' event <- as.integer(tt <= cc)
 #' medsurv_fast(time, event, group = g, control = 0)
-#' medsurv_fast(time, event, group = g, control = 0, method = "nph")
+#' medsurv_fast(time, event, group = g, control = 0, bw = 10)
 #'
 #' # Formula interface
 #' d <- data.frame(time, event, g)
 #' medsurv_fast(Surv(time, event) ~ g, data = d)
 #'
 #' @references
-#' Fleming, T. R., & Harrington, D. P. (1991). \emph{Counting Processes and
-#' Survival Analysis}. New York: John Wiley & Sons.
+#' Collett, D. (2023). \emph{Modelling Survival Data in Medical Research}
+#' (4th ed.). Chapman and Hall/CRC.
+#'
+#' Ramlau-Hansen, H. (1983). Smoothing counting process intensities by means
+#' of kernel functions. \emph{The Annals of Statistics}, \emph{11}(2),
+#' 453-466.
 #'
 #' @importFrom stats qnorm pnorm sd
 #' @export
 medsurv_fast <- function(time, event, group = NULL, control = NULL,
                          side = 2, conf.level = 0.95, conf.type = "log",
-                         method = c("km", "nph"), bw = NULL,
-                         presorted = FALSE, data = NULL) {
+                         bw = NULL, presorted = FALSE, data = NULL) {
   # Formula interface: Surv(time, event) ~ group or ~ 1 evaluated in 'data'
   if (inherits(time, "formula")) {
     f <- fastsurv_formula(time, data,
@@ -111,12 +116,10 @@ medsurv_fast <- function(time, event, group = NULL, control = NULL,
     if (is.null(control)) control <- f$control
     return(medsurv_fast(f$time, f$event, group = f$group, control = control,
                         side = side, conf.level = conf.level,
-                        conf.type = conf.type, method = method, bw = bw,
+                        conf.type = conf.type, bw = bw,
                         presorted = presorted))
   }
   if (!is.null(data)) stop("'data' is used only with a formula")
-
-  method <- match.arg(method)
 
   n_obs <- length(time)
   if (length(event) != n_obs) {
@@ -192,7 +195,7 @@ medsurv_fast <- function(time, event, group = NULL, control = NULL,
     evt <- s_time[s_grp == g & s_event == 1L]
     m_g <- length(evt)
     b <- if (m_g >= 2L && stats::sd(evt) > 0) {
-      1.06 * stats::sd(evt) * m_g^(-1 / 5)
+      (40 * sqrt(pi))^(1 / 5) * stats::sd(evt) * m_g^(-1 / 5)
     } else {
       NA_real_
     }
@@ -219,16 +222,9 @@ medsurv_fast <- function(time, event, group = NULL, control = NULL,
   median_v <- core[, 1]
   greenwood_v <- core[, 3]
   kernel_haz_v <- core[, 4]
-  nph_var_v <- core[, 5]
-  local_haz_v <- core[, 6]
 
-  if (method == "nph") {
-    var_v <- ifelse(is.finite(local_haz_v) & local_haz_v > 0,
-                    nph_var_v / (local_haz_v * local_haz_v), NA_real_)
-  } else {
-    var_v <- ifelse(is.finite(kernel_haz_v) & kernel_haz_v > 0,
-                    greenwood_v / (kernel_haz_v * kernel_haz_v), NA_real_)
-  }
+  var_v <- ifelse(is.finite(kernel_haz_v) & kernel_haz_v > 0,
+                  greenwood_v / (kernel_haz_v * kernel_haz_v), NA_real_)
   se_v <- sqrt(var_v)
 
   zc <- stats::qnorm(1 - (1 - conf.level) / 2)
@@ -289,7 +285,6 @@ medsurv_fast <- function(time, event, group = NULL, control = NULL,
   attr(out, "bw") <- bw_vec
   attr(out, "control") <- control_label
   attr(out, "treatment") <- treatment_label
-  attr(out, "method") <- method
   class(out) <- c("medsurv_fast", "fastsurv")
   out
 }

@@ -37,7 +37,7 @@ print.medsurv_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
   conf.level <- attr(x, "conf.level")
   if (is.null(conf.level)) conf.level <- 0.95
   ci_lab <- conf.level * 100
-  method <- attr(x, "method")
+  conf.type <- attr(x, "conf.type")
   side   <- attr(x, "side")
   alt    <- if (side == 2) "two.sided" else "one.sided"
 
@@ -45,7 +45,7 @@ print.medsurv_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
     control <- attr(x, "control")
     cat("Median survival time (two-group)\n\n")
     cat(sprintf("  control = %s\n", format(control)))
-    cat(sprintf("  method = %s,  alternative = %s\n\n", method, alt))
+    cat(sprintf("  conf.type = %s,  alternative = %s\n\n", conf.type, alt))
 
     if (is.na(x["median.control"]) || is.na(x["median.treatment"])) {
       cat("  Estimate not available.\n")
@@ -84,7 +84,7 @@ print.medsurv_fast <- function(x, digits = max(1L, getOption("digits") - 3L),
                  cs.ind = 1:3, tst.ind = 4L)
   } else {
     cat("Median survival time (single-group)\n\n")
-    cat(sprintf("  method = %s\n\n", method))
+    cat(sprintf("  conf.type = %s\n\n", conf.type))
 
     if (is.na(x["median"])) {
       cat("  Estimate not available.\n")

@@ -59,10 +59,11 @@ struct MedsurvScratch {
 void medsurv_core_impl(const double*, const int*, int, double,
                        MedsurvScratch&, double*);
 
-// Silverman type default bandwidth for the median kernel hazard, computed from
-// the event times of a single group. Reproduces the default bw used by
-// medsurv_fast when bw is not supplied: 1.06 sd(evt) m^(-1/5) when the event
-// times have positive spread, falling back to range / max(m, 1)^(1/3), or 1.
+// Default bandwidth for the median kernel hazard, computed from the event
+// times of a single group. Reproduces the default bw used by medsurv_fast when
+// bw is not supplied: (40 sqrt(pi))^(1/5) sd(evt) m^(-1/5), the normal
+// reference bandwidth of the Epanechnikov kernel, when the event times have
+// positive spread, falling back to range / max(m, 1)^(1/3), or 1.
 static double silverman_bw(const double* t, const int* e, int n) {
   double sum = 0.0;
   int m = 0;
@@ -77,7 +78,8 @@ static double silverman_bw(const double* t, const int* e, int n) {
     }
     double sd = std::sqrt(ss / (double) (m - 1));
     if (sd > 0.0) {
-      double b = 1.06 * sd * std::pow((double) m, -1.0 / 5.0);
+      double b = std::pow(40.0 * std::sqrt(std::acos(-1.0)), 1.0 / 5.0) * sd *
+                 std::pow((double) m, -1.0 / 5.0);
       if (std::isfinite(b) && b > 0.0) return b;
     }
   }
@@ -201,7 +203,7 @@ List analysis_loop_core(
   if (do_milestone) { ms_mat  = NumericMatrix(ncells, 4); std::fill(ms_mat.begin(),  ms_mat.end(),  NA_REAL); }
   if (do_rmw)       { rmw_mat = NumericMatrix(ncells, 5); std::fill(rmw_mat.begin(), rmw_mat.end(), NA_REAL); }
   if (do_ahr)       { ahr_mat = NumericMatrix(ncells, 5); std::fill(ahr_mat.begin(), ahr_mat.end(), NA_REAL); }
-  if (do_medsurv) { medsurv_mat = NumericMatrix(ncells, 10); std::fill(medsurv_mat.begin(), medsurv_mat.end(), NA_REAL); }
+  if (do_medsurv) { medsurv_mat = NumericMatrix(ncells, 6); std::fill(medsurv_mat.begin(), medsurv_mat.end(), NA_REAL); }
   if (do_wkm)     { wkm_mat  = NumericMatrix(ncells, 4); std::fill(wkm_mat.begin(),  wkm_mat.end(),  NA_REAL); }
   if (do_wmst)    { wmst_mat = NumericMatrix(ncells, 4); std::fill(wmst_mat.begin(), wmst_mat.end(), NA_REAL); }
   if (do_maxcombo) {
@@ -569,19 +571,15 @@ List analysis_loop_core(
                                           : silverman_bw(t0d.data(), e0i.data(), n0);
           double bw1 = (medsurv_bw > 0.0) ? medsurv_bw
                                           : silverman_bw(t1d.data(), e1i.data(), n1);
-          double m0[6], m1[6];
+          double m0[4], m1[4];
           medsurv_core_impl(t0d.data(), e0i.data(), n0, bw0, medsurv_sc, m0);
           medsurv_core_impl(t1d.data(), e1i.data(), n1, bw1, medsurv_sc, m1);
           medsurv_mat(pos, 0) = m0[0];  // median (control)
           medsurv_mat(pos, 1) = m0[2];  // greenwood
           medsurv_mat(pos, 2) = m0[3];  // kernel hazard
-          medsurv_mat(pos, 3) = m0[4];  // nph variance increment
-          medsurv_mat(pos, 4) = m0[5];  // local hazard
-          medsurv_mat(pos, 5) = m1[0];  // median (treatment)
-          medsurv_mat(pos, 6) = m1[2];
-          medsurv_mat(pos, 7) = m1[3];
-          medsurv_mat(pos, 8) = m1[4];
-          medsurv_mat(pos, 9) = m1[5];
+          medsurv_mat(pos, 3) = m1[0];  // median (treatment)
+          medsurv_mat(pos, 4) = m1[2];
+          medsurv_mat(pos, 5) = m1[3];
         }
 
         ++pos;

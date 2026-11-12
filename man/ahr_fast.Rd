@@ -83,15 +83,24 @@ The estimator works with the group shares of the total hazard. Writing
 \code{S1} and \code{S2} for the two survival functions, the reference-group
 share is \code{theta1 = -integral(S2 dS1) / (1 - S1(tau) S2(tau))} over
 \code{[0, tau]}, the comparison-group share is \code{theta2 = 1 - theta1},
-and the average hazard ratio is \code{ahr = theta2 / theta1}. Under
+and the average hazard ratio is \code{ahr = theta2 / theta1}. This is the
+share of Kalbfleisch and Prentice (1981, Section 2.3) with the weight
+function \code{S1 S2} (their alpha = 1), truncated at \code{tau}. Under
 proportional hazards with hazard ratio \code{psi}, \code{ahr} estimates
 \code{psi}. A value above 1 indicates higher hazard (worse survival) in the
-comparison group. The variance of \code{theta1} is the direct
-Greenwood-based estimator. The primary test is on the theta (group-share)
+comparison group. The variance of \code{theta1} is the delta-method
+variance of Kalbfleisch and Prentice (1981, Section 2.3), with the variance
+of each log Kaplan-Meier curve estimated by Greenwood's formula as in their
+Section 2.4. The terms that pair a curve over \code{[0, tau]} with its value
+at \code{tau} carry the factor \code{S1(tau) S2(tau)} that follows from
+the linearization in their eq. (11). The primary test is on the theta
+(group-share)
 scale, as in Kalbfleisch and Prentice (1981) and Dormuth et al. (2024,
 eq. 5): the comparison-group share is compared with its null value (0.5 when
 \code{null.ahr = 1}). An equivalent test and a confidence interval on the
-\code{log(ahr)} scale are also reported.
+\code{log(ahr)} scale are also reported; they use the delta method for
+\code{log(theta2 / theta1)}, as Kalbfleisch and Prentice (1981, p. 107) do
+for \code{log(theta1 / (1 - theta1))}.
 
 The integral uses the right-continuous Kaplan-Meier estimate \code{S2} at
 each jump of \code{S1}, exactly as the \code{AHR} package does, and

@@ -205,7 +205,7 @@ if (have_survival && have_nph) {
     "medsurv_fast()", "nph::nphparams()",
     microbenchmark::microbenchmark(
       fast = medsurv_fast(t_s, e_s, g_s, control = 1, side = 1,
-                          method = "nph", presorted = TRUE),
+                          presorted = TRUE),
       ref  = nph::nphparams(time = dataset$tte, event = dataset$event,
                             group = as.integer(dataset$group == 2),
                             param_type = "Q", param_par = 0.5),

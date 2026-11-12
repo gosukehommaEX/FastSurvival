@@ -37,9 +37,10 @@
 #' \code{side = 2} the statistic is \code{max(abs(Z_lr), abs(Z_mw))} and the
 #' two-sided p-value is \code{P(max(abs(Z_lr), abs(Z_mw)) >= observed)}. The
 #' joint normal probability is evaluated with \code{mvtnorm::pmvnorm}, using the
-#' exact \code{TVPACK} algorithm for the one-sided region, an orthant (all
-#' upper limits infinite), and the
-#' deterministic \code{Miwa} algorithm for the two-sided rectangle.
+#' deterministic \code{TVPACK} algorithm of Genz (2004) for the one-sided
+#' region, an orthant (all upper limits infinite), and the deterministic
+#' \code{Miwa} algorithm of Miwa, Hayter, and Kuriki (2003) for the two-sided
+#' rectangle.
 #'
 #' When \code{presorted = TRUE}, the input vectors are assumed to be sorted by
 #' ascending \code{time} and the internal \code{order()} call is skipped, which
@@ -117,12 +118,20 @@
 #' \code{\link{print.rmw_fast}} for the print method.
 #'
 #' @references
+#' Genz, A. (2004). Numerical computation of rectangular bivariate and
+#' trivariate normal and t probabilities. \emph{Statistics and Computing},
+#' \emph{14}(3), 251-260.
+#'
 #' Magirr, D., & \enc{Öhrn}{Ohrn}, F. (2026). Robust modestly weighted log-rank
 #' tests.
 #' \emph{Pharmaceutical Statistics}, \emph{25}(1), e70066.
 #'
 #' Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 #' \emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
+#'
+#' Miwa, T., Hayter, A. J., & Kuriki, S. (2003). The evaluation of general
+#' non-centred orthant probabilities. \emph{Journal of the Royal Statistical
+#' Society, Series B}, \emph{65}(1), 223-234.
 #'
 #' @export
 rmw_fast <- function(time, event, group, control, side = 2,

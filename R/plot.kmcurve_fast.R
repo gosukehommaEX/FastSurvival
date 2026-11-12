@@ -13,7 +13,8 @@
 #'
 #' @details
 #' The smoothed hazard ratio is obtained by kernel smoothing the Nelson-Aalen
-#' increments of each group. For group \code{j} the kernel hazard estimate is
+#' increments of each group (Ramlau-Hansen, 1983). For group \code{j} the
+#' kernel hazard estimate is
 #' the sum over event times of \code{(1 / bw) K((t - t_i) / bw) (d_i / Y_i)},
 #' with an Epanechnikov kernel \code{K}, and the hazard ratio is the treatment
 #' estimate divided by the control estimate. The bandwidth \code{bw} controls the
@@ -41,8 +42,10 @@
 #' @param tau Upper limit used for the restricted mean survival time and the
 #'   average hazard ratio. Defaults to the smaller of the two groups' largest
 #'   observed times.
-#' @param bw Kernel bandwidth for the smoothed hazard ratio. Defaults to a value
-#'   derived from the spread of the event times.
+#' @param bw Kernel bandwidth for the smoothed hazard ratio. Defaults to 0.15
+#'   times the range of the event times of both groups, a default for display:
+#'   the bandwidth sets the smoothness of the drawn curve, and Ramlau-Hansen
+#'   (1983) also chose it by inspecting the estimate.
 #' @param n_grid Number of grid points for the smoothed hazard ratio.
 #' @param conf.int Logical. If \code{TRUE}, add pointwise confidence limits to
 #'   the survival curves, drawn as set by \code{conf.style}.
@@ -84,6 +87,11 @@
 #' @param ... Further arguments, currently ignored.
 #'
 #' @return The input \code{x}, invisibly.
+#'
+#' @references
+#' Ramlau-Hansen, H. (1983). Smoothing counting process intensities by means
+#' of kernel functions. \emph{The Annals of Statistics}, \emph{11}(2),
+#' 453-466.
 #'
 #' @seealso \code{\link{kmcurve_fast}}, \code{\link{print.kmcurve_fast}},
 #'   \code{\link{as.data.frame.kmcurve_fast}}

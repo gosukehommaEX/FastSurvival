@@ -103,8 +103,8 @@
 #' }
 #'
 #' @references
-#' Collett, D. (2014). \emph{Modelling Survival Data in Medical Research}
-#' (3rd ed.). Chapman and Hall/CRC.
+#' Collett, D. (2023). \emph{Modelling Survival Data in Medical Research}
+#' (4th ed.). Chapman and Hall/CRC.
 #'
 #' @useDynLib FastSurvival, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

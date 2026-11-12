@@ -101,49 +101,22 @@ test_that("bandwidth affects the standard error but not the median (km method)",
                                 unname(res_b["se.control"]))))
 })
 
-test_that("method changes the standard error but not the median", {
-  set.seed(202)
-  n_per <- 250
-  grp <- rep(0:1, each = n_per)
-  tt <- c(rexp(n_per, log(2) / 12), rexp(n_per, log(2) / 16))
-  cc <- rexp(2 * n_per, 0.01)
-  time <- pmin(tt, cc)
-  event <- as.integer(tt <= cc)
-
-  km <- medsurv_fast(time, event, group = grp, control = 0, method = "km")
-  np <- medsurv_fast(time, event, group = grp, control = 0, method = "nph")
-  expect_equal(unname(km["median.control"]), unname(np["median.control"]))
-  expect_equal(unname(km["median.treatment"]), unname(np["median.treatment"]))
-  expect_false(isTRUE(all.equal(unname(km["se.diff"]), unname(np["se.diff"]))))
-})
-
-test_that("method = 'nph' reproduces nph::nphparams median inference", {
-  skip_if_not_installed("nph")
-  set.seed(101)
-  n_per <- 300
-  grp <- rep(0:1, each = n_per)
-  tt <- c(rexp(n_per, log(2) / 12), rexp(n_per, log(2) / 16))
-  cc <- rexp(2 * n_per, 0.01)
-  time <- pmin(tt, cc)
-  event <- as.integer(tt <= cc)
-  # Only the reference computation is protected; an error in medsurv_fast
-  # fails the test instead of skipping it.
-  fast <- medsurv_fast(time, event, group = grp, control = 0, side = 2,
-                       method = "nph")
-  np <- tryCatch(
-    nph::nphparams(time = time, event = event, group = grp,
-                   param_type = "Q", param_par = 0.5),
-    error = function(e) NULL)
-  skip_if(is.null(np), "nph::nphparams failed")
-  # An exact comparison requires the Kaplan-Meier and Nelson-Aalen medians to
-  # coincide, since medsurv_fast keeps the Kaplan-Meier point estimate.
-  skip_if(!isTRUE(all.equal(unname(fast["diff"]),
-                            as.numeric(np$tab$Estimate), tolerance = 1e-8)),
-          "Kaplan-Meier and Nelson-Aalen medians differ for this dataset")
-  expect_equal(unname(fast["se.diff"]), as.numeric(np$tab$SE),
-               tolerance = 1e-6)
-  expect_equal(unname(fast["p"]), as.numeric(np$tab$p_unadj),
-               tolerance = 1e-6)
+test_that("the default bandwidth and the standard error match an independent computation", {
+  # Expected values computed independently in Python: the Kaplan-Meier median
+  # (13), the Greenwood sum up to it, the default bandwidth
+  # (40 sqrt(pi))^(1/5) sd m^(-1/5) of the m = 13 event times, the
+  # Epanechnikov kernel hazard at the median from the Nelson-Aalen increments,
+  # se = sqrt(Greenwood sum) / hazard, and the 95% log-type interval. The
+  # earlier constant 1.06 would change the standard error by 9 percent.
+  time  <- c(2, 3, 3, 5, 6, 7, 8, 8, 9, 11, 12, 13, 15, 16, 18, 20, 21, 24,
+             25, 30)
+  event <- c(1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0)
+  res <- medsurv_fast(time, event)
+  expect_equal(attr(res, "bw"), 9.4871981483546968, tolerance = 1e-12)
+  expect_equal(unname(res["median"]), 13)
+  expect_equal(unname(res["se"]), 4.0142773648345704, tolerance = 1e-12)
+  expect_equal(unname(res["lower"]), 7.0974173780602863, tolerance = 1e-12)
+  expect_equal(unname(res["upper"]), 23.811478316382665, tolerance = 1e-12)
 })
 
 test_that("input validation works", {
@@ -156,11 +129,6 @@ test_that("input validation works", {
   expect_error(
     medsurv_fast(1:6, rep(0:1, 3), group = rep(0:1, 3)),
     "control must be specified"
-  )
-  expect_error(
-    medsurv_fast(1:6, rep(0:1, 3), group = rep(0:1, 3), control = 0,
-                 method = "foo"),
-    "should be one of"
   )
 })
 
@@ -208,12 +176,10 @@ test_that("medsurv_fast: a median at 0.5 up to an infinite time is NA", {
   time  <- c(1:10, 1:5, rep(Inf, 5))
   event <- c(rep(1, 10), rep(1, 5), rep(0, 5))
   group <- rep(0:1, each = 10)
-  for (m in c("km", "nph")) {
-    res <- medsurv_fast(time, event, group = group, control = 0, method = m)
-    expect_equal(unname(res["median.control"]), 5.5)
-    for (nm in c("median.treatment", "diff", "se.diff", "z", "p")) {
-      expect_true(is.na(res[[nm]]), info = paste(m, nm))
-    }
+  res <- medsurv_fast(time, event, group = group, control = 0)
+  expect_equal(unname(res["median.control"]), 5.5)
+  for (nm in c("median.treatment", "diff", "se.diff", "z", "p")) {
+    expect_true(is.na(res[[nm]]), info = nm)
   }
   one <- medsurv_fast(time[group == 1], event[group == 1])
   expect_true(is.na(one[["median"]]))
@@ -241,11 +207,9 @@ test_that("medsurv_fast: the formula interface gives the vector result", {
   n <- 120
   d <- data.frame(tt = round(rexp(n, 0.1), 1), ee = rbinom(n, 1, 0.8),
                   g = rep(c(1, 0), n / 2))
-  for (m in c("km", "nph")) {
-    expect_identical(
-      medsurv_fast(Surv(tt, ee) ~ g, data = d, method = m),
-      medsurv_fast(d$tt, d$ee, group = d$g, control = 0, method = m))
-  }
+  expect_identical(
+    medsurv_fast(Surv(tt, ee) ~ g, data = d),
+    medsurv_fast(d$tt, d$ee, group = d$g, control = 0))
   ref1 <- medsurv_fast(d$tt, d$ee)
   expect_identical(medsurv_fast(Surv(tt, ee) ~ 1, data = d), ref1)
   expect_identical(class(ref1), c("medsurv_fast", "fastsurv"))
@@ -261,9 +225,9 @@ test_that("medsurv_fast: the formula interface passes every argument", {
   d2 <- d[order(d$s, d$tt), ]
   expect_identical(
     medsurv_fast(Surv(tt, ee) ~ g, d1, control = "b", side = 1,
-                 conf.level = 0.9, conf.type = "plain", method = "nph",
+                 conf.level = 0.9, conf.type = "plain",
                  bw = c(2, 3), presorted = TRUE),
     medsurv_fast(d1$tt, d1$ee, d1$g, "b", side = 1, conf.level = 0.9,
-                 conf.type = "plain", method = "nph", bw = c(2, 3),
+                 conf.type = "plain", bw = c(2, 3),
                  presorted = TRUE))
 })

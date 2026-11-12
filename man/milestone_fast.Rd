@@ -78,8 +78,9 @@ log-log and log transformed confidence intervals respectively. When the
 estimate of a group is 0 or 1 at \code{tau}, its one-sample interval
 degenerates to the estimate, so the interval of the difference is still
 given; the \code{"loglog"} test statistic is then \code{NA}. See Tang
-(2021) for the MOVER difference interval and Tang (2022) for the use of
-milestone survival in trial design.
+(2021) for the MOVER difference interval, Zou and Donner (2008) for the
+MOVER method in general, and Tang (2022) for the use of milestone survival
+in trial design.
 }
 \details{
 The \code{"wald"} statistic is the difference divided by its Greenwood
@@ -116,4 +117,8 @@ Medicine}, \emph{40}(23), 4961-4976.
 
 Tang, Y. (2022). Complex survival trial design by the product integration
 method. \emph{Statistics in Medicine}, \emph{41}(4), 798-814.
+
+Zou, G. Y., & Donner, A. (2008). Construction of confidence limits about
+effect measures: a general approach. \emph{Statistics in Medicine},
+\emph{27}(10), 1693-1702.
 }

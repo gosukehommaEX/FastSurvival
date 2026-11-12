@@ -35,14 +35,18 @@
 #' the overall statistic is Z = (sum O_1 - sum E_1) / sqrt(sum V_1). A stratum
 #' that contains only one group contributes zero to all three totals, the same
 #' convention used by \code{\link[survival]{survdiff}}. This is the standard
-#' stratified log-rank test, equivalent to a log-rank test that conditions on
-#' the stratum at each event time.
+#' stratified log-rank test (Collett, 2023, Section 2.8), equivalent to a
+#' log-rank test that conditions on the stratum at each event time.
 #'
 #' When a non-default \code{weight} is requested, the weighted log-rank test is
 #' computed by the C++ core \code{weighted_logrank_core}. The statistic is
 #' Z = U / sqrt(V) with U = sum w_j (O_1j - E_1j) and
 #' V = sum w_j^2 n_0j n_1j O_j (n_j - O_j) / (n_j^2 (n_j - 1)), where the weight
-#' w_j is one of the schemes named by \code{weight}. The Fleming-Harrington and
+#' w_j is one of the schemes named by \code{weight}. V is the hypergeometric
+#' variance of the log-rank test weighted by w_j^2 (Fleming and Harrington,
+#' 1991, Section 7.2). For the Gehan-Breslow weight it is the variance of
+#' Breslow (1970) and Tarone and Ware (1977), not the permutation variance of
+#' Gehan (1965). The Fleming-Harrington and
 #' modestly-weighted schemes use the left-continuous pooled Kaplan-Meier
 #' estimate S(t-), initialized at 1 and updated after each event time, so the
 #' first event always has S(t-) = 1. The modestly-weighted scheme determines
@@ -53,7 +57,8 @@
 #' \code{stratified_weighted_logrank_core}: each stratum is an independent
 #' weighted log-rank test whose weights come from that stratum's own pooled
 #' Kaplan-Meier estimate, and the per-stratum U and V are summed before
-#' standardizing once as Z = sum U / sqrt(sum V).
+#' standardizing once as Z = sum U / sqrt(sum V), as Collett (2023,
+#' Section 2.8) describes for the stratified weighted tests.
 #'
 #' When \code{presorted = TRUE}, the input vectors are assumed to be sorted and
 #' the internal \code{order()} call is skipped. In the unstratified case the
@@ -109,9 +114,10 @@
 #'   Fleming-Harrington G(rho, gamma) test with weight
 #'   \code{S(t-)^rho (1 - S(t-))^gamma}. \code{"mwlrt"} is the modestly-weighted
 #'   log-rank test of Magirr and Burman with weight
-#'   \code{1 / max(S(t-), S(t_star-))}, the left-continuous form used by
-#'   nphRCT (Magirr and Burman define the weight with \code{S(t)} and
-#'   \code{S(t_star)}). \code{"gehan"} is the Gehan-Breslow test
+#'   \code{1 / max(S(t-), S(t_star-))}, the left-continuous form of Magirr
+#'   and \enc{Öhrn}{Ohrn} (2026, eq. 2) and nphRCT (Magirr and Burman define
+#'   the weight with \code{S(t)} and \code{S(t_star)}). \code{"gehan"} is the
+#'   Gehan-Breslow test
 #'   with weight equal to the at-risk count, and \code{"tarone-ware"} uses the
 #'   square root of the at-risk count. Here \code{S(t-)} is the left-continuous
 #'   pooled Kaplan-Meier estimate just prior to each event time.
@@ -209,6 +215,13 @@
 #' \code{\link{print.survdiff_fast}} for the print method.
 #'
 #' @references
+#' Breslow, N. (1970). A generalized Kruskal-Wallis test for comparing K
+#' samples subject to unequal patterns of censorship. \emph{Biometrika},
+#' \emph{57}(3), 579-594.
+#'
+#' Collett, D. (2023). \emph{Modelling Survival Data in Medical Research}
+#' (4th ed.). Chapman and Hall/CRC.
+#'
 #' Gehan, E. A. (1965). A generalized Wilcoxon test for comparing arbitrarily
 #' singly-censored samples. \emph{Biometrika}, \emph{52}(1-2), 203-224.
 #'
@@ -224,6 +237,9 @@
 #'
 #' Magirr, D., & Burman, C.-F. (2019). Modestly weighted logrank tests.
 #' \emph{Statistics in Medicine}, \emph{38}(20), 3782-3790.
+#'
+#' Magirr, D., & \enc{Öhrn}{Ohrn}, F. (2026). Robust modestly weighted log-rank
+#' tests. \emph{Pharmaceutical Statistics}, \emph{25}(1), e70066.
 #'
 #' @export
 survdiff_fast <- function(time, event, group, control, side = 2,

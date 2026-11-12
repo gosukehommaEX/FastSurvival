@@ -36,7 +36,9 @@
 #' supplied and piecewise-exponential when a vector is supplied together with
 #' the corresponding \code{e.time} or \code{d.time} breakpoints, whose last
 #' element must be \code{Inf}. Group-specific parameters are supplied as a
-#' two-element list (control first, treatment second).
+#' two-element list (control first, treatment second). The times are generated
+#' by applying the inverse of the cumulative hazard to a unit exponential
+#' variable (Bender, Augustin, and Blettner, 2005).
 #'
 #' When \code{prevalence} is supplied the trial has subgroups. A numeric vector
 #' defines a single factor; a list of numeric vectors defines several
@@ -414,6 +416,10 @@
 #' head(res12)
 #'
 #' @references
+#' Bender, R., Augustin, T., & Blettner, M. (2005). Generating survival times
+#' to simulate Cox proportional hazards models. \emph{Statistics in Medicine},
+#' \emph{24}(11), 1713-1723.
+#'
 #' Fleischer, F., Gaschler-Markefski, B., & Bluhmki, E. (2009). A statistical
 #' model for the dependence between progression-free survival and overall
 #' survival. \emph{Statistics in Medicine}, \emph{28}(21), 2669-2686.

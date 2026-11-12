@@ -192,10 +192,9 @@
 #' The \code{"medsurv"} statistic compares the non-parametric Kaplan-Meier
 #' median survival times of the two groups. It reports the per-group medians,
 #' their difference (treatment minus control) with a plain-scale confidence
-#' interval, the Wald statistic, and the p-value. The variance method is
-#' selected with \code{medsurv.method} (\code{"km"} or \code{"nph"}), matching
-#' \code{\link{medsurv_fast}}; \code{medsurv.bw} optionally overrides the kernel
-#' bandwidth used by \code{medsurv.method = "km"}. The benefit direction is a
+#' interval, the Wald statistic, and the p-value. The variance is that of
+#' \code{\link{medsurv_fast}}, and \code{medsurv.bw} optionally overrides its
+#' default kernel bandwidth. The benefit direction is a
 #' positive difference (a longer median under treatment), so a positive Z favors
 #' treatment. When the Kaplan-Meier estimate of a group stays at 0.5 up to an
 #' infinite observed time, as for subjects with \code{tte = Inf} at a look
@@ -344,13 +343,10 @@
 #'   \code{"maxcombo"} p-value with four or more weights or with a two-sided
 #'   test (see Details). Defaults to 25000. Larger values reduce the
 #'   integration error at a higher computing cost.
-#' @param medsurv.method A character string naming the variance method for the
-#'   \code{"medsurv"} statistic, one of \code{"km"} (default) or \code{"nph"}.
-#'   See \code{\link{medsurv_fast}}.
 #' @param medsurv.bw An optional single positive numeric value, the kernel
-#'   bandwidth for the median hazard used by \code{medsurv.method = "km"},
-#'   applied to both groups. \code{NULL} (default) uses a Silverman type default
-#'   computed per group from the cut data, matching \code{\link{medsurv_fast}}.
+#'   bandwidth for the hazard at the median, applied to both groups.
+#'   \code{NULL} (default) uses the default bandwidth of
+#'   \code{\link{medsurv_fast}}, computed per group from the cut data.
 #' @param wkm.weight A character string naming the weight for the \code{"wkm"}
 #'   statistic, one of \code{"PF"} (default, Pepe-Fleming combined censoring
 #'   weight), \code{"sqrtPF"}, or \code{"constant"}. See \code{\link{wkm_fast}},
@@ -480,7 +476,7 @@ analysis_fast <- function(data, control,
                           s_star = 0.5,
                           mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
                           abseps = 1e-5, maxpts = 25000,
-                          medsurv.method = c("km", "nph"), medsurv.bw = NULL,
+                          medsurv.bw = NULL,
                           wkm.weight = c("PF", "sqrtPF", "constant"),
                           wmst.tau1 = 0, wmst.tau2 = NULL,
                           cutoff.looks = NULL, mc.alpha = NULL,
@@ -488,7 +484,6 @@ analysis_fast <- function(data, control,
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
-  medsurv.method <- match.arg(medsurv.method)
   wkm.weight <- match.arg(wkm.weight)
   ties <- match.arg(ties)
 
@@ -1108,16 +1103,9 @@ analysis_fast <- function(data, control,
 
   if (do_medsurv) {
     med0 <- core$medsurv[, 1]; gw0 <- core$medsurv[, 2]; kh0 <- core$medsurv[, 3]
-    nv0  <- core$medsurv[, 4]; lh0 <- core$medsurv[, 5]
-    med1 <- core$medsurv[, 6]; gw1 <- core$medsurv[, 7]; kh1 <- core$medsurv[, 8]
-    nv1  <- core$medsurv[, 9]; lh1 <- core$medsurv[, 10]
-    if (medsurv.method == "nph") {
-      var0 <- ifelse(is.finite(lh0) & lh0 > 0, nv0 / (lh0 * lh0), NA_real_)
-      var1 <- ifelse(is.finite(lh1) & lh1 > 0, nv1 / (lh1 * lh1), NA_real_)
-    } else {
-      var0 <- ifelse(is.finite(kh0) & kh0 > 0, gw0 / (kh0 * kh0), NA_real_)
-      var1 <- ifelse(is.finite(kh1) & kh1 > 0, gw1 / (kh1 * kh1), NA_real_)
-    }
+    med1 <- core$medsurv[, 4]; gw1 <- core$medsurv[, 5]; kh1 <- core$medsurv[, 6]
+    var0 <- ifelse(is.finite(kh0) & kh0 > 0, gw0 / (kh0 * kh0), NA_real_)
+    var1 <- ifelse(is.finite(kh1) & kh1 > 0, gw1 / (kh1 * kh1), NA_real_)
     diff_v  <- med1 - med0
     se_diff <- sqrt(var0 + var1)
     z_med   <- ifelse(is.finite(se_diff) & se_diff > 0, diff_v / se_diff,
