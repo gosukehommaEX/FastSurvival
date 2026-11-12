@@ -103,7 +103,22 @@ reference implementation, so results are reproducible from <code>seed</code>.</p
 <span>  h12.switch.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  h12.switch.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  switch.clock <span class="op">=</span> <span class="st">"reset"</span>,</span>
-<span>  stream <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  stream <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h1s.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h1s.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h1s.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h12.switch.clock <span class="op">=</span> <span class="st">"switch"</span>,</span>
+<span>  switch.aft.factor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h0s.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h0s.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h0s.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h01.switch.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h01.switch.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h01.switch.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.switch.hazard <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.switch.median <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  h02.switch.time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  e1.censor.switch <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -261,8 +276,9 @@ to <code>h12.hazard</code>.</p></dd>
 
 
 <dt id="arg-h-time">h12.time<a class="anchor" aria-label="anchor" href="#arg-h-time"></a></dt>
-<dd><p>Breakpoints for a piecewise <code>h12.hazard</code>, measured from
-the intermediate-event time (clock-reset).</p></dd>
+<dd><p>Breakpoints for a piecewise <code>h12.hazard</code>, measured on
+the clock of <code>switch.clock</code> (by default from the intermediate
+event).</p></dd>
 
 
 <dt id="arg-switch-prop">switch.prop<a class="anchor" aria-label="anchor" href="#arg-switch-prop"></a></dt>
@@ -274,8 +290,11 @@ zero.</p></dd>
 
 
 <dt id="arg-h-switch-hazard">h12.switch.hazard<a class="anchor" aria-label="anchor" href="#arg-h-switch-hazard"></a></dt>
-<dd><p>Transition hazard(s) from state 1 to state 2 for
-subjects who switch. Required when any <code>switch.prop</code> is positive.</p></dd>
+<dd><p>Transition hazard(s) to the terminal event for
+subjects who switch. Required when a switch is possible
+(<code>switch.prop</code>, <code>h1s.*</code>, or <code>h0s.*</code>), unless
+<code>switch.aft.factor</code> is given for switches at or after the
+intermediate event.</p></dd>
 
 
 <dt id="arg-h-switch-median">h12.switch.median<a class="anchor" aria-label="anchor" href="#arg-h-switch-median"></a></dt>
@@ -285,12 +304,17 @@ alternative to <code>h12.switch.hazard</code>.</p></dd>
 
 <dt id="arg-h-switch-time">h12.switch.time<a class="anchor" aria-label="anchor" href="#arg-h-switch-time"></a></dt>
 <dd><p>Breakpoints for a piecewise <code>h12.switch.hazard</code>,
-measured from the switch (intermediate-event) time (clock-reset).</p></dd>
+measured on the clock of <code>h12.switch.clock</code> (by default from the
+switch).</p></dd>
 
 
 <dt id="arg-switch-clock">switch.clock<a class="anchor" aria-label="anchor" href="#arg-switch-clock"></a></dt>
-<dd><p>Time origin for the post-event hazards. Currently only
-<code>"reset"</code> (measured from the intermediate event) is implemented.</p></dd>
+<dd><p>Clock of the post-event hazards (<code>h12.*</code>,
+<code>h1s.*</code>, and, with <code>h12.switch.clock = "same"</code>,
+<code>h12.switch.*</code>): <code>"reset"</code> (default, the time since the
+intermediate event) or <code>"forward"</code> (the time since
+randomization, so that their breakpoints are also times since
+randomization). See the section on switching rules.</p></dd>
 
 
 <dt id="arg-stream">stream<a class="anchor" aria-label="anchor" href="#arg-stream"></a></dt>
@@ -303,6 +327,98 @@ on how the batches are distributed. With the default Xoroshiro128++
 generator of <code>dqrng</code>, stream <code>k</code> starts <code>k</code> jumps of
 \(2^{64}\) draws ahead of the seeded state, so <code>stream = 0</code> gives
 the same numbers as no stream. See the section on batches.</p></dd>
+
+
+<dt id="arg-h-s-hazard">h1s.hazard<a class="anchor" aria-label="anchor" href="#arg-h-s-hazard"></a></dt>
+<dd><p>Hazard(s) of switching after the intermediate event, for
+subjects who did not switch at it, on the clock of
+<code>switch.clock</code>. Same group, subgroup, and piecewise conventions as
+<code>h12.hazard</code>. Defaults to no switching after the intermediate
+event.</p></dd>
+
+
+<dt id="arg-h-s-median">h1s.median<a class="anchor" aria-label="anchor" href="#arg-h-s-median"></a></dt>
+<dd><p>Median(s) of the time to a switch after the intermediate
+event; an alternative to <code>h1s.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-s-time">h1s.time<a class="anchor" aria-label="anchor" href="#arg-h-s-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h1s.hazard</code> (last element
+<code>Inf</code>).</p></dd>
+
+
+<dt id="arg-h-switch-clock">h12.switch.clock<a class="anchor" aria-label="anchor" href="#arg-h-switch-clock"></a></dt>
+<dd><p>Clock of <code>h12.switch.*</code> after a switch at or
+after the intermediate event: <code>"switch"</code> (default, the time since
+the switch) or <code>"same"</code> (the clock of <code>switch.clock</code>). The two
+give the same data for a switch at the intermediate event with
+<code>switch.clock = "reset"</code>.</p></dd>
+
+
+<dt id="arg-switch-aft-factor">switch.aft.factor<a class="anchor" aria-label="anchor" href="#arg-switch-aft-factor"></a></dt>
+<dd><p>Optional acceleration factor of an accelerated
+failure time effect of a switch at or after the intermediate event: the
+remaining time to the terminal event without switching is multiplied by
+it, as with the <code>aft.factor</code> argument of <code><a href="switch_fast.html">switch_fast</a></code>,
+so that a value above 1 prolongs survival. A single positive value or a
+two-element list (control, treatment). It replaces
+<code>h12.switch.*</code> and cannot be combined with <code>h0s.*</code>.</p></dd>
+
+
+<dt id="arg-h-s-hazard">h0s.hazard<a class="anchor" aria-label="anchor" href="#arg-h-s-hazard"></a></dt>
+<dd><p>Hazard(s) of switching before the intermediate event,
+measured from randomization. Same conventions as <code>h01.hazard</code>.
+Defaults to no switching before the intermediate event. A switch before
+the intermediate event requires <code>h12.switch.*</code>.</p></dd>
+
+
+<dt id="arg-h-s-median">h0s.median<a class="anchor" aria-label="anchor" href="#arg-h-s-median"></a></dt>
+<dd><p>Median(s) of the time to a switch before the
+intermediate event; an alternative to <code>h0s.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-s-time">h0s.time<a class="anchor" aria-label="anchor" href="#arg-h-s-time"></a></dt>
+<dd><p>Breakpoints for a piecewise <code>h0s.hazard</code> (last element
+<code>Inf</code>).</p></dd>
+
+
+<dt id="arg-h-switch-hazard">h01.switch.hazard<a class="anchor" aria-label="anchor" href="#arg-h-switch-hazard"></a></dt>
+<dd><p>Hazard(s) of the intermediate event after a switch
+before it, measured from randomization. Defaults to <code>h01.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-median">h01.switch.median<a class="anchor" aria-label="anchor" href="#arg-h-switch-median"></a></dt>
+<dd><p>Median(s); an alternative to
+<code>h01.switch.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-time">h01.switch.time<a class="anchor" aria-label="anchor" href="#arg-h-switch-time"></a></dt>
+<dd><p>Breakpoints for a piecewise
+<code>h01.switch.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-hazard">h02.switch.hazard<a class="anchor" aria-label="anchor" href="#arg-h-switch-hazard"></a></dt>
+<dd><p>Hazard(s) of the terminal event without an
+intermediate event after a switch before the intermediate event,
+measured from randomization. Defaults to <code>h02.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-median">h02.switch.median<a class="anchor" aria-label="anchor" href="#arg-h-switch-median"></a></dt>
+<dd><p>Median(s); an alternative to
+<code>h02.switch.hazard</code>.</p></dd>
+
+
+<dt id="arg-h-switch-time">h02.switch.time<a class="anchor" aria-label="anchor" href="#arg-h-switch-time"></a></dt>
+<dd><p>Breakpoints for a piecewise
+<code>h02.switch.hazard</code>.</p></dd>
+
+
+<dt id="arg-e-censor-switch">e1.censor.switch<a class="anchor" aria-label="anchor" href="#arg-e-censor-switch"></a></dt>
+<dd><p>Logical; when <code>TRUE</code>, the first endpoint is
+censored at a switch before the intermediate event (for example
+progression-free survival censored at the start of a new therapy).
+Defaults to <code>FALSE</code>, under which the first endpoint is followed up
+to the intermediate or terminal event after such a switch.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -324,9 +440,11 @@ the same numbers as no stream. See the section on batches.</p></dd>
   describes the latent process (an intermediate event before the terminal
   event, <code>e1_surv_time &lt; e2_surv_time</code>), also when it would occur
   after dropout; the observed intermediate event is <code>intermediate == 1</code>
-  with <code>e1_event == 1</code>. A switch (<code>switched == 1</code>, at
-  <code>switch_time</code>, the intermediate-event time) occurs only after an
-  observed intermediate event.</p>
+  with <code>e1_event == 1</code>. With <code>switch.prop</code> only, a switch
+  (<code>switched == 1</code>, at <code>switch_time</code>, the intermediate-event
+  time) occurs only at an observed intermediate event; with <code>h1s.*</code>
+  or <code>h0s.*</code>, <code>switch_time</code> can also be after or before it (see
+  the section on switching rules).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -413,6 +531,51 @@ illness-death models without generating the subgroups separately and
 adjusting their accrual rates. With a single cell (for example
 <code>prevalence = 1</code>) the data equal those without <code>prevalence</code>, with
 the subgroup column added.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="switching-rules-in-the-illness-death-model">Switching rules in the illness-death model<a class="anchor" aria-label="anchor" href="#switching-rules-in-the-illness-death-model"></a></h2>
+
+
+<p>A subject can switch treatment before, at, or after the intermediate
+event. A switch before the intermediate event occurs with hazard
+<code>h0s.*</code> (time since randomization) when it comes before the
+intermediate event, the terminal event, and dropout. After it, the
+intermediate and terminal events follow <code>h01.switch.*</code> and
+<code>h02.switch.*</code> (time since randomization, given survival to the
+switch), and the terminal event after an intermediate event follows
+<code>h12.switch.*</code> on the clock of <code>switch.clock</code>. At an
+intermediate event observed before dropout, a subject switches with
+probability <code>switch.prop</code>. After the intermediate event, a subject
+who did not switch at it switches with hazard <code>h1s.*</code> when the
+switch comes before the terminal event (hazard <code>h12.*</code>) and before
+dropout. After a switch at or after the intermediate event, the terminal
+event follows <code>h12.switch.*</code> on the clock of
+<code>h12.switch.clock</code>, given survival to the switch on that clock, or,
+with <code>switch.aft.factor</code>, the remaining time without switching
+multiplied by the factor.</p>
+<p>With <code>switch.clock = "reset"</code> the post-event hazards are functions of
+the time since the intermediate event (a semi-Markov model); with
+<code>"forward"</code> they are functions of the time since randomization (a
+Markov model when the post-switch hazard is on the same clock). The two
+clocks give the same model when the post-event hazards are constant.
+Competing events are generated as independent latent times, and a time
+after a switch, or after the intermediate event on the forward clock, by
+the inverse of the cumulative hazard given survival to that time (Bender,
+Augustin, and Blettner, 2005). The rules follow the multistate model of
+the DesignComplexSurvival package, and the script
+<code>validation/validate_switching.R</code> of the installed package compares
+the simulated data with its analytic values.</p>
+<p>The columns <code>switched</code> and <code>switch_time</code> record all three kinds
+of switch: <code>switch_time</code> is before <code>e1_surv_time</code> for a switch
+before the intermediate event, equal to it for a switch at the
+intermediate event, and after it for a switch after the intermediate
+event. <code>e1_surv_time</code> is always the time of leaving the event-free
+states; with <code>e1.censor.switch = TRUE</code> only the observed columns of
+the first endpoint (<code>e1_tte</code>, <code>e1_event</code>, and
+<code>e1_calendar_time</code>) are censored at a switch before the intermediate
+event. The random numbers of these rules are drawn after the others and
+only in the groups (and subgroup cells) that use them, so the data of a
+call without them are unchanged.</p>
     </div>
     <div class="section level2">
     <h2 id="batches-and-parallel-execution">Batches and parallel execution<a class="anchor" aria-label="anchor" href="#batches-and-parallel-execution"></a></h2>
@@ -704,6 +867,31 @@ survival. <em>Statistics in Medicine</em>, <em>28</em>(21), 2669-2686.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4        1   0.6111453</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5        0          NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6        0          NA</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Switching rules: control subjects also switch after the intermediate</span></span></span>
+<span class="r-in"><span><span class="co"># event with hazard 0.03 and before it with hazard 0.01, and the first</span></span></span>
+<span class="r-in"><span><span class="co"># endpoint is censored at a switch before the intermediate event. The sign</span></span></span>
+<span class="r-in"><span><span class="co"># of switch_time - e1_surv_time gives the kind of switch.</span></span></span>
+<span class="r-in"><span><span class="va">dfr</span> <span class="op">&lt;-</span> <span class="fu">simdata_fast</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  nsim              <span class="op">=</span> <span class="fl">20</span>,</span></span>
+<span class="r-in"><span>  n                 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150</span>, <span class="fl">150</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.time            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  a.rate            <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">12</span>,</span></span>
+<span class="r-in"><span>  h01.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h02.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  switch.prop       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h12.switch.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">36</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h1s.hazard        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.03</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  h0s.hazard        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  e1.censor.switch  <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  seed              <span class="op">=</span> <span class="fl">9</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dfr</span><span class="op">$</span><span class="va">group</span>, <span class="fu"><a href="https://rdrr.io/r/base/sign.html" class="external-link">sign</a></span><span class="op">(</span><span class="va">dfr</span><span class="op">$</span><span class="va">switch_time</span> <span class="op">-</span> <span class="va">dfr</span><span class="op">$</span><span class="va">e1_surv_time</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>      useNA <span class="op">=</span> <span class="st">"ifany"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       -1    0    1 &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1  252  811  626 1311</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2    0    0    0 3000</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Illness-death model with two subgroups (prevalence 0.4 and 0.6): the</span></span></span>
 <span class="r-in"><span><span class="co"># treatment effect on progression is larger in subgroup 2.</span></span></span>

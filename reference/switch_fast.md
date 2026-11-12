@@ -141,10 +141,11 @@ For a single-endpoint simulation these are `surv_time` and
 (time to the first event, such as progression-free survival),
 `e2_surv_time` (time to the terminal event, such as overall survival),
 `dropout_time`, and `intermediate`. The observed columns (`tte`,
-`event`, and `calendar_time`, or their `e1_` and `e2_` counterparts) are
-recomputed from the modified latent times, and the columns `switched`
-and `switch_time` (time from accrual to the switch) record the switches.
-The columns `sim`, `group`, `accrual_time`, and the subgroup columns are
+`event`, and `calendar_time`, or their `e1_` and `e2_` counterparts) of
+the switched subjects are recomputed from the modified latent times
+(those of the other subjects are kept), and the columns `switched` and
+`switch_time` (time from accrual to the switch) record the switches. The
+columns `sim`, `group`, `accrual_time`, and the subgroup columns are
 unchanged.
 
 The switch time `s`, measured from accrual, is
@@ -165,14 +166,15 @@ A subject of the selected `group` switches with probability `prob` when
 the switch occurs before the terminal event and before dropout
 (`s < e2_surv_time`, or `s < surv_time` for single-endpoint data, and
 `s < dropout_time`) and the subject has not already switched
-(`switched == 1`, for example at progression through the `switch.prop`
-argument of
-[`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)).
-With `when = "cutoff"` or `"later"`, the switch never occurs before the
-opening time, so every outcome observed by calendar time
-`cutoff + delay` is left unchanged; subjects accrued after the opening
-are also eligible, as in a protocol that opens crossover from that time
-on.
+(`switched == 1`, for example through the `switch.prop`, `h1s.*`, or
+`h0s.*` arguments of
+[`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
+whose observed columns, such as a first endpoint censored at a switch
+before the intermediate event, are kept). With `when = "cutoff"` or
+`"later"`, the switch never occurs before the opening time, so every
+outcome observed by calendar time `cutoff + delay` is left unchanged;
+subjects accrued after the opening are also eligible, as in a protocol
+that opens crossover from that time on.
 
 The effect of switching on the terminal time `T > s` is
 

@@ -208,8 +208,9 @@ a single-endpoint simulation these are <code>surv_time</code> and
 survival), <code>e2_surv_time</code> (time to the terminal event, such as overall
 survival), <code>dropout_time</code>, and <code>intermediate</code>. The observed
 columns (<code>tte</code>, <code>event</code>, and <code>calendar_time</code>, or their
-<code>e1_</code> and <code>e2_</code> counterparts) are recomputed from the modified
-latent times, and the columns <code>switched</code> and <code>switch_time</code> (time
+<code>e1_</code> and <code>e2_</code> counterparts) of the switched subjects are
+recomputed from the modified latent times (those of the other subjects are
+kept), and the columns <code>switched</code> and <code>switch_time</code> (time
 from accrual to the switch) record the switches. The columns <code>sim</code>,
 <code>group</code>, <code>accrual_time</code>, and the subgroup columns are unchanged.</p>
 <p>The switch time <code>s</code>, measured from accrual, is</p><ul><li><p><code>when = "intermediate"</code>: the intermediate event time
@@ -225,8 +226,11 @@ from accrual to the switch) record the switches. The columns <code>sim</code>,
 <code>prob</code> when the switch occurs before the terminal event and before
 dropout (<code>s &lt; e2_surv_time</code>, or <code>s &lt; surv_time</code> for
 single-endpoint data, and <code>s &lt; dropout_time</code>) and the subject has not
-already switched (<code>switched == 1</code>, for example at progression through
-the <code>switch.prop</code> argument of <code><a href="simdata_fast.html">simdata_fast</a></code>). With <code>when = "cutoff"</code> or <code>"later"</code>, the switch
+already switched (<code>switched == 1</code>, for example through the
+<code>switch.prop</code>, <code>h1s.*</code>, or <code>h0s.*</code> arguments of
+<code><a href="simdata_fast.html">simdata_fast</a></code>, whose observed columns, such as a first
+endpoint censored at a switch before the intermediate event, are kept).
+With <code>when = "cutoff"</code> or <code>"later"</code>, the switch
 never occurs before the opening time, so every outcome observed by calendar
 time <code>cutoff + delay</code> is left unchanged; subjects accrued after the
 opening are also eligible, as in a protocol that opens crossover from that

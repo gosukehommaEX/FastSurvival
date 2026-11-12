@@ -43,7 +43,22 @@ simdata_fast(
   h12.switch.median = NULL,
   h12.switch.time = NULL,
   switch.clock = "reset",
-  stream = NULL
+  stream = NULL,
+  h1s.hazard = NULL,
+  h1s.median = NULL,
+  h1s.time = NULL,
+  h12.switch.clock = "switch",
+  switch.aft.factor = NULL,
+  h0s.hazard = NULL,
+  h0s.median = NULL,
+  h0s.time = NULL,
+  h01.switch.hazard = NULL,
+  h01.switch.median = NULL,
+  h01.switch.time = NULL,
+  h02.switch.hazard = NULL,
+  h02.switch.median = NULL,
+  h02.switch.time = NULL,
+  e1.censor.switch = FALSE
 )
 ```
 
@@ -197,8 +212,8 @@ simdata_fast(
 
 - h12.time:
 
-  Breakpoints for a piecewise `h12.hazard`, measured from the
-  intermediate-event time (clock-reset).
+  Breakpoints for a piecewise `h12.hazard`, measured on the clock of
+  `switch.clock` (by default from the intermediate event).
 
 - switch.prop:
 
@@ -209,8 +224,10 @@ simdata_fast(
 
 - h12.switch.hazard:
 
-  Transition hazard(s) from state 1 to state 2 for subjects who switch.
-  Required when any `switch.prop` is positive.
+  Transition hazard(s) to the terminal event for subjects who switch.
+  Required when a switch is possible (`switch.prop`, `h1s.*`, or
+  `h0s.*`), unless `switch.aft.factor` is given for switches at or after
+  the intermediate event.
 
 - h12.switch.median:
 
@@ -219,13 +236,16 @@ simdata_fast(
 
 - h12.switch.time:
 
-  Breakpoints for a piecewise `h12.switch.hazard`, measured from the
-  switch (intermediate-event) time (clock-reset).
+  Breakpoints for a piecewise `h12.switch.hazard`, measured on the clock
+  of `h12.switch.clock` (by default from the switch).
 
 - switch.clock:
 
-  Time origin for the post-event hazards. Currently only `"reset"`
-  (measured from the intermediate event) is implemented.
+  Clock of the post-event hazards (`h12.*`, `h1s.*`, and, with
+  `h12.switch.clock = "same"`, `h12.switch.*`): `"reset"` (default, the
+  time since the intermediate event) or `"forward"` (the time since
+  randomization, so that their breakpoints are also times since
+  randomization). See the section on switching rules.
 
 - stream:
 
@@ -238,6 +258,91 @@ simdata_fast(
   stream `k` starts `k` jumps of \\2^{64}\\ draws ahead of the seeded
   state, so `stream = 0` gives the same numbers as no stream. See the
   section on batches.
+
+- h1s.hazard:
+
+  Hazard(s) of switching after the intermediate event, for subjects who
+  did not switch at it, on the clock of `switch.clock`. Same group,
+  subgroup, and piecewise conventions as `h12.hazard`. Defaults to no
+  switching after the intermediate event.
+
+- h1s.median:
+
+  Median(s) of the time to a switch after the intermediate event; an
+  alternative to `h1s.hazard`.
+
+- h1s.time:
+
+  Breakpoints for a piecewise `h1s.hazard` (last element `Inf`).
+
+- h12.switch.clock:
+
+  Clock of `h12.switch.*` after a switch at or after the intermediate
+  event: `"switch"` (default, the time since the switch) or `"same"`
+  (the clock of `switch.clock`). The two give the same data for a switch
+  at the intermediate event with `switch.clock = "reset"`.
+
+- switch.aft.factor:
+
+  Optional acceleration factor of an accelerated failure time effect of
+  a switch at or after the intermediate event: the remaining time to the
+  terminal event without switching is multiplied by it, as with the
+  `aft.factor` argument of
+  [`switch_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md),
+  so that a value above 1 prolongs survival. A single positive value or
+  a two-element list (control, treatment). It replaces `h12.switch.*`
+  and cannot be combined with `h0s.*`.
+
+- h0s.hazard:
+
+  Hazard(s) of switching before the intermediate event, measured from
+  randomization. Same conventions as `h01.hazard`. Defaults to no
+  switching before the intermediate event. A switch before the
+  intermediate event requires `h12.switch.*`.
+
+- h0s.median:
+
+  Median(s) of the time to a switch before the intermediate event; an
+  alternative to `h0s.hazard`.
+
+- h0s.time:
+
+  Breakpoints for a piecewise `h0s.hazard` (last element `Inf`).
+
+- h01.switch.hazard:
+
+  Hazard(s) of the intermediate event after a switch before it, measured
+  from randomization. Defaults to `h01.hazard`.
+
+- h01.switch.median:
+
+  Median(s); an alternative to `h01.switch.hazard`.
+
+- h01.switch.time:
+
+  Breakpoints for a piecewise `h01.switch.hazard`.
+
+- h02.switch.hazard:
+
+  Hazard(s) of the terminal event without an intermediate event after a
+  switch before the intermediate event, measured from randomization.
+  Defaults to `h02.hazard`.
+
+- h02.switch.median:
+
+  Median(s); an alternative to `h02.switch.hazard`.
+
+- h02.switch.time:
+
+  Breakpoints for a piecewise `h02.switch.hazard`.
+
+- e1.censor.switch:
+
+  Logical; when `TRUE`, the first endpoint is censored at a switch
+  before the intermediate event (for example progression-free survival
+  censored at the start of a new therapy). Defaults to `FALSE`, under
+  which the first endpoint is followed up to the intermediate or
+  terminal event after such a switch.
 
 ## Value
 
@@ -254,9 +359,11 @@ survival, and `intermediate` flags progression. The column
 `intermediate` describes the latent process (an intermediate event
 before the terminal event, `e1_surv_time < e2_surv_time`), also when it
 would occur after dropout; the observed intermediate event is
-`intermediate == 1` with `e1_event == 1`. A switch (`switched == 1`, at
-`switch_time`, the intermediate-event time) occurs only after an
-observed intermediate event.
+`intermediate == 1` with `e1_event == 1`. With `switch.prop` only, a
+switch (`switched == 1`, at `switch_time`, the intermediate-event time)
+occurs only at an observed intermediate event; with `h1s.*` or `h0s.*`,
+`switch_time` can also be after or before it (see the section on
+switching rules).
 
 ## Details
 
@@ -351,6 +458,49 @@ prevalence. This gives a mixture of illness-death models without
 generating the subgroups separately and adjusting their accrual rates.
 With a single cell (for example `prevalence = 1`) the data equal those
 without `prevalence`, with the subgroup column added.
+
+## Switching rules in the illness-death model
+
+A subject can switch treatment before, at, or after the intermediate
+event. A switch before the intermediate event occurs with hazard `h0s.*`
+(time since randomization) when it comes before the intermediate event,
+the terminal event, and dropout. After it, the intermediate and terminal
+events follow `h01.switch.*` and `h02.switch.*` (time since
+randomization, given survival to the switch), and the terminal event
+after an intermediate event follows `h12.switch.*` on the clock of
+`switch.clock`. At an intermediate event observed before dropout, a
+subject switches with probability `switch.prop`. After the intermediate
+event, a subject who did not switch at it switches with hazard `h1s.*`
+when the switch comes before the terminal event (hazard `h12.*`) and
+before dropout. After a switch at or after the intermediate event, the
+terminal event follows `h12.switch.*` on the clock of
+`h12.switch.clock`, given survival to the switch on that clock, or, with
+`switch.aft.factor`, the remaining time without switching multiplied by
+the factor.
+
+With `switch.clock = "reset"` the post-event hazards are functions of
+the time since the intermediate event (a semi-Markov model); with
+`"forward"` they are functions of the time since randomization (a Markov
+model when the post-switch hazard is on the same clock). The two clocks
+give the same model when the post-event hazards are constant. Competing
+events are generated as independent latent times, and a time after a
+switch, or after the intermediate event on the forward clock, by the
+inverse of the cumulative hazard given survival to that time (Bender,
+Augustin, and Blettner, 2005). The rules follow the multistate model of
+the DesignComplexSurvival package, and the script
+`validation/validate_switching.R` of the installed package compares the
+simulated data with its analytic values.
+
+The columns `switched` and `switch_time` record all three kinds of
+switch: `switch_time` is before `e1_surv_time` for a switch before the
+intermediate event, equal to it for a switch at the intermediate event,
+and after it for a switch after the intermediate event. `e1_surv_time`
+is always the time of leaving the event-free states; with
+`e1.censor.switch = TRUE` only the observed columns of the first
+endpoint (`e1_tte`, `e1_event`, and `e1_calendar_time`) are censored at
+a switch before the intermediate event. The random numbers of these
+rules are drawn after the others and only in the groups (and subgroup
+cells) that use them, so the data of a call without them are unchanged.
 
 ## Batches and parallel execution
 
@@ -648,6 +798,31 @@ head(dfsw)
 #> 4        1   0.6111453
 #> 5        0          NA
 #> 6        0          NA
+
+# Switching rules: control subjects also switch after the intermediate
+# event with hazard 0.03 and before it with hazard 0.01, and the first
+# endpoint is censored at a switch before the intermediate event. The sign
+# of switch_time - e1_surv_time gives the kind of switch.
+dfr <- simdata_fast(
+  nsim              = 20,
+  n                 = c(150, 150),
+  a.time            = c(0, 12),
+  a.rate            = 300 / 12,
+  h01.median        = list(8, 12),
+  h02.median        = list(24, 30),
+  switch.prop       = list(0.4, 0),
+  h12.switch.median = list(36, 36),
+  h1s.hazard        = list(0.03, 0),
+  h0s.hazard        = list(0.01, 0),
+  e1.censor.switch  = TRUE,
+  seed              = 9
+)
+table(dfr$group, sign(dfr$switch_time - dfr$e1_surv_time),
+      useNA = "ifany")
+#>    
+#>       -1    0    1 <NA>
+#>   1  252  811  626 1311
+#>   2    0    0    0 3000
 
 # Illness-death model with two subgroups (prevalence 0.4 and 0.6): the
 # treatment effect on progression is larger in subgroup 2.
