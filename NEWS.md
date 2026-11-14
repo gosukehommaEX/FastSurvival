@@ -80,10 +80,29 @@
   can be written as one chain from `simdata_fast()` to `simsummary_fast()`
   with `|>`. `pairwise_fast()` applies the function to the data of all arms.
 
+* `simdata_fast()` has further switching rules in the illness-death model:
+  switching after the intermediate event with a hazard (`h1s.*`); switching
+  before it with a hazard (`h0s.*`), with the hazards of the intermediate and
+  terminal events after such a switch (`h01.switch.*`, `h02.switch.*`) and
+  the censoring of the first endpoint at the switch (`e1.censor.switch`);
+  the forward clock of the post-event hazards (`switch.clock = "forward"`,
+  the time since randomization); the clock of the post-switch hazard
+  (`h12.switch.clock`); and an accelerated failure time effect of a switch
+  (`switch.aft.factor`). The data of a call without these arguments are
+  unchanged. The rules follow the multistate model of the
+  DesignComplexSurvival package, and `inst/validation/validate_switching.R`
+  checks the simulated data against its analytic values and against
+  independent simulations in Python.
+
+* `switch_fast()` recomputes the observed columns only for the subjects it
+  switches, so it keeps those of the other subjects, such as a first endpoint
+  censored at a switch before the intermediate event.
+
 ## Documentation
 
 * The treatment-switching vignette refers to TrialSimulator 1.39.0, the
-  current version on CRAN.
+  current version on CRAN, and shows the new switching rules of
+  `simdata_fast()`.
 
 * The validation vignette checks `wkm_fast()` against the two-sample z test
   without censoring, and explains why the weighted Kaplan-Meier test of
@@ -134,6 +153,11 @@
 
 * New tests check that the calls with the native pipe give the same results
   as the calls without it.
+
+* New tests check the switching rules of `simdata_fast()` against state
+  occupation probabilities of Markov models computed independently (matrix
+  exponentials) and against closed forms, and that the data without the
+  rules are unchanged.
 
 # FastSurvival 1.2.0
 

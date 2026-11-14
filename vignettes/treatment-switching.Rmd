@@ -44,7 +44,10 @@ crossover opens:
 5. the OS analysis is run on the modified data.
 
 The interim analysis is unaffected by step 4 by construction, which is checked
-below.
+below. Switching rules that belong to the data-generating process, such as a
+switch after or before progression with a given hazard, are given to
+`simdata_fast()` directly (see the section on switching rules in the
+data-generating model).
 
 ## Design
 
@@ -255,12 +258,84 @@ The mean of the estimates is close to the true value relative to its standard
 error, so the RPSFT method recovers the acceleration factor used to generate
 the switched survival times.
 
+## Switching rules in the data-generating model
+
+Some switching rules are part of the data-generating process rather than
+decisions taken at an analysis. `simdata_fast()` generates them in the
+illness-death model together with the other transitions:
+
+- `switch.prop`: a switch at progression with a given probability;
+- `h1s.hazard`: a switch after progression, for the patients who did not
+  switch at it, with a (piecewise) constant hazard that competes with death;
+- `h0s.hazard`: a switch before progression, after which progression and death
+  follow `h01.switch.hazard` and `h02.switch.hazard`; with
+  `e1.censor.switch = TRUE`, PFS is censored at the switch;
+- `h12.switch.hazard` or `switch.aft.factor`: the effect of a switch on
+  survival, as a new hazard or as an acceleration factor of the remaining
+  time.
+
+The post-progression hazards are functions of the time since progression by
+default (`switch.clock = "reset"`) or of the time since randomization
+(`switch.clock = "forward"`), and `h12.switch.clock` sets whether the
+post-switch hazard is measured from the switch or on the same clock. The rules
+follow the multistate model of the DesignComplexSurvival package; the script
+`validation/validate_switching.R` of the installed package compares the data
+of `simdata_fast()` with its analytic values and with independent simulations
+in Python.
+
+In the trial above, suppose that 30 percent of the control patients switch at
+progression, that the others switch after progression at 4 percent per month,
+and that 1 percent per month switch before progression, in which case PFS is
+censored at the switch. After a switch the median survival is 18 months.
+
+```{r rules}
+df_rules <- simdata_fast(
+  nsim              = nsim,
+  n                 = c(300, 300),
+  a.time            = c(0, 18),
+  a.rate            = 600 / 18,
+  h01.median        = list(8, 12),
+  h02.median        = list(30, 36),
+  h12.median        = list(12, 12),
+  switch.prop       = list(0.3, 0),   # at progression
+  h1s.hazard        = list(0.04, 0),  # after progression, per month
+  h0s.hazard        = list(0.01, 0),  # before progression, per month
+  h12.switch.median = 18,             # survival after a switch
+  e1.censor.switch  = TRUE,           # PFS censored at an early switch
+  d.hazard          = -log(1 - 0.05) / 12,
+  seed              = seed
+)
+
+# Kind of switch in the control group, from the switch time and the time of
+# leaving the progression-free state
+ctl <- df_rules[df_rules$group == 1, ]
+kind <- ifelse(ctl$switched == 0, "no switch",
+               ifelse(ctl$switch_time < ctl$e1_surv_time,
+                      "before progression",
+                      ifelse(ctl$switch_time == ctl$e1_surv_time,
+                             "at progression", "after progression")))
+round(prop.table(table(kind)), 3)
+```
+
+The OS analysis of these data can be compared with the scenarios in the table
+above.
+
+```{r rules-os}
+r_rules <- os_final(df_rules)
+c(control_switched = round(mean(ctl$switched == 1), 3),
+  OS_power         = round(mean(r_rules$logrank.p <= 0.025, na.rm = TRUE), 3),
+  mean_HR          = round(exp(mean(r_rules$cox.coef, na.rm = TRUE)), 3))
+```
+
 ## Remarks
 
 `switch_fast()` covers switching rules whose timing is a function of the
 patient's own outcomes (progression), of an opening time per trial, or of both,
 with an effect on the remaining time to the terminal event given by an
-acceleration factor or by a new hazard. Designs in which an interim decision
+acceleration factor or by a new hazard. It can also be applied to data with
+the switching rules of `simdata_fast()`, for example for a crossover after an
+interim analysis; the patients who already switched are left unchanged.
+Designs in which an interim decision
 changes the enrollment or the randomization itself, such as dropping an arm and
 re-randomizing new patients, change the data-generating process and are outside
 this approach.
