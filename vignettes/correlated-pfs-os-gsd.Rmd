@@ -141,20 +141,6 @@ df <- simdata_fast(
   d.hazard   = eta,
   seed       = seed
 )
-
-# Single-endpoint view of PFS (k = 1) or OS (k = 2), in the columns that
-# analysis_fast() reads.
-ep <- function(d, k) {
-  data.frame(
-    sim          = d$sim,
-    group        = d$group,
-    accrual_time = d$accrual_time,
-    tte          = d[[paste0("e", k, "_tte")]],
-    event        = d[[paste0("e", k, "_event")]]
-  )
-}
-pfs_dat <- ep(df, 1)
-os_dat  <- ep(df, 2)
 ```
 
 ## Primary endpoint analysis (PFS)
@@ -163,21 +149,24 @@ PFS is analyzed at the three event-driven looks. `cutoff_fast` returns, for ever
 trial, the calendar time of the `d_PFS[l]`-th PFS event, which is the analysis time of look `l`.
 It counts the events in the PFS columns `e1_tte` and `e1_event` of the illness-death data. These
 cutoffs are exactly the analysis times of the design, and both endpoints are analyzed at them
-through the `cutoff.looks` argument of `analysis_fast`.
+through the `cutoff.looks` argument of `analysis_fast`, whose `tte.col` and `event.col` name
+the columns of the endpoint analyzed.
 
 ```{r pfs-analysis}
 # Per-simulation calendar cutoffs A_l (rows = simulation, columns = look),
 # triggered by the PFS events.
-A_mat <- cutoff_fast(df, event.looks = d_PFS,
-                     tte.col = "e1_tte", event.col = "e1_event")
+A_mat <- df |>
+  cutoff_fast(event.looks = d_PFS, tte.col = "e1_tte", event.col = "e1_event")
 
-pfs_res <- analysis_fast(
-  pfs_dat,
-  control      = 1,
-  cutoff.looks = A_mat,
-  stat         = "logrank",
-  side         = 1
-)
+pfs_res <- df |>
+  analysis_fast(
+    control      = 1,
+    cutoff.looks = A_mat,
+    stat         = "logrank",
+    side         = 1,
+    tte.col      = "e1_tte",
+    event.col    = "e1_event"
+  )
 
 # With this sample size and these event targets the looks are reached in
 # essentially every simulation; warn if any target is not reached.
@@ -199,13 +188,15 @@ administratively censored at `A_l`, which reproduces the design rule that the OS
 look uses the PFS-driven analysis time.
 
 ```{r os-analysis}
-os_res <- analysis_fast(
-  os_dat,
-  control      = 1,
-  cutoff.looks = A_mat,
-  stat         = "logrank",
-  side         = 1
-)
+os_res <- df |>
+  analysis_fast(
+    control      = 1,
+    cutoff.looks = A_mat,
+    stat         = "logrank",
+    side         = 1,
+    tte.col      = "e2_tte",
+    event.col    = "e2_event"
+  )
 
 # Standardized OS log-rank statistics
 Z_OS <- matrix(os_res$logrank.z, nrow = nsim, ncol = L, byrow = TRUE)
@@ -290,21 +281,21 @@ For OS the efficacy boundary is applied alone. The `cum.reject` value on the ove
 power of that endpoint considered on its own.
 
 ```{r oc-pfs, eval = has_gsd}
-oc_PFS <- simsummary_fast(
-  pfs_res,
-  eff.col  = "logrank.z", efficacy = eff_PFS,
-  fut.col  = "logrank.z", futility = fut_PFS,
-  direction = "lower"
-)
+oc_PFS <- pfs_res |>
+  simsummary_fast(
+    eff.col  = "logrank.z", efficacy = eff_PFS,
+    fut.col  = "logrank.z", futility = fut_PFS,
+    direction = "lower"
+  )
 oc_PFS
 ```
 
 ```{r oc-os, eval = has_gsd}
-oc_OS <- simsummary_fast(
-  os_res,
-  eff.col = "logrank.z", efficacy = eff_OS,
-  direction = "lower"
-)
+oc_OS <- os_res |>
+  simsummary_fast(
+    eff.col = "logrank.z", efficacy = eff_OS,
+    direction = "lower"
+  )
 oc_OS
 ```
 

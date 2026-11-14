@@ -32,13 +32,16 @@ analysis_fast(
   wmst.tau2 = NULL,
   cutoff.looks = NULL,
   mc.alpha = NULL,
-  ties = c("efron", "breslow")
+  ties = c("efron", "breslow"),
+  tte.col = "tte",
+  event.col = "event"
 )
 }
 \arguments{
 \item{data}{A data frame from \code{\link{simdata_fast}} for a two-group
 trial, containing at least \code{sim}, \code{group}, \code{accrual_time},
-\code{tte}, and \code{event}.}
+and the columns named by \code{tte.col} and \code{event.col} (by default
+\code{tte} and \code{event}).}
 
 \item{control}{A scalar value indicating which level of \code{group}
 represents the control group.}
@@ -188,7 +191,10 @@ not reached. The \code{look.value} column of the output is taken from the
 argument, which is applied to \code{data} and must return such a matrix
 or vector, for example
 \code{function(x) cutoff_fast(x, event.looks = 150)}; the cutoffs are then
-computed inside a chain of calls with the native pipe \code{|>}.}
+computed inside a chain of calls with the native pipe \code{|>}. The
+function receives \code{data} as given, so with \code{tte.col} and
+\code{event.col} the call of \code{\link{cutoff_fast}} names the columns
+of the endpoint that triggers the looks.}
 
 \item{mc.alpha}{An optional numeric vector of nominal levels in (0, 1), one
 per look or a single value for all looks, at which the \code{"maxcombo"}
@@ -200,6 +206,14 @@ integration only when the Bonferroni bounds do not decide the comparison
 \item{ties}{A character string, \code{"efron"} (default) or
 \code{"breslow"}, naming the handling of tied event times in the
 \code{"coxph"} statistic; see \code{\link{coxph_fast}}.}
+
+\item{tte.col}{A single character string naming the column of \code{data}
+with the observed time to event (numeric and non-negative). Defaults to
+\code{"tte"}, as in \code{\link{cutoff_fast}}.}
+
+\item{event.col}{A single character string naming the column of
+\code{data} with the event indicator (numeric or logical, 0 or 1).
+Defaults to \code{"event"}, as in \code{\link{cutoff_fast}}.}
 }
 \value{
 A data frame. When \code{by.subgroup = FALSE}, it has
@@ -275,7 +289,12 @@ numeric and non-negative, \code{event} must be numeric or logical and coded
 as 0 or 1, and \code{group} must have exactly two distinct values, one of
 which is \code{control}. For a
 multi-arm trial, subset the data to two arms first or use
-\code{\link{pairwise_fast}}.
+\code{\link{pairwise_fast}}. Another endpoint is analyzed by naming its
+columns with \code{tte.col} and \code{event.col}, for example the first
+(\code{"e1_tte"} and \code{"e1_event"}) or the terminal (\code{"e2_tte"}
+and \code{"e2_event"}) endpoint of the illness-death model of
+\code{\link{simdata_fast}}; \code{tte} and \code{event} below then stand
+for those columns.
 
 For a look at calendar time \code{cutoff}, each subject with accrual time
 \code{a} contributes only if enrolled by then (\code{a <= cutoff}). The
@@ -523,6 +542,17 @@ head(res5)
 df |>
   analysis_fast(control = 1, cutoff.looks = function(x)
     cutoff_fast(x, event.looks = c(80, 140), max.time = c(NA, 36))) |>
+  head()
+
+# The terminal endpoint (overall survival) of an illness-death model,
+# analyzed at 60 deaths
+ids <- simdata_fast(nsim = 20, n = c(100, 100), a.time = c(0, 12),
+                    a.rate = 200 / 12, h01.median = list(6, 9),
+                    h02.median = list(20, 24), h12.median = list(10, 10),
+                    seed = 2)
+ids |>
+  analysis_fast(control = 1, event.looks = 60, tte.col = "e2_tte",
+                event.col = "e2_event") |>
   head()
 
 }

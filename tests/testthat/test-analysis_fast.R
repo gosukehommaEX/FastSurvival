@@ -846,3 +846,90 @@ test_that("analysis_fast: cutoff.looks can be a function of the data", {
                              cutoff.looks = function(x) "a"),
                "must return a numeric")
 })
+
+test_that("analysis_fast: tte.col and event.col select the endpoint", {
+  ids <- simdata_fast(nsim = 6, n = c(60, 60), a.time = c(0, 6),
+                      a.rate = 20, h01.median = list(6, 9),
+                      h02.median = list(20, 24), h12.median = list(10, 10),
+                      d.hazard = 0.01, seed = 41)
+  # Reference: the endpoint copied into the columns 'tte' and 'event'
+  as_ep <- function(d, k) {
+    d$tte   <- d[[paste0("e", k, "_tte")]]
+    d$event <- d[[paste0("e", k, "_event")]]
+    d
+  }
+  expect_identical(
+    analysis_fast(ids, control = 1, event.looks = c(40, 70),
+                  stat = c("logrank", "coxph"), side = 1,
+                  tte.col = "e1_tte", event.col = "e1_event"),
+    analysis_fast(as_ep(ids, 1), control = 1, event.looks = c(40, 70),
+                  stat = c("logrank", "coxph"), side = 1))
+  expect_identical(
+    analysis_fast(ids, control = 1, time.looks = c(12, 24),
+                  stat = c("logrank", "rmst"), tau = 10,
+                  tte.col = "e2_tte", event.col = "e2_event"),
+    analysis_fast(as_ep(ids, 2), control = 1, time.looks = c(12, 24),
+                  stat = c("logrank", "rmst"), tau = 10))
+  # OS at the looks triggered by PFS events; the function given as
+  # cutoff.looks receives the data as given
+  seen <- NULL
+  rule <- function(x) {
+    seen <<- x
+    cutoff_fast(x, event.looks = 50, tte.col = "e1_tte",
+                event.col = "e1_event")
+  }
+  got <- ids |>
+    analysis_fast(control = 1, cutoff.looks = rule, tte.col = "e2_tte",
+                  event.col = "e2_event")
+  expect_identical(seen, ids)
+  expect_identical(got, analysis_fast(as_ep(ids, 2), control = 1,
+                                      cutoff.looks = rule(ids)))
+})
+
+test_that("analysis_fast: tte.col and event.col keep the subgroup columns", {
+  ids <- simdata_fast(nsim = 4, n = c(60, 60), a.time = c(0, 6),
+                      a.rate = 20,
+                      h01.hazard = list(list(0.10, 0.05), list(0.07, 0.04)),
+                      h02.hazard = list(0.03, 0.02),
+                      h12.hazard = list(list(0.08, 0.20), 0.06),
+                      prevalence = c(0.3, 0.7), seed = 42)
+  ref <- ids
+  ref$tte   <- ref$e2_tte
+  ref$event <- ref$e2_event
+  expect_identical(
+    analysis_fast(ids, control = 1, time.looks = 18, by.subgroup = TRUE,
+                  stat = c("logrank", "coxph"), strata = "subgroup",
+                  tte.col = "e2_tte", event.col = "e2_event"),
+    analysis_fast(ref, control = 1, time.looks = 18, by.subgroup = TRUE,
+                  stat = c("logrank", "coxph"), strata = "subgroup"))
+})
+
+test_that("analysis_fast: tte.col and event.col are validated", {
+  ids <- simdata_fast(nsim = 2, n = c(30, 30), a.time = c(0, 6),
+                      a.rate = 10, h01.median = list(6, 9),
+                      h02.median = list(20, 24), h12.median = list(10, 10),
+                      seed = 43)
+  # The illness-death data have no columns 'tte' and 'event'
+  expect_error(analysis_fast(ids, control = 1, time.looks = 12),
+               "must be a data frame with columns")
+  expect_error(analysis_fast(ids, control = 1, time.looks = 12,
+                             tte.col = "e2_tte", event.col = "nope"),
+               "accrual_time, e2_tte, nope")
+  expect_error(analysis_fast(ids, control = 1, time.looks = 12, tte.col = 2,
+                             event.col = "e2_event"),
+               "single character strings")
+  expect_error(analysis_fast(ids, control = 1, time.looks = 12,
+                             tte.col = "e2_tte",
+                             event.col = c("e1_event", "e2_event")),
+               "single character strings")
+  ids_na <- ids
+  ids_na$e2_tte[1] <- NA
+  expect_error(analysis_fast(ids_na, control = 1, time.looks = 12,
+                             tte.col = "e2_tte", event.col = "e2_event"),
+               "'e2_tte' of 'data' must not contain missing values")
+  ids_ev <- ids
+  ids_ev$e2_event[1] <- 2L
+  expect_error(analysis_fast(ids_ev, control = 1, time.looks = 12,
+                             tte.col = "e2_tte", event.col = "e2_event"),
+               "'e2_event' of 'data' must be coded")
+})

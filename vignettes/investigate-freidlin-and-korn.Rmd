@@ -68,13 +68,13 @@ however, falls below one after the first 0.1 year, and it is this late region
 that late-emphasis tests reward.
 
 ```{r scenario-figure, fig.width = 5, fig.height = 4}
-scn_strong <- gen_scenario_fast(
+gen_scenario_fast(
   list("Strong null" = list(
     e.hazard = list(scenarios$strong$haz_c, scenarios$strong$haz_e),
     e.time   = e_time)),
   shared = list(n = c(N_HALF, N_HALF), a.time = c(0, 1e-4), a.prop = 1)
-)
-plot(scn_strong, tmax = cut, hr_max = 2, xlab = "Time (years)")
+) |>
+  plot(tmax = cut, hr_max = 2, xlab = "Time (years)")
 ```
 
 The design-stage plot of `gen_scenario_fast()` draws the two survival curves and
@@ -123,19 +123,20 @@ run_one_scenario <- function(scn) {
     seed     = SEED
   )
 
-  res_lr   <- analysis_fast(dataset, control = 1, time.looks = cut,
-                            stat = "logrank", side = SIDE)
-  res_fh01 <- analysis_fast(dataset, control = 1, time.looks = cut,
-                            stat = "logrank", weight = "fh",
-                            rho = 0, gamma = 1, side = SIDE)
-  res_mb   <- analysis_fast(dataset, control = 1, time.looks = cut,
-                            stat = "logrank", weight = "mwlrt",
-                            t_star = T_STAR, side = SIDE)
+  res_lr   <- dataset |>
+    analysis_fast(control = 1, time.looks = cut, stat = "logrank",
+                  side = SIDE)
+  res_fh01 <- dataset |>
+    analysis_fast(control = 1, time.looks = cut, stat = "logrank",
+                  weight = "fh", rho = 0, gamma = 1, side = SIDE)
+  res_mb   <- dataset |>
+    analysis_fast(control = 1, time.looks = cut, stat = "logrank",
+                  weight = "mwlrt", t_star = T_STAR, side = SIDE)
   set.seed(SEED)
-  res_mc   <- analysis_fast(dataset, control = 1, time.looks = cut,
-                            stat = "maxcombo",
-                            mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
-                            side = SIDE, mc.alpha = ALPHA)
+  res_mc   <- dataset |>
+    analysis_fast(control = 1, time.looks = cut, stat = "maxcombo",
+                  mc.rho = c(0, 0, 1, 1), mc.gamma = c(0, 1, 0, 1),
+                  side = SIDE, mc.alpha = ALPHA)
 
   reject_in_favor <- function(res, pcol) {
     ok <- res$reached

@@ -15,13 +15,16 @@ pairwise_fast(
   adjust = c("none", "bonferroni"),
   p.col = NULL,
   cutoff.looks = NULL,
+  tte.col = "tte",
+  event.col = "event",
   ...
 )
 }
 \arguments{
 \item{data}{A data frame of simulated trial data with columns \code{sim},
-\code{group}, \code{accrual_time}, \code{tte}, and \code{event}, as produced
-by \code{\link{simdata_fast}}.}
+\code{group}, \code{accrual_time}, and the columns named by
+\code{tte.col} and \code{event.col} (by default \code{tte} and
+\code{event}), as produced by \code{\link{simdata_fast}}.}
 
 \item{control}{The group label of the control arm.}
 
@@ -56,6 +59,13 @@ one row per simulated trial and one column per look, as returned by
 matched to the simulations. It can also be a function of one argument,
 as in \code{\link{analysis_fast}}, which is applied to the whole
 \code{data} (all arms) before the contrasts are formed.}
+
+\item{tte.col}{A single character string naming the column of \code{data}
+with the observed time to event. Defaults to \code{"tte"}, as in
+\code{\link{analysis_fast}} and \code{\link{cutoff_fast}}.}
+
+\item{event.col}{A single character string naming the column of
+\code{data} with the event indicator. Defaults to \code{"event"}.}
 
 \item{...}{Further arguments passed to \code{\link{analysis_fast}}, such as
 \code{side}, \code{conf.level}, \code{tau}, \code{rho}, and \code{gamma}.
@@ -115,9 +125,12 @@ this function, \code{simsummary_fast} summarizes each arm separately (the
 Bonferroni-adjusted p-values can be used there through
 \code{p.col = "p.adj"}).
 
-This is a single-endpoint helper: it reads the \code{tte} and \code{event}
-columns and does not support subgroups. Comparisons for a second endpoint are
-obtained by calling \code{pairwise_fast} again on that endpoint's columns.
+This is a single-endpoint helper: it analyzes the columns named by
+\code{tte.col} and \code{event.col} (by default \code{tte} and
+\code{event}) and does not support subgroups. Comparisons for a second
+endpoint are obtained by calling \code{pairwise_fast} again with that
+endpoint's columns. With \code{event.looks}, the events of the primary
+contrast are counted on the same columns.
 }
 \examples{
 # Three-arm trial: control (group 1) and two experimental arms.

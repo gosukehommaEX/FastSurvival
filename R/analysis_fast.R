@@ -28,7 +28,12 @@
 #' as 0 or 1, and \code{group} must have exactly two distinct values, one of
 #' which is \code{control}. For a
 #' multi-arm trial, subset the data to two arms first or use
-#' \code{\link{pairwise_fast}}.
+#' \code{\link{pairwise_fast}}. Another endpoint is analyzed by naming its
+#' columns with \code{tte.col} and \code{event.col}, for example the first
+#' (\code{"e1_tte"} and \code{"e1_event"}) or the terminal (\code{"e2_tte"}
+#' and \code{"e2_event"}) endpoint of the illness-death model of
+#' \code{\link{simdata_fast}}; \code{tte} and \code{event} below then stand
+#' for those columns.
 #'
 #' For a look at calendar time \code{cutoff}, each subject with accrual time
 #' \code{a} contributes only if enrolled by then (\code{a <= cutoff}). The
@@ -237,7 +242,8 @@
 #'
 #' @param data A data frame from \code{\link{simdata_fast}} for a two-group
 #'   trial, containing at least \code{sim}, \code{group}, \code{accrual_time},
-#'   \code{tte}, and \code{event}.
+#'   and the columns named by \code{tte.col} and \code{event.col} (by default
+#'   \code{tte} and \code{event}).
 #' @param control A scalar value indicating which level of \code{group}
 #'   represents the control group.
 #' @param event.looks A vector of positive whole numbers, the target cumulative
@@ -258,7 +264,10 @@
 #'   argument, which is applied to \code{data} and must return such a matrix
 #'   or vector, for example
 #'   \code{function(x) cutoff_fast(x, event.looks = 150)}; the cutoffs are then
-#'   computed inside a chain of calls with the native pipe \code{|>}.
+#'   computed inside a chain of calls with the native pipe \code{|>}. The
+#'   function receives \code{data} as given, so with \code{tte.col} and
+#'   \code{event.col} the call of \code{\link{cutoff_fast}} names the columns
+#'   of the endpoint that triggers the looks.
 #' @param stat A character vector naming the statistics to compute. Any subset
 #'   of \code{"logrank"}, \code{"coxph"}, \code{"rmst"}, \code{"km"},
 #'   \code{"maxcombo"}, \code{"ahsw"}, \code{"milestone"}, \code{"rmw"},
@@ -372,6 +381,12 @@
 #' @param ties A character string, \code{"efron"} (default) or
 #'   \code{"breslow"}, naming the handling of tied event times in the
 #'   \code{"coxph"} statistic; see \code{\link{coxph_fast}}.
+#' @param tte.col A single character string naming the column of \code{data}
+#'   with the observed time to event (numeric and non-negative). Defaults to
+#'   \code{"tte"}, as in \code{\link{cutoff_fast}}.
+#' @param event.col A single character string naming the column of
+#'   \code{data} with the event indicator (numeric or logical, 0 or 1).
+#'   Defaults to \code{"event"}, as in \code{\link{cutoff_fast}}.
 #'
 #' @return A data frame. When \code{by.subgroup = FALSE}, it has
 #'   \code{nsim * length(looks)} rows. When \code{by.subgroup = TRUE}, it has
@@ -461,6 +476,17 @@
 #'     cutoff_fast(x, event.looks = c(80, 140), max.time = c(NA, 36))) |>
 #'   head()
 #'
+#' # The terminal endpoint (overall survival) of an illness-death model,
+#' # analyzed at 60 deaths
+#' ids <- simdata_fast(nsim = 20, n = c(100, 100), a.time = c(0, 12),
+#'                     a.rate = 200 / 12, h01.median = list(6, 9),
+#'                     h02.median = list(20, 24), h12.median = list(10, 10),
+#'                     seed = 2)
+#' ids |>
+#'   analysis_fast(control = 1, event.looks = 60, tte.col = "e2_tte",
+#'                 event.col = "e2_event") |>
+#'   head()
+#'
 #' @seealso \code{\link{simdata_fast}}, \code{\link{survdiff_fast}},
 #'   \code{\link{coxph_fast}}, \code{\link{rmst_fast}},
 #'   \code{\link{survfit_fast}}, \code{\link{maxcombo_fast}},
@@ -491,7 +517,8 @@ analysis_fast <- function(data, control,
                           wkm.weight = c("PF", "sqrtPF", "constant"),
                           wmst.tau1 = 0, wmst.tau2 = NULL,
                           cutoff.looks = NULL, mc.alpha = NULL,
-                          ties = c("efron", "breslow")) {
+                          ties = c("efron", "breslow"),
+                          tte.col = "tte", event.col = "event") {
 
   weight <- match.arg(weight)
   ms.method <- match.arg(ms.method)
@@ -499,18 +526,31 @@ analysis_fast <- function(data, control,
   ties <- match.arg(ties)
 
   # ---- Input validation --------------------------------------------------
-  req_cols <- c("sim", "group", "accrual_time", "tte", "event")
+  if (!is.character(tte.col) || length(tte.col) != 1L ||
+      !is.character(event.col) || length(event.col) != 1L) {
+    stop("'tte.col' and 'event.col' must be single character strings")
+  }
+  req_cols <- c("sim", "group", "accrual_time", tte.col, event.col)
   if (!is.data.frame(data) || !all(req_cols %in% names(data))) {
     stop("'data' must be a data frame with columns: ",
          paste(req_cols, collapse = ", "))
   }
-  # A function of the data gives the cutoffs (for a chain with |>)
+  # A function of the data gives the cutoffs (for a chain with |>); it
+  # receives the data as given
   if (is.function(cutoff.looks)) {
     cutoff.looks <- cutoff.looks(data)
     if (!is.numeric(cutoff.looks)) {
       stop("the function given as 'cutoff.looks' must return a numeric ",
            "matrix or vector, such as the result of cutoff_fast()")
     }
+  }
+  # The endpoint named by 'tte.col' and 'event.col' is analyzed as the
+  # columns 'tte' and 'event' (both read before either is replaced)
+  if (tte.col != "tte" || event.col != "event") {
+    tte_col_values   <- data[[tte.col]]
+    event_col_values <- data[[event.col]]
+    data$tte   <- tte_col_values
+    data$event <- event_col_values
   }
   has_event  <- !is.null(event.looks)
   has_time   <- !is.null(time.looks)
@@ -553,18 +593,19 @@ analysis_fast <- function(data, control,
   }
   if (has_event) looks <- round(looks)
   if (anyNA(data$sim) || anyNA(data$accrual_time) || anyNA(data$tte)) {
-    stop("columns 'sim', 'accrual_time', and 'tte' of 'data' must not ",
-         "contain missing values")
+    stop("columns 'sim', 'accrual_time', and '", tte.col, "' of 'data' ",
+         "must not contain missing values")
   }
   if (!is.numeric(data$tte) || any(data$tte < 0)) {
-    stop("column 'tte' of 'data' must be numeric and non-negative")
+    stop("column '", tte.col, "' of 'data' must be numeric and non-negative")
   }
   if (!(is.numeric(data$event) || is.logical(data$event))) {
-    stop("column 'event' of 'data' must be numeric or logical, not a factor ",
-         "or a character vector")
+    stop("column '", event.col, "' of 'data' must be numeric or logical, ",
+         "not a factor or a character vector")
   }
   if (anyNA(data$event) || !all(data$event == 0 | data$event == 1)) {
-    stop("column 'event' of 'data' must be coded as 0 (censored) or 1 (event)")
+    stop("column '", event.col, "' of 'data' must be coded as 0 (censored) ",
+         "or 1 (event)")
   }
   # Treatment indicator (1 = treatment, 0 = control), validated on the whole
   # data: 'group' must have exactly two values, one of which is 'control'.

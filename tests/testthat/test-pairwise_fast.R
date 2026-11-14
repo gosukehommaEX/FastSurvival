@@ -213,3 +213,28 @@ test_that("pairwise_fast: cutoff.looks can be a function of the data of all arms
                              cutoff.looks = function(x) "a"),
                "must return a numeric")
 })
+
+test_that("pairwise_fast: tte.col and event.col select the endpoint", {
+  dfk <- make_karm(8)
+  # The same endpoint under other column names
+  alt <- dfk
+  alt$os_tte   <- alt$tte
+  alt$os_event <- alt$event
+  alt$tte   <- NULL
+  alt$event <- NULL
+  looks <- list(list(time.looks = 30),
+                list(event.looks = c(100, 200), primary = 3),
+                list(cutoff.looks = cutoff_fast(dfk, event.looks = 150)))
+  for (lk in looks) {
+    expect_identical(
+      do.call(pairwise_fast,
+              c(list(alt, control = 1, side = 1, adjust = "bonferroni",
+                     tte.col = "os_tte", event.col = "os_event"), lk)),
+      do.call(pairwise_fast,
+              c(list(dfk, control = 1, side = 1, adjust = "bonferroni"), lk)))
+  }
+  expect_error(pairwise_fast(alt, control = 1, time.looks = 30),
+               "'tte', and 'event' columns")
+  expect_error(pairwise_fast(alt, control = 1, time.looks = 30, tte.col = 1),
+               "single character strings")
+})

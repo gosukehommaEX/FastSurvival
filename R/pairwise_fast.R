@@ -44,13 +44,17 @@
 #' Bonferroni-adjusted p-values can be used there through
 #' \code{p.col = "p.adj"}).
 #'
-#' This is a single-endpoint helper: it reads the \code{tte} and \code{event}
-#' columns and does not support subgroups. Comparisons for a second endpoint are
-#' obtained by calling \code{pairwise_fast} again on that endpoint's columns.
+#' This is a single-endpoint helper: it analyzes the columns named by
+#' \code{tte.col} and \code{event.col} (by default \code{tte} and
+#' \code{event}) and does not support subgroups. Comparisons for a second
+#' endpoint are obtained by calling \code{pairwise_fast} again with that
+#' endpoint's columns. With \code{event.looks}, the events of the primary
+#' contrast are counted on the same columns.
 #'
 #' @param data A data frame of simulated trial data with columns \code{sim},
-#'   \code{group}, \code{accrual_time}, \code{tte}, and \code{event}, as produced
-#'   by \code{\link{simdata_fast}}.
+#'   \code{group}, \code{accrual_time}, and the columns named by
+#'   \code{tte.col} and \code{event.col} (by default \code{tte} and
+#'   \code{event}), as produced by \code{\link{simdata_fast}}.
 #' @param control The group label of the control arm.
 #' @param event.looks A numeric vector of target cumulative event counts for the
 #'   primary contrast, one per look. Mutually exclusive with \code{time.looks}
@@ -76,6 +80,11 @@
 #'   (default) or \code{"bonferroni"}, which adds a \code{p.adj} column.
 #' @param p.col The name of the p-value column to adjust. By default it is the
 #'   column matching the chosen \code{stat} (for example \code{"logrank.p"}).
+#' @param tte.col A single character string naming the column of \code{data}
+#'   with the observed time to event. Defaults to \code{"tte"}, as in
+#'   \code{\link{analysis_fast}} and \code{\link{cutoff_fast}}.
+#' @param event.col A single character string naming the column of
+#'   \code{data} with the event indicator. Defaults to \code{"event"}.
 #' @param ... Further arguments passed to \code{\link{analysis_fast}}, such as
 #'   \code{side}, \code{conf.level}, \code{tau}, \code{rho}, and \code{gamma}.
 #'   The argument \code{by.subgroup} is not supported.
@@ -126,18 +135,23 @@ pairwise_fast <- function(data, control,
                           primary = NULL, arms = NULL,
                           stat = "logrank",
                           adjust = c("none", "bonferroni"),
-                          p.col = NULL, cutoff.looks = NULL, ...) {
+                          p.col = NULL, cutoff.looks = NULL,
+                          tte.col = "tte", event.col = "event", ...) {
   adjust <- match.arg(adjust)
   dots <- list(...)
   if (isTRUE(dots$by.subgroup)) {
     stop("pairwise_fast() does not support 'by.subgroup'; it compares each arm ",
          "against the control on the pooled population.")
   }
+  if (!is.character(tte.col) || length(tte.col) != 1L ||
+      !is.character(event.col) || length(event.col) != 1L) {
+    stop("'tte.col' and 'event.col' must be single character strings")
+  }
   if (is.null(data[["sim"]]) || is.null(data[["group"]]) ||
-      is.null(data[["tte"]]) || is.null(data[["event"]]) ||
+      is.null(data[[tte.col]]) || is.null(data[[event.col]]) ||
       is.null(data[["accrual_time"]])) {
-    stop("'data' must have 'sim', 'group', 'accrual_time', 'tte', and 'event' ",
-         "columns, as produced by simdata_fast().")
+    stop("'data' must have 'sim', 'group', 'accrual_time', '", tte.col,
+         "', and '", event.col, "' columns, as produced by simdata_fast().")
   }
 
   # A function of the data gives the cutoffs of all arms (for a chain with |>)
@@ -206,7 +220,8 @@ pairwise_fast <- function(data, control,
     blocks <- lapply(arms, function(j) {
       sub <- data[data$group %in% c(control, j), , drop = FALSE]
       res <- analysis_fast(sub, control = control, time.looks = time.looks,
-                           stat = stat, ...)
+                           stat = stat, tte.col = tte.col,
+                           event.col = event.col, ...)
       cbind(arm = j, res)
     })
     out <- do.call(rbind, blocks)
@@ -228,7 +243,8 @@ pairwise_fast <- function(data, control,
     # primary arm), per simulation; NA where the target is not reached.
     cutoff.looks <- cutoff_fast(
       data, event.looks = event.looks,
-      event.subset = data$group %in% c(control, primary)
+      event.subset = data$group %in% c(control, primary),
+      tte.col = tte.col, event.col = event.col
     )
   }
 
@@ -237,7 +253,8 @@ pairwise_fast <- function(data, control,
   blocks <- lapply(arms, function(j) {
     sub <- data[data$group %in% c(control, j), , drop = FALSE]
     res <- analysis_fast(sub, control = control, cutoff.looks = cutoff.looks,
-                         stat = stat, ...)
+                         stat = stat, tte.col = tte.col,
+                         event.col = event.col, ...)
     out_j <- cbind(arm = j, res)
     # A look whose shared trigger was not met carries no statistics.
     if (any(!out_j$reached)) {

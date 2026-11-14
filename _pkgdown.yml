@@ -67,6 +67,7 @@ articles:
   navbar: ~
   contents:
   - FastSurvival
+  - simulation-pipe
   - validation
   - speed-comparison
   - group-sequential-design

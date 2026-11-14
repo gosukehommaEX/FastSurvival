@@ -30,7 +30,7 @@ library(FastSurvival)
 
 # Function families
 
-The package has two families of functions. Collett (2014) gives the
+The package has two families of functions. Collett (2023) gives the
 methodological background of the standard methods they implement.
 
 The estimation and testing functions operate on a single dataset and return
@@ -96,16 +96,16 @@ fit <- coxph_fast(Surv(futime, fustat) ~ rx, data = ovarian, side = 1)
 as.data.frame(fit)
 exp(confint(fit))
 
-as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
-                        tau = 500))
+rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 500) |>
+  as.data.frame()
 ```
 
 `kmcurve_fast()` builds the Kaplan-Meier curves of a data set, and its
 `plot()` method can add the numbers at risk below the curves.
 
 ```{r km-plot, eval = requireNamespace("survival", quietly = TRUE), fig.width = 7, fig.height = 5}
-km <- kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian)
-plot(km, risk_table = TRUE, conf.style = "band")
+kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian) |>
+  plot(risk_table = TRUE, conf.style = "band")
 ```
 
 # Chaining with the native pipe
@@ -135,7 +135,9 @@ simdata_fast(nsim = 200, n = c(150, 150), a.time = c(0, 12),
 
 # Where to go next
 
-Several further vignettes cover the package in depth. *Validation of
+Several further vignettes cover the package in depth. *Simulation studies
+with the native pipe* writes complete simulation studies as chains of the
+functions above. *Validation of
 FastSurvival* checks numerical agreement with established packages on a real
 clinical-trial dataset. *Speed comparison* quantifies the performance gain.
 *Group sequential design with the simulation trio* demonstrates
@@ -148,5 +150,5 @@ functions.
 
 # References
 
-Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd ed.).
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th ed.).
 Chapman and Hall/CRC.
