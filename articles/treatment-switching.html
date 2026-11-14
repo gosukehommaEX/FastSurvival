@@ -112,7 +112,10 @@ switch, changing only their outcomes after the switch;</li>
 <li>the OS analysis is run on the modified data.</li>
 </ol>
 <p>The interim analysis is unaffected by step 4 by construction, which
-is checked below.</p>
+is checked below. Switching rules that belong to the data-generating
+process, such as a switch after or before progression with a given
+hazard, are given to <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> directly (see the
+section on switching rules in the data-generating model).</p>
 </div>
 <div class="section level2">
 <h2 id="design">Design<a class="anchor" aria-label="anchor" href="#design"></a>
@@ -272,7 +275,7 @@ scenario, runs in about a second.</p>
 <span>  <span class="va">r1</span>  <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">d1</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.517   0.053   0.570</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.425   0.042   0.465</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="a-check-with-the-rank-preserving-structural-failure-time-model">A check with the rank-preserving structural failure time model<a class="anchor" aria-label="anchor" href="#a-check-with-the-rank-preserving-structural-failure-time-model"></a>
@@ -338,12 +341,95 @@ standard error, so the RPSFT method recovers the acceleration factor
 used to generate the switched survival times.</p>
 </div>
 <div class="section level2">
+<h2 id="switching-rules-in-the-data-generating-model">Switching rules in the data-generating model<a class="anchor" aria-label="anchor" href="#switching-rules-in-the-data-generating-model"></a>
+</h2>
+<p>Some switching rules are part of the data-generating process rather
+than decisions taken at an analysis. <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>
+generates them in the illness-death model together with the other
+transitions:</p>
+<ul>
+<li>
+<code>switch.prop</code>: a switch at progression with a given
+probability;</li>
+<li>
+<code>h1s.hazard</code>: a switch after progression, for the
+patients who did not switch at it, with a (piecewise) constant hazard
+that competes with death;</li>
+<li>
+<code>h0s.hazard</code>: a switch before progression, after which
+progression and death follow <code>h01.switch.hazard</code> and
+<code>h02.switch.hazard</code>; with
+<code>e1.censor.switch = TRUE</code>, PFS is censored at the
+switch;</li>
+<li>
+<code>h12.switch.hazard</code> or <code>switch.aft.factor</code>:
+the effect of a switch on survival, as a new hazard or as an
+acceleration factor of the remaining time.</li>
+</ul>
+<p>The post-progression hazards are functions of the time since
+progression by default (<code>switch.clock = "reset"</code>) or of the
+time since randomization (<code>switch.clock = "forward"</code>), and
+<code>h12.switch.clock</code> sets whether the post-switch hazard is
+measured from the switch or on the same clock. The rules follow the
+multistate model of the DesignComplexSurvival package; the script
+<code>validation/validate_switching.R</code> of the installed package
+compares the data of <code><a href="../reference/simdata_fast.html">simdata_fast()</a></code> with its analytic
+values and with independent simulations in Python.</p>
+<p>In the trial above, suppose that 30 percent of the control patients
+switch at progression, that the others switch after progression at 4
+percent per month, and that 1 percent per month switch before
+progression, in which case PFS is censored at the switch. After a switch
+the median survival is 18 months.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df_rules</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<span>  nsim              <span class="op">=</span> <span class="va">nsim</span>,</span>
+<span>  n                 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">300</span><span class="op">)</span>,</span>
+<span>  a.time            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">18</span><span class="op">)</span>,</span>
+<span>  a.rate            <span class="op">=</span> <span class="fl">600</span> <span class="op">/</span> <span class="fl">18</span>,</span>
+<span>  h01.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  h02.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">36</span><span class="op">)</span>,</span>
+<span>  h12.median        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  switch.prop       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0</span><span class="op">)</span>,   <span class="co"># at progression</span></span>
+<span>  h1s.hazard        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.04</span>, <span class="fl">0</span><span class="op">)</span>,  <span class="co"># after progression, per month</span></span>
+<span>  h0s.hazard        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0</span><span class="op">)</span>,  <span class="co"># before progression, per month</span></span>
+<span>  h12.switch.median <span class="op">=</span> <span class="fl">18</span>,             <span class="co"># survival after a switch</span></span>
+<span>  e1.censor.switch  <span class="op">=</span> <span class="cn">TRUE</span>,           <span class="co"># PFS censored at an early switch</span></span>
+<span>  d.hazard          <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">/</span> <span class="fl">12</span>,</span>
+<span>  seed              <span class="op">=</span> <span class="va">seed</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Kind of switch in the control group, from the switch time and the time of</span></span>
+<span><span class="co"># leaving the progression-free state</span></span>
+<span><span class="va">ctl</span> <span class="op">&lt;-</span> <span class="va">df_rules</span><span class="op">[</span><span class="va">df_rules</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="va">kind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ctl</span><span class="op">$</span><span class="va">switched</span> <span class="op">==</span> <span class="fl">0</span>, <span class="st">"no switch"</span>,</span>
+<span>               <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ctl</span><span class="op">$</span><span class="va">switch_time</span> <span class="op">&lt;</span> <span class="va">ctl</span><span class="op">$</span><span class="va">e1_surv_time</span>,</span>
+<span>                      <span class="st">"before progression"</span>,</span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">ctl</span><span class="op">$</span><span class="va">switch_time</span> <span class="op">==</span> <span class="va">ctl</span><span class="op">$</span><span class="va">e1_surv_time</span>,</span>
+<span>                             <span class="st">"at progression"</span>, <span class="st">"after progression"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kind</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; kind</span></span>
+<span><span class="co">#&gt;  after progression     at progression before progression          no switch </span></span>
+<span><span class="co">#&gt;              0.192              0.209              0.080              0.519</span></span></code></pre></div>
+<p>The OS analysis of these data can be compared with the scenarios in
+the table above.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">r_rules</span> <span class="op">&lt;-</span> <span class="fu">os_final</span><span class="op">(</span><span class="va">df_rules</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>control_switched <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ctl</span><span class="op">$</span><span class="va">switched</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  OS_power         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">r_rules</span><span class="op">$</span><span class="va">logrank.p</span> <span class="op">&lt;=</span> <span class="fl">0.025</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  mean_HR          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">r_rules</span><span class="op">$</span><span class="va">cox.coef</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; control_switched         OS_power          mean_HR </span></span>
+<span><span class="co">#&gt;            0.481            0.068            0.950</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="remarks">Remarks<a class="anchor" aria-label="anchor" href="#remarks"></a>
 </h2>
 <p><code><a href="../reference/switch_fast.html">switch_fast()</a></code> covers switching rules whose timing is a
 function of the patient’s own outcomes (progression), of an opening time
 per trial, or of both, with an effect on the remaining time to the
-terminal event given by an acceleration factor or by a new hazard.
+terminal event given by an acceleration factor or by a new hazard. It
+can also be applied to data with the switching rules of
+<code><a href="../reference/simdata_fast.html">simdata_fast()</a></code>, for example for a crossover after an
+interim analysis; the patients who already switched are left unchanged.
 Designs in which an interim decision changes the enrollment or the
 randomization itself, such as dropping an arm and re-randomizing new
 patients, change the data-generating process and are outside this
