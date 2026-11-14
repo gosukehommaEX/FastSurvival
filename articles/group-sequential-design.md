@@ -74,17 +74,17 @@ df <- simdata_fast(
 ## Interim and final analyses
 
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-runs the event-driven looks. We analyze at 252 and 336 events, take the
-chemotherapy group as the control, and compute both the log-rank and the
-Cox statistics with a two-sided test, matching the trial.
+runs the event-driven looks on the simulated data, which the native pipe
+`|>` passes to it as the first argument. We analyze at 252 and 336
+events, take the chemotherapy group as the control, and compute both the
+log-rank and the Cox statistics with a two-sided test, matching the
+trial.
 
 ``` r
 
-res <- analysis_fast(
-  df, control = 2,
-  event.looks = c(252, 336),
-  stat = c("logrank", "coxph"), side = 2
-)
+res <- df |>
+  analysis_fast(control = 2, event.looks = c(252, 336),
+                stat = c("logrank", "coxph"), side = 2)
 ```
 
 ## Spending boundaries
@@ -121,7 +121,7 @@ expected sample size, and expected analysis time across the looks.
 
 ``` r
 
-oc <- simsummary_fast(res, p.col = "logrank.p", alpha = spend_alpha)
+oc <- res |> simsummary_fast(p.col = "logrank.p", alpha = spend_alpha)
 oc
 #> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 10000
@@ -153,7 +153,7 @@ against the expected number of events.
 
 ``` r
 
-plot(oc, xaxis = "events")
+oc |> plot(xaxis = "events")
 ```
 
 ![](group-sequential-design_files/figure-html/summary-plot-1.png)
@@ -280,15 +280,15 @@ df_delay <- simdata_fast(
 )
 
 set.seed(1)
-res_delay <- analysis_fast(
-  df_delay, control = 2,
-  event.looks = looks,
-  stat = c("logrank", "maxcombo"), side = 2,
-  mc.alpha = spend_alpha
-)
+res_delay <- df_delay |>
+  analysis_fast(control = 2, event.looks = looks,
+                stat = c("logrank", "maxcombo"), side = 2,
+                mc.alpha = spend_alpha)
 
-oc_lr <- simsummary_fast(res_delay, p.col = "logrank.p",  alpha = spend_alpha)
-oc_mc <- simsummary_fast(res_delay, p.col = "maxcombo.p", alpha = spend_alpha)
+oc_lr <- res_delay |>
+  simsummary_fast(p.col = "logrank.p", alpha = spend_alpha)
+oc_mc <- res_delay |>
+  simsummary_fast(p.col = "maxcombo.p", alpha = spend_alpha)
 data.frame(
   test  = c("Log-rank", "Max-combo"),
   power = round(c(oc_lr[oc_lr$look == "overall", "cum.reject"],

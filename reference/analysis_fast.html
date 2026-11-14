@@ -51,7 +51,8 @@ presorted = TRUE, so each look avoids a redundant sort."><meta property="og:imag
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -128,7 +129,9 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <span>  wmst.tau2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cutoff.looks <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mc.alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"efron"</span>, <span class="st">"breslow"</span><span class="op">)</span></span>
+<span>  ties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"efron"</span>, <span class="st">"breslow"</span><span class="op">)</span>,</span>
+<span>  tte.col <span class="op">=</span> <span class="st">"tte"</span>,</span>
+<span>  event.col <span class="op">=</span> <span class="st">"event"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -139,7 +142,8 @@ sorting are handled by a C++ backend, and the analysis cores are called with
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame from <code><a href="simdata_fast.html">simdata_fast</a></code> for a two-group
 trial, containing at least <code>sim</code>, <code>group</code>, <code>accrual_time</code>,
-<code>tte</code>, and <code>event</code>.</p></dd>
+and the columns named by <code>tte.col</code> and <code>event.col</code> (by default
+<code>tte</code> and <code>event</code>).</p></dd>
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
@@ -339,7 +343,10 @@ not reached. The <code>look.value</code> column of the output is taken from the
 argument, which is applied to <code>data</code> and must return such a matrix
 or vector, for example
 <code>function(x) cutoff_fast(x, event.looks = 150)</code>; the cutoffs are then
-computed inside a chain of calls with the native pipe <code>|&gt;</code>.</p></dd>
+computed inside a chain of calls with the native pipe <code>|&gt;</code>. The
+function receives <code>data</code> as given, so with <code>tte.col</code> and
+<code>event.col</code> the call of <code><a href="cutoff_fast.html">cutoff_fast</a></code> names the columns
+of the endpoint that triggers the looks.</p></dd>
 
 
 <dt id="arg-mc-alpha">mc.alpha<a class="anchor" aria-label="anchor" href="#arg-mc-alpha"></a></dt>
@@ -355,6 +362,18 @@ integration only when the Bonferroni bounds do not decide the comparison
 <dd><p>A character string, <code>"efron"</code> (default) or
 <code>"breslow"</code>, naming the handling of tied event times in the
 <code>"coxph"</code> statistic; see <code><a href="coxph_fast.html">coxph_fast</a></code>.</p></dd>
+
+
+<dt id="arg-tte-col">tte.col<a class="anchor" aria-label="anchor" href="#arg-tte-col"></a></dt>
+<dd><p>A single character string naming the column of <code>data</code>
+with the observed time to event (numeric and non-negative). Defaults to
+<code>"tte"</code>, as in <code><a href="cutoff_fast.html">cutoff_fast</a></code>.</p></dd>
+
+
+<dt id="arg-event-col">event.col<a class="anchor" aria-label="anchor" href="#arg-event-col"></a></dt>
+<dd><p>A single character string naming the column of
+<code>data</code> with the event indicator (numeric or logical, 0 or 1).
+Defaults to <code>"event"</code>, as in <code><a href="cutoff_fast.html">cutoff_fast</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -414,7 +433,12 @@ numeric and non-negative, <code>event</code> must be numeric or logical and code
 as 0 or 1, and <code>group</code> must have exactly two distinct values, one of
 which is <code>control</code>. For a
 multi-arm trial, subset the data to two arms first or use
-<code><a href="pairwise_fast.html">pairwise_fast</a></code>.</p>
+<code><a href="pairwise_fast.html">pairwise_fast</a></code>. Another endpoint is analyzed by naming its
+columns with <code>tte.col</code> and <code>event.col</code>, for example the first
+(<code>"e1_tte"</code> and <code>"e1_event"</code>) or the terminal (<code>"e2_tte"</code>
+and <code>"e2_event"</code>) endpoint of the illness-death model of
+<code><a href="simdata_fast.html">simdata_fast</a></code>; <code>tte</code> and <code>event</code> below then stand
+for those columns.</p>
 <p>For a look at calendar time <code>cutoff</code>, each subject with accrual time
 <code>a</code> contributes only if enrolled by then (<code>a &lt;= cutoff</code>). The
 observed time at the look is <code>min(tte, cutoff - a)</code> and the observed
@@ -778,6 +802,31 @@ the whole-population analysis.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 -4.862092     23.639938 1.161516e-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 -3.631606     13.188562 2.816629e-04</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 -5.043861     25.440534 4.562306e-07</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The terminal endpoint (overall survival) of an illness-death model,</span></span></span>
+<span class="r-in"><span><span class="co"># analyzed at 60 deaths</span></span></span>
+<span class="r-in"><span><span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="simdata_fast.html">simdata_fast</a></span><span class="op">(</span>nsim <span class="op">=</span> <span class="fl">20</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span>, a.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    a.rate <span class="op">=</span> <span class="fl">200</span> <span class="op">/</span> <span class="fl">12</span>, h01.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">9</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    h02.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">24</span><span class="op">)</span>, h12.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ids</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">analysis_fast</span><span class="op">(</span>control <span class="op">=</span> <span class="fl">1</span>, event.looks <span class="op">=</span> <span class="fl">60</span>, tte.col <span class="op">=</span> <span class="st">"e2_tte"</span>,</span></span>
+<span class="r-in"><span>                event.col <span class="op">=</span> <span class="st">"e2_event"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1         60 15.35095    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2    1         60 13.66708    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   3    1         60 13.00029    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4    1         60 15.11037    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   5    1         60 14.71349    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   6    1         60 14.50334    TRUE        200      60         0        140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    logrank.z logrank.chisq logrank.p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.3325414    0.11058379 0.7394805</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -1.0540929    1.11111191 0.2918404</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.2891788    0.08362439 0.7724445</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.6123677    0.37499419 0.5402945</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.6159667    0.37941497 0.5379165</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.7356875    3.01261115 0.0826191</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

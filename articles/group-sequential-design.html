@@ -38,7 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+<li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -142,16 +143,15 @@ the tisotumab vedotin group and group 2 the chemotherapy group.</p>
 <div class="section level2">
 <h2 id="interim-and-final-analyses">Interim and final analyses<a class="anchor" aria-label="anchor" href="#interim-and-final-analyses"></a>
 </h2>
-<p><code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> runs the event-driven looks. We analyze
-at 252 and 336 events, take the chemotherapy group as the control, and
-compute both the log-rank and the Cox statistics with a two-sided test,
-matching the trial.</p>
+<p><code><a href="../reference/analysis_fast.html">analysis_fast()</a></code> runs the event-driven looks on the
+simulated data, which the native pipe <code>|&gt;</code> passes to it as
+the first argument. We analyze at 252 and 336 events, take the
+chemotherapy group as the control, and compute both the log-rank and the
+Cox statistics with a two-sided test, matching the trial.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df</span>, control <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span>,</span>
-<span>  stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span>control <span class="op">=</span> <span class="fl">2</span>, event.looks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">252</span>, <span class="fl">336</span><span class="op">)</span>,</span>
+<span>                stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="spending-boundaries">Spending boundaries<a class="anchor" aria-label="anchor" href="#spending-boundaries"></a>
@@ -183,7 +183,7 @@ to the simulated log-rank p-values and aggregates the crossing
 probabilities, expected events, expected sample size, and expected
 analysis time across the looks.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">oc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">oc</span> <span class="op">&lt;-</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span>p.col <span class="op">=</span> <span class="st">"logrank.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
 <span><span class="va">oc</span></span>
 <span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
 <span><span class="co">#&gt;   Simulations: 10000</span></span>
@@ -210,7 +210,7 @@ analysis time across the looks.</p>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws the cumulative probability of stopping for
 efficacy at each look, here against the expected number of events.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">oc</span>, xaxis <span class="op">=</span> <span class="st">"events"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">oc</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>xaxis <span class="op">=</span> <span class="st">"events"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="group-sequential-design_files/figure-html/summary-plot-1.png" class="r-plt" alt="" width="576"></p>
 </div>
 <div class="section level2">
@@ -361,15 +361,15 @@ for the max-combo statistic itself.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">res_delay</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df_delay</span>, control <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">looks</span>,</span>
-<span>  stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"maxcombo"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  mc.alpha <span class="op">=</span> <span class="va">spend_alpha</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">res_delay</span> <span class="op">&lt;-</span> <span class="va">df_delay</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span>control <span class="op">=</span> <span class="fl">2</span>, event.looks <span class="op">=</span> <span class="va">looks</span>,</span>
+<span>                stat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"maxcombo"</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                mc.alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">oc_lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res_delay</span>, p.col <span class="op">=</span> <span class="st">"logrank.p"</span>,  alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
-<span><span class="va">oc_mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span><span class="va">res_delay</span>, p.col <span class="op">=</span> <span class="st">"maxcombo.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<span><span class="va">oc_lr</span> <span class="op">&lt;-</span> <span class="va">res_delay</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span>p.col <span class="op">=</span> <span class="st">"logrank.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
+<span><span class="va">oc_mc</span> <span class="op">&lt;-</span> <span class="va">res_delay</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span>p.col <span class="op">=</span> <span class="st">"maxcombo.p"</span>, alpha <span class="op">=</span> <span class="va">spend_alpha</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  test  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Log-rank"</span>, <span class="st">"Max-combo"</span><span class="op">)</span>,</span>
 <span>  power <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">oc_lr</span><span class="op">[</span><span class="va">oc_lr</span><span class="op">$</span><span class="va">look</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="st">"cum.reject"</span><span class="op">]</span>,</span>

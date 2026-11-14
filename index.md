@@ -517,6 +517,11 @@ library(survival)
 ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
 ```
 
+The vignette *Simulation studies with the native pipe* gives further
+examples of such chains: looks from combined event and calendar-time
+rules, several statistics from one analysis, illness-death data with
+treatment switching, multi-arm trials, and studies run in batches.
+
 The estimation functions can also be used directly inside a loop. Except
 for
 [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)

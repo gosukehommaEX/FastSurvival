@@ -517,6 +517,11 @@ library(survival)
 ovarian |> coxph_fast(Surv(futime, fustat) ~ rx) |> as.data.frame()
 ```
 
+The vignette *Simulation studies with the native pipe* gives further
+examples of such chains: looks from combined event and calendar-time
+rules, several statistics from one analysis, illness-death data with
+treatment switching, multi-arm trials, and studies run in batches.
+
 The estimation functions can also be used directly inside a loop. Except
 for
 [`milestone_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/milestone_fast.md)
@@ -776,6 +781,8 @@ Display methods for the returned S3 objects.
 
 - [Introduction to
   FastSurvival](https://gosukehommaEX.github.io/FastSurvival/articles/FastSurvival.md):
+- [Simulation studies with the native
+  pipe](https://gosukehommaEX.github.io/FastSurvival/articles/simulation-pipe.md):
 - [Validation of
   FastSurvival](https://gosukehommaEX.github.io/FastSurvival/articles/validation.md):
 - [Speed

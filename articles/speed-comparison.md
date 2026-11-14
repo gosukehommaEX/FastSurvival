@@ -331,6 +331,20 @@ needed, the `mc.alpha` argument of
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
 restricts the integration to the p-values near those levels.
 
+A whole study written as one chain with the native pipe is timed in the
+same way, for example for 10,000 trials with the log-rank and RMST
+statistics at two event-driven looks:
+
+``` r
+
+system.time(
+  simdata_fast(nsim = 10000, n = c(300, 300), a.time = c(0, 12),
+               a.rate = 600 / 12, e.median = list(12, 18), seed = 1) |>
+    analysis_fast(control = 1, event.looks = c(300, 450),
+                  stat = c("logrank", "rmst"), tau = 18, side = 1)
+)
+```
+
 ## References
 
 Dormuth, I., Pauly, M., Rauch, G., & Herrmann, C. (2024). Sample size

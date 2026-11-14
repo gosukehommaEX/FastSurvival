@@ -38,7 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+<li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -228,14 +229,14 @@ taken at the identical data cut as the overall test. We request the
 log-rank statistic for the overall efficacy decision and the Cox hazard
 ratio for the consistency criteria.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  data        <span class="op">=</span> <span class="va">data_all</span>,</span>
-<span>  control     <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="va">E</span>,</span>
-<span>  stat        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>,</span>
-<span>  side        <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  by.subgroup <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="va">data_all</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>    control     <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    event.looks <span class="op">=</span> <span class="va">E</span>,</span>
+<span>    stat        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logrank"</span>, <span class="st">"coxph"</span><span class="op">)</span>,</span>
+<span>    side        <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    by.subgroup <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sim"</span>, <span class="st">"look"</span>, <span class="st">"population"</span>, <span class="st">"n.event"</span>, <span class="st">"logrank.z"</span>, <span class="st">"cox.hr"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   sim look population n.event logrank.z    cox.hr</span></span>
 <span><span class="co">#&gt; 1   1    1    overall     142 -3.032779 0.5984187</span></span>
@@ -383,12 +384,12 @@ the same boundaries on the overall population to give the usual
 group-sequential operating characteristics, here as an independent check
 on the efficacy column above.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">res</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">population</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="op">]</span>,</span>
-<span>  eff.col   <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff.bound</span>,</span>
-<span>  fut.col   <span class="op">=</span> <span class="st">"logrank.z"</span>, futility <span class="op">=</span> <span class="va">fut.bound</span>,</span>
-<span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">population</span> <span class="op">==</span> <span class="st">"overall"</span>, <span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
+<span>    eff.col   <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff.bound</span>,</span>
+<span>    fut.col   <span class="op">=</span> <span class="st">"logrank.z"</span>, futility <span class="op">=</span> <span class="va">fut.bound</span>,</span>
+<span>    direction <span class="op">=</span> <span class="st">"lower"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="va">gs</span></span>
 <span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
 <span><span class="co">#&gt;   Simulations: 10000</span></span>

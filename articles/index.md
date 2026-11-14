@@ -4,6 +4,8 @@
 
 - [Introduction to
   FastSurvival](https://gosukehommaEX.github.io/FastSurvival/articles/FastSurvival.md):
+- [Simulation studies with the native
+  pipe](https://gosukehommaEX.github.io/FastSurvival/articles/simulation-pipe.md):
 - [Validation of
   FastSurvival](https://gosukehommaEX.github.io/FastSurvival/articles/validation.md):
 - [Speed

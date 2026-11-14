@@ -41,7 +41,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/validation.html">Validation of FastSurvival</a></li>
+<li><a class="dropdown-item" href="articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -391,6 +392,7 @@
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/therneau/survival" class="external-link">survival</a></span><span class="op">)</span></span>
 <span><span class="va">ovarian</span> <span class="op">|&gt;</span> <span class="fu"><a href="reference/coxph_fast.html">coxph_fast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">rx</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>The vignette <em>Simulation studies with the native pipe</em> gives further examples of such chains: looks from combined event and calendar-time rules, several statistics from one analysis, illness-death data with treatment switching, multi-arm trials, and studies run in batches.</p>
 <p>The estimation functions can also be used directly inside a loop. Except for <code><a href="reference/milestone_fast.html">milestone_fast()</a></code> and <code><a href="reference/ahr_fast.html">ahr_fast()</a></code>, which return lists, each returned object is internally a numeric vector, so after stripping the class with <code><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass()</a></code> the per-simulation results can be combined with <code><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind()</a></code> into an ordinary numeric matrix:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="fl">1000L</span><span class="op">)</span></span>

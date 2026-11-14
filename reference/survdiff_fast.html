@@ -37,7 +37,8 @@ hazards."><meta property="og:image" content="https://gosukehommaEX.github.io/Fas
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -452,9 +453,12 @@ tests. <em>Pharmaceutical Statistics</em>, <em>25</em>(1), e70066.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq      mean  median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  37.255  43.079  56.68756  53.805  58.4565 4944.597  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 628.683 666.669 702.03874 680.470 698.4615 5909.870  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean   median        uq      max neval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  59.751  69.0585   78.15165   80.595   83.9015  226.042  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 944.893 990.5430 1038.48317 1004.834 1024.2515 7838.775  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

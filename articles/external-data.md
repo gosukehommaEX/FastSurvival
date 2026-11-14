@@ -26,7 +26,7 @@ The columns that the functions read are
 | Function | Required columns |
 |----|----|
 | [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md) | `sim`, `accrual_time`, and the time and event columns named by `tte.col` and `event.col` (`tte` and `event` by default) |
-| [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md), [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | `sim`, `group`, `accrual_time`, `tte`, `event` |
+| [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md), [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md) | `sim`, `group`, `accrual_time`, and the time and event columns named by `tte.col` and `event.col` (`tte` and `event` by default) |
 | [`switch_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/switch_fast.md) | `sim`, `group`, `accrual_time`, and the latent times `surv_time` and `dropout_time` |
 
 where `tte` is the observed time from accrual, `event` is 1 for an event
@@ -119,8 +119,9 @@ returns the calendar time of both looks for every simulated trial.
 
 ``` r
 
-cut <- cutoff_fast(dat, event.looks = c(150, 280), max.time = c(24, 48),
-                   min.gap = c(NA, 9))
+cut <- dat |>
+  cutoff_fast(event.looks = c(150, 280), max.time = c(24, 48),
+              min.gap = c(NA, 9))
 head(cut)
 #>      look1    look2
 #> 1 17.72435 30.83964
@@ -150,12 +151,13 @@ of the randomized integration, as without `mc.alpha`.
 
 alpha_look <- c(0.002, 0.024)
 set.seed(1)
-res <- analysis_fast(dat, control = 1, cutoff.looks = cut,
-                     stat = c("logrank", "maxcombo"), side = 1,
-                     mc.alpha = alpha_look)
+res <- dat |>
+  analysis_fast(control = 1, cutoff.looks = cut,
+                stat = c("logrank", "maxcombo"), side = 1,
+                mc.alpha = alpha_look)
 
-oc_lr <- simsummary_fast(res, p.col = "logrank.p",  alpha = alpha_look)
-oc_mc <- simsummary_fast(res, p.col = "maxcombo.p", alpha = alpha_look)
+oc_lr <- res |> simsummary_fast(p.col = "logrank.p",  alpha = alpha_look)
+oc_mc <- res |> simsummary_fast(p.col = "maxcombo.p", alpha = alpha_look)
 data.frame(
   test             = c("Log-rank", "Max-combo"),
   reject_interim   = c(oc_lr[oc_lr$look == "1", "prob.stop.efficacy"],
@@ -185,19 +187,22 @@ statistics are the same as before.
 
 ``` r
 
-sw <- switch_fast(dat, group = 1, when = "cutoff",
-                  cutoff = cut[, 1, drop = FALSE], aft.factor = 1.5)
-cut_sw <- cutoff_fast(sw, event.looks = c(150, 280), max.time = c(24, 48),
-                      min.gap = c(NA, 9))
+sw <- dat |>
+  switch_fast(group = 1, when = "cutoff", cutoff = cut[, 1, drop = FALSE],
+              aft.factor = 1.5)
+cut_sw <- sw |>
+  cutoff_fast(event.looks = c(150, 280), max.time = c(24, 48),
+              min.gap = c(NA, 9))
 all.equal(cut_sw[, 1], cut[, 1])
 #> [1] TRUE
 
-res_sw <- analysis_fast(sw, control = 1, cutoff.looks = cut_sw,
-                        stat = "logrank", side = 1)
+res_sw <- sw |>
+  analysis_fast(control = 1, cutoff.looks = cut_sw, stat = "logrank",
+                side = 1)
 all.equal(res_sw$logrank.z[res_sw$look == 1], res$logrank.z[res$look == 1])
 #> [1] TRUE
 
-oc_sw <- simsummary_fast(res_sw, p.col = "logrank.p", alpha = alpha_look)
+oc_sw <- res_sw |> simsummary_fast(p.col = "logrank.p", alpha = alpha_look)
 c(log_rank_power_without_switching = oc_lr[oc_lr$look == "overall", "cum.reject"],
   log_rank_power_with_crossover    = oc_sw[oc_sw$look == "overall", "cum.reject"])
 #> log_rank_power_without_switching    log_rank_power_with_crossover 

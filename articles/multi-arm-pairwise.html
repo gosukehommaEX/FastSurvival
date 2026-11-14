@@ -38,7 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+<li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -190,14 +191,13 @@ in which a negative Z favors the experimental arm.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Z</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"arm"</span>, <span class="va">exp_arms</span>, <span class="st">"_vs_ctrl"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">exp_arms</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">sub</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">group</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">control_arm</span>, <span class="va">exp_arms</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span>, <span class="op">]</span></span>
-<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>    <span class="va">sub</span>,</span>
-<span>    control    <span class="op">=</span> <span class="va">control_arm</span>,</span>
-<span>    time.looks <span class="op">=</span> <span class="va">analysis_month</span>,</span>
-<span>    stat       <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>    side       <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">group</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">control_arm</span>, <span class="va">exp_arms</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span>, <span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>      control    <span class="op">=</span> <span class="va">control_arm</span>,</span>
+<span>      time.looks <span class="op">=</span> <span class="va">analysis_month</span>,</span>
+<span>      stat       <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>      side       <span class="op">=</span> <span class="fl">1</span></span>
+<span>    <span class="op">)</span></span>
 <span>  <span class="va">Z</span><span class="op">[</span>, <span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">logrank.z</span></span>
 <span>  <span class="va">P</span><span class="op">[</span>, <span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">logrank.p</span></span>
 <span><span class="op">}</span></span>
@@ -222,14 +222,14 @@ cutoff, and <code>adjust = "bonferroni"</code> appends a
 <code>p.adj</code> column that multiplies each p-value by the number of
 contrasts.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df</span>,</span>
-<span>  control    <span class="op">=</span> <span class="va">control_arm</span>,</span>
-<span>  time.looks <span class="op">=</span> <span class="va">analysis_month</span>,</span>
-<span>  stat       <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>  side       <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  adjust     <span class="op">=</span> <span class="st">"bonferroni"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">pw</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span></span>
+<span>    control    <span class="op">=</span> <span class="va">control_arm</span>,</span>
+<span>    time.looks <span class="op">=</span> <span class="va">analysis_month</span>,</span>
+<span>    stat       <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>    side       <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    adjust     <span class="op">=</span> <span class="st">"bonferroni"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pw</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"arm"</span>, <span class="st">"sim"</span>, <span class="st">"cutoff"</span>, <span class="st">"logrank.z"</span>, <span class="st">"logrank.p"</span>, <span class="st">"p.adj"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   arm sim cutoff logrank.z    logrank.p        p.adj</span></span>
 <span><span class="co">#&gt; 1   2   1     30 -2.949901 1.589381e-03 3.178762e-03</span></span>
@@ -250,15 +250,15 @@ target of 200 control-plus-arm-3 events defines the per-simulation
 calendar cutoff, and both contrasts are analyzed at that same
 cutoff.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pw_ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">df</span>,</span>
-<span>  control     <span class="op">=</span> <span class="va">control_arm</span>,</span>
-<span>  event.looks <span class="op">=</span> <span class="fl">200</span>,</span>
-<span>  primary     <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  stat        <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>  side        <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  adjust      <span class="op">=</span> <span class="st">"bonferroni"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">pw_ev</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span></span>
+<span>    control     <span class="op">=</span> <span class="va">control_arm</span>,</span>
+<span>    event.looks <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>    primary     <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>    stat        <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>    side        <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    adjust      <span class="op">=</span> <span class="st">"bonferroni"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pw_ev</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"arm"</span>, <span class="st">"sim"</span>, <span class="st">"cutoff"</span>, <span class="st">"reached"</span>, <span class="st">"logrank.z"</span>, <span class="st">"p.adj"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   arm sim   cutoff reached logrank.z        p.adj</span></span>
 <span><span class="co">#&gt; 1   2   1 30.41747    TRUE -2.948070 0.0031976438</span></span>
@@ -349,17 +349,16 @@ gives the global null, under which no experimental arm truly beats
 control. The Bonferroni rule should reject at least one arm no more than
 the nominal family-wise level.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">pw0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simdata_fast.html">simdata_fast</a></span><span class="op">(</span></span>
 <span>  nsim     <span class="op">=</span> <span class="va">nsim</span>,</span>
 <span>  n        <span class="op">=</span> <span class="va">n_arm</span>,</span>
 <span>  a.time   <span class="op">=</span> <span class="va">a_time</span>,</span>
 <span>  a.rate   <span class="op">=</span> <span class="va">a_rate</span>,</span>
 <span>  e.median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">mst</span><span class="op">[</span><span class="st">"control"</span><span class="op">]</span>, <span class="va">mst</span><span class="op">[</span><span class="st">"control"</span><span class="op">]</span>, <span class="va">mst</span><span class="op">[</span><span class="st">"control"</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>  seed     <span class="op">=</span> <span class="va">seed</span> <span class="op">+</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">pw0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span><span class="va">df0</span>, control <span class="op">=</span> <span class="va">control_arm</span>,</span>
-<span>                     time.looks <span class="op">=</span> <span class="va">analysis_month</span>, stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/pairwise_fast.html">pairwise_fast</a></span><span class="op">(</span>control <span class="op">=</span> <span class="va">control_arm</span>, time.looks <span class="op">=</span> <span class="va">analysis_month</span>,</span>
+<span>                stat <span class="op">=</span> <span class="st">"logrank"</span>, side <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co"># One column per contrast; the rows of each arm are ordered by simulation.</span></span>
 <span><span class="va">P0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">exp_arms</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="va">pw0</span><span class="op">$</span><span class="va">logrank.p</span><span class="op">[</span><span class="va">pw0</span><span class="op">$</span><span class="va">arm</span> <span class="op">==</span> <span class="va">k</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>

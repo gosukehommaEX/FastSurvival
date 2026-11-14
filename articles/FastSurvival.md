@@ -18,7 +18,7 @@ library(FastSurvival)
 
 ## Function families
 
-The package has two families of functions. Collett (2014) gives the
+The package has two families of functions. Collett (2023) gives the
 methodological background of the standard methods they implement.
 
 The estimation and testing functions operate on a single dataset and
@@ -146,8 +146,8 @@ exp(confint(fit))
 #>          2.5 %   97.5 %
 #> coef 0.1743207 1.740371
 
-as.data.frame(rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian,
-                        tau = 500))
+rmst_fast(Surv(futime, fustat) ~ rx, data = ovarian, tau = 500) |>
+  as.data.frame()
 #>        term    estimate  std.error     conf.low   conf.high statistic
 #> 1 rmst.ctrl 373.6923077 44.9503848 285.59117234 461.7934430        NA
 #> 2  rmst.trt 472.5726496 13.9339045 445.26269865 499.8826005        NA
@@ -167,8 +167,8 @@ the numbers at risk below the curves.
 
 ``` r
 
-km <- kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian)
-plot(km, risk_table = TRUE, conf.style = "band")
+kmcurve_fast(Surv(futime, fustat) ~ rx, data = ovarian) |>
+  plot(risk_table = TRUE, conf.style = "band")
 ```
 
 ![](FastSurvival_files/figure-html/km-plot-1.png)
@@ -231,11 +231,12 @@ simdata_fast(nsim = 200, n = c(150, 150), a.time = c(0, 12),
 
 ## Where to go next
 
-Several further vignettes cover the package in depth. *Validation of
-FastSurvival* checks numerical agreement with established packages on a
-real clinical-trial dataset. *Speed comparison* quantifies the
-performance gain. *Group sequential design with the simulation trio*
-demonstrates
+Several further vignettes cover the package in depth. *Simulation
+studies with the native pipe* writes complete simulation studies as
+chains of the functions above. *Validation of FastSurvival* checks
+numerical agreement with established packages on a real clinical-trial
+dataset. *Speed comparison* quantifies the performance gain. *Group
+sequential design with the simulation trio* demonstrates
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md),
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
 and
@@ -248,5 +249,5 @@ outside the package with the same functions.
 
 ## References
 
-Collett, D. (2014). *Modelling Survival Data in Medical Research* (3rd
+Collett, D. (2023). *Modelling Survival Data in Medical Research* (4th
 ed.). Chapman and Hall/CRC.

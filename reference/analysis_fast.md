@@ -58,7 +58,9 @@ analysis_fast(
   wmst.tau2 = NULL,
   cutoff.looks = NULL,
   mc.alpha = NULL,
-  ties = c("efron", "breslow")
+  ties = c("efron", "breslow"),
+  tte.col = "tte",
+  event.col = "event"
 )
 ```
 
@@ -69,7 +71,8 @@ analysis_fast(
   A data frame from
   [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
   for a two-group trial, containing at least `sim`, `group`,
-  `accrual_time`, `tte`, and `event`.
+  `accrual_time`, and the columns named by `tte.col` and `event.col` (by
+  default `tte` and `event`).
 
 - control:
 
@@ -269,7 +272,11 @@ analysis_fast(
   function of one argument, which is applied to `data` and must return
   such a matrix or vector, for example
   `function(x) cutoff_fast(x, event.looks = 150)`; the cutoffs are then
-  computed inside a chain of calls with the native pipe `|>`.
+  computed inside a chain of calls with the native pipe `|>`. The
+  function receives `data` as given, so with `tte.col` and `event.col`
+  the call of
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+  names the columns of the endpoint that triggers the looks.
 
 - mc.alpha:
 
@@ -285,6 +292,19 @@ analysis_fast(
   A character string, `"efron"` (default) or `"breslow"`, naming the
   handling of tied event times in the `"coxph"` statistic; see
   [`coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md).
+
+- tte.col:
+
+  A single character string naming the column of `data` with the
+  observed time to event (numeric and non-negative). Defaults to
+  `"tte"`, as in
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+
+- event.col:
+
+  A single character string naming the column of `data` with the event
+  indicator (numeric or logical, 0 or 1). Defaults to `"event"`, as in
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
 
 ## Value
 
@@ -335,6 +355,12 @@ or logical and coded as 0 or 1, and `group` must have exactly two
 distinct values, one of which is `control`. For a multi-arm trial,
 subset the data to two arms first or use
 [`pairwise_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md).
+Another endpoint is analyzed by naming its columns with `tte.col` and
+`event.col`, for example the first (`"e1_tte"` and `"e1_event"`) or the
+terminal (`"e2_tte"` and `"e2_event"`) endpoint of the illness-death
+model of
+[`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md);
+`tte` and `event` below then stand for those columns.
 
 For a look at calendar time `cutoff`, each subject with accrual time `a`
 contributes only if enrolled by then (`a <= cutoff`). The observed time
@@ -732,4 +758,29 @@ df |>
 #> 4 -4.862092     23.639938 1.161516e-06
 #> 5 -3.631606     13.188562 2.816629e-04
 #> 6 -5.043861     25.440534 4.562306e-07
+
+# The terminal endpoint (overall survival) of an illness-death model,
+# analyzed at 60 deaths
+ids <- simdata_fast(nsim = 20, n = c(100, 100), a.time = c(0, 12),
+                    a.rate = 200 / 12, h01.median = list(6, 9),
+                    h02.median = list(20, 24), h12.median = list(10, 10),
+                    seed = 2)
+ids |>
+  analysis_fast(control = 1, event.looks = 60, tte.col = "e2_tte",
+                event.col = "e2_event") |>
+  head()
+#>   sim look look.value   cutoff reached n.enrolled n.event n.dropout n.pipeline
+#> 1   1    1         60 15.35095    TRUE        200      60         0        140
+#> 2   2    1         60 13.66708    TRUE        200      60         0        140
+#> 3   3    1         60 13.00029    TRUE        200      60         0        140
+#> 4   4    1         60 15.11037    TRUE        200      60         0        140
+#> 5   5    1         60 14.71349    TRUE        200      60         0        140
+#> 6   6    1         60 14.50334    TRUE        200      60         0        140
+#>    logrank.z logrank.chisq logrank.p
+#> 1 -0.3325414    0.11058379 0.7394805
+#> 2 -1.0540929    1.11111191 0.2918404
+#> 3 -0.2891788    0.08362439 0.7724445
+#> 4  0.6123677    0.37499419 0.5402945
+#> 5  0.6159667    0.37941497 0.5379165
+#> 6 -1.7356875    3.01261115 0.0826191
 ```

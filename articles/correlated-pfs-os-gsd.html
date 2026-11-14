@@ -38,7 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+<li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -218,21 +219,7 @@ both PFS and OS at the same time.</p>
 <span>  h02.hazard <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lam_OS_C</span>, <span class="va">lam_OS_T</span><span class="op">)</span>,</span>
 <span>  d.hazard   <span class="op">=</span> <span class="va">eta</span>,</span>
 <span>  seed       <span class="op">=</span> <span class="va">seed</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Single-endpoint view of PFS (k = 1) or OS (k = 2), in the columns that</span></span>
-<span><span class="co"># analysis_fast() reads.</span></span>
-<span><span class="va">ep</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">d</span>, <span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    sim          <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">sim</span>,</span>
-<span>    group        <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">group</span>,</span>
-<span>    accrual_time <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">accrual_time</span>,</span>
-<span>    tte          <span class="op">=</span> <span class="va">d</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"e"</span>, <span class="va">k</span>, <span class="st">"_tte"</span><span class="op">)</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>    event        <span class="op">=</span> <span class="va">d</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"e"</span>, <span class="va">k</span>, <span class="st">"_event"</span><span class="op">)</span><span class="op">]</span><span class="op">]</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="va">pfs_dat</span> <span class="op">&lt;-</span> <span class="fu">ep</span><span class="op">(</span><span class="va">df</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">os_dat</span>  <span class="op">&lt;-</span> <span class="fu">ep</span><span class="op">(</span><span class="va">df</span>, <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="primary-endpoint-analysis-pfs">Primary endpoint analysis (PFS)<a class="anchor" aria-label="anchor" href="#primary-endpoint-analysis-pfs"></a>
@@ -244,20 +231,24 @@ analysis time of look <code>l</code>. It counts the events in the PFS
 columns <code>e1_tte</code> and <code>e1_event</code> of the
 illness-death data. These cutoffs are exactly the analysis times of the
 design, and both endpoints are analyzed at them through the
-<code>cutoff.looks</code> argument of <code>analysis_fast</code>.</p>
+<code>cutoff.looks</code> argument of <code>analysis_fast</code>, whose
+<code>tte.col</code> and <code>event.col</code> name the columns of the
+endpoint analyzed.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Per-simulation calendar cutoffs A_l (rows = simulation, columns = look),</span></span>
 <span><span class="co"># triggered by the PFS events.</span></span>
-<span><span class="va">A_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cutoff_fast.html">cutoff_fast</a></span><span class="op">(</span><span class="va">df</span>, event.looks <span class="op">=</span> <span class="va">d_PFS</span>,</span>
-<span>                     tte.col <span class="op">=</span> <span class="st">"e1_tte"</span>, event.col <span class="op">=</span> <span class="st">"e1_event"</span><span class="op">)</span></span>
+<span><span class="va">A_mat</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/cutoff_fast.html">cutoff_fast</a></span><span class="op">(</span>event.looks <span class="op">=</span> <span class="va">d_PFS</span>, tte.col <span class="op">=</span> <span class="st">"e1_tte"</span>, event.col <span class="op">=</span> <span class="st">"e1_event"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pfs_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">pfs_dat</span>,</span>
-<span>  control      <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
-<span>  stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>  side         <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">pfs_res</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>    control      <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
+<span>    stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>    side         <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    tte.col      <span class="op">=</span> <span class="st">"e1_tte"</span>,</span>
+<span>    event.col    <span class="op">=</span> <span class="st">"e1_event"</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># With this sample size and these event targets the looks are reached in</span></span>
 <span><span class="co"># essentially every simulation; warn if any target is not reached.</span></span>
@@ -279,13 +270,15 @@ At each look the OS times are administratively censored at
 <code>A_l</code>, which reproduces the design rule that the OS analysis
 at a look uses the PFS-driven analysis time.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">os_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">os_dat</span>,</span>
-<span>  control      <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
-<span>  stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
-<span>  side         <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">os_res</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/analysis_fast.html">analysis_fast</a></span><span class="op">(</span></span>
+<span>    control      <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    cutoff.looks <span class="op">=</span> <span class="va">A_mat</span>,</span>
+<span>    stat         <span class="op">=</span> <span class="st">"logrank"</span>,</span>
+<span>    side         <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    tte.col      <span class="op">=</span> <span class="st">"e2_tte"</span>,</span>
+<span>    event.col    <span class="op">=</span> <span class="st">"e2_event"</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Standardized OS log-rank statistics</span></span>
 <span><span class="va">Z_OS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">os_res</span><span class="op">$</span><span class="va">logrank.z</span>, nrow <span class="op">=</span> <span class="va">nsim</span>, ncol <span class="op">=</span> <span class="va">L</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
@@ -380,12 +373,12 @@ when it is at or above the futility boundary. For OS the efficacy
 boundary is applied alone. The <code>cum.reject</code> value on the
 overall row is the power of that endpoint considered on its own.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">oc_PFS</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">pfs_res</span>,</span>
-<span>  eff.col  <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff_PFS</span>,</span>
-<span>  fut.col  <span class="op">=</span> <span class="st">"logrank.z"</span>, futility <span class="op">=</span> <span class="va">fut_PFS</span>,</span>
-<span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">oc_PFS</span> <span class="op">&lt;-</span> <span class="va">pfs_res</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
+<span>    eff.col  <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff_PFS</span>,</span>
+<span>    fut.col  <span class="op">=</span> <span class="st">"logrank.z"</span>, futility <span class="op">=</span> <span class="va">fut_PFS</span>,</span>
+<span>    direction <span class="op">=</span> <span class="st">"lower"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="va">oc_PFS</span></span>
 <span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
 <span><span class="co">#&gt;   Simulations: 5000</span></span>
@@ -418,11 +411,11 @@ overall row is the power of that endpoint considered on its own.</p>
 <span><span class="co">#&gt;   Expected sample size at stop:   599.6</span></span>
 <span><span class="co">#&gt;   Expected analysis time at stop: 19.60</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">oc_OS</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
-<span>  <span class="va">os_res</span>,</span>
-<span>  eff.col <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff_OS</span>,</span>
-<span>  direction <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">oc_OS</span> <span class="op">&lt;-</span> <span class="va">os_res</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/simsummary_fast.html">simsummary_fast</a></span><span class="op">(</span></span>
+<span>    eff.col <span class="op">=</span> <span class="st">"logrank.z"</span>, efficacy <span class="op">=</span> <span class="va">eff_OS</span>,</span>
+<span>    direction <span class="op">=</span> <span class="st">"lower"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="va">oc_OS</span></span>
 <span><span class="co">#&gt; Group-Sequential Operating Characteristics (simsummary_fast)</span></span>
 <span><span class="co">#&gt;   Simulations: 5000</span></span>

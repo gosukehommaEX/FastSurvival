@@ -116,14 +116,13 @@ P <- matrix(NA_real_, nrow = nsim, ncol = n_contrast)
 colnames(Z) <- colnames(P) <- paste0("arm", exp_arms, "_vs_ctrl")
 
 for (k in seq_along(exp_arms)) {
-  sub <- df[df$group %in% c(control_arm, exp_arms[k]), ]
-  res <- analysis_fast(
-    sub,
-    control    = control_arm,
-    time.looks = analysis_month,
-    stat       = "logrank",
-    side       = 1
-  )
+  res <- df[df$group %in% c(control_arm, exp_arms[k]), ] |>
+    analysis_fast(
+      control    = control_arm,
+      time.looks = analysis_month,
+      stat       = "logrank",
+      side       = 1
+    )
   Z[, k] <- res$logrank.z
   P[, k] <- res$logrank.p
 }
@@ -149,14 +148,14 @@ p-value by the number of contrasts.
 
 ``` r
 
-pw <- pairwise_fast(
-  df,
-  control    = control_arm,
-  time.looks = analysis_month,
-  stat       = "logrank",
-  side       = 1,
-  adjust     = "bonferroni"
-)
+pw <- df |>
+  pairwise_fast(
+    control    = control_arm,
+    time.looks = analysis_month,
+    stat       = "logrank",
+    side       = 1,
+    adjust     = "bonferroni"
+  )
 head(pw[, c("arm", "sim", "cutoff", "logrank.z", "logrank.p", "p.adj")])
 #>   arm sim cutoff logrank.z    logrank.p        p.adj
 #> 1   2   1     30 -2.949901 1.589381e-03 3.178762e-03
@@ -184,15 +183,15 @@ calendar cutoff, and both contrasts are analyzed at that same cutoff.
 
 ``` r
 
-pw_ev <- pairwise_fast(
-  df,
-  control     = control_arm,
-  event.looks = 200,
-  primary     = 3,
-  stat        = "logrank",
-  side        = 1,
-  adjust      = "bonferroni"
-)
+pw_ev <- df |>
+  pairwise_fast(
+    control     = control_arm,
+    event.looks = 200,
+    primary     = 3,
+    stat        = "logrank",
+    side        = 1,
+    adjust      = "bonferroni"
+  )
 head(pw_ev[, c("arm", "sim", "cutoff", "reached", "logrank.z", "p.adj")])
 #>   arm sim   cutoff reached logrank.z        p.adj
 #> 1   2   1 30.41747    TRUE -2.948070 0.0031976438
@@ -293,17 +292,16 @@ the nominal family-wise level.
 
 ``` r
 
-df0 <- simdata_fast(
+pw0 <- simdata_fast(
   nsim     = nsim,
   n        = n_arm,
   a.time   = a_time,
   a.rate   = a_rate,
   e.median = list(mst["control"], mst["control"], mst["control"]),
   seed     = seed + 1
-)
-
-pw0 <- pairwise_fast(df0, control = control_arm,
-                     time.looks = analysis_month, stat = "logrank", side = 1)
+) |>
+  pairwise_fast(control = control_arm, time.looks = analysis_month,
+                stat = "logrank", side = 1)
 # One column per contrast; the rows of each arm are ordered by simulation.
 P0 <- sapply(exp_arms, function(k) pw0$logrank.p[pw0$arm == k])
 

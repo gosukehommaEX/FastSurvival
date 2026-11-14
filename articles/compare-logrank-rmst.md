@@ -102,7 +102,7 @@ scn <- gen_scenario_fast(
   shared = list(n = n, a.time = c(0, accrual), a.rate = a_rate)
 )
 
-plot(scn, tmax = study_dur, mfrow = c(1, 3))
+scn |> plot(tmax = study_dur, mfrow = c(1, 3))
 ```
 
 ![](compare-logrank-rmst_files/figure-html/scenarios-1.png)
@@ -135,14 +135,11 @@ for (i in seq_along(scenarios)) {
     simdata_fast,
     c(s$args, list(nsim = nsim, d.hazard = eta, seed = seeds[i]))
   )
-  res <- analysis_fast(
-    dat, control = 1,
-    time.looks = study_dur,
-    stat = c("logrank", "rmst"),
-    tau = tau, side = 1
-  )
-  s_lr   <- simsummary_fast(res, p.col = "logrank.p", alpha = alpha)
-  s_rmst <- simsummary_fast(res, p.col = "rmst.p",    alpha = alpha)
+  res <- dat |>
+    analysis_fast(control = 1, time.looks = study_dur,
+                  stat = c("logrank", "rmst"), tau = tau, side = 1)
+  s_lr   <- res |> simsummary_fast(p.col = "logrank.p", alpha = alpha)
+  s_rmst <- res |> simsummary_fast(p.col = "rmst.p",    alpha = alpha)
   power_tab <- rbind(power_tab, data.frame(
     Scenario = s$label,
     LogRank  = s_lr[s_lr$look   == "overall", "cum.reject"],
@@ -161,9 +158,9 @@ for (i in seq_along(scenarios)) {
 
 ``` r
 
-ex  <- examples[["Crossing"]]
-fit <- kmcurve_fast(ex$tte, ex$event, ex$group, control = 1)
-plot(fit, hr = TRUE, rmst = TRUE, tau = tau, bw = 3)
+ex <- examples[["Crossing"]]
+kmcurve_fast(ex$tte, ex$event, ex$group, control = 1) |>
+  plot(hr = TRUE, rmst = TRUE, tau = tau, bw = 3)
 ```
 
 ![](compare-logrank-rmst_files/figure-html/km-plot-1.png)

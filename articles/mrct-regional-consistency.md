@@ -163,14 +163,14 @@ Cox hazard ratio for the consistency criteria.
 
 ``` r
 
-res <- analysis_fast(
-  data        = data_all,
-  control     = 1,
-  event.looks = E,
-  stat        = c("logrank", "coxph"),
-  side        = 1,
-  by.subgroup = TRUE
-)
+res <- data_all |>
+  analysis_fast(
+    control     = 1,
+    event.looks = E,
+    stat        = c("logrank", "coxph"),
+    side        = 1,
+    by.subgroup = TRUE
+  )
 head(res[, c("sim", "look", "population", "n.event", "logrank.z", "cox.hr")])
 #>   sim look population n.event logrank.z    cox.hr
 #> 1   1    1    overall     142 -3.032779 0.5984187
@@ -323,12 +323,12 @@ check on the efficacy column above.
 
 ``` r
 
-gs <- simsummary_fast(
-  res[res$population == "overall", ],
-  eff.col   = "logrank.z", efficacy = eff.bound,
-  fut.col   = "logrank.z", futility = fut.bound,
-  direction = "lower"
-)
+gs <- res[res$population == "overall", ] |>
+  simsummary_fast(
+    eff.col   = "logrank.z", efficacy = eff.bound,
+    fut.col   = "logrank.z", futility = fut.bound,
+    direction = "lower"
+  )
 gs
 #> Group-Sequential Operating Characteristics (simsummary_fast)
 #>   Simulations: 10000

@@ -29,7 +29,8 @@ a Bonferroni-adjusted p-value across the contrasts."><meta property="og:image" c
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/simulation-pipe.html">Simulation studies with the native pipe</a></li>
+    <li><a class="dropdown-item" href="../articles/validation.html">Validation of FastSurvival</a></li>
     <li><a class="dropdown-item" href="../articles/speed-comparison.html">Speed comparison</a></li>
     <li><a class="dropdown-item" href="../articles/group-sequential-design.html">Group sequential design with the simulation trio</a></li>
     <li><a class="dropdown-item" href="../articles/investigate-freidlin-and-korn.html">Investigating the Freidlin and Korn strong null scenario</a></li>
@@ -78,6 +79,8 @@ a Bonferroni-adjusted p-value across the contrasts.</p>
 <span>  adjust <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"bonferroni"</span><span class="op">)</span>,</span>
 <span>  p.col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cutoff.looks <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tte.col <span class="op">=</span> <span class="st">"tte"</span>,</span>
+<span>  event.col <span class="op">=</span> <span class="st">"event"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -88,8 +91,9 @@ a Bonferroni-adjusted p-value across the contrasts.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame of simulated trial data with columns <code>sim</code>,
-<code>group</code>, <code>accrual_time</code>, <code>tte</code>, and <code>event</code>, as produced
-by <code><a href="simdata_fast.html">simdata_fast</a></code>.</p></dd>
+<code>group</code>, <code>accrual_time</code>, and the columns named by
+<code>tte.col</code> and <code>event.col</code> (by default <code>tte</code> and
+<code>event</code>), as produced by <code><a href="simdata_fast.html">simdata_fast</a></code>.</p></dd>
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
@@ -144,6 +148,17 @@ as in <code><a href="analysis_fast.html">analysis_fast</a></code>, which is appl
 <code>data</code> (all arms) before the contrasts are formed.</p></dd>
 
 
+<dt id="arg-tte-col">tte.col<a class="anchor" aria-label="anchor" href="#arg-tte-col"></a></dt>
+<dd><p>A single character string naming the column of <code>data</code>
+with the observed time to event. Defaults to <code>"tte"</code>, as in
+<code><a href="analysis_fast.html">analysis_fast</a></code> and <code><a href="cutoff_fast.html">cutoff_fast</a></code>.</p></dd>
+
+
+<dt id="arg-event-col">event.col<a class="anchor" aria-label="anchor" href="#arg-event-col"></a></dt>
+<dd><p>A single character string naming the column of
+<code>data</code> with the event indicator. Defaults to <code>"event"</code>.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Further arguments passed to <code><a href="analysis_fast.html">analysis_fast</a></code>, such as
 <code>side</code>, <code>conf.level</code>, <code>tau</code>, <code>rho</code>, and <code>gamma</code>.
@@ -193,9 +208,12 @@ separate matter handled by group-sequential boundaries in
 this function, <code>simsummary_fast</code> summarizes each arm separately (the
 Bonferroni-adjusted p-values can be used there through
 <code>p.col = "p.adj"</code>).</p>
-<p>This is a single-endpoint helper: it reads the <code>tte</code> and <code>event</code>
-columns and does not support subgroups. Comparisons for a second endpoint are
-obtained by calling <code>pairwise_fast</code> again on that endpoint's columns.</p>
+<p>This is a single-endpoint helper: it analyzes the columns named by
+<code>tte.col</code> and <code>event.col</code> (by default <code>tte</code> and
+<code>event</code>) and does not support subgroups. Comparisons for a second
+endpoint are obtained by calling <code>pairwise_fast</code> again with that
+endpoint's columns. With <code>event.looks</code>, the events of the primary
+contrast are counted on the same columns.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

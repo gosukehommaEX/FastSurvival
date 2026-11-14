@@ -600,8 +600,9 @@ subject, and in any case by month 30”.
 sim_c <- simdata_fast(nsim = 50, n = c(150, 150), a.time = c(0, 12),
                       a.rate = 300 / 12, e.median = list(12, 16),
                       d.hazard = 0.01, seed = 2026)
-cut_c <- cutoff_fast(sim_c, event.looks = 150, time.looks = 18,
-                     max.time = 30, min.enrolled = 250, min.followup = 6)
+cut_c <- sim_c |>
+  cutoff_fast(event.looks = 150, time.looks = 18, max.time = 30,
+              min.enrolled = 250, min.followup = 6)
 ref_c <- vapply(seq_len(50), function(s) {
   d <- sim_c[sim_c$sim == s, ]
   x <- data.frame(enroll_time = d$accrual_time,
@@ -639,11 +640,11 @@ survival function over the accrual times.
 ``` r
 
 lam   <- log(2) / 12
-sim_s <- simdata_fast(nsim = 200, n = c(250, 250), a.time = c(0, 6),
+sw    <- simdata_fast(nsim = 200, n = c(250, 250), a.time = c(0, 6),
                       a.prop = 1, e.hazard = list(lam, lam / 1.5),
-                      seed = 2027)
-sw    <- switch_fast(sim_s, group = 1, when = "cutoff",
-                     cutoff = rep(12, 200), aft.factor = 2)
+                      seed = 2027) |>
+  switch_fast(group = 1, when = "cutoff", cutoff = rep(12, 200),
+              aft.factor = 2)
 ctl   <- sw$group == 1
 s_sw  <- 12 - sw$accrual_time[ctl]
 t_grid <- c(6, 12, 18, 24, 36)

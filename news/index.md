@@ -128,6 +128,22 @@
   [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
   applies the function to the data of all arms.
 
+- [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  and
+  [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  have the arguments `tte.col` and `event.col` of
+  [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md),
+  which name the columns of the endpoint to analyze, such as `"e2_tte"`
+  and `"e2_event"` for the terminal endpoint of the illness-death model
+  of
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md).
+  The endpoint no longer needs to be copied into the columns `tte` and
+  `event` first, and the subgroup columns of the data are kept. A
+  function given as `cutoff.looks` receives the data as given, so its
+  call of
+  [`cutoff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md)
+  names the columns of the endpoint that triggers the looks.
+
 - [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
   has further switching rules in the illness-death model: switching
   after the intermediate event with a hazard (`h1s.*`); switching before
@@ -150,6 +166,18 @@
   censored at a switch before the intermediate event.
 
 ### Documentation
+
+- The new vignette “Simulation studies with the native pipe” writes
+  simulation studies as chains of calls from
+  [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
+  to
+  [`simsummary_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simsummary_fast.md):
+  looks from combined rules, several statistics from one analysis,
+  illness-death data with treatment switching, multi-arm trials, and
+  studies run in batches. The other vignettes now chain the simulation
+  functions with the native pipe, and they select the endpoints of
+  illness-death data with `tte.col` and `event.col` instead of a helper
+  function that copied them into the columns `tte` and `event`.
 
 - The treatment-switching vignette refers to TrialSimulator 1.39.0, the
   current version on CRAN, and shows the new switching rules of
@@ -196,8 +224,9 @@
   [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
   no longer cites Fleming and Harrington (1991).
 
-- The package overview, `DESCRIPTION`, and the README cite the fourth
-  edition of Collett (2023) in place of the third edition (2014).
+- The package overview, `DESCRIPTION`, the README, and the introduction
+  vignette cite the fourth edition of Collett (2023) in place of the
+  third edition (2014).
 
 - The validation and speed-comparison vignettes no longer use the
   removed `method = "nph"` of
@@ -230,7 +259,12 @@
   [`ahr_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/ahr_fast.md).
 
 - New tests check that the calls with the native pipe give the same
-  results as the calls without it.
+  results as the calls without it, and that `tte.col` and `event.col` of
+  [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  and
+  [`pairwise_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/pairwise_fast.md)
+  give the same results as data with the endpoint copied into the
+  columns `tte` and `event`.
 
 - New tests check the switching rules of
   [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)

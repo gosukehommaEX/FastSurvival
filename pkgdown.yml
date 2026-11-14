@@ -10,10 +10,11 @@ articles:
   investigate-freidlin-and-korn: investigate-freidlin-and-korn.html
   mrct-regional-consistency: mrct-regional-consistency.html
   multi-arm-pairwise: multi-arm-pairwise.html
+  simulation-pipe: simulation-pipe.html
   speed-comparison: speed-comparison.html
   treatment-switching: treatment-switching.html
   validation: validation.html
-last_built: 2026-11-14T07:56Z
+last_built: 2026-11-14T14:08Z
 urls:
   reference: https://gosukehommaEX.github.io/FastSurvival/reference
   article: https://gosukehommaEX.github.io/FastSurvival/articles

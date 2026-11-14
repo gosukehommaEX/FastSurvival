@@ -64,17 +64,6 @@ df <- simdata_fast(
   d.hazard   = -log(1 - 0.05) / 12,
   seed       = seed
 )
-
-# Single-endpoint view of PFS (k = 1) or OS (k = 2) for analysis_fast().
-ep <- function(d, k) {
-  data.frame(
-    sim          = d$sim,
-    group        = d$group,
-    accrual_time = d$accrual_time,
-    tte          = d[[paste0("e", k, "_tte")]],
-    event        = d[[paste0("e", k, "_event")]]
-  )
-}
 ```
 
 ## PFS analysis and the crossover decision
@@ -83,14 +72,16 @@ ep <- function(d, k) {
 counts the PFS events (the columns `e1_tte` and `e1_event`) to find the
 analysis time of each trial, and
 [`analysis_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
-analyzes PFS at those times.
+analyzes PFS at those times, with the same columns given by `tte.col`
+and `event.col`.
 
 ``` r
 
-pfs_cut <- cutoff_fast(df, event.looks = 380,
-                       tte.col = "e1_tte", event.col = "e1_event")
-pfs_res <- analysis_fast(ep(df, 1), control = 1, cutoff.looks = pfs_cut,
-                         side = 1)
+pfs_cut <- df |>
+  cutoff_fast(event.looks = 380, tte.col = "e1_tte", event.col = "e1_event")
+pfs_res <- df |>
+  analysis_fast(control = 1, cutoff.looks = pfs_cut, side = 1,
+                tte.col = "e1_tte", event.col = "e1_event")
 pfs_pos <- (pfs_res$reached & pfs_res$logrank.p <= 0.025) %in% TRUE
 
 c(PFS_power = mean(pfs_pos),
@@ -118,12 +109,13 @@ Three scenarios are compared with the trial without switching.
 
 ``` r
 
-sw_gated <- switch_fast(df, group = 1, when = "later", cutoff = pfs_cut,
-                        sims = pfs_pos, aft.factor = 1.3)
-sw_all   <- switch_fast(df, group = 1, when = "later", cutoff = pfs_cut,
-                        aft.factor = 1.3)
-sw_prog  <- switch_fast(df, group = 1, prob = 0.5, when = "intermediate",
-                        median = 18)
+sw_gated <- df |>
+  switch_fast(group = 1, when = "later", cutoff = pfs_cut, sims = pfs_pos,
+              aft.factor = 1.3)
+sw_all   <- df |>
+  switch_fast(group = 1, when = "later", cutoff = pfs_cut, aft.factor = 1.3)
+sw_prog  <- df |>
+  switch_fast(group = 1, prob = 0.5, when = "intermediate", median = 18)
 ```
 
 The OS analysis at the time of the PFS analysis is the same with and
@@ -131,10 +123,12 @@ without switching, because every switch happens after that time.
 
 ``` r
 
-os_ia0 <- analysis_fast(ep(df, 2), control = 1, cutoff.looks = pfs_cut,
-                        side = 1)
-os_ia1 <- analysis_fast(ep(sw_gated, 2), control = 1, cutoff.looks = pfs_cut,
-                        side = 1)
+os_ia0 <- df |>
+  analysis_fast(control = 1, cutoff.looks = pfs_cut, side = 1,
+                tte.col = "e2_tte", event.col = "e2_event")
+os_ia1 <- sw_gated |>
+  analysis_fast(control = 1, cutoff.looks = pfs_cut, side = 1,
+                tte.col = "e2_tte", event.col = "e2_event")
 all.equal(os_ia0, os_ia1)
 #> [1] TRUE
 ```
@@ -147,10 +141,12 @@ switching delays deaths and therefore the analysis.
 ``` r
 
 os_final <- function(d) {
-  cut <- cutoff_fast(d, event.looks = 350,
-                     tte.col = "e2_tte", event.col = "e2_event")
-  analysis_fast(ep(d, 2), control = 1, cutoff.looks = cut,
-                stat = c("logrank", "coxph"), side = 1)
+  d |>
+    analysis_fast(control = 1, stat = c("logrank", "coxph"), side = 1,
+                  tte.col = "e2_tte", event.col = "e2_event",
+                  cutoff.looks = \(x) cutoff_fast(x, event.looks = 350,
+                                                  tte.col = "e2_tte",
+                                                  event.col = "e2_event"))
 }
 
 scen <- list(
@@ -202,16 +198,19 @@ system.time({
                       h01.median = list(8, 12), h02.median = list(30, 36),
                       h12.median = list(12, 12),
                       d.hazard = -log(1 - 0.05) / 12, seed = seed)
-  pc  <- cutoff_fast(d0, event.looks = 380,
-                     tte.col = "e1_tte", event.col = "e1_event")
-  pr  <- analysis_fast(ep(d0, 1), control = 1, cutoff.looks = pc, side = 1)
+  pc  <- d0 |>
+    cutoff_fast(event.looks = 380, tte.col = "e1_tte", event.col = "e1_event")
+  pr  <- d0 |>
+    analysis_fast(control = 1, cutoff.looks = pc, side = 1,
+                  tte.col = "e1_tte", event.col = "e1_event")
   pos <- (pr$reached & pr$logrank.p <= 0.025) %in% TRUE
-  d1  <- switch_fast(d0, group = 1, when = "later", cutoff = pc, sims = pos,
-                     aft.factor = 1.3)
-  r1  <- os_final(d1)
+  r1  <- d0 |>
+    switch_fast(group = 1, when = "later", cutoff = pc, sims = pos,
+                aft.factor = 1.3) |>
+    os_final()
 })
 #>    user  system elapsed 
-#>   0.425   0.042   0.465
+#>   0.516   0.048   0.564
 ```
 
 ## A check with the rank-preserving structural failure time model
@@ -241,9 +240,9 @@ big <- simdata_fast(
   nsim = n_rep, n = c(2000, 2000), a.time = c(0, 12), a.rate = 4000 / 12,
   h01.hazard = list(h01, h01 / f), h02.hazard = list(h02, h02 / f),
   h12.hazard = list(h12, h12 / f), seed = 7
-)
-big <- switch_fast(big, group = 1, prob = 0.6, when = "intermediate",
-                   aft.factor = f, seed = 8)
+) |>
+  switch_fast(group = 1, prob = 0.6, when = "intermediate", aft.factor = f,
+              seed = 8)
 
 suppressWarnings(suppressPackageStartupMessages({
   library(survival)

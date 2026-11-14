@@ -24,6 +24,8 @@ pairwise_fast(
   adjust = c("none", "bonferroni"),
   p.col = NULL,
   cutoff.looks = NULL,
+  tte.col = "tte",
+  event.col = "event",
   ...
 )
 ```
@@ -33,7 +35,8 @@ pairwise_fast(
 - data:
 
   A data frame of simulated trial data with columns `sim`, `group`,
-  `accrual_time`, `tte`, and `event`, as produced by
+  `accrual_time`, and the columns named by `tte.col` and `event.col` (by
+  default `tte` and `event`), as produced by
   [`simdata_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md).
 
 - control:
@@ -90,6 +93,19 @@ pairwise_fast(
   [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md),
   which is applied to the whole `data` (all arms) before the contrasts
   are formed.
+
+- tte.col:
+
+  A single character string naming the column of `data` with the
+  observed time to event. Defaults to `"tte"`, as in
+  [`analysis_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/analysis_fast.md)
+  and
+  [`cutoff_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/cutoff_fast.md).
+
+- event.col:
+
+  A single character string naming the column of `data` with the event
+  indicator. Defaults to `"event"`.
 
 - ...:
 
@@ -154,9 +170,12 @@ not by this adjustment; given the output of this function,
 Bonferroni-adjusted p-values can be used there through
 `p.col = "p.adj"`).
 
-This is a single-endpoint helper: it reads the `tte` and `event` columns
-and does not support subgroups. Comparisons for a second endpoint are
-obtained by calling `pairwise_fast` again on that endpoint's columns.
+This is a single-endpoint helper: it analyzes the columns named by
+`tte.col` and `event.col` (by default `tte` and `event`) and does not
+support subgroups. Comparisons for a second endpoint are obtained by
+calling `pairwise_fast` again with that endpoint's columns. With
+`event.looks`, the events of the primary contrast are counted on the
+same columns.
 
 ## See also
 
