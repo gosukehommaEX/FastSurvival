@@ -1,0 +1,4 @@
+DesignComplexSurvival 0.4.0 from the source folder DesignComplexSurvival
+R version 4.6.1 (2026-06-24 ucrt)
+rows 700
+2026-11-14 05:42:57 UTC
