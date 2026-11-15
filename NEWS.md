@@ -180,6 +180,9 @@
   exponentials) and against closed forms, and that the data without the
   rules are unchanged.
 
+* New tests check the summaries printed by `print.kmcurve_fast()` and
+  `print.survdiff_fast()` against values computed independently.
+
 # FastSurvival 1.2.0
 
 This release corrects errors and documentation found while preparing an

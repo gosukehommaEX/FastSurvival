@@ -1,18 +1,25 @@
-# ------------------------------------------------------------------ #
-#  Internal wrapper: illness-death simulation with subgroups
-# ------------------------------------------------------------------ #
-# Called by simdata_fast_id() when 'prevalence' is supplied. The hazards have
-# already been converted from medians. Every transition, switching, and dropout
-# specification follows the rules of 'e.hazard' with subgroups: in a two-group
-# simulation it is shared (not a list) or a list with one element per group,
-# and each group's element is shared or a list with one element per subgroup
-# cell; in a one-group simulation a list holds one element per cell. All
-# subjects share one accrual process, and the cells are assigned after accrual
-# (see simdata_core_id_sub()). The seed is already set by the caller. The
-# switching rules of 2.0.0 (h1s, h0s, h01.switch, h02.switch,
-# switch.aft.factor, and the clocks) are passed to the kernel as elements of
-# the cell specifications; simdata_fast_id() also calls this function, with
-# one cell per group, when they are used without subgroups.
+#' Illness-death simulation with subgroups
+#'
+#' Called by simdata_fast_id() when 'prevalence' is supplied. The hazards have
+#' already been converted from medians. Every transition, switching, and dropout
+#' specification follows the rules of 'e.hazard' with subgroups: in a two-group
+#' simulation it is shared (not a list) or a list with one element per group,
+#' and each group's element is shared or a list with one element per subgroup
+#' cell; in a one-group simulation a list holds one element per cell. All
+#' subjects share one accrual process, and the cells are assigned after accrual
+#' (see simdata_core_id_sub()). The seed is already set by the caller. The
+#' switching rules of 2.0.0 (h1s, h0s, h01.switch, h02.switch,
+#' switch.aft.factor, and the clocks) are passed to the kernel as elements of
+#' the cell specifications; simdata_fast_id() also calls this function, with
+#' one cell per group, when they are used without subgroups.
+#'
+#' @inheritParams simdata_fast
+#' @param alloc_given \code{TRUE} when \code{alloc} was given in the call of
+#'   \code{simdata_fast()}.
+#' @param has_dropout \code{TRUE} when a dropout hazard is given.
+#' @return The data frame returned by \code{simdata_fast()} for the
+#'   illness-death model.
+#' @noRd
 simdata_fast_id_sub <- function(nsim, n, alloc, alloc_given,
                                 a.time, a.rate, a.prop,
                                 h01.hazard, h01.time,

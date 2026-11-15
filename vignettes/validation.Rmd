@@ -361,7 +361,9 @@ data.frame(
 
 The average hazard is the ratio of the cumulative event probability to the
 restricted mean survival time, so for the `gbsg` data, where follow-up is
-measured in days, the values are on the order of 1e-04 per day in both groups.
+measured in days, the values are on the order of
+`r if (exists("fast_ah")) format(10^floor(log10(max(unclass(fast_ah)[c("ah.ctrl", "ah.trt")])))) else "1e-04"`
+per day in both groups.
 
 # Average hazard ratio
 
@@ -559,7 +561,9 @@ data.frame(
 ```
 
 The empirical survival matches the analytic survival function to Monte Carlo
-error (the standard error is at most about 0.002 with 50,000 control subjects). The
+error (the standard error is at most about
+`r round(sqrt(0.25 / sum(ctl)), 3)` with
+`r format(sum(ctl), big.mark = ",")` control subjects). The
 vignette on treatment switching also checks the switching model with the
 rank-preserving structural failure time estimator of the rpsftm package.
 

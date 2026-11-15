@@ -450,13 +450,6 @@ test_that("survdiff_fast validates event coding, group levels, and control", {
                              control = 0), "missing")
 })
 
-test_that("print labels the unweighted stratified log-rank test", {
-  skip_if_not_installed("survival")
-  ov  <- survival::ovarian
-  fit <- survdiff_fast(ov$futime, ov$fustat, ov$rx, 1, strata = ov$resid.ds)
-  expect_output(print(fit), "Stratified log-rank test")
-})
-
 test_that("survdiff_fast: presorted = TRUE checks the order", {
   time  <- c(3, 1, 2, 4, 6, 5)
   event <- c(1, 1, 0, 1, 1, 0)

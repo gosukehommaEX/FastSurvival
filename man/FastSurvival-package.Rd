@@ -123,11 +123,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Gosuke Homma \email{my.name.is.gosuke@gmail.com}
+\strong{Maintainer}: Gosuke Homma \email{my.name.is.gosuke@gmail.com} (\href{https://orcid.org/0000-0002-6854-5627}{ORCID})
 
 Authors:
 \itemize{
-  \item Gosuke Homma \email{my.name.is.gosuke@gmail.com}
+  \item Gosuke Homma \email{my.name.is.gosuke@gmail.com} (\href{https://orcid.org/0000-0002-6854-5627}{ORCID})
 }
 
 }

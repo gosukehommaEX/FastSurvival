@@ -436,7 +436,8 @@ abline(h = 0, v = 0, col = "grey70", lty = 3)
 
 ## Remarks
 
-The cross-endpoint correlation at matching looks is moderate, around 0.6, and is largest at the
+The cross-endpoint correlation at matching looks is moderate, around
+`r round(mean(diag(cross_block)), 1)`, and is largest at the
 first look, easing slightly as the trial matures. This cross-endpoint
 correlation is the input a sequential PFS-then-OS procedure needs to characterize its joint
 operating characteristics, and the simulation estimates it together with the power of the

@@ -3,10 +3,11 @@ Type: Package
 Title: Fast Survival Analysis and Simulation for Clinical Trials
 Version: 1.2.0.9000
 Authors@R: person(
-    given  = "Gosuke",
-    family = "Homma",
-    role   = c("aut", "cre"),
-    email  = "my.name.is.gosuke@gmail.com"
+    given   = "Gosuke",
+    family  = "Homma",
+    role    = c("aut", "cre"),
+    email   = "my.name.is.gosuke@gmail.com",
+    comment = c(ORCID = "0000-0002-6854-5627")
   )
 Description: Provides fast alternatives to standard survival analysis functions
     in the 'survival' package, together with tools for time-to-event trial
