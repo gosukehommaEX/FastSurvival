@@ -1,0 +1,5 @@
+date: 2026-11-15
+R: R version 4.6.1 (2026-06-24 ucrt)
+running: Windows 11 x64 (build 26200)
+FastSurvival: 1.2.0.9000
+survival: 3.8.12

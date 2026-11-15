@@ -516,9 +516,9 @@ test_that("simdata_fast (illness-death): the forward and reset clocks agree for 
 })
 
 test_that("simdata_fast (illness-death): the switching rules give the state probabilities of a Markov model", {
-  # Model M1 of Planning/switching_rules/expected_markov.py (matrix
-  # exponential): constant hazards, switching before, at, and after the
-  # intermediate event.
+  # Model M1 (state probabilities computed independently in Python with a
+  # matrix exponential): constant hazards, switching before, at, and after
+  # the intermediate event.
   d <- simdata_fast(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
                     h01.hazard = 0.10, h02.hazard = 0.02, h12.hazard = 0.06,
                     switch.prop = 0.3, h1s.hazard = 0.04,
@@ -543,8 +543,8 @@ test_that("simdata_fast (illness-death): the switching rules give the state prob
 })
 
 test_that("simdata_fast (illness-death): the forward clock gives the state probabilities of a piecewise Markov model", {
-  # Model M2 of Planning/switching_rules/expected_markov.py (products of
-  # matrix exponentials over the pieces of the time since randomization).
+  # Model M2 (computed independently in Python as products of matrix
+  # exponentials over the pieces of the time since randomization).
   d <- simdata_fast(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
                     h01.hazard = c(0.12, 0.06), h01.time = c(0, 4, Inf),
                     h02.hazard = 0.01, h12.hazard = c(0.05, 0.15),
@@ -573,7 +573,7 @@ test_that("simdata_fast (illness-death): the forward clock gives the state proba
 })
 
 test_that("simdata_fast (illness-death): h12.switch.clock sets the clock after a switch after the intermediate event", {
-  # Models M3 and M3b of Planning/switching_rules/expected_markov.py: the
+  # Models M3 and M3b (expected values computed independently in Python): the
   # post-switch hazard is 0.5 in the first unit of its clock and 0.01 after.
   args <- list(nsim = 1, n = 100000, a.time = c(0, 1), a.prop = 1,
                h01.hazard = 0.2, h02.hazard = 0.01, h12.hazard = 0.05,
@@ -592,7 +592,7 @@ test_that("simdata_fast (illness-death): h12.switch.clock sets the clock after a
 })
 
 test_that("simdata_fast (illness-death): switch.aft.factor multiplies the remaining time", {
-  # Model M4 of Planning/switching_rules/expected_markov.py: with a constant
+  # Model M4 (computed independently in Python): with a constant
   # h12 of 0.05 and the factor 1.5, the time from a switch at or after the
   # intermediate event to the terminal event is exponential with rate
   # 0.05 / 1.5.
@@ -627,8 +627,8 @@ test_that("simdata_fast (illness-death): e1.censor.switch censors the first endp
   expect_identical(d$e1_calendar_time[pre],
                    d$accrual_time[pre] + d$switch_time[pre])
   expect_true(all(d$e1_event[!pre] == 1L))
-  # Expected proportion of events (h01 + h02) / (h01 + h02 + h0s), from
-  # Planning/switching_rules/expected_markov.py
+  # Expected proportion of events (h01 + h02) / (h01 + h02 + h0s), also
+  # computed independently in Python
   ex <- 0.8571428571428571
   expect_lt(abs(mean(d$e1_event) - ex), 4 * sqrt(ex * (1 - ex) / nrow(d)))
   # Without the censoring the first endpoint is followed up to its event, and

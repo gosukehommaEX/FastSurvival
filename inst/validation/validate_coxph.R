@@ -21,10 +21,14 @@
 #              with init at the estimate and iter.max = 0), which shows that
 #              the estimate is a root of the score.
 #   FAIL       otherwise.
-# Two self-tests check that the comparison is not vacuous: the coxph_fast()
-# estimates of the PASS fits changed by 1e-8 times max(1, |estimate|) must
-# not be PASS, and those of the E2 fits changed by 1e-5 times
-# max(1, |estimate|) must not be E2.
+# E1 also requires that the finiteness condition L < O_T < H of ?coxph_fast,
+# counted again here from the subject-level data (finite_by_counts()),
+# fails, so that a finite estimate returned as NA is not explained by a
+# warning of coxph() alone. Three self-tests check that the comparison is
+# not vacuous: the coxph_fast() estimates of the PASS fits changed by 1e-8
+# times max(1, |estimate|) must not be PASS, those of the E2 fits changed
+# by 1e-5 times max(1, |estimate|) must not be E2, and the E1 fits with the
+# count set to finite must not be E1.
 
 library(survival)
 if (!"FastSurvival" %in% loadedNamespaces()) library(FastSurvival)
@@ -71,6 +75,28 @@ ref_fit <- function(time, event, x, strata, ties, init = NULL,
 
 rel_diff <- function(a, b) abs(a - b) / pmax(1, abs(b))
 
+# The finiteness condition L < O_T < H of ?coxph_fast, written again from
+# the subject-level data: O_T is the number of events in the treatment
+# group, L the number of events at times when no control subject is at
+# risk, and H the number of events at times when a treatment-group subject
+# is at risk, within each stratum.
+finite_by_counts <- function(time, event, x, strata) {
+  s <- if (is.null(strata)) rep(1L, length(time)) else strata
+  o_t <- sum(event == 1L & x == 1L)
+  l_cnt <- 0
+  h_cnt <- 0
+  for (st in unique(s)) {
+    i <- s == st
+    for (u in unique(time[i & event == 1L])) {
+      at_risk <- i & time >= u
+      d <- sum(i & time == u & event == 1L)
+      if (!any(at_risk & x == 0L)) l_cnt <- l_cnt + d
+      if (any(at_risk & x == 1L)) h_cnt <- h_cnt + d
+    }
+  }
+  l_cnt < o_t && o_t < h_cnt
+}
+
 # Verdicts of a data frame of fits; iter_fast is NA for analysis_fast()
 classify <- function(d) {
   conv <- d$converged
@@ -81,8 +107,9 @@ classify <- function(d) {
     rel_diff(d$se_fast, d$se_cox) <= tol_pass & same_iter
   pass[is.na(pass)] <- FALSE
   score_ok <- !is.na(d$score_at_fast) & d$score_at_fast <= tol_score
-  e1 <- is.na(conv) & (d$warning_cox != "" | !is.finite(d$coef_cox) |
-                         (!is.na(d$se_cox) & d$se_cox > 1e3))
+  e1 <- is.na(conv) & !is.na(d$finite_counts) & !d$finite_counts &
+    (d$warning_cox != "" | !is.finite(d$coef_cox) |
+       (!is.na(d$se_cox) & d$se_cox > 1e3))
   e2 <- !pass & !is.na(conv) & conv & ok_ref & score_ok &
     abs(d$coef_fast - d$coef_cox) <= tol_e2
   e3 <- !pass & !is.na(conv) & conv & score_ok &
@@ -122,9 +149,12 @@ one_fit <- function(time, event, x, strata, ties) {
     score <- ref_fit(time, event, x, strata, ties, init = cf,
                      iter.max = 0)$score
   }
+  # The count is needed only when coxph_fast() returns NA (candidates of E1)
+  fin <- if (is.na(conv)) finite_by_counts(time, event, x, strata) else NA
   data.frame(coef_fast = cf, se_fast = sf, iter_fast = itf, converged = conv,
              coef_cox = ref$coef, se_cox = ref$se, iter_cox = ref$iter,
-             warning_cox = ref$warning, score_at_fast = score)
+             warning_cox = ref$warning, score_at_fast = score,
+             finite_counts = fin)
 }
 
 # Two-group data: exponential event and censoring times, optionally rounded
@@ -228,13 +258,17 @@ for (k in seq_along(configs_c)) {
       score <- ref_fit(cd$time, cd$event, cd$x, st, cfg$ties, init = cf,
                        iter.max = 0)$score
     }
+    fin <- if (is.na(conv)) {
+      finite_by_counts(cd$time, cd$event, cd$x, st)
+    } else NA
     rows[[length(rows) + 1L]] <- data.frame(
       group = "C analysis_fast", scenario = k, rep = res$sim[r],
       config = cfg$label, look = res$look[r], ties = cfg$ties,
       events = sum(cd$event), n_trt = sum(cd$x),
       coef_fast = cf, se_fast = sf, iter_fast = NA_integer_,
       converged = conv, coef_cox = ref$coef, se_cox = ref$se,
-      iter_cox = ref$iter, warning_cox = ref$warning, score_at_fast = score)
+      iter_cox = ref$iter, warning_cox = ref$warning, score_at_fast = score,
+      finite_counts = fin)
   }
 }
 res_c <- do.call(rbind, rows)
@@ -242,7 +276,8 @@ res_c <- do.call(rbind, rows)
 # ---- Verdicts, self-test, and output ---------------------------------------
 common <- c("group", "scenario", "rep", "ties", "events", "n_trt",
             "coef_fast", "se_fast", "iter_fast", "converged", "coef_cox",
-            "se_cox", "iter_cox", "warning_cox", "score_at_fast")
+            "se_cox", "iter_cox", "warning_cox", "score_at_fast",
+            "finite_counts")
 all_fits <- rbind(res_a[common], res_b[common], res_c[common])
 all_fits <- cbind(all_fits, classify(all_fits))
 
@@ -258,6 +293,11 @@ perturbed_e2$coef_fast <- perturbed_e2$coef_fast +
   1e-5 * pmax(1, abs(perturbed_e2$coef_fast))
 self_r2 <- classify(perturbed_e2)$reason
 self_ok2 <- !any(self_r2 == "E2")
+is_e1 <- all_fits$reason == "E1"
+perturbed_e1 <- all_fits[is_e1, ]
+perturbed_e1$finite_counts <- TRUE
+self_r1 <- classify(perturbed_e1)$reason
+self_ok3 <- sum(is_e1) > 0L && !any(self_r1 == "E1")
 explained_rows <- all_fits$verdict == "EXPLAINED" &
   all_fits$reason %in% c("E2", "E3", "E4")
 
@@ -329,11 +369,15 @@ md <- c(
          "the ", sum(is_e2), " E2 estimates by 1e-5 times max(1, |estimate|), ",
          sum(self_r2 == "E2"), " are E2 (",
          if (self_ok2) "E2 does not accept the change" else
-           "E2 ACCEPTS THE CHANGE", ").")
+           "E2 ACCEPTS THE CHANGE", "). After setting the count of the ",
+         sum(is_e1), " E1 fits to finite, ", sum(self_r1 == "E1"),
+         " are E1 (", if (self_ok3) "E1 requires the count" else
+           "E1 DOES NOT REQUIRE THE COUNT", ").")
 )
 writeLines(md, file.path(res_dir, "validate_coxph_summary.md"))
 message(paste(md, collapse = "\n"))
-if (any(all_fits$verdict == "FAIL") || !self_ok || !self_ok2) {
+if (any(all_fits$verdict == "FAIL") || !self_ok || !self_ok2 ||
+    !self_ok3) {
   warning("validate_coxph: FAIL in ", sum(all_fits$verdict == "FAIL"),
           " fits or a self-test failed; see ", res_dir)
 }

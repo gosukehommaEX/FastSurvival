@@ -1,0 +1,88 @@
+ahr_fast vs AHR cross-validation
+2026-11-15 02:14:31 
+
+seed=1 ne=100 rate0=0.10 rate1=0.18 tau=8
+  max abs diff:
+    theta1       0.000e+00
+    theta2       0.000e+00
+    ahr          0.000e+00
+    var.theta1   4.337e-19
+    var.theta2   8.674e-19
+    z.theta      8.882e-16
+    z.loghr      8.882e-16
+
+seed=2 ne=200 rate0=0.10 rate1=0.10 tau=6
+  max abs diff:
+    theta1       1.665e-16
+    theta2       1.110e-16
+    ahr          8.882e-16
+    var.theta1   2.168e-19
+    var.theta2   2.168e-19
+    z.theta      2.442e-15
+    z.loghr      3.997e-15
+
+seed=3 ne=150 rate0=0.15 rate1=0.08 tau=10
+  max abs diff:
+    theta1       0.000e+00
+    theta2       0.000e+00
+    ahr          0.000e+00
+    var.theta1   6.505e-19
+    var.theta2   2.168e-19
+    z.theta      4.441e-16
+    z.loghr      8.882e-16
+
+seed=4 ne=300 rate0=0.12 rate1=0.20 tau=7
+  max abs diff:
+    theta1       1.665e-16
+    theta2       2.220e-16
+    ahr          1.332e-15
+    var.theta1   5.421e-19
+    var.theta2   4.337e-19
+    z.theta      9.770e-15
+    z.loghr      7.994e-15
+
+All differences should be ~1e-8 or smaller (same estimator,  independent code paths).
+
+
+--- sessionInfo() ---
+R version 4.6.1 (2026-06-24 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Japanese_Japan.utf8  LC_CTYPE=Japanese_Japan.utf8    LC_MONETARY=Japanese_Japan.utf8
+[4] LC_NUMERIC=C                    LC_TIME=Japanese_Japan.utf8    
+
+time zone: Asia/Tokyo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] FastSurvival_1.2.0.9000 dqrng_0.4.1             testthat_3.3.2         
+
+loaded via a namespace (and not attached):
+ [1] nphRCT_0.1.1        AHR_1.5.0           rlang_1.3.0         magrittr_2.0.5      hunspell_3.0.6     
+ [6] otel_0.2.0          compiler_4.6.1      roxygen2_8.0.0      callr_3.7.6         vctrs_0.7.3        
+[11] pkgconfig_2.0.3     crayon_1.5.3        fastmap_1.2.0       ellipsis_0.3.3      rmarkdown_2.32     
+[16] sessioninfo_1.2.3   purrr_1.2.2         waldo_0.6.2         xfun_0.61           cachem_1.1.0       
+[21] jsonlite_2.0.0      survRM2_1.0-4       parallel_4.6.1      prettyunits_1.2.0   R6_2.6.1           
+[26] bslib_0.10.0        RColorBrewer_1.1-3  parallelly_1.47.0   gsDesign_3.11.0     pkgload_1.5.2      
+[31] brio_1.1.5          jquerylib_0.1.4     Rcpp_1.1.1-1.1      iterators_1.0.14    knitr_1.52         
+[36] future.apply_1.20.2 usethis_3.2.1       Matrix_1.7-5        splines_4.6.1       tidyselect_1.2.1   
+[41] rstudioapi_0.18.0   yaml_2.3.12         codetools_0.2-20    curl_7.1.0          processx_3.9.0     
+[46] listenv_0.10.1      pkgbuild_1.4.8      lattice_0.22-9      tibble_3.3.1        withr_3.0.2        
+[51] S7_0.2.2            evaluate_1.0.5      future_1.70.0       desc_1.4.3          survival_3.8-12    
+[56] xml2_1.6.0          pillar_1.11.1       foreach_1.5.2       generics_0.1.4      rprojroot_2.1.1    
+[61] xopen_1.0.1         ggplot2_4.0.3       commonmark_2.0.0    scales_1.4.0        lt_0.4             
+[66] globals_0.19.1      xtable_1.8-8        etm_1.1.2           glue_1.8.1          tools_4.6.1        
+[71] diffobj_0.3.6       data.table_1.18.4   simtrial_1.1.0      fs_2.1.0            mvtnorm_1.4-2      
+[76] grid_4.6.1          tidyr_1.3.2         devtools_2.5.2      cli_3.6.6           r2rtf_1.3.0        
+[81] rcmdcheck_1.4.0     survAH_1.2.0        doFuture_1.2.2      gt_1.3.0            dplyr_1.2.1        
+[86] downlit_0.4.5       gtable_0.3.6        sass_0.4.10         digest_0.6.39       farver_2.1.2       
+[91] memoise_2.0.1       htmltools_0.5.9     pkgdown_2.2.1       lifecycle_1.0.5     MASS_7.3-65        
+[96] spelling_2.3.2     

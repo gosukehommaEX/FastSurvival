@@ -177,11 +177,15 @@ alternative to \code{h12.switch.hazard}.}
 
 \item{h12.switch.time}{Breakpoints for a piecewise \code{h12.switch.hazard},
 measured on the clock of \code{h12.switch.clock} (by default from the
-switch).}
+switch) after a switch at or after the intermediate event, and on the
+clock of \code{switch.clock} after an intermediate event that follows a
+switch before it.}
 
 \item{switch.clock}{Clock of the post-event hazards (\code{h12.*},
-\code{h1s.*}, and, with \code{h12.switch.clock = "same"},
-\code{h12.switch.*}): \code{"reset"} (default, the time since the
+\code{h1s.*}, \code{h12.switch.*} after an intermediate event that
+follows a switch before it, and, with
+\code{h12.switch.clock = "same"}, \code{h12.switch.*} after the
+other switches): \code{"reset"} (default, the time since the
 intermediate event) or \code{"forward"} (the time since
 randomization, so that their breakpoints are also times since
 randomization). See the section on switching rules.}
@@ -413,7 +417,9 @@ Competing events are generated as independent latent times, and a time
 after a switch, or after the intermediate event on the forward clock, by
 the inverse of the cumulative hazard given survival to that time (Bender,
 Augustin, and Blettner, 2005). The rules follow the multistate model of
-the DesignComplexSurvival package, and the script
+the DesignComplexSurvival package
+(\url{https://github.com/gosukehommaEX/DesignComplexSurvival}),
+and the script
 \code{validation/validate_switching.R} of the installed package compares
 the simulated data with its analytic values.
 

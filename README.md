@@ -206,8 +206,9 @@ one pass over the pooled sorted data and runs the Newton-Raphson iteration on
 the numbers at risk and of events at the distinct event times, with the
 starting value, convergence criterion, and maximum number of iterations of
 `coxph()`. The estimate therefore agrees with that of `coxph()` to rounding
-error, except in rare data in which a step of the iteration must be halved
-(see `?coxph_fast`). The standard error comes from the observed information at
+error, except in data, usually with an extreme hazard ratio or a small group,
+in which a step of the iteration must be halved (see `?coxph_fast`). The
+standard error comes from the observed information at
 the estimate, and the confidence interval is a Wald interval. An infinite
 estimate, for example when all events are in one group, is returned as `NA`.
 With `strata`, the risk sets are formed within each stratum, which gives the

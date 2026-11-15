@@ -6,12 +6,13 @@ The files in this folder are the references against which
 
 - `sim_python.csv` (MD5 a59395bc535c7148eb9dd5849353453e) and
   `sim_python_two.csv` (MD5 4fd7f37452339ee995caeecb3081d2a3): copies of
-  `inst/validation/results/` of the DesignComplexSurvival package, version
-  0.4.0. They hold summaries of patient-level simulations written in Python
-  independently of both packages: `inst/validation/python/simulate_ms.py`
-  (scenarios V6 to V10, 20000 trials under each hypothesis) and
-  `inst/validation/python/simulate_two.py` (among others V6, V7, V11, and V12,
-  20000 trials under each hypothesis). According to
+  `inst/validation/results/` of the DesignComplexSurvival package
+  (<https://github.com/gosukehommaEX/DesignComplexSurvival>), version 0.4.0. They
+  hold summaries of patient-level simulations written in Python
+  independently of both packages, by the scripts of DesignComplexSurvival
+  `inst/validation/python/simulate_ms.py` (scenarios V6 to V10, 20000 trials
+  under each hypothesis) and `inst/validation/python/simulate_two.py` (among
+  others V6, V7, V11, and V12, 20000 trials under each hypothesis). According to
   `inst/validation/README.md` of DesignComplexSurvival, `sim_python.csv` was
   computed with Python 3.13, numpy 2.5.3, and scipy 1.18.1. The copies were
   made, and checked by MD5, by a script of the development folder of

@@ -63,8 +63,10 @@ behavior of earlier versions of this function exactly. \code{"fh"} is the
 Fleming-Harrington G(rho, gamma) test with weight
 \code{S(t-)^rho (1 - S(t-))^gamma}. \code{"mwlrt"} is the modestly-weighted
 log-rank test of Magirr and Burman with weight
-\code{1 / max(S(t-), S(t_star-))}, the left-continuous form of Magirr
-and \enc{Öhrn}{Ohrn} (2026, eq. 2) and nphRCT (Magirr and Burman define
+\code{1 / max(S(t-), S(t_star-))}, which evaluates the pooled
+Kaplan-Meier estimate just before each time, as do Magirr and
+\enc{Öhrn}{Ohrn} (2026, eq. 2, where the cap is a survival threshold
+s* instead of \code{S(t_star-)}) and nphRCT (Magirr and Burman define
 the weight with \code{S(t)} and \code{S(t_star)}). \code{"gehan"} is the
 Gehan-Breslow test
 with weight equal to the at-risk count, and \code{"tarone-ware"} uses the

@@ -123,8 +123,8 @@ test_that("wkm_fast reduces to the two-sample z test without censoring", {
 
 test_that("wkm_fast matches values computed from Pepe and Fleming (1989)", {
   # Expected values computed independently from the formulas of Pepe and
-  # Fleming (1989, eq. 3.3 and p. 501) with exact sums over the intervals
-  # (Planning/wkm_comparisonsurv/wkm_pf1989.py). The data have tied times
+  # Fleming (1989, eq. 3.3 and p. 501) with exact sums over the intervals,
+  # in Python. The data have tied times
   # within and across the groups, a tie of an event and a censored time, and
   # a control group whose follow-up ends earlier with a censored time.
   tt <- c(2, 3, 3, 5, 6, 7, 8, 8, 10, 12, 14, 15,

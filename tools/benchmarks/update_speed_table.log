@@ -1,0 +1,15 @@
+update_speed_table.R run on 2026-11-15 15:34:07 with R version 4.6.1 (2026-06-24 ucrt)
+speed_results.csv: 12 rows; run of 2026-11-15, R 4.6.1, Windows 11 (x86_64), FastSurvival 1.2.0.9000; skipped wkm_fast/nphsim
+  survfit_fast(): speed gain 31.6 -> ~30x (was ~30x)
+  survdiff_fast(): speed gain 23.4 -> ~25x (was ~25x)
+  coxph_fast(): speed gain 22.6 -> ~25x (was ~25x)
+  rmst_fast(): speed gain 29.5 -> ~30x (was ~30x)
+  survdiff_fast(weight = "fh"): speed gain 267.9 -> ~250x (was ~250x)
+  wmst_fast(): speed gain 755.9 -> ~750x (was ~750x)
+  milestone_fast(): speed gain 16.7 -> ~15x (was ~15x)
+  medsurv_fast(): speed gain 35 -> ~35x (was ~35x)
+  maxcombo_fast(): speed gain 315.4 -> ~300x (was ~300x)
+  rmw_fast(): speed gain 79.6 -> ~80x (was ~80x)
+  ahsw_fast(): speed gain 380.2 -> ~400x (was ~400x)
+  ahr_fast(): speed gain 171.5 -> ~150x (was ~150x)
+vignettes/speed-comparison.Rmd a24b1bb93419c34190e59aad1696e93d -> a24b1bb93419c34190e59aad1696e93d

@@ -17,8 +17,13 @@ NAMESPACE.bak
 /inst/doc/
 inst/doc
 
-# Validation/benchmark script outputs
-tools/benchmarks/
+# Validation/benchmark script outputs, except those that the vignettes cite
+tools/benchmarks/*
+!tools/benchmarks/speed_results.csv
+!tools/benchmarks/speed_results_session.txt
+!tools/benchmarks/speed_results.log
+!tools/benchmarks/update_speed_table.log
+!tools/benchmarks/compare_ahr_ahrKM_log.txt
 
 # Compiled objects
 src/*.o

@@ -7,11 +7,13 @@
 # without the censoring of PFS only (dropout_pfs), which simdata_fast() does
 # not have.
 #
-# DesignComplexSurvival (0.4.0 or later) is not a dependency of FastSurvival
-# and is needed only here. Run from the package root of FastSurvival, either
+# DesignComplexSurvival (0.4.0 or later,
+# https://github.com/gosukehommaEX/DesignComplexSurvival) is not a
+# dependency of FastSurvival and is needed only here. Run from the package
+# root of FastSurvival, either
 # with DesignComplexSurvival installed or with the path of its source folder
 # in 'dcs_path' (loaded with pkgload::load_all()), for example:
-#   dcs_path <- "../../04_DesignComplexSurvival/Rpackage/DesignComplexSurvival"
+#   dcs_path <- "path/to/DesignComplexSurvival"
 #   source("inst/validation/make_switching_reference.R")
 # It writes inst/validation/reference/switching_dcs.csv and
 # switching_dcs_info.txt; validate_switching.R reads them.

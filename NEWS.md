@@ -1,4 +1,4 @@
-# FastSurvival (development version)
+# FastSurvival 2.0.0
 
 ## Breaking changes
 
@@ -27,7 +27,8 @@
   `NA` with a warning; `analysis_fast()` then sets the `cox.` columns of the
   row to `NA` and gives one warning for all such rows. The result of
   `coxph_fast()` has the new attributes `ties`, `iter`, and `converged`, and
-  its `print()` method shows the handling of tied event times.
+  its `print()` method names the Cox model in its title and shows the
+  handling of tied event times.
 
 * In the two-group mode, `rmst_fast()` also returns the standard errors of
   the restricted mean survival times of the two groups, `se.ctrl` and
@@ -54,17 +55,22 @@
   description exists. The standard error is always that of the former
   `method = "km"`: the delta method for a percentile with a kernel estimate of
   the hazard at the median. The `print()` method of `medsurv_fast()` shows
-  `conf.type` in place of the method.
+  `conf.type` in place of the method. The arguments after the removed ones
+  move up by one position, so calls that pass them by position must name
+  them.
 
 * The default kernel bandwidth of `medsurv_fast()` and of the `"medsurv"`
   statistic of `analysis_fast()` is now (40 sqrt(pi))^(1/5) s m^(-1/5), about
   2.34 s m^(-1/5), where m is the number of events of the group and s the
   standard deviation of their times. This is the normal-reference bandwidth of
   the Epanechnikov kernel that the hazard estimate uses; earlier versions used
-  1.06 s m^(-1/5), the constant for a Gaussian kernel. In our checks the
-  coverage of the 95 percent interval of the median was 0.94 to 0.95 with the
-  new default and 0.91 to 0.94 with the earlier one. The standard errors with
-  the default bandwidth change; the medians do not.
+  1.06 s m^(-1/5), the constant for a Gaussian kernel. In our checks with
+  exponential times (50 to 250 subjects, about 30 percent censored), the
+  coverage of the default 95 percent interval of the median was 0.94 to 0.96
+  with the new default and 0.93 to 0.94 with the earlier one; without
+  censoring the new default gives slightly conservative intervals (coverage
+  about 0.96, against 0.94 to 0.95 with the earlier one). The standard errors
+  with the default bandwidth change; the medians do not.
 
 ## New features
 
@@ -99,9 +105,10 @@
   (`h12.switch.clock`); and an accelerated failure time effect of a switch
   (`switch.aft.factor`). The data of a call without these arguments are
   unchanged. The rules follow the multistate model of the
-  DesignComplexSurvival package, and `inst/validation/validate_switching.R`
-  checks the simulated data against its analytic values and against
-  independent simulations in Python.
+  DesignComplexSurvival package
+  (<https://github.com/gosukehommaEX/DesignComplexSurvival>), and
+  `inst/validation/validate_switching.R` checks the simulated data against its
+  analytic values and against independent simulations in Python.
 
 * `switch_fast()` recomputes the observed columns only for the subjects it
   switches, so it keeps those of the other subjects, such as a first endpoint
@@ -119,7 +126,7 @@
   function that copied them into the columns `tte` and `event`.
 
 * The treatment-switching vignette refers to TrialSimulator 1.39.0, the
-  current version on CRAN, and shows the new switching rules of
+  version on CRAN in November 2026, and shows the new switching rules of
   `simdata_fast()`.
 
 * The validation vignette checks `wkm_fast()` against the two-sample z test
@@ -132,8 +139,9 @@
   the confidence intervals, the stratified tests, and the median
   (`survfit_fast()`, `survdiff_fast()`, `medsurv_fast()`); Breslow (1970) and
   Tarone and Ware (1977) for the variance of the Gehan-Breslow test and
-  Magirr and Öhrn (2026) for the left-continuous weight of the modestly
-  weighted test (`survdiff_fast()`); Tang (2021) for the variance of the
+  Magirr and Öhrn (2026) for the evaluation of the pooled Kaplan-Meier
+  estimate just before each time in the weight of the modestly weighted test
+  (`survdiff_fast()`); Tang (2021) for the variance of the
   restricted mean survival time (`rmst_fast()`); Ramlau-Hansen (1983) for the
   kernel estimate of the hazard (`medsurv_fast()`, `plot.kmcurve_fast()`);
   Genz (1992, 2004) and Miwa, Hayter, and Kuriki (2003) for the multivariate

@@ -64,7 +64,7 @@ void medsurv_core_impl(const double*, const int*, int, double,
 // bw is not supplied: (40 sqrt(pi))^(1/5) sd(evt) m^(-1/5), the normal
 // reference bandwidth of the Epanechnikov kernel, when the event times have
 // positive spread, falling back to range / max(m, 1)^(1/3), or 1.
-static double silverman_bw(const double* t, const int* e, int n) {
+static double default_medsurv_bw(const double* t, const int* e, int n) {
   double sum = 0.0;
   int m = 0;
   for (int k = 0; k < n; ++k) {
@@ -567,10 +567,12 @@ List analysis_loop_core(
 
         // ---- Median survival (per-group KM + variance summaries) ---------
         if (do_medsurv && both) {
-          double bw0 = (medsurv_bw > 0.0) ? medsurv_bw
-                                          : silverman_bw(t0d.data(), e0i.data(), n0);
-          double bw1 = (medsurv_bw > 0.0) ? medsurv_bw
-                                          : silverman_bw(t1d.data(), e1i.data(), n1);
+          double bw0 = (medsurv_bw > 0.0)
+                           ? medsurv_bw
+                           : default_medsurv_bw(t0d.data(), e0i.data(), n0);
+          double bw1 = (medsurv_bw > 0.0)
+                           ? medsurv_bw
+                           : default_medsurv_bw(t1d.data(), e1i.data(), n1);
           double m0[4], m1[4];
           medsurv_core_impl(t0d.data(), e0i.data(), n0, bw0, medsurv_sc, m0);
           medsurv_core_impl(t1d.data(), e1i.data(), n1, bw1, medsurv_sc, m1);

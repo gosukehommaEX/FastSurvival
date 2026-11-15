@@ -1,0 +1,6 @@
+FastSurvival speed benchmark
+Run started: 2026-11-15 02:17:25
+n = 500, events = 500, tau = 32, replicates = 1000
+Skipped wkm_fast benchmark (nphsim not installed).
+Wrote speed_results.csv and speed_results.rds
+Wrote speed_results_session.txt

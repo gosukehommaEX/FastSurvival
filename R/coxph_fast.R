@@ -33,18 +33,22 @@
 #'
 #' The estimate maximizes l(beta) by Newton-Raphson iteration from beta = 0,
 #' which Therneau and Grambsch (2000, Appendix E) work through on a small
-#' data set. A step after which l(beta) decreases is halved. From the first
-#' halved step on, the iteration also keeps the interval between the largest
-#' value at which the score l'(beta) has been found positive and the smallest
-#' value at which it has been found negative, and a trial value outside this
-#' interval is replaced by its midpoint; this keeps the iteration convergent
-#' when the hazard ratio is extreme and one group is small. The iteration
-#' stops when the relative change in l(beta) is at most 1e-9, and at most 20
-#' iterations are taken. The starting value, the convergence criterion, and
-#' the maximum number of iterations are those of \code{survival::coxph()}
-#' with the default \code{\link[survival]{coxph.control}()}, so that the two
-#' estimates agree to rounding error when no step is halved; when a step is
-#' halved, they can differ within the convergence tolerance.
+#' data set. A step after which l(beta) decreases is halved. The iteration
+#' keeps the interval between the largest value at which the score
+#' l'(beta) has been found positive and the smallest value at which it has
+#' been found negative (over all the values evaluated), and from the first
+#' halved step on, a trial value outside this interval is replaced by its
+#' midpoint; this keeps the iteration convergent when the hazard ratio is
+#' extreme and one group is small. The iteration stops when the relative
+#' change in l(beta) is at most 1e-9, and at most 20 iterations are taken.
+#' The starting value, the convergence criterion, and the maximum number of
+#' iterations are those of \code{survival::coxph()} with the default
+#' \code{\link[survival]{coxph.control}()}, so that the two estimates agree
+#' to rounding error when no step is halved. The two iterations differ when
+#' a step is halved: \code{survival::coxph()} also checks convergence right
+#' after a halved step and shortens repeated steps more strongly, so the
+#' estimates can then differ within the convergence tolerance, and the
+#' numbers of iterations (the attribute \code{iter}) can differ.
 #'
 #' The standard error of the log hazard ratio is 1 / sqrt(I), where
 #' I = -l''(beta) is the observed information at the estimate, and the Wald

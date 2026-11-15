@@ -120,10 +120,9 @@ test_that("coxph_fast reproduces Therneau and Grambsch (2000), Appendix E", {
   # LL(0) -4.564348, LL(beta) -3.824750, I(beta) 0.634168, iterates 0, 8/5,
   # 1.4727236, 1.4752838, 1.4752849; (p. 327, Efron): LL(0) -4.276666. The
   # expected values to 1e-12 are the exact Newton iterates of the book's own
-  # U and I and the fit of Planning/python_checks/cox_exact.py. The printed
-  # iterates 2 and 3 and the Efron LL(beta), I(beta), and beta of p. 327
-  # differ from the book's own formulas (see cox_exact_output.txt), so they
-  # are not tested.
+  # U and I, computed independently in Python. The printed iterates 2 and 3
+  # and the Efron LL(beta), I(beta), and beta of p. 327 differ from the
+  # values of the book's own formulas, so they are not tested.
   tt <- c(1, 1, 6, 6, 8, 9)
   ee <- c(1L, 0L, 1L, 1L, 0L, 1L)
   xx <- c(1L, 1L, 1L, 0L, 0L, 0L)
@@ -160,9 +159,9 @@ test_that("coxph_fast reproduces Therneau and Grambsch (2000), Appendix E", {
 
 test_that("coxph_fast returns NA when the estimate is infinite", {
   # The finiteness condition L < O_T < H of ?coxph_fast fails in the first
-  # three data sets (no root of the score; Planning/python_checks/
-  # cox_exact.py, check C). In the last, a treated subject is at risk at a
-  # control event, and the brentq root of the score is 0.8216793853198513.
+  # three data sets (the score has no root, as checked independently in
+  # Python). In the last, a treated subject is at risk at a control event,
+  # and the brentq root of the score is 0.8216793853198513.
   inf_sets <- list(
     list(1:6, c(1, 1, 1, 0, 0, 0), c(0, 0, 0, 1, 1, 1)),  # O_T = 0 = L
     list(1:4, c(1, 0, 1, 1), c(0, 0, 1, 1)),              # L = O_T = 2
@@ -183,8 +182,8 @@ test_that("coxph_fast converges when steps must be halved", {
   # Five treated subjects (n = 60), all with early events. Without the
   # bracket of the root kept after the first halved step, the iteration does
   # not converge in 20 iterations; with it, it converges in 8 with one halved
-  # step (Planning/python_checks/cox_exact.py, check D, which also gives the
-  # brentq root 4.901223249152088).
+  # step (a computation of the same iteration in Python, which also gives
+  # the brentq root 4.901223249152088).
   tt <- c(0.6275, 0.6532, 0.2890, 0.1301, 0.0050, 0.2375, 0.0127, 0.0420,
           0.3368, 0.0600, 0.0034, 0.0951, 0.0783, 0.6512, 0.9587, 0.1691,
           0.4081, 0.7416, 0.2145, 0.3499, 0.1962, 0.9845, 0.1353, 0.3724,
@@ -277,8 +276,7 @@ test_that("cox_core reproduces a stratified hand calculation", {
   # 4 - 13/3 = -1/3, and I(0) = 1/4 + 2/9 + 2/9 + 1/4 = 17/18, so the first
   # Newton-Raphson iterate is U(0) / I(0) = -6/17. With r = exp(beta) the
   # score is U = 2 - 2r / (r + 1) - 4r / (2r + 1), which vanishes at
-  # r = 1 / sqrt(2), i.e. beta = -log(2) / 2 (Planning/python_checks/
-  # cox_exact.py, check B).
+  # r = 1 / sqrt(2), i.e. beta = -log(2) / 2 (also checked in Python).
   tt <- c(1, 2, 3, 4, 1, 2, 3)
   ee <- c(1L, 1L, 0L, 1L, 1L, 1L, 1L)
   jj <- c(0L, 1L, 0L, 1L, 1L, 0L, 1L)
