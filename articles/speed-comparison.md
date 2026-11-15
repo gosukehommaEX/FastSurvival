@@ -9,7 +9,9 @@ results. The benchmark code is shown but not executed when the vignette
 is built, because timing many microbenchmark replicates would exceed the
 build-time limits. To reproduce the numbers, run the code blocks
 interactively. The same code is collected in the
-`tools/benchmark_speed.R` script of the package’s GitHub repository.
+`tools/benchmark_speed.R` script of the package’s GitHub repository,
+which writes its results to `tools/benchmarks/`; the table below is
+written from them by `tools/update_speed_table.R`.
 
 The reported figures are median times of 1,000 microbenchmark
 replicates, measured on 2026-11-15 with R 4.6.1 on Windows 11 (x86_64)

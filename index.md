@@ -214,8 +214,8 @@ criterion, and maximum number of iterations of
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html). The estimate
 therefore agrees with that of
 [`coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) to rounding
-error, except in rare data in which a step of the iteration must be
-halved (see
+error, except in data, usually with an extreme hazard ratio or a small
+group, in which a step of the iteration must be halved (see
 [`?coxph_fast`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)).
 The standard error comes from the observed information at the estimate,
 and the confidence interval is a Wald interval. An infinite estimate,

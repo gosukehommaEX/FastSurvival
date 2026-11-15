@@ -25,7 +25,7 @@ hazards."><meta property="og:image" content="https://gosukehommaEX.github.io/Fas
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -158,8 +158,10 @@ behavior of earlier versions of this function exactly. <code>"fh"</code> is the
 Fleming-Harrington G(rho, gamma) test with weight
 <code>S(t-)^rho (1 - S(t-))^gamma</code>. <code>"mwlrt"</code> is the modestly-weighted
 log-rank test of Magirr and Burman with weight
-<code>1 / max(S(t-), S(t_star-))</code>, the left-continuous form of Magirr
-and Öhrn (2026, eq. 2) and nphRCT (Magirr and Burman define
+<code>1 / max(S(t-), S(t_star-))</code>, which evaluates the pooled
+Kaplan-Meier estimate just before each time, as do Magirr and
+Öhrn (2026, eq. 2, where the cap is a survival threshold
+s* instead of <code>S(t_star-)</code>) and nphRCT (Magirr and Burman define
 the weight with <code>S(t)</code> and <code>S(t_star)</code>). <code>"gehan"</code> is the
 Gehan-Breslow test
 with weight equal to the at-risk count, and <code>"tarone-ware"</code> uses the
@@ -453,9 +455,12 @@ tests. <em>Pharmaceutical Statistics</em>, <em>25</em>(1), e70066.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unit: microseconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min      lq      mean   median       uq      max neval cld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  26.259  30.145  38.51492  34.7275  37.2560 4017.292  1000  a </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 417.587 434.172 468.33269 442.6295 454.5375 4346.036  1000   b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           expr     min       lq       mean    median        uq      max neval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  survdiff_fast  60.814   70.081   86.82491   83.9615   94.4115  398.545  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       survdiff 978.016 1014.053 1116.81439 1032.3530 1067.5280 7008.847  1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cld</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

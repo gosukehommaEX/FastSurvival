@@ -21,7 +21,7 @@ reference implementation, so results are reproducible from seed."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">FastSurvival</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -306,13 +306,17 @@ alternative to <code>h12.switch.hazard</code>.</p></dd>
 <dt id="arg-h-switch-time">h12.switch.time<a class="anchor" aria-label="anchor" href="#arg-h-switch-time"></a></dt>
 <dd><p>Breakpoints for a piecewise <code>h12.switch.hazard</code>,
 measured on the clock of <code>h12.switch.clock</code> (by default from the
-switch).</p></dd>
+switch) after a switch at or after the intermediate event, and on the
+clock of <code>switch.clock</code> after an intermediate event that follows a
+switch before it.</p></dd>
 
 
 <dt id="arg-switch-clock">switch.clock<a class="anchor" aria-label="anchor" href="#arg-switch-clock"></a></dt>
 <dd><p>Clock of the post-event hazards (<code>h12.*</code>,
-<code>h1s.*</code>, and, with <code>h12.switch.clock = "same"</code>,
-<code>h12.switch.*</code>): <code>"reset"</code> (default, the time since the
+<code>h1s.*</code>, <code>h12.switch.*</code> after an intermediate event that
+follows a switch before it, and, with
+<code>h12.switch.clock = "same"</code>, <code>h12.switch.*</code> after the
+other switches): <code>"reset"</code> (default, the time since the
 intermediate event) or <code>"forward"</code> (the time since
 randomization, so that their breakpoints are also times since
 randomization). See the section on switching rules.</p></dd>
@@ -563,7 +567,9 @@ Competing events are generated as independent latent times, and a time
 after a switch, or after the intermediate event on the forward clock, by
 the inverse of the cumulative hazard given survival to that time (Bender,
 Augustin, and Blettner, 2005). The rules follow the multistate model of
-the DesignComplexSurvival package, and the script
+the DesignComplexSurvival package
+(<a href="https://github.com/gosukehommaEX/DesignComplexSurvival" class="external-link">https://github.com/gosukehommaEX/DesignComplexSurvival</a>),
+and the script
 <code>validation/validate_switching.R</code> of the installed package compares
 the simulated data with its analytic values.</p>
 <p>The columns <code>switched</code> and <code>switch_time</code> record all three kinds

@@ -95,12 +95,14 @@ survdiff_fast(
   Fleming-Harrington G(rho, gamma) test with weight
   `S(t-)^rho (1 - S(t-))^gamma`. `"mwlrt"` is the modestly-weighted
   log-rank test of Magirr and Burman with weight
-  `1 / max(S(t-), S(t_star-))`, the left-continuous form of Magirr and
-  Öhrn (2026, eq. 2) and nphRCT (Magirr and Burman define the weight
-  with `S(t)` and `S(t_star)`). `"gehan"` is the Gehan-Breslow test with
-  weight equal to the at-risk count, and `"tarone-ware"` uses the square
-  root of the at-risk count. Here `S(t-)` is the left-continuous pooled
-  Kaplan-Meier estimate just prior to each event time.
+  `1 / max(S(t-), S(t_star-))`, which evaluates the pooled Kaplan-Meier
+  estimate just before each time, as do Magirr and Öhrn (2026, eq. 2,
+  where the cap is a survival threshold s\* instead of `S(t_star-)`) and
+  nphRCT (Magirr and Burman define the weight with `S(t)` and
+  `S(t_star)`). `"gehan"` is the Gehan-Breslow test with weight equal to
+  the at-risk count, and `"tarone-ware"` uses the square root of the
+  at-risk count. Here `S(t-)` is the left-continuous pooled Kaplan-Meier
+  estimate just prior to each event time.
 
 - rho:
 
@@ -408,8 +410,11 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>           expr     min      lq      mean   median       uq      max neval cld
-#>  survdiff_fast  26.259  30.145  38.51492  34.7275  37.2560 4017.292  1000  a 
-#>       survdiff 417.587 434.172 468.33269 442.6295 454.5375 4346.036  1000   b
+#>           expr     min       lq       mean    median        uq      max neval
+#>  survdiff_fast  60.814   70.081   86.82491   83.9615   94.4115  398.545  1000
+#>       survdiff 978.016 1014.053 1116.81439 1032.3530 1067.5280 7008.847  1000
+#>  cld
+#>   a 
+#>    b
 # }
 ```

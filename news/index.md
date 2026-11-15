@@ -1,6 +1,6 @@
 # Changelog
 
-## FastSurvival (development version)
+## FastSurvival 2.0.0
 
 ### Breaking changes
 
@@ -46,8 +46,8 @@
   for all such rows. The result of
   [`coxph_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/coxph_fast.md)
   has the new attributes `ties`, `iter`, and `converged`, and its
-  [`print()`](https://rdrr.io/r/base/print.html) method shows the
-  handling of tied event times.
+  [`print()`](https://rdrr.io/r/base/print.html) method names the Cox
+  model in its title and shows the handling of tied event times.
 
 - In the two-group mode,
   [`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md)
@@ -87,7 +87,9 @@
   with a kernel estimate of the hazard at the median. The
   [`print()`](https://rdrr.io/r/base/print.html) method of
   [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
-  shows `conf.type` in place of the method.
+  shows `conf.type` in place of the method. The arguments after the
+  removed ones move up by one position, so calls that pass them by
+  position must name them.
 
 - The default kernel bandwidth of
   [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md)
@@ -98,10 +100,13 @@
   their times. This is the normal-reference bandwidth of the
   Epanechnikov kernel that the hazard estimate uses; earlier versions
   used 1.06 s m^(-1/5), the constant for a Gaussian kernel. In our
-  checks the coverage of the 95 percent interval of the median was 0.94
-  to 0.95 with the new default and 0.91 to 0.94 with the earlier one.
-  The standard errors with the default bandwidth change; the medians do
-  not.
+  checks with exponential times (50 to 250 subjects, about 30 percent
+  censored), the coverage of the default 95 percent interval of the
+  median was 0.94 to 0.96 with the new default and 0.93 to 0.94 with the
+  earlier one; without censoring the new default gives slightly
+  conservative intervals (coverage about 0.96, against 0.94 to 0.95 with
+  the earlier one). The standard errors with the default bandwidth
+  change; the medians do not.
 
 ### New features
 
@@ -155,7 +160,8 @@
   of the post-switch hazard (`h12.switch.clock`); and an accelerated
   failure time effect of a switch (`switch.aft.factor`). The data of a
   call without these arguments are unchanged. The rules follow the
-  multistate model of the DesignComplexSurvival package, and
+  multistate model of the DesignComplexSurvival package
+  (<https://github.com/gosukehommaEX/DesignComplexSurvival>), and
   `inst/validation/validate_switching.R` checks the simulated data
   against its analytic values and against independent simulations in
   Python.
@@ -180,7 +186,7 @@
   function that copied them into the columns `tte` and `event`.
 
 - The treatment-switching vignette refers to TrialSimulator 1.39.0, the
-  current version on CRAN, and shows the new switching rules of
+  version on CRAN in November 2026, and shows the new switching rules of
   [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md).
 
 - The validation vignette checks
@@ -198,8 +204,9 @@
   [`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md),
   [`medsurv_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/medsurv_fast.md));
   Breslow (1970) and Tarone and Ware (1977) for the variance of the
-  Gehan-Breslow test and Magirr and Öhrn (2026) for the left-continuous
-  weight of the modestly weighted test
+  Gehan-Breslow test and Magirr and Öhrn (2026) for the evaluation of
+  the pooled Kaplan-Meier estimate just before each time in the weight
+  of the modestly weighted test
   ([`survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/survdiff_fast.md));
   Tang (2021) for the variance of the restricted mean survival time
   ([`rmst_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/rmst_fast.md));

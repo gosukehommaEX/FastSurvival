@@ -237,15 +237,19 @@ simdata_fast(
 - h12.switch.time:
 
   Breakpoints for a piecewise `h12.switch.hazard`, measured on the clock
-  of `h12.switch.clock` (by default from the switch).
+  of `h12.switch.clock` (by default from the switch) after a switch at
+  or after the intermediate event, and on the clock of `switch.clock`
+  after an intermediate event that follows a switch before it.
 
 - switch.clock:
 
-  Clock of the post-event hazards (`h12.*`, `h1s.*`, and, with
-  `h12.switch.clock = "same"`, `h12.switch.*`): `"reset"` (default, the
-  time since the intermediate event) or `"forward"` (the time since
-  randomization, so that their breakpoints are also times since
-  randomization). See the section on switching rules.
+  Clock of the post-event hazards (`h12.*`, `h1s.*`, `h12.switch.*`
+  after an intermediate event that follows a switch before it, and, with
+  `h12.switch.clock = "same"`, `h12.switch.*` after the other switches):
+  `"reset"` (default, the time since the intermediate event) or
+  `"forward"` (the time since randomization, so that their breakpoints
+  are also times since randomization). See the section on switching
+  rules.
 
 - stream:
 
@@ -487,9 +491,10 @@ events are generated as independent latent times, and a time after a
 switch, or after the intermediate event on the forward clock, by the
 inverse of the cumulative hazard given survival to that time (Bender,
 Augustin, and Blettner, 2005). The rules follow the multistate model of
-the DesignComplexSurvival package, and the script
-`validation/validate_switching.R` of the installed package compares the
-simulated data with its analytic values.
+the DesignComplexSurvival package
+(<https://github.com/gosukehommaEX/DesignComplexSurvival>), and the
+script `validation/validate_switching.R` of the installed package
+compares the simulated data with its analytic values.
 
 The columns `switched` and `switch_time` record all three kinds of
 switch: `switch_time` is before `e1_surv_time` for a switch before the

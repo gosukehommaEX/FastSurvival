@@ -168,21 +168,26 @@ and each stratum has its own baseline hazard.
 
 The estimate maximizes l(beta) by Newton-Raphson iteration from beta =
 0, which Therneau and Grambsch (2000, Appendix E) work through on a
-small data set. A step after which l(beta) decreases is halved. From the
-first halved step on, the iteration also keeps the interval between the
-largest value at which the score l'(beta) has been found positive and
-the smallest value at which it has been found negative, and a trial
-value outside this interval is replaced by its midpoint; this keeps the
-iteration convergent when the hazard ratio is extreme and one group is
-small. The iteration stops when the relative change in l(beta) is at
-most 1e-9, and at most 20 iterations are taken. The starting value, the
-convergence criterion, and the maximum number of iterations are those of
+small data set. A step after which l(beta) decreases is halved. The
+iteration keeps the interval between the largest value at which the
+score l'(beta) has been found positive and the smallest value at which
+it has been found negative (over all the values evaluated), and from the
+first halved step on, a trial value outside this interval is replaced by
+its midpoint; this keeps the iteration convergent when the hazard ratio
+is extreme and one group is small. The iteration stops when the relative
+change in l(beta) is at most 1e-9, and at most 20 iterations are taken.
+The starting value, the convergence criterion, and the maximum number of
+iterations are those of
 [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) with
 the default
 [`coxph.control()`](https://rdrr.io/pkg/survival/man/coxph.control.html),
 so that the two estimates agree to rounding error when no step is
-halved; when a step is halved, they can differ within the convergence
-tolerance.
+halved. The two iterations differ when a step is halved:
+[`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html) also
+checks convergence right after a halved step and shortens repeated steps
+more strongly, so the estimates can then differ within the convergence
+tolerance, and the numbers of iterations (the attribute `iter`) can
+differ.
 
 The standard error of the log hazard ratio is 1 / sqrt(I), where I =
 -l”(beta) is the observed information at the estimate, and the Wald
@@ -346,8 +351,8 @@ if (requireNamespace("microbenchmark", quietly = TRUE)) {
   )
 }
 #> Unit: microseconds
-#>        expr     min      lq      mean  median       uq      max neval cld
-#>  coxph_fast  31.337  36.655  47.95228  46.565  50.9215 3708.488  1000  a 
-#>       coxph 680.281 707.753 749.17876 717.337 731.9490 4724.093  1000   b
+#>        expr      min       lq      mean   median        uq      max neval cld
+#>  coxph_fast   75.922   88.210  112.7862  107.526  126.5015  520.521  1000  a 
+#>       coxph 1526.520 1597.589 1741.5898 1636.570 1683.3585 7583.140  1000   b
 # }
 ```

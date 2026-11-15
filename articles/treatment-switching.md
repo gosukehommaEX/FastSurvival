@@ -210,7 +210,7 @@ system.time({
     os_final()
 })
 #>    user  system elapsed 
-#>   0.336   0.031   0.367
+#>   0.487   0.049   0.536
 ```
 
 ## A check with the rank-preserving structural failure time model
@@ -303,9 +303,10 @@ The post-progression hazards are functions of the time since progression
 by default (`switch.clock = "reset"`) or of the time since randomization
 (`switch.clock = "forward"`), and `h12.switch.clock` sets whether the
 post-switch hazard is measured from the switch or on the same clock. The
-rules follow the multistate model of the DesignComplexSurvival package;
-the script `validation/validate_switching.R` of the installed package
-compares the data of
+rules follow the multistate model of the
+[DesignComplexSurvival](https://github.com/gosukehommaEX/DesignComplexSurvival)
+package; the script `validation/validate_switching.R` of the installed
+package compares the data of
 [`simdata_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/simdata_fast.md)
 with its analytic values and with independent simulations in Python.
 
@@ -313,7 +314,11 @@ In the trial above, suppose that 30 percent of the control patients
 switch at progression, that the others switch after progression at 4
 percent per month, and that 1 percent per month switch before
 progression, in which case PFS is censored at the switch. After a switch
-the median survival is 18 months.
+at or after progression the median survival is 18 months. After a switch
+before progression, death before progression keeps the control hazard
+(`h02.median` of 30 months), and death after a later progression has the
+median of 18 months, on the clock of `switch.clock` (from progression by
+default).
 
 ``` r
 
