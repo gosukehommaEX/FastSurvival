@@ -272,6 +272,12 @@
   independently (matrix exponentials) and against closed forms, and that
   the data without the rules are unchanged.
 
+- New tests check the summaries printed by
+  [`print.kmcurve_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.kmcurve_fast.md)
+  and
+  [`print.survdiff_fast()`](https://gosukehommaEX.github.io/FastSurvival/reference/print.survdiff_fast.md)
+  against values computed independently.
+
 ## FastSurvival 1.2.0
 
 CRAN release: 2026-10-15

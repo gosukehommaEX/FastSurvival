@@ -179,7 +179,9 @@ Useful links:
 ## Author
 
 **Maintainer**: Gosuke Homma <my.name.is.gosuke@gmail.com>
+([ORCID](https://orcid.org/0000-0002-6854-5627))
 
 Authors:
 
 - Gosuke Homma <my.name.is.gosuke@gmail.com>
+  ([ORCID](https://orcid.org/0000-0002-6854-5627))

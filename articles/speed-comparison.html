@@ -92,7 +92,7 @@ run the code blocks interactively. The same code is collected in the
 <code>tools/benchmark_speed.R</code> script of the package’s GitHub
 repository.</p>
 <p>The reported figures are median times of 1,000 microbenchmark
-replicates, measured on 2026-11-07 with R 4.6.1 on Windows 11 (x86_64)
+replicates, measured on 2026-11-15 with R 4.6.1 on Windows 11 (x86_64)
 for the data set of 500 subjects below, all of whom have an event. The
 FastSurvival functions are timed on presorted input, so the single sort
 of the data is excluded from their times, whereas the reference
@@ -354,7 +354,7 @@ because nphsim was not installed when the table was produced.</p>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> + <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> at one time
 point</td>
-<td>~35x</td>
+<td>~30x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/survdiff_fast.html">survdiff_fast()</a></code></td>
@@ -380,13 +380,13 @@ point</td>
 <tr class="even">
 <td><code><a href="../reference/wmst_fast.html">wmst_fast()</a></code></td>
 <td><code>survWMST::wmst()</code></td>
-<td>~800x</td>
+<td>~750x</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/milestone_fast.html">milestone_fast()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/pkg/survival/man/survfit.html" class="external-link">survfit()</a></code> + <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> at a milestone</td>
-<td>~20x</td>
+<td>~15x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/medsurv_fast.html">medsurv_fast()</a></code></td>
@@ -396,13 +396,13 @@ point</td>
 <tr class="odd">
 <td><code><a href="../reference/maxcombo_fast.html">maxcombo_fast()</a></code></td>
 <td><code><a href="https://rdrr.io/pkg/nph/man/logrank.maxtest.html" class="external-link">nph::logrank.maxtest()</a></code></td>
-<td>~350x</td>
+<td>~300x</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/rmw_fast.html">rmw_fast()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/pkg/nphRCT/man/wlrt.html" class="external-link">nphRCT::wlrt()</a></code> (two components)</td>
-<td>~75x</td>
+<td>~80x</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/ahsw_fast.html">ahsw_fast()</a></code></td>
@@ -412,7 +412,7 @@ point</td>
 <tr class="even">
 <td><code><a href="../reference/ahr_fast.html">ahr_fast()</a></code></td>
 <td><code>AHR::ahrKM()</code></td>
-<td>~200x</td>
+<td>~150x</td>
 </tr>
 </tbody>
 </table>
