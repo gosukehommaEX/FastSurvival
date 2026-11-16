@@ -45,6 +45,13 @@ requireNamespace(). The package was checked with --run-donttest.
 ## Test environments
 
 * Local: Windows 11 x64 (build 26200), R 4.6.1
+* win-builder: R-release (R 4.6.2)
+* win-builder: R-devel (2026-11-14 r90890)
+* GitHub Actions (R-CMD-check workflow):
+  - ubuntu-latest (R release)
+  - ubuntu-latest (R devel)
+  - windows-latest (R release)
+  - macos-latest (R release)
 
 ## R CMD check results
 
